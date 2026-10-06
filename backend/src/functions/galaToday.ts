@@ -192,7 +192,9 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   let lastReason = "no draft";
   const attempts: string[] = [];
   for (let attempt = 0; attempt < MAX_DRAFTS; attempt += 1) {
-    const { system, user } = buildPrompt({ date, topic, format, places, areaName, weather: weather?.line ?? null, day: dayContext(manilaNow, holiday), budget, editorNotes });
+    // Money only enters the prompt for budget challenges; other formats must not mention peso amounts the rules can't verify.
+    const promptBudget = format === "budget-challenge" ? budget : null;
+    const { system, user } = buildPrompt({ date, topic, format, places, areaName, weather: weather?.line ?? null, day: dayContext(manilaNow, holiday), budget: promptBudget, editorNotes });
     const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, (message) => context.warn(message));
     const parsed = extractJsonObject(raw);
     if (!parsed) {
@@ -200,7 +202,7 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
       attempts.push(`${model}: unparseable`);
       continue;
     }
-    const result = validateDraft(parsed, { topic, format, places, areaName, weather: weather?.line ?? null, budget, date, now, takenSlugs });
+    const result = validateDraft(parsed, { topic, format, places, areaName, weather: weather?.line ?? null, budget: promptBudget, date, now, takenSlugs });
     if ("reason" in result) {
       lastReason = result.reason;
       attempts.push(`${model}: rules: ${result.reason}`);

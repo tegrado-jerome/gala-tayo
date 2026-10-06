@@ -277,7 +277,8 @@ HARD LIMITS (break one and the post is thrown away)
 THE POST
 - TOPIC is the hook. Build the title around the search phrase in QUERY so people searching it find us, and make the title state the plan and the payoff. Max 70 chars.
 - FORMAT decides the shape (FORMAT RULES). Commit to it; it is the joke engine.
-- meme: two caption lines for a photo meme of the first pick, max 60 chars each. top sets it up, bottom lands the punchline. Both must make sense on a photo of that place.
+- Never write peso amounts or prices unless a BUDGET block is given, and then only the numbers in it.
+- meme: two caption lines for a photo meme of the first pick, max 60 chars each (count them; shorter is funnier). top sets it up, bottom lands the punchline. Both must make sense on a photo of that place.
 - slug: 3–6 lowercase complete words joined by hyphens, readable, with the topic words (like "500-peso-intramuros-challenge"). No dates.
 - hook: one line, max 120 chars. body: 40–90 words that deliver the format's payoff and end with a nudge to go.
 - picks: choose only from PLACES by slug. "why" = one specific, funny line from that place's facts, max 110 chars.
