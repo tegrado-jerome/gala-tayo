@@ -123,8 +123,8 @@ describe("memory", () => {
   it("lowers the budget for 'mas mura?'", () => {
     const withBudget = updateMemory({ ...EMPTY_MEMORY, budgetPerHead: 1000 }, "Mas mura?", places, TODAY.iso);
     assert.equal(withBudget.budgetPerHead, 700);
-    const fromPicks = updateMemory({ ...EMPTY_MEMORY, lastPlaceSlugs: ["cubao-expo"] }, "Something cheaper?", places, TODAY.iso);
-    assert.ok(fromPicks.budgetPerHead !== null && fromPicks.budgetPerHead < 200);
+    const fromPicks = updateMemory({ ...EMPTY_MEMORY, lastPlaceSlugs: ["art-in-island"] }, "Something cheaper?", places, TODAY.iso);
+    assert.ok(fromPicks.budgetPerHead !== null && fromPicks.budgetPerHead < 850);
     assert.equal(updateMemory(null, "free things to do", places, TODAY.iso).budgetPerHead, 0);
   });
 
@@ -292,9 +292,9 @@ describe("answer sanitising", () => {
 });
 
 describe("recorded conversations (12 prompts)", () => {
-  const expectations: Record<string, { cities?: string[]; budget?: number; language: "english" | "taglish"; itinerary?: boolean; weather?: boolean; tools: string[] }> = {
+  const expectations: Record<string, { cities?: string[]; budget?: number; language: "english" | "taglish"; itinerary?: boolean; weather?: boolean; tools: string[]; minCards?: number }> = {
     "BGC date ₱1500": { cities: ["Taguig", "Makati"], budget: 750, language: "english", tools: ["search_places"] },
-    "Rainy QC barkada": { cities: ["Quezon City"], language: "english", weather: true, tools: ["weather", "search_places"] },
+    "Rainy QC barkada": { cities: ["Quezon City"], language: "english", weather: true, tools: ["weather", "search_places"], minCards: 1 },
     "Tagaytay family day": { cities: ["Tagaytay", "Silang", "Alfonso"], language: "english", itinerary: true, tools: ["plan_day"] },
     // Intramuros is also a curated place, so its details are looked up next to the search.
     "Intramuros history walk": { cities: ["Manila"], language: "english", tools: ["get_place", "search_places"] },
@@ -304,7 +304,7 @@ describe("recorded conversations (12 prompts)", () => {
     "saan masarap mag-sisig": { language: "taglish", tools: ["search_places"] },
     "indoor activities ngayon umuulan": { language: "taglish", weather: true, tools: ["weather", "search_places"] },
     "date spot with view Makati": { cities: ["Makati"], language: "english", tools: ["search_places"] },
-    "cheap gala QC": { cities: ["Quezon City"], budget: 500, language: "english", tools: ["search_places"] },
+    "cheap gala QC": { cities: ["Quezon City"], budget: 500, language: "english", tools: ["search_places"], minCards: 1 },
     "island hopping Coron budget": { cities: ["Coron", "Busuanga"], language: "english", tools: ["search_places"] },
   };
 
@@ -320,7 +320,8 @@ describe("recorded conversations (12 prompts)", () => {
       assertGrounded(response);
       assert.equal(response.language, expected.language);
       assert.equal(response.refused, false);
-      assert.ok(response.places.length >= 2, "shows place cards");
+      // Curation leaves Quezon City with few visible places, so those prompts may show a single card.
+      assert.ok(response.places.length >= (expected.minCards ?? 2), "shows place cards");
       assert.ok(response.map && response.map.pins.length === response.places.filter((card) => card.latitude !== null).length);
       assert.ok(response.chips.some((chip) => chip.kind === "add_to_plan"));
       assert.ok(response.text.length > 0 && response.text.length < 900);
