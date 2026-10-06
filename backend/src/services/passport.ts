@@ -63,3 +63,12 @@ export function buildCityStamps(
     };
   });
 }
+
+const HISTORY_MONTHS = 13;
+const HISTORY_MAX = 500;
+
+/** Check-ins from the last 13 calendar months, newest first: enough for a monthly recap without sending everything. */
+export function recentCheckinHistory<T extends { created_at: string }>(checkins: T[], now: Date) {
+  const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - HISTORY_MONTHS + 1, 1)).toISOString();
+  return checkins.filter((checkin) => new Date(checkin.created_at).toISOString() >= since).slice(0, HISTORY_MAX);
+}

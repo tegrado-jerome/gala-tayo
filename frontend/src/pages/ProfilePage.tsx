@@ -52,6 +52,7 @@ import {
 import { formatGalaPlanDate, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
 import { daysUntil, getPlanDate } from '../utils/galaPlanTrip'
 import { getMyPassport, type CityStamp } from '../utils/passportApi'
+import { useGalaLists } from '../utils/galaListsStore'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { shareLink } from '../utils/share'
 import { getPlacePhoto } from '../utils/placePhoto'
@@ -324,6 +325,7 @@ function ProfilePage({ session }: ProfilePageProps) {
 
 function AccountProfilePage({ session }: ProfilePageProps) {
   const { currentProfile } = useAppUser()
+  const { lists: galaLists } = useGalaLists()
   const { favorites } = useSavedFavorites()
   const isGuestProfile = !session?.user?.id
   const cachedAtRender = useMemo(() => {
@@ -549,9 +551,10 @@ function AccountProfilePage({ session }: ProfilePageProps) {
     if (city) byCity.set(city, [...(byCity.get(city) ?? []), place])
   }
   const savedLists = [
-    ...(savedPlaces.length > 0 ? [{ key: 'all', label: 'All saved', count: savedPlaces.length, photo: savedPlaces.map(getPlacePhoto).find(Boolean) ?? null }] : []),
+    ...(savedPlaces.length > 0 ? [{ key: 'all', label: 'All saved', count: savedPlaces.length, photo: savedPlaces.map(getPlacePhoto).find(Boolean) ?? null, href: '/favorites' }] : []),
+    ...galaLists.slice(0, 4).map((list) => ({ key: `list-${list.id}`, label: list.name, count: list.places.length, photo: list.places[0]?.photo ?? null, href: `/lists/${list.id}` })),
     ...(byCity.size > 1
-      ? Array.from(byCity, ([city, places]) => ({ key: city, label: city, count: places.length, photo: places.map(getPlacePhoto).find(Boolean) ?? null }))
+      ? Array.from(byCity, ([city, places]) => ({ key: city, label: city, count: places.length, photo: places.map(getPlacePhoto).find(Boolean) ?? null, href: '/favorites' }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 4)
       : []),
@@ -707,7 +710,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
             <ul className="me-saved">
               {savedLists.map((list) => (
                 <li key={list.key}>
-                  <InternalLink href="/favorites" className="me-saved-pill">
+                  <InternalLink href={list.href} className="me-saved-pill">
                     {list.photo ? <img src={list.photo} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true"><Heart weight="light" /></span>}
                     {list.label} · {list.count}
                   </InternalLink>

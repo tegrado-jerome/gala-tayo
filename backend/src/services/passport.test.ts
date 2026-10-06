@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildCityStamps, isNearPlace, weeklyStreak } from "./passport";
+import { buildCityStamps, isNearPlace, recentCheckinHistory, weeklyStreak } from "./passport";
 
 describe("weeklyStreak", () => {
   it("counts consecutive weeks ending this week", () => {
@@ -35,5 +35,15 @@ describe("buildCityStamps", () => {
     ]);
     assert.deepEqual(stamps[0], { city: "Makati", collected: true, places: 2, first_checkin_at: "2026-09-19T10:00:00Z" });
     assert.equal(stamps[1].collected, false);
+  });
+});
+
+describe("recentCheckinHistory", () => {
+  it("keeps the last 13 calendar months", () => {
+    const rows = [{ created_at: "2026-10-05T00:00:00Z" }, { created_at: "2025-10-01T00:00:00+00:00" }, { created_at: "2025-09-30T23:00:00Z" }];
+    assert.deepEqual(
+      recentCheckinHistory(rows, new Date("2026-10-06T00:00:00Z")).map((row) => row.created_at),
+      ["2026-10-05T00:00:00Z", "2025-10-01T00:00:00+00:00"]
+    );
   });
 });

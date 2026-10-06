@@ -138,6 +138,10 @@
       "rewrite": "/app-shell.html"
     },
     {
+      "route": "/lists/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
       "route": "/history",
       "rewrite": "/app-shell.html"
     },

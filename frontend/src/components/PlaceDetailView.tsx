@@ -67,6 +67,8 @@ import { SectionTabs } from './place-detail/SectionTabs'
 import SimilarPlaces from './place-detail/SimilarPlaces'
 import { buildHighlights, describedTips, reviewHighlights, shortBestTime, splitSentences } from './place-detail/placeInsights'
 import '../design/place.css'
+import PlaceShareSheet, { type PlaceShareView } from './share/PlaceShareSheet'
+import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
@@ -580,6 +582,7 @@ function PlaceDetailView({
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const guestAuth = useGuestAuthPrompt()
   const [isSaving, setIsSaving] = useState(false)
+  const [shareView, setShareView] = useState<PlaceShareView>(null)
   const [shareError, setShareError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [isContributionOpen, setIsContributionOpen] = useState(false)
@@ -2289,6 +2292,10 @@ function PlaceDetailView({
   const backItem = breadcrumbItems[breadcrumbItems.length - 1]
   const saveLabel = isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`
   const showAddPhotoAction = approvedImageCount < 3
+  // Only media.galatayo.app originals send CORS headers, so only they can be drawn on the story canvas.
+  const storyPhotos = uniqueList([galleryPhotos[0], ...hdPhotos.map((photo) => photo.url)])
+    .filter((url) => url.startsWith(`${R2_PUBLIC_BASE_URL}/`))
+    .map((url) => hdPhotos.find((photo) => photo.url === url) ?? { url })
   const priceSummary = barPriceValue ? (
     <>
       {budgetAmount === 0 ? null : <span className="pd-from">From</span>}
@@ -2313,7 +2320,7 @@ function PlaceDetailView({
               </span>
             </InternalLink>
             <span className="flex-1" />
-            <button type="button" className="pd-hit" aria-label="Share" onClick={() => void handleSharePlace()}>
+            <button type="button" className="pd-hit" aria-label="Share" aria-haspopup="dialog" onClick={() => setShareView('menu')}>
               <span className="pd-round" aria-hidden="true">
                 <Share2 weight="light" />
               </span>
@@ -2342,7 +2349,7 @@ function PlaceDetailView({
             <div className="flex items-start justify-between gap-6">
               <h1 className="pd-title">{place.name}</h1>
               <div className="g-only-desk mt-1 flex shrink-0 items-center gap-1">
-                <Button variant="text" size="sm" onClick={() => void handleSharePlace()}>
+                <Button variant="text" size="sm" aria-haspopup="dialog" onClick={() => setShareView('menu')}>
                   <Share2 weight="light" aria-hidden="true" />
                   Share
                 </Button>
@@ -2596,6 +2603,32 @@ function PlaceDetailView({
           </Button>
         </div>
       </div>
+
+      <PlaceShareSheet
+        view={shareView}
+        onViewChange={setShareView}
+        place={{
+          name: place.name,
+          slug: placeSlug,
+          city: cityName || null,
+          area: localAreaName || null,
+          category: cleanString(place.category) || null,
+          place_history: place.place_history,
+          description: place.description,
+        }}
+        photos={storyPhotos}
+        listPlace={{
+          slug: placeSlug,
+          name: place.name,
+          city: cleanString(place.city) || null,
+          area: localAreaName || null,
+          category: cleanString(place.category) || null,
+          photo: galleryPhotos[0] ?? null,
+        }}
+        onShareLink={() => void handleSharePlace()}
+        onStoryShared={() => trackPlaceShared({ placeSlug: place.slug ?? null })}
+        saved={{ isSaved, onToggle: () => void handleSavePlace(), disabled: isSaving }}
+      />
 
       {allPhotosIndex !== null && galleryPhotos.length > 0 ? (
         <AllPhotos

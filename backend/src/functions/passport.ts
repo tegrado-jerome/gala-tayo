@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getActiveNormalizedPlaces } from "../domain/places";
-import { buildCityStamps, isNearPlace, weeklyStreak } from "../services/passport";
+import { buildCityStamps, isNearPlace, recentCheckinHistory, weeklyStreak } from "../services/passport";
 import { getCurrentUser } from "../utils/social";
 
 type CheckinRow = { place_id: string; checkin_date: string; created_at: string };
@@ -53,6 +53,13 @@ async function buildPassport(userId: string) {
       const place = placesById.get(checkin.place_id);
       return { place_id: checkin.place_id, name: place?.name ?? "Place", slug: place?.slug ?? null, city: checkin.city, created_at: checkin.created_at };
     }),
+    // For the monthly Gala Wrapped recap.
+    history: recentCheckinHistory(withCity, new Date()).map((checkin) => ({
+      place_id: checkin.place_id,
+      city: checkin.city,
+      category: placesById.get(checkin.place_id)?.category ?? null,
+      created_at: checkin.created_at,
+    })),
   };
 }
 

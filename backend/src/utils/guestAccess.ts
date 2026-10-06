@@ -21,6 +21,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "sitemapXml",
   "robotsTxt",
   "planSharePage",
+  "listSharePage",
   "placeDetail",
   "placeDetailsBatch",
   "placePhotos",
