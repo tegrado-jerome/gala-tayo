@@ -80,7 +80,7 @@ async function readFrontendPaths() {
   const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
   // Gala Today posts are committed daily into src/data/galaToday.json by the SEO daily workflow.
   const todayPosts = JSON.parse(await readFile(path.join(root, 'src/data/galaToday.json'), 'utf8'))
-  return ['/saan-tayo', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
+  return ['/saan-tayo', '/gala-tayo-meaning', '/long-weekends-2027-philippines', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
 }
 
 const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
@@ -253,11 +253,11 @@ function buildLlmsTxt(pages) {
     '- Contact for corrections: officialgalatayo@gmail.com',
     '',
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
-    ...section('Guides', (routePath) => routePath.startsWith('/guides')),
+    ...section('Guides', (routePath) => routePath.startsWith('/guides') || routePath.startsWith('/long-weekends')),
     ...section('Gala Today (daily trend picks)', (routePath) => routePath.startsWith('/today')),
     ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
     ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
-    ...section('About', (routePath) => ['/about', '/privacy', '/terms'].includes(routePath)),
+    ...section('About', (routePath) => ['/about', '/gala-tayo-meaning', '/privacy', '/terms'].includes(routePath)),
   ].join('\n')
 }
 

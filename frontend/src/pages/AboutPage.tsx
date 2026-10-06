@@ -4,6 +4,7 @@ import { Compass } from '@phosphor-icons/react/dist/csr/Compass'
 import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
+import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { Button, Page } from '../components/ui'
 import { getSiteOrigin } from '../utils/seo'
@@ -88,7 +89,10 @@ function AboutPage() {
           <p className="m-onb-step">About</p>
           <h1 className="g-h1 mt-1.5">About GalaTayo</h1>
           <p className="g-mut mt-3 max-w-[60ch] text-[16px] leading-relaxed">
-            &ldquo;Gala tayo&rdquo; means &ldquo;let&apos;s go out&rdquo;. That&apos;s the whole idea.
+            &ldquo;Gala tayo&rdquo; means &ldquo;let&apos;s go out&rdquo;. That&apos;s the whole idea.{' '}
+            <InternalLink href="/gala-tayo-meaning" className="underline underline-offset-[3px]">
+              More on what it means
+            </InternalLink>
           </p>
         </header>
 

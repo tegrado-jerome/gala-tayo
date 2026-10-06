@@ -39,6 +39,8 @@ const PublicGalaPlanPage = lazy(() => import('../pages/PublicGalaPlanPage'))
 const LegalPage = lazy(() => import('../pages/LegalPage'))
 const AboutPage = lazy(() => import('../pages/AboutPage'))
 const SaanTayoPage = lazy(() => import('../pages/SaanTayoPage'))
+const GalaTayoMeaningPage = lazy(() => import('../pages/GalaTayoMeaningPage'))
+const LongWeekendsPage = lazy(() => import('../pages/LongWeekendsPage'))
 const GalaTodayPage = lazy(() => import('../pages/GalaTodayPage'))
 const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
 const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
@@ -324,6 +326,10 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return <AboutPage />
     case 'saan-tayo':
       return <SaanTayoPage />
+    case 'gala-tayo-meaning':
+      return <GalaTayoMeaningPage />
+    case 'long-weekends':
+      return <LongWeekendsPage />
     case 'gala-today':
       return <GalaTodayPage slug={descriptor.slug} />
     case 'profile-search':

@@ -12,6 +12,8 @@ import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, buildBrand
 
 const footerLinks = [
   { href: '/about', label: 'About' },
+  { href: '/gala-tayo-meaning', label: 'What "gala tayo" means' },
+  { href: '/long-weekends-2027-philippines', label: 'Long weekends 2027' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
 ]
