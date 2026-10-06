@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { METRO_MANILA_CENTER } from '../data/destinations'
+import { FORECAST_DAYS, describeWeather, isRainCode, type DayForecast, type Forecast, type HourForecast } from '../utils/weather'
 
 export type Weather = {
   temperature: number
@@ -12,7 +13,9 @@ export type WeatherLocation = {
   lng: number
 }
 
-const CACHE_KEY_PREFIX = 'galatayo:weather'
+export type ForecastState = { status: 'loading' | 'failed'; forecast: null } | { status: 'ready'; forecast: Forecast }
+
+const CACHE_KEY_PREFIX = 'galatayo:forecast'
 const CACHE_TTL_MS = 30 * 60 * 1000
 const MANILA: WeatherLocation = { lat: METRO_MANILA_CENTER[0], lng: METRO_MANILA_CENTER[1] }
 
@@ -25,27 +28,71 @@ function getCacheKey({ lat, lng }: WeatherLocation) {
   return `${CACHE_KEY_PREFIX}:${roundCoordinate(lat)},${roundCoordinate(lng)}`
 }
 
-// Open-Meteo is free and keyless.
-function getWeatherUrl({ lat, lng }: WeatherLocation) {
-  return `https://api.open-meteo.com/v1/forecast?latitude=${roundCoordinate(lat)}&longitude=${roundCoordinate(lng)}&current=temperature_2m,precipitation,weather_code&timezone=Asia%2FManila`
+// Open-Meteo is free and keyless. 14 days of hourly data covers plan dates.
+function getForecastUrl({ lat, lng }: WeatherLocation) {
+  const params = new URLSearchParams({
+    latitude: roundCoordinate(lat),
+    longitude: roundCoordinate(lng),
+    current: 'temperature_2m,precipitation,weather_code,is_day',
+    hourly: 'temperature_2m,weather_code,precipitation_probability,precipitation',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset',
+    forecast_days: String(FORECAST_DAYS),
+    timezone: 'Asia/Manila',
+  })
+  return `https://api.open-meteo.com/v1/forecast?${params}`
 }
 
-// WMO weather codes: https://open-meteo.com/en/docs
-function describe(code: number) {
-  if (code >= 95) return 'Thunderstorm'
-  if (code >= 80) return 'Rain showers'
-  if (code >= 51 && code <= 67) return 'Rainy'
-  if (code >= 45 && code <= 48) return 'Foggy'
-  if (code >= 1 && code <= 3) return 'Cloudy'
-  return 'Clear'
+type OpenMeteoResponse = {
+  current?: { time?: string; temperature_2m?: number; precipitation?: number; weather_code?: number; is_day?: number }
+  hourly?: { time?: string[]; temperature_2m?: number[]; weather_code?: number[]; precipitation_probability?: Array<number | null>; precipitation?: Array<number | null> }
+  daily?: {
+    time?: string[]
+    weather_code?: number[]
+    temperature_2m_max?: number[]
+    temperature_2m_min?: number[]
+    sunrise?: string[]
+    sunset?: string[]
+  }
 }
 
-function readCache(cacheKey: string): Weather | null {
+function parseForecast(data: OpenMeteoResponse | null): Forecast | null {
+  const { current, hourly, daily } = data ?? {}
+  if (!current || typeof current.temperature_2m !== 'number' || !hourly?.time || !daily?.time) return null
+
+  const currentHour = (current.time ?? '').slice(0, 13)
+  const hours: HourForecast[] = hourly.time
+    .map((time, index) => ({
+      time,
+      temp: Math.round(hourly.temperature_2m?.[index] ?? NaN),
+      code: hourly.weather_code?.[index] ?? 0,
+      rain: hourly.precipitation_probability?.[index] ?? 0,
+      mm: hourly.precipitation?.[index] ?? 0,
+    }))
+    .filter((hour) => hour.time.slice(0, 13) >= currentHour && Number.isFinite(hour.temp))
+  const days: DayForecast[] = daily.time
+    .map((date, index) => ({
+      date,
+      code: daily.weather_code?.[index] ?? 0,
+      min: Math.round(daily.temperature_2m_min?.[index] ?? NaN),
+      max: Math.round(daily.temperature_2m_max?.[index] ?? NaN),
+      sunrise: daily.sunrise?.[index] ?? '',
+      sunset: daily.sunset?.[index] ?? '',
+    }))
+    .filter((day) => Number.isFinite(day.min) && Number.isFinite(day.max))
+
+  return {
+    current: { temp: Math.round(current.temperature_2m), code: current.weather_code ?? 0, precipitation: current.precipitation ?? 0, isDay: current.is_day !== 0 },
+    hours,
+    days,
+  }
+}
+
+function readCache(cacheKey: string): Forecast | null {
   try {
-    const raw = sessionStorage.getItem(cacheKey)
+    const raw = localStorage.getItem(cacheKey)
     if (!raw) return null
-    const cached = JSON.parse(raw) as { weather: Weather; savedAt: number }
-    return Date.now() - cached.savedAt < CACHE_TTL_MS ? cached.weather : null
+    const cached = JSON.parse(raw) as { forecast: Forecast; savedAt: number }
+    return Date.now() - cached.savedAt < CACHE_TTL_MS ? cached.forecast : null
   } catch {
     return null
   }
@@ -55,41 +102,49 @@ function isValidLocation(location: WeatherLocation | null | undefined): location
   return Boolean(location && Number.isFinite(location.lat) && Number.isFinite(location.lng) && (location.lat !== 0 || location.lng !== 0))
 }
 
-/** Current weather at a place or city; Metro Manila when no location is given. */
-export function useWeather(location?: WeatherLocation | null) {
-  const target = isValidLocation(location) ? location : MANILA
-  const cacheKey = getCacheKey(target)
-  const [reading, setReading] = useState<{ cacheKey: string; weather: Weather | null }>(() => ({ cacheKey, weather: readCache(cacheKey) }))
-  const weather = reading.cacheKey === cacheKey ? reading.weather : readCache(cacheKey)
-  const url = getWeatherUrl(target)
+function stateFor(forecast: Forecast | null): ForecastState {
+  return forecast ? { status: 'ready', forecast } : { status: 'loading', forecast: null }
+}
+
+/** Current, hourly and 14-day forecast for a spot. Pass null to skip; failures resolve to status "failed". */
+export function useForecast(location: WeatherLocation | null): ForecastState {
+  const target = isValidLocation(location) ? location : null
+  const cacheKey = target ? getCacheKey(target) : ''
+  const [reading, setReading] = useState<{ cacheKey: string; state: ForecastState }>(() => ({ cacheKey, state: stateFor(cacheKey ? readCache(cacheKey) : null) }))
+  const state: ForecastState = !target ? { status: 'failed', forecast: null } : reading.cacheKey === cacheKey ? reading.state : stateFor(readCache(cacheKey))
+  const url = target ? getForecastUrl(target) : ''
+  const needsFetch = Boolean(target) && state.status === 'loading'
 
   useEffect(() => {
-    if (weather) return
+    if (!needsFetch) return
 
     const controller = new AbortController()
     fetch(url, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: { current?: { temperature_2m?: number; precipitation?: number; weather_code?: number } } | null) => {
-        const current = data?.current
-        if (!current || typeof current.temperature_2m !== 'number') return
-
-        const code = current.weather_code ?? 0
-        const next: Weather = {
-          temperature: Math.round(current.temperature_2m),
-          isRaining: (current.precipitation ?? 0) > 0.1 || (code >= 51 && code <= 67) || code >= 80,
-          label: describe(code),
-        }
-        setReading({ cacheKey, weather: next })
+      .then((data: OpenMeteoResponse | null) => {
+        const forecast = parseForecast(data)
+        setReading({ cacheKey, state: forecast ? { status: 'ready', forecast } : { status: 'failed', forecast: null } })
+        if (!forecast) return
         try {
-          sessionStorage.setItem(cacheKey, JSON.stringify({ weather: next, savedAt: Date.now() }))
+          localStorage.setItem(cacheKey, JSON.stringify({ forecast, savedAt: Date.now() }))
         } catch {
-          // Storage can be unavailable (private mode); the banner just refetches next time.
+          // Storage can be unavailable (private mode); we just refetch next time.
         }
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (!controller.signal.aborted) setReading({ cacheKey, state: { status: 'failed', forecast: null } })
+      })
 
     return () => controller.abort()
-  }, [cacheKey, url, weather])
+  }, [cacheKey, url, needsFetch])
 
-  return weather
+  return state
+}
+
+/** Current weather at a place or city; Metro Manila when no location is given. */
+export function useWeather(location?: WeatherLocation | null): Weather | null {
+  const { forecast } = useForecast(isValidLocation(location) ? location : MANILA)
+  if (!forecast) return null
+  const { temp, code, precipitation } = forecast.current
+  return { temperature: temp, isRaining: precipitation > 0.1 || isRainCode(code), label: describeWeather(code) }
 }

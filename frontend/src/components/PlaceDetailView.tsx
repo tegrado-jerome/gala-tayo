@@ -68,6 +68,7 @@ import { AllPhotos, PhotoGrid, usePhotoList } from './place-detail/PlaceGallery'
 import { SunDots } from './place-detail/SunDots'
 import { SectionTabs } from './place-detail/SectionTabs'
 import SimilarPlaces from './place-detail/SimilarPlaces'
+import PlaceWeather from './weather/PlaceWeather'
 import { buildHighlights, describedTips, reviewHighlights, shortBestTime, splitSentences } from './place-detail/placeInsights'
 import '../design/place.css'
 import PlaceShareSheet, { type PlaceShareView } from './share/PlaceShareSheet'
@@ -2407,8 +2408,12 @@ function PlaceDetailView({
               </div>
             ) : null}
 
-            {keyFacts.length > 0 ? (
+            {keyFacts.length > 0 || placePosition ? (
               <ul className="pd-kl" aria-label="Key facts">
+                <PlaceWeather
+                  position={placePosition}
+                  place={{ name: place.name, category: categoryLabel, tags: place.tags, indoorOutdoor: cleanString(place.indoor_outdoor) }}
+                />
                 {keyFacts.map((fact) => {
                   const FactIcon = fact.icon
                   const body = (

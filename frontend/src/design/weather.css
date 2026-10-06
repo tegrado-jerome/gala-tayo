@@ -1,0 +1,36 @@
+/* Live weather: "Weather now" key-fact row, 12-hour sheet, plan-day forecast. Tokens come from gt1.css. */
+
+/* Reserved space while the forecast loads, so nothing below jumps. */
+.gw-row.is-pending { position: relative; min-height: 56px; }
+.gw-row.is-pending.is-tall { min-height: 80px; }
+.gw-row.is-pending::before { content: ''; position: absolute; top: 10px; left: 40px; width: min(220px, 60%); height: 34px; border-radius: var(--r-1); background: var(--fill); }
+.gw-plan.is-pending { min-height: 64px; margin-top: 16px; border-radius: var(--r-2); background: var(--fill); }
+
+.gw-now { display: grid; grid-template-columns: 28px minmax(0, 1fr) 20px; gap: 12px; align-items: center; width: 100%; min-height: 44px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.gw-now:hover b { text-decoration: underline; text-underline-offset: 2px; }
+.gw-now:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+.pd-kl .gw-now svg.gw-caret { width: 18px; height: 18px; color: var(--ink-2); }
+
+.gw-line { display: flex; gap: 6px; align-items: flex-start; margin: -2px 0 6px 40px; font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--sea); }
+.gw-line.is-warn { color: var(--warn); }
+.pd-kl .gw-line svg { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: currentColor; }
+
+/* Sheet: next 12 hours */
+.gw-hours { display: grid; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.gw-hours li { display: grid; grid-template-columns: 64px 28px 1fr auto; gap: 10px; align-items: center; min-height: 44px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.gw-hours svg { width: 22px; height: 22px; color: var(--ink); }
+.gw-time { color: var(--ink-2); font-size: 14px; }
+.gw-temp { font-weight: 600; font-variant-numeric: tabular-nums; }
+.gw-rain { display: inline-flex; gap: 4px; align-items: center; justify-content: flex-end; min-width: 52px; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.gw-rain svg { width: 16px; height: 16px; color: currentColor; }
+.gw-rain.is-likely { color: var(--sea); font-weight: 600; }
+.gw-sunset { display: flex; gap: 8px; align-items: center; margin: 14px 0 0; font-size: 15px; }
+.gw-sunset svg { width: 22px; height: 22px; }
+.gw-credit { margin: 14px 0 0; font-size: 12px; color: var(--ink-2); }
+.gw-credit a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Plan header: the plan day's forecast */
+.gw-plan { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-2); background: var(--fill); }
+.gw-plan > svg { width: 26px; height: 26px; color: var(--ink); }
+.gw-plan b { display: block; font-size: 15px; font-weight: 600; line-height: 1.3; }
+.gw-plan b + span { display: -webkit-box; overflow: hidden; font-size: 13px; line-height: 1.35; color: var(--ink-2); -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
