@@ -39,12 +39,12 @@ const ASK_AI_IP_BURST_LIMIT = 20;
 const ASK_AI_IP_BURST_WINDOW_SECONDS = 10 * 60;
 const ASK_AI_GUEST_IP_DAILY_LIMIT = 40;
 
-/** False when this IP has sent too many AI requests recently (or, for guests, today). */
-export async function isAskAiIpAllowed(request: HttpRequest, actor: AskAiActor): Promise<boolean> {
+/** False when this IP has sent too many AI requests recently (or, for guests, today). `skipDaily` keeps only the burst limit. */
+export async function isAskAiIpAllowed(request: HttpRequest, actor: AskAiActor, { skipDaily = false } = {}): Promise<boolean> {
   const ip = getClientIp(request);
   const burst = await checkRedisRateLimit(`ask-ai-ip:${ip}`, ASK_AI_IP_BURST_LIMIT, ASK_AI_IP_BURST_WINDOW_SECONDS);
   if (!burst.allowed) return false;
-  if (actor.kind !== "guest") return true;
+  if (actor.kind !== "guest" || skipDaily) return true;
   const daily = await checkRedisRateLimit(`ask-ai-guest-ip:${ip}`, ASK_AI_GUEST_IP_DAILY_LIMIT, 24 * 60 * 60);
   return daily.allowed;
 }

@@ -8,6 +8,7 @@
  * --only <id,id>, --limit <n>, --append (re-score the cases already in results/<label>.json and run only the missing ones;
  * with nothing missing it just re-scores). Auth: guest mode by default (a fresh guest id per conversation, so each one stays inside
  * the guest daily limit); set EVAL_ACCESS_TOKEN to a GalaTayo QA account access token to run as that account instead.
+ * Set ASSISTANT_EVAL_KEY to the API's secret of the same name to skip the daily AI limits (assistant target only).
  * Curated places come from Supabase (public anon key, read from frontend/.env or EVAL_SUPABASE_URL / EVAL_SUPABASE_KEY)
  * minus the gala-worthy hidden list.
  */
@@ -86,10 +87,12 @@ type Conversation = { guestId: string; history: Array<{ role: "user" | "assistan
 
 function headers(conversation: Conversation, requestId: string) {
   const token = process.env.EVAL_ACCESS_TOKEN;
+  const evalKey = process.env.ASSISTANT_EVAL_KEY;
   return {
     "Content-Type": "application/json",
     "x-request-id": requestId,
     ...(token ? { Authorization: `Bearer ${token}` } : { "x-ask-ai-guest-id": conversation.guestId }),
+    ...(evalKey ? { "x-assistant-eval-key": evalKey } : {}),
   };
 }
 

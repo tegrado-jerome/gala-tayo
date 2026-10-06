@@ -196,7 +196,7 @@ export function fallbackText(cards: PlaceCard[], memory: AssistantMemory, langua
       : `I couldn't find a GalaTayo place${memory.area ? ` in ${memory.area}` : ""} for that yet. Want to try another area or budget?`;
   }
   const where = memory.area ? (taglish ? ` sa ${memory.area}` : ` in ${memory.area}`) : "";
-  const intro = taglish ? `Heto ang mga swak${where}:` : `Here are good picks${where}:`;
+  const intro = taglish ? `Heto ang mga swak na puntahan${where}, tingnan mo:` : `Here are good picks${where}:`;
   const rain = weather?.rainLikely ? (taglish ? ` (${weather.summary.toLowerCase()}, kaya indoor-friendly muna)` : ` (${weather.summary.toLowerCase()})`) : "";
   const lines = cards.slice(0, 4).map((card) => `- **${card.name}**${card.budgetLabel ? ` · ${card.budgetLabel.toLowerCase()}` : ""}`);
   return [`${intro.replace(/:$/, rain + ":")}`, ...lines].join("\n");

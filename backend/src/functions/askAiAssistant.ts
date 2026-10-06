@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
 import { runAssistant, type AgentDeps, type AgentHistoryTurn, type AnswerCache } from "../services/assistant/agent";
@@ -52,12 +52,40 @@ function buildProviders(): AssistantModelProvider[] {
 
 const providers = buildProviders();
 
-async function loadPlaces(): Promise<NormalizedPlace[]> {
+async function fetchPlaces(): Promise<NormalizedPlace[]> {
   if (process.env.ASSISTANT_PLACES === "fixtures") {
     // Loaded only on demand: the snapshot is large and production never needs it.
     return (require("../services/assistant/fixtures/testPlaces") as typeof import("../services/assistant/fixtures/testPlaces")).allFixturePlaces;
   }
   return getActiveNormalizedPlaces();
+}
+
+// The place list is one large Redis read per request; keeping it in memory for a minute takes that off every answer.
+const PLACES_MEMO_MS = 60_000;
+let placesMemo: { at: number; places: Promise<NormalizedPlace[]> } | null = null;
+
+function loadPlaces(): Promise<NormalizedPlace[]> {
+  if (placesMemo && Date.now() - placesMemo.at < PLACES_MEMO_MS) return placesMemo.places;
+  const places = fetchPlaces();
+  const memo = { at: Date.now(), places };
+  placesMemo = memo;
+  places.catch(() => {
+    if (placesMemo === memo) placesMemo = null;
+  });
+  return places;
+}
+
+const EVAL_HEADER = "x-assistant-eval-key";
+
+/**
+ * True when the request carries the eval secret from ASSISTANT_EVAL_KEY, so the full eval suite can run past the
+ * daily AI limits. Off unless that env var holds a long secret.
+ */
+export function isEvalRequest(header: string | null, secret = process.env.ASSISTANT_EVAL_KEY): boolean {
+  const expected = secret?.trim() ?? "";
+  if (expected.length < 16 || !header) return false;
+  const digest = (value: string) => createHash("sha256").update(value).digest();
+  return timingSafeEqual(digest(header.trim()), digest(expected));
 }
 
 const answerCache: AnswerCache = {
@@ -83,7 +111,16 @@ function errorResponse(status: number, code: string, message: string, extra: Rec
 }
 
 export async function postAskAiAssistant(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const started = Date.now();
+  const stages: Record<string, number> = {};
+  const mark = (stage: string) => {
+    stages[stage] = Date.now() - started;
+  };
   const requestId = getAskAiRequestId(request, randomUUID());
+  // Started now so the place list loads while auth and limits are checked.
+  const placesPromise = loadPlaces();
+  placesPromise.catch(() => undefined);
+  const evalRun = isEvalRequest(request.headers.get(EVAL_HEADER));
   let actor: AskAiActor;
   try {
     actor = await resolveAskAiActor(request);
@@ -91,11 +128,14 @@ export async function postAskAiAssistant(request: HttpRequest, context: Invocati
     const message = error instanceof Error ? error.message : "";
     return /guest identifier/i.test(message) ? errorResponse(400, "ASK_AI_GUEST_ID_REQUIRED", message) : errorResponse(401, "UNAUTHORIZED", "Sign in again to use Tara.");
   }
-  if (!(await isAskAiIpAllowed(request, actor))) {
+  mark("auth");
+  const [ipAllowed, parsed] = await Promise.all([isAskAiIpAllowed(request, actor, { skipDaily: evalRun }), request.json().catch(() => ({}))]);
+  mark("guards");
+  if (!ipAllowed) {
     return errorResponse(429, "rate_limited", "Too many Ask AI requests. Try again in a few minutes.");
   }
 
-  const body = ((await request.json().catch(() => ({}))) ?? {}) as Record<string, unknown>;
+  const body = (parsed ?? {}) as Record<string, unknown>;
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (message.length < 1 || message.length > MAX_MESSAGE_LENGTH) return errorResponse(400, "BAD_MESSAGE", `Write 1 to ${MAX_MESSAGE_LENGTH} characters.`);
   const mode: AssistantMode = body.mode === "map" ? "map" : "chat";
@@ -105,13 +145,17 @@ export async function postAskAiAssistant(request: HttpRequest, context: Invocati
   const memory = parseClientMemory(body.memory);
 
   // Usage is taken before the model runs and handed back when no model answered (refusal, cache, fallback, failure).
-  const usage = await consumeAskAiUsageForActor(actor, usageType);
+  // Eval runs (secret header, see isEvalRequest) don't count against the daily limit.
+  const usage: AskAiUsageResult = evalRun
+    ? { allowed: true, usageType, dailyLimit: 0, requestCount: 0, remaining: 0, usageDate: "", resetsAt: "" }
+    : await consumeAskAiUsageForActor(actor, usageType);
+  mark("usage");
   if (!usage.allowed) {
     return errorResponse(429, "daily_ai_limit_reached", buildDailyLimitMessage(actor, usage.dailyLimit), { usage: usageBody(usage) });
   }
   const cancellation = registerAskAiRequest(requestId, { actor, usageType });
   const refund = async () => {
-    if (!markAskAiRequestUsageRefunded(requestId)) return;
+    if (evalRun || !markAskAiRequestUsageRefunded(requestId)) return;
     await refundAskAiUsageForActor({ actor, usageType }).catch(() => undefined);
     usage.remaining += 1;
     usage.requestCount = Math.max(0, usage.requestCount - 1);
@@ -119,7 +163,9 @@ export async function postAskAiAssistant(request: HttpRequest, context: Invocati
 
   const run = async (emit: (event: AssistantEvent) => void) => {
     try {
-      const places = await loadPlaces();
+      const places = await placesPromise;
+      mark("places");
+      context.log(`[Assistant] requestId=${requestId} stages ${Object.entries(stages).map(([stage, ms]) => `${stage}=${ms}`).join(" ")}${evalRun ? " eval=1" : ""}`);
       const deps: AgentDeps = {
         providers,
         tools: {
@@ -145,7 +191,7 @@ export async function postAskAiAssistant(request: HttpRequest, context: Invocati
       });
       await uploadsFor(response);
       if (response.refused || response.provider === "fallback" || response.provider === "cache") await refund();
-      context.log(`[Assistant] requestId=${requestId} mode=${mode} provider=${response.provider} places=${response.places.length} refused=${response.refused}`);
+      context.log(`[Assistant] requestId=${requestId} mode=${mode} provider=${response.provider} places=${response.places.length} refused=${response.refused} totalMs=${Date.now() - started}`);
       emit({ type: "final", response: { ...response, usage: usageBody(usage) } });
     } catch (error) {
       await refund();

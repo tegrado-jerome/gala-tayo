@@ -2,18 +2,22 @@ import { createHash } from "node:crypto";
 import type { NormalizedPlace } from "../../domain/places";
 import { classifyAskAiScope } from "../../functions/askAiStrictPgGuard";
 import { manilaToday } from "../galaPlanDraftPlanner";
-import { buildChips, buildItinerary, buildMap, buildWeather, fallbackText, sanitizeAnswer, selectCards } from "./compose";
+import { buildChips, buildItinerary, buildMap, buildWeather, fallbackText, mentionedPlaces, sanitizeAnswer, selectCards } from "./compose";
 import { guardMessage, redactPersonalData, refusalText } from "./guard";
-import { detectLanguage, type ReplyLanguage } from "./language";
+import { answerLanguage, detectLanguage, type ReplyLanguage } from "./language";
 import { updateMemory } from "./memory";
-import { buildSystemPrompt, OFF_TOPIC_MARKER } from "./prompt";
-import { ProviderError, type AssistantModelProvider, type ModelTurn } from "./providers/types";
+import { buildSystemPrompt, groundedUserTurn, OFF_TOPIC_MARKER, rewritePrompt } from "./prompt";
+import { ProviderError, type AssistantModelProvider, type ModelTurn, type ToolDeclaration } from "./providers/types";
 import { ASSISTANT_PROVIDERS, validateAssistantResponse, type AssistantEvent, type AssistantMemory, type AssistantMode, type AssistantProvider, type AssistantResponse } from "./schema";
 import { newLedger, queryTokens, runTool, TOOL_DECLARATIONS, VERIFY_TOOL, visiblePlaces, type ToolContext, type ToolLedger } from "./tools";
 
 const MAX_STEPS = 4;
 const MAX_HISTORY_TURNS = 6;
 const CACHE_TTL_SECONDS = 30 * 60;
+// Weather only adds a line to the answer; past this wait the model writes without it.
+const WEATHER_WAIT_MS = 1500;
+// Answers shorter than this are too short to judge their language.
+const MIN_WORDS_FOR_LANGUAGE_CHECK = 8;
 
 export type AgentHistoryTurn = { role: "user" | "assistant"; content: string };
 
@@ -53,7 +57,7 @@ export function replyLanguage(message: string, history: AgentHistoryTurn[]): Rep
 
 export function cacheKey(mode: AssistantMode, language: ReplyLanguage, message: string) {
   const normalised = message.toLowerCase().replace(/[^\p{L}\p{N}₱ ]+/gu, " ").replace(/\s+/g, " ").trim();
-  return `assistant:answer:v1:${mode}:${language}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
+  return `assistant:answer:v2:${mode}:${language}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
 }
 
 function historyTurns(history: AgentHistoryTurn[]): ModelTurn[] {
@@ -76,22 +80,69 @@ export function fallbackSearchArgs(message: string, memory: AssistantMemory): Re
   };
 }
 
-const PLAN_WORDS = /\b(itinerary|day plan|plan|schedule|whole day|buong araw|2 days|weekend trip|day trip)\b/i;
+const PLAN_WORDS = /\b(itinerary|day plan|plan|schedule|whole day|buong araw|\d+\s*days|weekend trip|weekend getaway|day trip|family day|for a day)\b|\bweekend\s*[?!.]*$/i;
+const WEATHER_WORDS = /\b(umuulan|maulan|ulan|rain|raining|rainy|bagyo|storm|typhoon|weather|panahon)\b/i;
+const NEAR_WORDS = /\b(near|nearby|malapit|around|katabi|beside)\b/i;
+const GREETING = /^\s*(hi|hello|hey|yo|kumusta|kamusta|musta|good (morning|afternoon|evening)|magandang (umaga|hapon|gabi))\b/i;
+
+export type ToolPlan = Array<{ name: string; args: Record<string, unknown> }>;
+
+/**
+ * The tool calls a model would make for a common gala ask, decided in code so the cards can show before any
+ * model call. Null when the model should decide: greetings, injection attempts, unclear scope, or nothing to search.
+ */
+export function planTools(message: string, memory: AssistantMemory, places: NormalizedPlace[], history: AgentHistoryTurn[], injection: boolean): ToolPlan | null {
+  const words = message.trim().split(/\s+/).length;
+  if (injection || (GREETING.test(message) && words <= 4)) return null;
+  const named = mentionedPlaces(message, places)[0] ?? null;
+  const followUp = history.length > 0 && Boolean(memory.topic);
+  if (classifyAskAiScope(message) !== "allow" && !named && !followUp) return null;
+  // "Gala tayo" alone names nothing to look for: the model asks one question instead.
+  const filters = Boolean(memory.area || memory.vibe || memory.indoor) || memory.budgetPerHead !== null;
+  if (!named && !followUp && queryTokens(message).length === 0 && !filters) return null;
+
+  const plan: ToolPlan = [];
+  const near = Boolean(named) && NEAR_WORDS.test(message);
+  if (named) plan.push(near ? { name: "nearby_places", args: { slug: named.slug, radius_km: 2 } } : { name: "get_place", args: { slug: named.slug } });
+  if (PLAN_WORDS.test(message)) {
+    const request = memory.area && !message.toLowerCase().includes(memory.area.toLowerCase()) ? `${message} (${memory.area})` : message;
+    plan.push({ name: "plan_day", args: { request } });
+  } else if (!near) {
+    plan.push({ name: "search_places", args: fallbackSearchArgs(message, memory) });
+  }
+  if (WEATHER_WORDS.test(message)) plan.push({ name: "weather", args: memory.area ? { area: memory.area } : {} });
+  return plan;
+}
+
+/** Runs a tool plan. Local tools finish at once; the weather lookup is handed back to await separately. */
+async function runToolPlan(plan: ToolPlan, context: ToolContext, ledger: ToolLedger) {
+  const results: Record<string, unknown> = {};
+  const slow: Promise<void>[] = [];
+  for (const call of plan) {
+    const running = runTool(call.name, call.args, context, ledger).then((result) => {
+      results[call.name] = result;
+    });
+    if (call.name === "weather") slow.push(running);
+    else await running;
+  }
+  return { results, slow: Promise.all(slow) };
+}
+
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms).unref?.());
 
 type ModelOutcome = { text: string; provider: AssistantProvider };
+type ModelCall = { system: string; turns: ModelTurn[]; tools: ToolDeclaration[]; forceTool: boolean; grounded: boolean; maxOutputTokens: number };
 
 async function runModel(
   input: AgentInput,
   deps: AgentDeps,
   context: ToolContext,
   ledger: ToolLedger,
-  system: string,
-  forceTool: boolean,
+  call: ModelCall,
   emit: (event: AssistantEvent) => void,
   onPreview: () => void
 ): Promise<ModelOutcome | null> {
-  const tools = context.verify ? [...TOOL_DECLARATIONS, VERIFY_TOOL] : TOOL_DECLARATIONS;
-  const turns: ModelTurn[] = [...historyTurns(input.history), { role: "user", text: redactPersonalData(input.message) }];
+  const turns = [...call.turns];
   let streamed = false;
 
   for (const provider of deps.providers) {
@@ -101,11 +152,12 @@ async function runModel(
         const last = step === MAX_STEPS - 1;
         const result = await provider.step(
           {
-            system,
+            system: call.system,
             turns,
-            tools: last ? [] : tools,
-            toolChoice: step === 0 && forceTool && !turns.some((turn) => turn.role === "tool") ? "required" : "auto",
-            maxOutputTokens: input.mode === "map" ? 450 : 700,
+            tools: last ? [] : call.tools,
+            toolChoice: step === 0 && call.forceTool && !turns.some((turn) => turn.role === "tool") ? "required" : "auto",
+            grounded: call.grounded,
+            maxOutputTokens: call.maxOutputTokens,
             temperature: 0.4,
             signal: input.signal,
             requestId: input.requestId,
@@ -116,12 +168,12 @@ async function runModel(
           }
         );
         if (result.toolCalls.length === 0) {
-          deps.log?.(`provider=${provider.id} model=${result.model} steps=${step + 1} tools=${ledger.calls.map((call) => call.name).join(",") || "none"}`);
+          deps.log?.(`provider=${provider.id} model=${result.model} steps=${step + 1} tools=${ledger.calls.map((entry) => entry.name).join(",") || "none"}`);
           if (!result.text.trim()) throw new ProviderError(provider.id, 502, "empty answer");
           return { text: result.text, provider: (ASSISTANT_PROVIDERS as readonly string[]).includes(provider.id) ? (provider.id as AssistantProvider) : "mock" };
         }
         turns.push({ role: "model", text: result.text, toolCalls: result.toolCalls, raw: result.raw, provider: provider.id });
-        const results = await Promise.all(result.toolCalls.slice(0, 4).map(async (call) => ({ id: call.id, name: call.name, result: await runTool(call.name, call.args, context, ledger) })));
+        const results = await Promise.all(result.toolCalls.slice(0, 4).map(async (entry) => ({ id: entry.id, name: entry.name, result: await runTool(entry.name, entry.args, context, ledger) })));
         turns.push({ role: "tool", results });
         onPreview();
       }
@@ -143,11 +195,22 @@ async function runModel(
   return null;
 }
 
+/** Whether an answer is long enough to judge and written in another language than the user's. */
+export function wrongLanguage(text: string, language: ReplyLanguage): boolean {
+  return text.split(/\s+/).filter(Boolean).length >= MIN_WORDS_FOR_LANGUAGE_CHECK && answerLanguage(text) !== language;
+}
+
 /**
- * One assistant turn: guard, memory, tool-calling model (with provider fallbacks), then a structured
- * response built from what the tools returned. Events stream through `emit` as they happen.
+ * One assistant turn. Common asks take the fast path: GalaTayo's own search runs in code, the cards stream
+ * at once, and one model call ranks and phrases them. Everything else goes through the tool-calling loop.
+ * Both end in a structured response built only from what the tools returned. Events stream through `emit`.
  */
 export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (event: AssistantEvent) => void = () => undefined): Promise<AssistantResponse> {
+  const started = Date.now();
+  const timings: Record<string, number> = {};
+  const mark = (stage: string) => {
+    timings[stage] ??= Date.now() - started;
+  };
   const today = deps.today?.() ?? manilaToday();
   const context: ToolContext = { ...deps.tools, todayIso: today.iso };
   const places = visiblePlaces(deps.tools.places);
@@ -182,23 +245,33 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
     if (!validation.ok) deps.log?.(`schema problems: ${validation.errors.join("; ")}`);
     return response;
   };
+  const logTimings = (path: string) => {
+    mark("total");
+    deps.log?.(`timings path=${path} ${Object.entries(timings).map(([stage, ms]) => `${stage}=${ms}`).join(" ")}`);
+  };
 
   const guard = guardMessage(input.message);
   if (guard.action === "refuse") {
     const response = finish({ text: refusalText(language), refused: true, provider: "fallback" });
     emit({ type: "final", response });
+    logTimings("refused");
     return response;
   }
 
   const firstTurn = input.history.length === 0 && !input.memory.area && input.memory.budgetPerHead === null;
   const key = cacheKey(input.mode, language, input.message);
+  const plan = planTools(input.message, memory, places, input.history, guard.injection);
+  // The search is local and takes milliseconds: run it while the cache lookup is in flight.
+  const prefetch = plan ? runToolPlan(plan, context, ledger) : null;
   if (firstTurn && deps.cache) {
     const cached = await deps.cache.get(key).catch(() => null);
+    mark("cache");
     if (cached && validateAssistantResponse(cached).ok) {
       const response: AssistantResponse = { ...cached, requestId: input.requestId, provider: "cache" };
       emit({ type: "places", places: response.places, map: response.map });
       emit({ type: "delta", text: response.text });
       emit({ type: "final", response });
+      logTimings("cache");
       return response;
     }
   }
@@ -210,25 +283,56 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
     previewSent = true;
     const cards = selectCards("", ledger, input.mode, memory, language, deps.imageUrl);
     emit({ type: "places", places: cards, map: buildMap(cards) });
+    mark("places");
+  };
+  const emitText = (event: AssistantEvent) => {
+    if (event.type === "delta") mark("firstDelta");
+    emit(event);
   };
 
-  const system = buildSystemPrompt({ mode: input.mode, language, memory, todayIso: today.iso, weekday: today.weekday, injection: guard.injection });
-  const forceTool = classifyAskAiScope(input.message) === "allow" && !guard.injection && input.message.trim().split(/\s+/).length > 1;
-  const outcome = await runModel(input, deps, context, ledger, system, forceTool, emit, preview);
+  const system = buildSystemPrompt({ mode: input.mode, language, memory, todayIso: today.iso, weekday: today.weekday, injection: guard.injection, grounded: Boolean(plan) });
+  const maxOutputTokens = input.mode === "map" ? 450 : 700;
+  const allTools = context.verify ? [...TOOL_DECLARATIONS, VERIFY_TOOL] : TOOL_DECLARATIONS;
+  const history = historyTurns(input.history);
+  const message = redactPersonalData(input.message);
+  let call: ModelCall;
+  if (prefetch) {
+    const { results, slow } = await prefetch;
+    mark("search");
+    preview();
+    await Promise.race([slow, wait(WEATHER_WAIT_MS)]);
+    mark("weather");
+    // The search, plan and weather already ran; the model may still look up one place or what's near it.
+    const extraTools = allTools.filter((tool) => !["search_places", "plan_day", "weather"].includes(tool.name));
+    call = { system, turns: [...history, { role: "user", text: groundedUserTurn(message, results, language) }], tools: extraTools, forceTool: false, grounded: true, maxOutputTokens };
+  } else {
+    const forceTool = classifyAskAiScope(input.message) === "allow" && !guard.injection && input.message.trim().split(/\s+/).length > 1;
+    call = { system, turns: [...history, { role: "user", text: message }], tools: allTools, forceTool, grounded: false, maxOutputTokens };
+  }
+  const outcome = await runModel(input, deps, context, ledger, call, emitText, preview);
+  mark("model");
 
   let response: AssistantResponse;
   if (outcome && outcome.text.includes(OFF_TOPIC_MARKER)) {
     const line = outcome.text.split(OFF_TOPIC_MARKER)[1]?.trim();
     response = finish({ text: line && line.length > 10 ? sanitizeAnswer(line, newLedger(), places, input.message) : refusalText(language), refused: true, provider: outcome.provider });
   } else if (outcome) {
-    const text = sanitizeAnswer(outcome.text, ledger, places, input.message);
+    let text = sanitizeAnswer(outcome.text, ledger, places, input.message);
+    if (wrongLanguage(text, language)) {
+      text = await fixLanguage(text, language, input, deps, context, ledger, memory);
+      mark("languageFix");
+      emit({ type: "reset" });
+      emit({ type: "delta", text });
+    }
     const clarify = ledger.calls.length === 0 && /\?\s*$/.test(text) ? text.split(/(?<=[.!])\s+/).pop() ?? text : null;
     response = finish({ text, refused: false, clarify, provider: outcome.provider });
   } else {
     // No model reachable: answer from the tools alone, honestly and briefly.
-    await runTool("search_places", fallbackSearchArgs(input.message, memory), context, ledger);
-    if (PLAN_WORDS.test(input.message)) await runTool("plan_day", { request: [input.message, memory.area].filter(Boolean).join(" ") }, context, ledger);
-    if (memory.indoor) await runTool("weather", memory.area ? { area: memory.area } : {}, context, ledger);
+    if (!prefetch) {
+      await runTool("search_places", fallbackSearchArgs(input.message, memory), context, ledger);
+      if (PLAN_WORDS.test(input.message)) await runTool("plan_day", { request: [input.message, memory.area].filter(Boolean).join(" ") }, context, ledger);
+      if (memory.indoor) await runTool("weather", memory.area ? { area: memory.area } : {}, context, ledger);
+    }
     const cards = selectCards("", ledger, input.mode, memory, language, deps.imageUrl);
     const text = fallbackText(cards, memory, language, buildWeather(ledger));
     emit({ type: "delta", text });
@@ -236,8 +340,33 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
   }
 
   emit({ type: "final", response });
+  logTimings(prefetch ? "fast" : "agent");
   // Not cached: weather goes stale, and Google Maps terms allow caching place ids only, never grounded results.
   const cacheable = firstTurn && deps.cache && !response.refused && response.provider !== "fallback" && !ledger.weather && ledger.verified.size === 0 && response.places.length > 0;
   if (cacheable) await deps.cache!.set(key, response, CACHE_TTL_SECONDS).catch(() => undefined);
   return response;
+}
+
+/**
+ * An answer came back in the wrong language: one quick rewrite, checked again. If that fails too, the
+ * honest card list in the right language replaces it.
+ */
+async function fixLanguage(text: string, language: ReplyLanguage, input: AgentInput, deps: AgentDeps, context: ToolContext, ledger: ToolLedger, memory: AssistantMemory): Promise<string> {
+  deps.log?.(`language mismatch: wanted ${language}, rewriting once`);
+  const rewrite = await runModel(
+    input,
+    deps,
+    context,
+    ledger,
+    { system: rewritePrompt(language), turns: [{ role: "user", text }], tools: [], forceTool: false, grounded: true, maxOutputTokens: 500 },
+    () => undefined,
+    () => undefined
+  ).catch((error) => {
+    if (input.signal?.aborted) throw error;
+    return null;
+  });
+  const rewritten = rewrite ? sanitizeAnswer(rewrite.text, ledger, visiblePlaces(context.places), input.message) : "";
+  if (rewritten && !rewritten.includes(OFF_TOPIC_MARKER) && !wrongLanguage(rewritten, language)) return rewritten;
+  const cards = selectCards(text, ledger, input.mode, memory, language, deps.imageUrl);
+  return fallbackText(cards, memory, language, buildWeather(ledger));
 }
