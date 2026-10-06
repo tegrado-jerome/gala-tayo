@@ -26,7 +26,16 @@ import {
 } from "../utils/askAiCancellation";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
-import { detectLocationIntent, findUncoveredArea, hasLocation, selectCandidates } from "../services/galaPlanDraftPlanner";
+import {
+  detectCategories,
+  detectLocationIntent,
+  findUncoveredArea,
+  hasLocation,
+  parseBudgetPerHead,
+  parseGroupSize,
+  placesForArea,
+  selectCandidates,
+} from "../services/galaPlanDraftPlanner";
 import { resolveAreaSlug } from "../utils/seoPlaces";
 import {
   ASK_AI_SCOPE_REJECTION_MESSAGE,
@@ -164,17 +173,44 @@ function buildPlaceGrounding(places: NormalizedPlace[]) {
     return `- ${place.name} | ${place.category ?? "Place"} | ${where} | ${budget}${goodFor ? ` | good for ${goodFor}` : ""}`;
   });
   const header =
-    "GALATAYO PLACES in or near the area asked about (name | category | area | budget). Recommend only these, written exactly as shown. If none are in the exact neighbourhood, suggest the closest ones and say they are nearby. Never invent places and never mention this list.";
+    "GALATAYO PLACES in or near the area asked about (name | category | area | budget per person). Recommend only these by name, written exactly as shown, in bold. General tips (areas, dishes to try, timing, commute) are fine, but name no other venue. If none are in the exact neighbourhood, suggest the closest ones and say they are nearby. If none is the kind of place asked for (no cafes, no beaches), say GalaTayo doesn't list one yet instead of passing off a different kind of place. Describe prices honestly from the budget shown. Never invent places and never mention this list or say 'the list'.";
   return [header, ...lines].join("\n");
+}
+
+const TAGALOG_WORDS = /\b(sa|na|ng|mga|ako|ko|mo|kami|tayo|natin|saan|ano|paano|masarap|mura|murang|hindi|di|po|naman|lang|ba|kain|kumain|gusto|pwede|puwede|tara|kasi|yung|ang|meron|malapit|dito|doon|dun)\b/gi;
+
+/** Two or more common Tagalog words: the reply should be Taglish too. */
+export function isTaglish(message: string) {
+  return (message.match(TAGALOG_WORDS) ?? []).length >= 2;
+}
+
+/** A note when the area has no place of the asked kind (no cafe in Makati), so the answer says so. */
+export function missingKind(message: string, candidates: NormalizedPlace[]) {
+  const asked = [...detectCategories(message)].filter((category) => category !== "Food");
+  if (asked.length === 0 || candidates.length === 0 || candidates.some((place) => asked.includes(place.category))) return null;
+  return `None of the GalaTayo places here is a ${asked.join(" or ").toLowerCase()}. Say GalaTayo doesn't list one in this area yet, then offer the closest fitting alternative from the places given, clearly labelled as a different kind of place.`;
+}
+
+const CHEAP_WORDS = /\b(mura|murang|cheap|budget|tipid|hindi mahal|di mahal|affordable|sulit|walang gastos|libre|free)\b/i;
+const CHEAP_PER_HEAD = 500;
+
+/** The most a place may cost per head for this question: the stated budget, or ₱500 for "mura" / "hindi mahal". */
+export function chatBudgetPerHead(message: string) {
+  return parseBudgetPerHead(message, parseGroupSize(message)) ?? (CHEAP_WORDS.test(message) ? CHEAP_PER_HEAD : null);
 }
 
 /** GalaTayo places named in the answer, in the order they appear, as in-app links. */
 export function findMentionedPlaces(answer: string, places: NormalizedPlace[]) {
-  const text = answer.toLowerCase();
-  return places
+  // Models often write "Po‑Heng" with a non-breaking hyphen; match it as a plain one.
+  const text = answer.toLowerCase().replace(/[‐-―]/g, "-");
+  const found = places
     .filter((place) => place.name && place.slug)
-    .map((place) => ({ place, index: text.indexOf(place.name.toLowerCase()) }))
+    .map((place) => ({ place, index: text.indexOf(place.name.toLowerCase()), end: 0 }))
     .filter((entry) => entry.index >= 0)
+    .map((entry) => ({ ...entry, end: entry.index + entry.place.name.length }));
+  return found
+    // "Intramuros" inside "Bambike Ecotours Intramuros" is the longer place, not two.
+    .filter((entry) => !found.some((other) => other !== entry && other.index <= entry.index && other.end >= entry.end && other.end - other.index > entry.end - entry.index))
     .sort((a, b) => a.index - b.index)
     .slice(0, MAX_SOURCES)
     .map(({ place }) => ({
@@ -385,18 +421,29 @@ export async function postAskAiChatbot(
 
     const places = await getActiveNormalizedPlaces();
     const locationText = resolveLocationContext(message, conversationHistory, places);
-    const uncoveredArea = findUncoveredArea(places, locationText);
-    const candidates = uncoveredArea ? [] : selectCandidates(places, message, MAX_GROUNDING_PLACES, locationText);
+    const location = detectLocationIntent(places, locationText);
+    const coveredHere = placesForArea(places, location);
+    const uncoveredArea =
+      findUncoveredArea(places, locationText) ?? (hasLocation(location) && coveredHere.length === 0 ? ([...location.cities][0] ?? "").replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()) || null : null);
+    const budgetPerHead = chatBudgetPerHead(message);
+    const candidates = uncoveredArea ? [] : selectCandidates(places, message, MAX_GROUNDING_PLACES, locationText, { budgetPerHead, start: null });
     const answer = await generateFromGroq({
-      message,
+      // Models drift to English; a note on the message itself keeps Taglish questions answered in Taglish.
+      message: isTaglish(message) ? `${message}\n\n(Sagot in Taglish.)` : message,
       conversationHistory,
       requestId,
       signal: cancellation.signal,
-      groundingContext: uncoveredArea
-        ? `GalaTayo has no listed places in ${uncoveredArea} yet. Do not name specific venues there; give general tips (local food to try, areas, timing, commute) and mention GalaTayo is still adding places there.`
-        : buildPlaceGrounding(candidates),
+      groundingContext: [
+        uncoveredArea
+          ? `GalaTayo has no listed places in ${uncoveredArea} yet. Do not name specific venues there; give general tips (local food to try, areas, timing, commute) and mention GalaTayo is still adding places there.`
+          : buildPlaceGrounding(candidates),
+        missingKind(message, candidates),
+      ]
+        .filter(Boolean)
+        .join("\n\n") || undefined,
     });
-    const sources = findMentionedPlaces(answer, candidates);
+    // Any GalaTayo place the answer names gets a link, even one outside the grounding list.
+    const sources = findMentionedPlaces(answer, [...candidates, ...places.filter((place) => !candidates.includes(place))]);
 
     context.log(
       `[AskAI Chatbot] provider=groq requestId=${requestId} REQUEST COMPLETED answerLength=${answer.length} sources=${sources.length}`

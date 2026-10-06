@@ -64,7 +64,9 @@ self.addEventListener('fetch', (event) => {
   const isMediaDomain = url.hostname === MEDIA_DOMAIN
   const isImageRequest = IMAGE_EXT.test(url.pathname)
 
-  if (!isMediaDomain && !isImageRequest) {
+  // CORS fetches (photos drawn onto the recap story canvas) go straight to the network, so a cached
+  // copy can never stand in for a response that needs CORS headers.
+  if ((!isMediaDomain && !isImageRequest) || request.mode === 'cors') {
     return
   }
 

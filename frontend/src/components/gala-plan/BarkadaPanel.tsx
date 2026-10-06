@@ -90,7 +90,7 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               onClick={() =>
                 canJoin
                   ? void run(() => setGalaPlanRsvp(plan.id, option.value, session))
-                  : guestAuth.open('plans-page', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
+                  : guestAuth.open('plan-rsvp', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
               }
             >
               {option.label}
@@ -238,7 +238,7 @@ export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
                   onClick={() =>
                     canJoin
                       ? void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, session))
-                      : guestAuth.open('plans-page', (guestSession) => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, guestSession)))
+                      : guestAuth.open('plan-rsvp', (guestSession) => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, guestSession)))
                   }
                   className={cx('g-po', isMine && 'is-mine')}
                 >

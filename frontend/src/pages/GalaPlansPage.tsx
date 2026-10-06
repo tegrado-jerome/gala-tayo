@@ -60,12 +60,18 @@ function parseTimeLabel(value: string | null | undefined): { time: string; perio
   const trimmedValue = value?.trim() ?? ''
   if (!trimmedValue) return { time: '', period: '' }
 
-  const match = trimmedValue.match(/^(.*?)(?:\s*)(AM|PM)$/i)
-  if (!match) return { time: trimmedValue, period: '' }
+  // "18:30" (a 24-hour label) shows as 6:30 + PM so the AM/PM picker isn't left blank.
+  const clock24 = trimmedValue.match(/^(\d{1,2}):(\d{2})$/)
+  if (clock24 && Number(clock24[1]) <= 23) {
+    const hours = Number(clock24[1])
+    return { time: `${hours % 12 || 12}:${clock24[2]}`, period: hours >= 12 ? 'PM' : 'AM' }
+  }
 
+  const match = trimmedValue.match(/^(.*?)(?:\s*)([AP])\.?\s*M\.?$/i)
+  if (!match) return { time: trimmedValue, period: '' }
   return {
     time: match[1]?.trim() ?? '',
-    period: match[2]?.toUpperCase() as TimePeriod,
+    period: `${match[2].toUpperCase()}M` as TimePeriod,
   }
 }
 
@@ -482,6 +488,8 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const [description, setDescription] = useState('')
   const [dateMode, setDateMode] = useState<GalaPlanDateMode>('anytime')
   const [date, setDate] = useState('')
+  // Kept from Plan with AI so editing the plan doesn't drop the group size.
+  const [groupSize, setGroupSize] = useState<number | null>(null)
   const [visibility, setVisibility] = useState<GalaPlanVisibility>('private')
   const [items, setItems] = useState<DraftItem[]>(() => (planId ? [] : readStartingStop()))
   const [isLoading, setIsLoading] = useState(isEdit)
@@ -506,6 +514,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
         setDescription(parsed.description)
         setDateMode(parsed.dateMode)
         setDate(parsed.date)
+        setGroupSize(parsed.groupSize)
         setVisibility(data.plan.visibility)
         setItems(data.plan.items.map((item) => ({ draft_id: item.id, place_id: item.place_id, day_number: item.day_number, sort_order: item.sort_order, time_label: item.time_label, notes: item.notes, estimated_minutes: item.estimated_minutes, place: item.place })))
       } catch (error) {
@@ -531,7 +540,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
       setErrorMessage('')
       const payload = {
         title,
-        description: composeGalaPlanDescription({ description, dateMode, date }),
+        description: composeGalaPlanDescription({ description, dateMode, date, groupSize }),
         visibility,
         items: toPayload(items),
       }
@@ -639,7 +648,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
               onChange={setVisibility}
             />
             <p className="g-hint mt-2">
-              {visibility === 'public' ? 'Shows on your profile. Anyone can view, RSVP and vote.' : 'Not on your profile. Only people you send the link to can open it.'}
+              {visibility === 'public' ? 'Shows on your profile. Anyone can view, RSVP and vote.' : 'Not on your profile. Anyone with the link can view and RSVP.'}
             </p>
           </section>
 

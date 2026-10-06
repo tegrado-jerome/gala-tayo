@@ -237,17 +237,23 @@ export async function reorderGalaPlanItems(
 
 export type GalaPlanDateMode = 'anytime' | 'na' | 'date'
 
-const DATE_MARKER_PATTERN = /^\[gala_date:(anytime|na|\d{4}-\d{2}-\d{2})\]\n?/i
+// Plan settings ride at the start of the description: "[gala_date:2026-10-10][gala_group:3]\nNotes".
+const MARKERS_PATTERN = /^((?:\[gala_[a-z]+:[^\]\n]*\])+)\n?/i
+const DATE_VALUE_PATTERN = /\[gala_date:(anytime|na|\d{4}-\d{2}-\d{2})\]/i
+const GROUP_VALUE_PATTERN = /\[gala_group:(\d{1,2})\]/i
 
 export function parseGalaPlanDescription(description: string | null | undefined) {
   const rawDescription = description ?? ''
-  const match = rawDescription.match(DATE_MARKER_PATTERN)
-  const markerValue = match?.[1] ?? 'anytime'
-  const cleanDescription = match ? rawDescription.replace(DATE_MARKER_PATTERN, '').trimStart() : rawDescription
+  const markers = rawDescription.match(MARKERS_PATTERN)?.[1] ?? ''
+  const markerValue = markers.match(DATE_VALUE_PATTERN)?.[1] ?? 'anytime'
+  const groupSize = Number(markers.match(GROUP_VALUE_PATTERN)?.[1] ?? 0)
+  const cleanDescription = markers ? rawDescription.replace(MARKERS_PATTERN, '').trimStart() : rawDescription
 
   return {
     dateMode: markerValue === 'anytime' || markerValue === 'na' ? markerValue as GalaPlanDateMode : 'date' as GalaPlanDateMode,
     date: markerValue === 'anytime' || markerValue === 'na' ? '' : markerValue,
+    /** How many people the plan is for, as set when it was made; null when never set. */
+    groupSize: groupSize >= 1 ? Math.min(30, groupSize) : null,
     description: cleanDescription,
   }
 }
@@ -256,14 +262,17 @@ export function composeGalaPlanDescription({
   description,
   dateMode,
   date,
+  groupSize = null,
 }: {
   description: string
   dateMode: GalaPlanDateMode
   date: string
+  groupSize?: number | null
 }) {
   const markerValue = dateMode === 'date' && date ? date : dateMode
   const cleanDescription = description.trim()
-  return `[gala_date:${markerValue}]${cleanDescription ? `\n${cleanDescription}` : ''}`
+  const group = groupSize && groupSize > 1 ? `[gala_group:${Math.min(30, Math.round(groupSize))}]` : ''
+  return `[gala_date:${markerValue}]${group}${cleanDescription ? `\n${cleanDescription}` : ''}`
 }
 
 export function formatGalaPlanDate(description: string | null | undefined) {
@@ -295,6 +304,8 @@ export type GalaPlanAiDraft = {
   /** "fallback" when the AI was busy and the plan was built from GalaTayo places without it. */
   source?: 'ai' | 'fallback'
   group_size: number
+  /** The budget per person read from the request, when it named one. */
+  budget_per_head?: number | null
   stops: Array<{
     place_id: string
     time: string

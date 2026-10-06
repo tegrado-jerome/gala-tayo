@@ -6,26 +6,32 @@ import { X } from '@phosphor-icons/react/dist/csr/X'
 import { Button, buttonClass, cx } from '../ui'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, getPlanDate } from '../../utils/galaPlanTrip'
+import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { buildPrivateGalaPlanShareUrl } from '../../utils/share'
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/bodyScrollLock'
 
 const W = 1080
 const H = 1920
 const PIN_R = 64
-const ROUTE_BOX = { left: 170, right: 910, top: 780, bottom: 1440 }
+const ROUTE_BOX = { left: 170, right: 910, top: 640, bottom: 1040 }
+const LIST_TOP = 1250
+const ROW_H = 78
+const MAX_ROWS = 5
 const MAX_PINS = 8
 /** Mint accent: reads on the ink story background (the ink-on-ink "tara" token would vanish). */
 const STORY_MINT = '#34E0A1'
 
-type Pin = { x: number; y: number; n: number; imageUrl: string | null }
+type Pin = { x: number; y: number; n: number; imageUrls: string[] }
+type StoryStop = { n: number; name: string; time: string | null }
 
 type Story = {
   eyebrow: string
   lines: string[]
   pins: Pin[]
-  city: string | null
-  stampLines: string[]
-  stampSize: number
+  stops: StoryStop[]
+  moreStops: number
   caption: string
+  link: string
   fileName: string
   summary: string
 }
@@ -76,7 +82,11 @@ function placePins(items: GalaPlanDetail['items']) {
     positions = flat.map((p) => ({ x: offsetX + (p.x - minX) * scale, y: offsetY + (p.y - minY) * scale }))
   }
 
-  return stops.map((item, index) => ({ ...positions[index], n: index + 1, imageUrl: item.place.image_url ?? null }))
+  return stops.map((item, index) => ({
+    ...positions[index],
+    n: index + 1,
+    imageUrls: [item.place.image_url, getStaticPlaceImageUrlForSlug(item.place.slug)].filter((url): url is string => Boolean(url)),
+  }))
 }
 
 function buildStory(plan: GalaPlanDetail, friends: number): Story {
@@ -90,19 +100,19 @@ function buildStory(plan: GalaPlanDetail, friends: number): Story {
     friends > 1 ? `${friends} friends.` : null,
     perHead > 0 ? `${formatPeso(perHead)} each.` : 'All free.',
   ].filter((line): line is string => Boolean(line))
-  const stampLines = city ? city.toUpperCase().split(/\s+/).slice(0, 2) : []
-  const longest = Math.max(1, ...stampLines.map((line) => line.length))
+  const stops = plan.items.slice(0, MAX_ROWS).map((item, index) => ({ n: index + 1, name: truncate(item.place.name, 30), time: item.time_label?.trim() || null }))
+  const link = buildPrivateGalaPlanShareUrl(plan.id).replace(/^https?:\/\//, '')
 
   return {
     eyebrow: ([day, city].filter(Boolean).join(' · ') || 'Gala recap').toUpperCase(),
     lines,
     pins: placePins(plan.items),
-    city,
-    stampLines,
-    stampSize: Math.min(28, Math.floor(150 / (longest * 0.7))),
-    caption: truncate(plan.title, 30),
+    stops,
+    moreStops: Math.max(0, plan.items.length - MAX_ROWS),
+    caption: truncate(plan.title, 32),
+    link,
     fileName: `galatayo-${(plan.slug || 'gala').replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'gala'}.png`,
-    summary: `${lines.join(' ')}${city ? ` ${city}.` : ''} ${plan.title}`,
+    summary: `${plan.title}. ${lines.join(' ')}${city ? ` ${city}.` : ''} ${stops.map((stop) => stop.name).join(', ')}.`,
   }
 }
 
@@ -110,22 +120,26 @@ function token(name: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement | null>((resolve) => {
-    const image = new Image()
-    const timer = window.setTimeout(() => resolve(null), 8000)
-    image.crossOrigin = 'anonymous'
-    image.decoding = 'async'
-    image.onload = () => {
+type StoryImage = ImageBitmap | null
+
+/**
+ * Loads a photo for the canvas. Fetched with CORS and without the HTTP cache: a copy the page already
+ * showed in an <img> may be cached without CORS headers, which would taint the canvas.
+ */
+async function loadImage(urls: string[]): Promise<StoryImage> {
+  for (const url of urls) {
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => controller.abort(), 8000)
+    try {
+      const response = await fetch(url, { mode: 'cors', cache: 'no-store', signal: controller.signal })
+      if (response.ok) return await createImageBitmap(await response.blob())
+    } catch {
+      // Try the next photo for this stop.
+    } finally {
       window.clearTimeout(timer)
-      resolve(image)
     }
-    image.onerror = () => {
-      window.clearTimeout(timer)
-      resolve(null)
-    }
-    image.src = src
-  })
+  }
+  return null
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -133,10 +147,9 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.roundRect(x, y, w, h, r)
 }
 
-function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HTMLImageElement | null>) {
+function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: StoryImage[]) {
   const ink = token('--ink')
   const tara = STORY_MINT
-  const sea = token('--sea')
   const white = token('--on-ink')
   const fill2 = token('--fill-2')
   const display = getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim() || 'Fraunces, serif'
@@ -161,9 +174,9 @@ function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HT
   ctx.fillText(story.eyebrow, 60, 210)
 
   ctx.fillStyle = white
-  ctx.font = `700 112px ${display}`
+  ctx.font = `700 100px ${display}`
   ctx.letterSpacing = '-3px'
-  story.lines.forEach((line, index) => ctx.fillText(line, 56, 340 + index * 122))
+  story.lines.forEach((line, index) => ctx.fillText(line, 56, 320 + index * 106))
   ctx.letterSpacing = '0px'
 
   if (story.pins.length > 1) {
@@ -192,8 +205,8 @@ function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HT
     ctx.arc(pin.x, pin.y, inner, 0, Math.PI * 2)
     ctx.clip()
     if (image) {
-      const side = Math.min(image.naturalWidth, image.naturalHeight)
-      ctx.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, pin.x - inner, pin.y - inner, inner * 2, inner * 2)
+      const side = Math.min(image.width, image.height)
+      ctx.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, pin.x - inner, pin.y - inner, inner * 2, inner * 2)
     } else {
       ctx.fillStyle = fill2
       ctx.fillRect(pin.x - inner, pin.y - inner, inner * 2, inner * 2)
@@ -219,43 +232,46 @@ function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HT
     ctx.textBaseline = 'alphabetic'
   })
 
-  if (story.city) {
-    const cx = 150
-    const cy = 1640
-    ctx.globalAlpha = 0.25
-    ctx.fillStyle = sea
+  ctx.fillStyle = white
+  ctx.font = `700 48px ${display}`
+  ctx.fillText(story.caption, 60, LIST_TOP - 56)
+  story.stops.forEach((stop, index) => {
+    const y = LIST_TOP + index * ROW_H
+    ctx.fillStyle = tara
     ctx.beginPath()
-    ctx.arc(cx, cy, 104, 0, Math.PI * 2)
+    ctx.arc(84, y + 22, 24, 0, Math.PI * 2)
     ctx.fill()
-    ctx.globalAlpha = 1
-    ctx.beginPath()
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.save()
-    ctx.translate(cx, cy)
-    ctx.rotate((-10 * Math.PI) / 180)
-    ctx.fillStyle = white
-    ctx.font = `800 ${story.stampSize}px ${display}`
+    ctx.fillStyle = ink
+    ctx.font = `700 24px ${body}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    const lh = story.stampSize * 1.1
-    story.stampLines.forEach((line, index) => ctx.fillText(line, 0, (index - (story.stampLines.length - 1) / 2) * lh))
-    ctx.restore()
+    ctx.fillText(String(stop.n), 84, y + 23)
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
-
     ctx.fillStyle = white
-    ctx.font = `700 44px ${display}`
-    ctx.fillText('Barkada gala', 280, 1630)
-    ctx.globalAlpha = 0.75
+    ctx.font = `600 38px ${body}`
+    ctx.fillText(stop.name, 132, y + 36)
+    if (stop.time) {
+      ctx.globalAlpha = 0.7
+      ctx.font = `500 30px ${body}`
+      ctx.textAlign = 'right'
+      ctx.fillText(stop.time, W - 60, y + 36)
+      ctx.textAlign = 'left'
+      ctx.globalAlpha = 1
+    }
+  })
+  if (story.moreStops > 0) {
+    ctx.globalAlpha = 0.7
     ctx.font = `500 30px ${body}`
-    ctx.fillText(story.caption, 280, 1680)
+    ctx.fillText(`+${story.moreStops} more`, 132, LIST_TOP + story.stops.length * ROW_H + 30)
     ctx.globalAlpha = 1
-  } else {
-    ctx.fillStyle = white
-    ctx.font = `700 44px ${display}`
-    ctx.fillText(story.caption, 60, 1660)
   }
+
+  ctx.globalAlpha = 0.75
+  ctx.fillStyle = white
+  ctx.font = `500 26px ${body}`
+  ctx.fillText(story.link, 60, 1736)
+  ctx.globalAlpha = 1
 
   ctx.fillStyle = white
   roundRect(ctx, 60, 1782, 60, 60, 16)
@@ -287,7 +303,8 @@ async function renderStoryPng(story: Story) {
   } catch {
     // Fallback fonts are fine.
   }
-  const images = await Promise.all(story.pins.map((pin) => (pin.imageUrl ? loadImage(pin.imageUrl) : Promise.resolve(null))))
+  // Wait for every photo before drawing, so the saved image has them.
+  const images = await Promise.all(story.pins.map((pin) => loadImage(pin.imageUrls)))
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -343,7 +360,7 @@ function StoryCard({ story }: { story: Story }) {
         {story.eyebrow}
       </text>
       {story.lines.map((line, index) => (
-        <text key={line} x={56} y={340 + index * 122} style={{ fill: 'var(--on-ink)', font: '700 112px var(--font-display)', letterSpacing: '-3px' }}>
+        <text key={line} x={56} y={320 + index * 106} style={{ fill: 'var(--on-ink)', font: '700 100px var(--font-display)', letterSpacing: '-3px' }}>
           {line}
         </text>
       ))}
@@ -365,8 +382,8 @@ function StoryCard({ story }: { story: Story }) {
         <g key={pin.n} className="motion-safe:animate-[g-fade_400ms_var(--ease-g)_both]" style={{ animationDelay: `${200 + index * 160}ms` }}>
           <circle cx={pin.x} cy={pin.y} r={PIN_R} style={{ fill: 'var(--on-ink)' }} />
           <circle cx={pin.x} cy={pin.y} r={PIN_R - 8} style={{ fill: 'var(--fill-2)' }} />
-          {pin.imageUrl ? (
-            <image href={pin.imageUrl} x={pin.x - PIN_R + 8} y={pin.y - PIN_R + 8} width={(PIN_R - 8) * 2} height={(PIN_R - 8) * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}c${pin.n})`} />
+          {pin.imageUrls[0] ? (
+            <image href={pin.imageUrls[0]} x={pin.x - PIN_R + 8} y={pin.y - PIN_R + 8} width={(PIN_R - 8) * 2} height={(PIN_R - 8) * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}c${pin.n})`} />
           ) : null}
           <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={27} style={{ fill: 'var(--on-ink)' }} />
           <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={23} style={{ fill: STORY_MINT }} />
@@ -376,36 +393,36 @@ function StoryCard({ story }: { story: Story }) {
         </g>
       ))}
 
-      {story.city ? (
-        <>
-          <circle cx={150} cy={1640} r={104} style={{ fill: 'var(--sea)' }} opacity={0.25} />
-          <circle cx={150} cy={1640} r={90} style={{ fill: 'var(--sea)' }} />
-          <g transform="translate(150 1640) rotate(-10)">
-            {story.stampLines.map((line, index) => (
-              <text
-                key={line + index}
-                x={0}
-                y={(index - (story.stampLines.length - 1) / 2) * story.stampSize * 1.1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                style={{ fill: 'var(--on-ink)', font: `800 ${story.stampSize}px var(--font-display)` }}
-              >
-                {line}
+      <text x={60} y={LIST_TOP - 56} style={{ fill: 'var(--on-ink)', font: '700 48px var(--font-display)' }}>
+        {story.caption}
+      </text>
+      {story.stops.map((stop, index) => {
+        const y = LIST_TOP + index * ROW_H
+        return (
+          <g key={stop.n}>
+            <circle cx={84} cy={y + 22} r={24} style={{ fill: STORY_MINT }} />
+            <text x={84} y={y + 23} textAnchor="middle" dominantBaseline="central" style={{ fill: 'var(--ink)', font: '700 24px var(--font-body)' }}>
+              {stop.n}
+            </text>
+            <text x={132} y={y + 36} style={{ fill: 'var(--on-ink)', font: '600 38px var(--font-body)' }}>
+              {stop.name}
+            </text>
+            {stop.time ? (
+              <text x={W - 60} y={y + 36} textAnchor="end" opacity={0.7} style={{ fill: 'var(--on-ink)', font: '500 30px var(--font-body)' }}>
+                {stop.time}
               </text>
-            ))}
+            ) : null}
           </g>
-          <text x={280} y={1630} style={{ fill: 'var(--on-ink)', font: '700 44px var(--font-display)' }}>
-            Barkada gala
-          </text>
-          <text x={280} y={1680} opacity={0.75} style={{ fill: 'var(--on-ink)', font: '500 30px var(--font-body)' }}>
-            {story.caption}
-          </text>
-        </>
-      ) : (
-        <text x={60} y={1660} style={{ fill: 'var(--on-ink)', font: '700 44px var(--font-display)' }}>
-          {story.caption}
+        )
+      })}
+      {story.moreStops > 0 ? (
+        <text x={132} y={LIST_TOP + story.stops.length * ROW_H + 30} opacity={0.7} style={{ fill: 'var(--on-ink)', font: '500 30px var(--font-body)' }}>
+          +{story.moreStops} more
         </text>
-      )}
+      ) : null}
+      <text x={60} y={1736} opacity={0.75} style={{ fill: 'var(--on-ink)', font: '500 26px var(--font-body)' }}>
+        {story.link}
+      </text>
 
       <rect x={60} y={1782} width={60} height={60} rx={16} style={{ fill: 'var(--on-ink)' }} />
       <path d="M77 1816a13 13 0 0 1 26 0Z" style={{ fill: STORY_MINT }} />

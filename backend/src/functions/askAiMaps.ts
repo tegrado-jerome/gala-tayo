@@ -299,6 +299,13 @@ export async function askAiMapsRequest(
         throw new Error("Ask AI Maps could not load places right now.");
       }
 
+      // A search that shows nothing doesn't use up a daily request.
+      if (result.places.length === 0 && markAskAiRequestUsageRefunded(requestId)) {
+        await refundAskAiUsageForActor({ actor, usageType: "ask_ai_maps" }).catch(() => undefined);
+        aiUsage.remaining += 1;
+        aiUsage.requestCount = Math.max(0, aiUsage.requestCount - 1);
+      }
+
       return {
         status: 200,
         headers: buildResponseHeaders(requestId),

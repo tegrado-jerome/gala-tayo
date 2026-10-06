@@ -30,14 +30,13 @@ import {
   parseGalaPlanDescription,
   reorderGalaPlanItems,
   toggleGalaPlanHeart,
-  updateGalaPlan,
   type GalaPlanDetail,
 } from '../../utils/galaPlansApi'
 import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs } from '../../utils/galaPlanTrip'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
-import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
+import { buildGalaPlanInviteUrl, shareLink } from '../../utils/share'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
 import { resizedMediaUrl } from '../../data/r2Config'
@@ -109,7 +108,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('itinerary')
-  const [confirm, setConfirm] = useState<'delete' | 'publish' | null>(null)
+  const [confirm, setConfirm] = useState<'delete' | null>(null)
   const [isWorking, setIsWorking] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
@@ -178,15 +177,18 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
   const date = getPlanDate(plan)
   const days = date ? daysUntil(date) : null
-  const description = parseGalaPlanDescription(plan.description).description
+  const parsedDescription = parseGalaPlanDescription(plan.description)
+  const description = parsedDescription.description
   const readyBarkada = barkada?.available ? barkada : null
   const going = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'going') : []
   const maybe = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'maybe') : []
   const passing = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'no') : []
-  const groupSize = Math.max(1, going.length)
+  // The group size set when the plan was made counts until more people RSVP.
+  const groupSize = Math.max(1, going.length, parsedDescription.groupSize ?? 0)
   const perHead = estimatePerHead(plan.items, groupSize)
-  const paidCount = going.filter((member) => member.paid).length
-  const shareUrl = buildPrivateGalaPlanShareUrl(plan.id)
+  const payingGuests = going.filter((member) => !member.is_owner)
+  const paidCount = payingGuests.filter((member) => member.paid).length
+  const shareUrl = buildGalaPlanInviteUrl(plan.id)
   const cover = plan.items.find((item) => item.place.image_url)?.place.image_url
   const coverStops = plan.items.map((item) => item.place)
   const storyStop = plan.items.find((item) => item.place.image_url || getStaticPlaceImageUrlForSlug(item.place.slug))?.place
@@ -222,7 +224,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
   const joinPlan = async (activeSession: Session | null | undefined = session) => {
     if (!activeSession) {
-      guestAuth.open('plans-page', (guestSession) => void joinPlan(guestSession))
+      guestAuth.open('plan-rsvp', (guestSession) => void joinPlan(guestSession))
       return
     }
     try {
@@ -232,11 +234,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     }
   }
 
+  // Sharing only hands out the link; it never changes who can open the plan.
   const share = async () => {
-    if (plan.viewer_is_owner && plan.visibility !== 'public') {
-      setConfirm('publish')
-      return
-    }
     try {
       await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
     } catch {
@@ -246,31 +245,12 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   }
 
   const copyLink = async () => {
-    if (plan.viewer_is_owner && plan.visibility !== 'public') {
-      setConfirm('publish')
-      return
-    }
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
       await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
-    }
-  }
-
-  const publishAndShare = async () => {
-    setIsWorking(true)
-    try {
-      const data = await updateGalaPlan(plan.id, { visibility: 'public' }, session)
-      setPlan({ ...plan, visibility: data.plan.visibility })
-      setConfirm(null)
-      await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
-      setNotice('Plan is now shared by link. Send it to your barkada.')
-    } catch (publishError) {
-      setNotice(publishError instanceof Error ? publishError.message : 'Could not share the plan.')
-    } finally {
-      setIsWorking(false)
     }
   }
 
@@ -313,7 +293,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const invite = (
     <>
       <p className="g-sm g-mut">
-        {plan.viewer_is_owner && plan.visibility !== 'public' ? 'Private for now. Copying turns on link sharing.' : 'Anyone with the link can view and vote.'}
+        {plan.visibility === 'public' ? 'On your profile. Anyone can view and RSVP.' : 'Link only. Anyone with the link can view and RSVP.'}
       </p>
       <figure className="mt-3">
         <figcaption className="g-xs g-mut mb-1.5">What your barkada sees</figcaption>
@@ -428,7 +408,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const splitCells = [
     { value: formatPeso(perHead), label: costLabel },
     groupSize > 1 ? { value: formatPeso(perHead * groupSize), label: 'group total' } : null,
-    groupSize > 1 && perHead > 0 ? { value: `${paidCount}/${groupSize}`, label: 'paid' } : { value: String(stops.length), label: stops.length === 1 ? 'stop' : 'stops' },
+    payingGuests.length > 0 && perHead > 0 ? { value: `${paidCount}/${payingGuests.length}`, label: 'settled' } : { value: String(stops.length), label: stops.length === 1 ? 'stop' : 'stops' },
   ].filter((cell): cell is { value: string; label: string } => cell !== null)
 
   const routeMap = hasRoute ? <PlanRouteMap stops={stops} className={isDesktop ? undefined : 'mb-6'} label={`Route map for ${plan.title}`} /> : null
@@ -443,15 +423,6 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         isConfirming={isWorking}
         onCancel={() => setConfirm(null)}
         onConfirm={remove}
-      />
-      <DestructiveConfirmModal
-        isOpen={confirm === 'publish'}
-        title="Share this plan by link?"
-        description="Anyone with the link can view the plan, RSVP and vote. You can make it private again from Edit."
-        confirmLabel="Share by link"
-        isConfirming={isWorking}
-        onCancel={() => setConfirm(null)}
-        onConfirm={publishAndShare}
       />
       <Sheet open={isInviteOpen} onClose={() => setIsInviteOpen(false)} title="Invite the barkada" labelledBy="invite-sheet-title">
         {invite}
@@ -555,7 +526,6 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                       </Button>
                     ) : null}
                   </div>
-                  <p className="g-xs g-mut mt-3">Travel times and fares are rough Grab and walking estimates.</p>
 
                   <section aria-labelledby="plan-split-title" className="mt-8">
                     <h2 id="plan-split-title" className="g-h2 mb-3">Budget</h2>

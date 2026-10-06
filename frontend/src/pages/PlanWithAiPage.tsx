@@ -38,6 +38,12 @@ const examplePrompts = [
   { icon: Trees, title: 'Barkada day in QC for 6', prompt: 'Barkada day in Quezon City for 6: a park, then a food trip, ₱600 each' },
 ]
 
+function addMinutes(time: string, minutes: number) {
+  const [hours, mins] = time.split(':').map(Number)
+  const total = (hours * 60 + mins + minutes) % (24 * 60)
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
 function describeCommute(legs: Array<TravelLeg | null>) {
   const known = legs.filter((leg): leg is TravelLeg => leg !== null)
   if (known.length === 0) return 'Depends on where you start'
@@ -208,6 +214,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             description: draft.summary,
             dateMode: draft.date ? 'date' : 'anytime',
             date: draft.date ?? '',
+            groupSize,
           }),
           visibility: 'private',
           items: draft.stops.map((stop, index) => ({
@@ -233,8 +240,12 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     : 'Any day'
   const todayIso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date())
   const firstTime = stops[0]?.time
-  const lastTime = stops[stops.length - 1]?.time
-  const timeRange = firstTime && lastTime && firstTime !== lastTime ? `${formatTime24(firstTime)} – ${formatTime24(lastTime)}` : firstTime ? formatTime24(firstTime) : null
+  const lastStop = stops[stops.length - 1]
+  // The day ends when the last stop does, not when it starts.
+  const endTime = lastStop?.time ? addMinutes(lastStop.time, lastStop.minutes) : null
+  const timeRange = firstTime && endTime && endTime !== firstTime ? `${formatTime24(firstTime)} – ${formatTime24(endTime)}` : firstTime ? formatTime24(firstTime) : null
+  const budget = draft?.budget_per_head ?? null
+  const budgetNote = budget ? (perHead <= budget ? `Fits your ${formatPeso(budget)} budget` : `${formatPeso(perHead - budget)} over your ${formatPeso(budget)} budget`) : null
   const showComposer = !draft && status !== 'building'
 
   return (
@@ -368,7 +379,6 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
               {draft.date_source === 'default' ? <span className="g-xs">(next Saturday, tap to change)</span> : null}
             </div>
             {draft.summary ? <p className="g-sm mt-2 leading-relaxed">{draft.summary}</p> : null}
-            {draft.source === 'fallback' ? <p className="g-xs g-mut mt-2">Tara was busy, so this is a quick plan from GalaTayo places. Swap stops as you like.</p> : null}
 
             <div className="g-tstats mt-4" style={{ ['--n' as string]: 3 }}>
               <div className="g-tstat">
@@ -415,14 +425,14 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                       </span>
                     ),
                   },
-                  { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
+                  { label: 'Cost', value: [`${formatPeso(perHead)}/head · rides split by ${groupSize}`, budgetNote].filter(Boolean).join(' · ') },
                 ]}
               />
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
-            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ng AI ang plano na ito. Times, fares and prices are estimates; check before you go.</p>
+            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ng AI ang plano na ito. Times and fares are estimates.</p>
             <Button variant="text" size="sm" onClick={startOver}>
               Start over
             </Button>
