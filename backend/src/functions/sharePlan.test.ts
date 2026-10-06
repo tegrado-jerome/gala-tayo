@@ -19,7 +19,7 @@ describe("plan share preview", () => {
     assert.equal(planDateLabel("[gala_date:2026-10-10]"), "Sat, Oct 10");
     assert.equal(preview.title, "Date night sa BGC");
     assert.equal(preview.description, "Sat, Oct 10 · 3 stops · Taguig. Sama ka? RSVP on GalaTayo.");
-    assert.match(preview.imageUrl, /cdn-cgi\/image\/width=1200,height=630,fit=cover.*\/places\/bhs\/1\.jpg$/);
+    assert.match(preview.imageUrl, /^https?:\/\/[^/]+\/places\/bhs\/1\.jpg$/);
   });
 
   it("prefers the curated HD photo over an upload", () => {

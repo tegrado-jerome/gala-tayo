@@ -18,11 +18,11 @@
         // A prerendered page already has the <img> in its HTML, so only the bare app shell needs this.
         // heroPreload.test.ts keeps the URL in step with the photo the page really shows.
         if ((p === '/' || p === '/home') && !document.documentElement.hasAttribute('data-prerendered')) {
-          var hero = 'https://media.galatayo.app/cdn-cgi/image/width=%W,quality=75,format=auto,onerror=redirect/places/fort-santiago/hd/fort-santiago-1-v2.webp';
+          var hero = 'https://media.galatayo.app/places/fort-santiago/hd/fort-santiago-1-v2.webp';
           var link = document.createElement('link');
           link.rel = 'preload';
           link.as = 'image';
-          link.setAttribute('imagesrcset', hero.replace('%W', '640') + ' 640w, ' + hero.replace('%W', '768') + ' 768w, ' + hero.replace('%W', '1280') + ' 1280w');
+          link.setAttribute('imagesrcset', hero.replace(/\.webp$/, '-card.webp') + ' 800w, ' + hero + ' 1600w');
           link.setAttribute('imagesizes', '(min-width: 1240px) 1176px, calc(100vw - 32px)');
           link.setAttribute('fetchpriority', 'high');
           document.head.appendChild(link);
