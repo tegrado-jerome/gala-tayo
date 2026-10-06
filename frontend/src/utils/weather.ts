@@ -3,14 +3,35 @@
  * Times are Open-Meteo's local ISO strings ("2026-10-06T15:00"), so plain string compares order them.
  */
 
-export type HourForecast = { time: string; temp: number; code: number; rain: number }
-export type DayForecast = { date: string; code: number; min: number; max: number; rain: number; sunrise: string; sunset: string }
+/** One forecast hour: temp °C, WMO code, chance of rain %, and rain amount in mm for that hour. */
+export type HourForecast = { time: string; temp: number; code: number; rain: number; mm: number }
+export type DayForecast = { date: string; code: number; min: number; max: number; sunrise: string; sunset: string }
 export type CurrentWeather = { temp: number; code: number; precipitation: number; isDay: boolean }
 export type Forecast = { current: CurrentWeather; hours: HourForecast[]; days: DayForecast[] }
 
-// Chance of rain (%) from which we call an hour "rain likely".
-export const RAIN_LIKELY = 50
-const DRY_BELOW = 30
+// "Rain likely" needs both a high chance and a real amount; intensity follows the usual mm/h bands.
+export const RAIN_LIKELY_CHANCE = 70
+export const RAIN_LIKELY_MM = 0.5
+const LIGHT_BELOW_MM = 1
+const HEAVY_FROM_MM = 7.6
+// A "light shower possible" hour: some chance and a trace of rain, short of likely.
+const SHOWER_CHANCE = 40
+const SHOWER_MM = 0.1
+// A rain window starting within this many hours changes the "now" label.
+const RAIN_SOON_HOURS = 3
+
+export function isRainLikelyHour(hour: Pick<HourForecast, 'rain' | 'mm'>) {
+  return hour.rain >= RAIN_LIKELY_CHANCE && hour.mm >= RAIN_LIKELY_MM
+}
+
+function isShowerHour(hour: Pick<HourForecast, 'rain' | 'mm'>) {
+  return hour.rain >= SHOWER_CHANCE && hour.mm >= SHOWER_MM
+}
+
+export function rainIntensity(mm: number): 'light' | 'moderate' | 'heavy' {
+  if (mm >= HEAVY_FROM_MM) return 'heavy'
+  return mm < LIGHT_BELOW_MM ? 'light' : 'moderate'
+}
 
 // WMO weather codes: https://open-meteo.com/en/docs
 export function describeWeather(code: number) {
@@ -32,10 +53,6 @@ export function isRainCode(code: number) {
 
 export function isStormCode(code: number) {
   return code >= 95
-}
-
-function isHeavyRainCode(code: number) {
-  return code === 65 || code === 67 || code === 82 || isStormCode(code)
 }
 
 /** The current hour in Manila as an Open-Meteo hourly key, e.g. "2026-10-06T15:00". */
@@ -71,26 +88,51 @@ export function formatHourRange(start: string, end: string) {
   return from.meridiem === to.meridiem ? `${from.hour12}–${formatHour(end)}` : `${formatHour(start)}–${formatHour(end)}`
 }
 
-export type RainWindow = { start: string; end: string | null; startsNow: boolean }
+export type RainWindow = { start: string; end: string | null; startsNow: boolean; offset: number; peakMm: number }
 
-/** First run of "rain likely" hours. `end` is the first dry hour after it, or null when it lasts past the list. */
-export function findRainWindow(hours: HourForecast[], threshold = RAIN_LIKELY): RainWindow | null {
-  const first = hours.findIndex((hour) => hour.rain >= threshold)
+/** First run of "rain likely" hours. `end` is the first hour after it, or null when it lasts past the list. */
+export function findRainWindow(hours: HourForecast[]): RainWindow | null {
+  const first = hours.findIndex(isRainLikelyHour)
   if (first < 0) return null
-  const after = hours.findIndex((hour, index) => index > first && hour.rain < threshold)
-  return { start: hours[first].time, end: after < 0 ? null : hours[after].time, startsNow: first === 0 }
+  const after = hours.findIndex((hour, index) => index > first && !isRainLikelyHour(hour))
+  const run = hours.slice(first, after < 0 ? undefined : after)
+  return {
+    start: hours[first].time,
+    end: after < 0 ? null : hours[after].time,
+    startsNow: first === 0,
+    offset: first,
+    peakMm: Math.max(...run.map((hour) => hour.mm)),
+  }
 }
 
-/** One short line on rain for the hours given (normally the next 12). */
-export function rainSummary(hours: HourForecast[]) {
+function rainWord(mm: number) {
+  const intensity = rainIntensity(mm)
+  return intensity === 'moderate' ? 'Rain' : intensity === 'light' ? 'Light rain' : 'Heavy rain'
+}
+
+/** One short line on rain for the hours given (normally the next 12, starting now). */
+export function rainSummary(hours: HourForecast[], currentCode = 0) {
   if (hours.length === 0) return ''
   const window = findRainWindow(hours)
   if (window) {
-    if (window.startsNow) return window.end ? `Rain likely until ${formatHour(window.end)}` : `Rain likely for the next ${hours.length} hrs`
-    return window.end ? `Rain likely ${formatHourRange(window.start, window.end)}` : `Rain likely from ${formatHour(window.start)}`
+    const word = rainWord(window.peakMm)
+    if (window.startsNow) return window.end ? `${word} likely until ${formatHour(window.end)}` : `${word} likely for the next ${hours.length} hrs`
+    return window.end ? `${word} likely ${formatHourRange(window.start, window.end)}` : `${word} likely from ${formatHour(window.start)}`
   }
-  const peak = Math.max(...hours.map((hour) => hour.rain))
-  return peak < DRY_BELOW ? `Dry for the next ${hours.length} hrs` : `Up to ${peak}% chance of rain, next ${hours.length} hrs`
+  if (isRainCode(currentCode)) return 'Showers easing soon'
+  return hours.some(isShowerHour) ? 'A few light showers possible' : `Dry for the next ${hours.length} hrs`
+}
+
+/**
+ * Label and icon code for "now" that never contradict the rain line: if rain is likely within
+ * the next 3 hours but the sky code says clear, say "Cloudy, rain soon".
+ */
+export function currentCondition(current: Pick<CurrentWeather, 'code'>, hours: HourForecast[]) {
+  const window = findRainWindow(hours)
+  if (window && window.offset < RAIN_SOON_HOURS && !isRainCode(current.code)) {
+    return window.startsNow ? { label: 'Cloudy, rain starting', code: 61 } : { label: 'Cloudy, rain soon', code: 3 }
+  }
+  return { label: describeWeather(current.code), code: current.code }
 }
 
 export type PlaceTraits = { category?: string | null; name?: string | null; tags?: Array<{ name: string }> | null; indoorOutdoor?: string | null }
@@ -142,11 +184,11 @@ export function outdoorTip(forecast: Pick<Forecast, 'hours' | 'days'>, nowKey: s
   return `Tomorrow: go before ${formatHour(window.start)}. Rain likely after.`
 }
 
-/** A safety line for water and hiking spots when storms or heavy rain are now or in the next hours. */
+/** A safety line for water and hiking spots when storms or heavy rain are happening or likely in the hours given. */
 export function safetyLine(current: Pick<CurrentWeather, 'code'>, hours: HourForecast[]) {
-  const codes = [current.code, ...hours.map((hour) => hour.code)]
-  if (codes.some(isStormCode)) return 'Skip swimming and trails during thunderstorms.'
-  if (codes.some(isHeavyRainCode)) return 'Heavy rain expected. Skip swimming and trails until it passes.'
+  const likely = hours.filter(isRainLikelyHour)
+  if (isStormCode(current.code) || likely.some((hour) => isStormCode(hour.code))) return 'Skip swimming and trails during thunderstorms.'
+  if (likely.some((hour) => rainIntensity(hour.mm) === 'heavy')) return 'Heavy rain expected. Skip swimming and trails until it passes.'
   return null
 }
 
@@ -161,4 +203,49 @@ export function daysFromToday(date: string, today: string) {
 /** The forecast for one "YYYY-MM-DD" date. */
 export function dayForecast(days: DayForecast[], date: string) {
   return days.find((day) => day.date === date) ?? null
+}
+
+function partOfDay(time: string) {
+  const hour = Number(time.slice(11, 13))
+  if (hour >= 6 && hour < 12) return 'morning'
+  if (hour >= 12 && hour < 18) return 'afternoon'
+  if (hour >= 18 && hour < 22) return 'evening'
+  return 'night'
+}
+
+function whenText(hours: HourForecast[]) {
+  const parts = [...new Set(hours.map((hour) => partOfDay(hour.time)))]
+  if (parts.length >= 3) return 'most of the day'
+  const phrase = (part: string) => (part === 'night' ? 'at night' : `in the ${part}`)
+  return parts.length === 2 ? `${phrase(parts[0])} and ${parts[1] === 'night' ? 'at night' : parts[1]}` : phrase(parts[0])
+}
+
+function isContiguous(hours: HourForecast[]) {
+  return hours.every((hour, index) => index === 0 || Date.parse(`${hour.time}:00Z`) - Date.parse(`${hours[index - 1].time}:00Z`) === 3_600_000)
+}
+
+export type DaySummary = { text: string; code: number }
+
+/**
+ * Plain wording for a whole day from its hourly data (6 AM to 10 PM), e.g. "Thunderstorms likely
+ * in the afternoon", "Light showers on and off", "Mostly dry". `code` picks a matching icon.
+ */
+export function summarizeDay(hours: HourForecast[], date: string): DaySummary | null {
+  const day = hours.filter((hour) => hour.time.startsWith(date) && partOfDay(hour.time) !== 'night')
+  if (day.length === 0) return null
+
+  const likely = day.filter(isRainLikelyHour)
+  const storms = likely.filter((hour) => isStormCode(hour.code))
+  if (storms.length > 0) return { text: `Thunderstorms likely ${whenText(storms)}`, code: 95 }
+
+  if (likely.length > 0) {
+    const intensity = rainIntensity(Math.max(...likely.map((hour) => hour.mm)))
+    if (intensity === 'heavy') return { text: `Heavy rain likely ${whenText(likely)}`, code: 65 }
+    if (intensity === 'light') return isContiguous(likely) ? { text: `Light rain likely ${whenText(likely)}`, code: 61 } : { text: 'Light showers on and off', code: 80 }
+    return { text: `Rain likely ${whenText(likely)}`, code: 63 }
+  }
+
+  if (day.some(isShowerHour)) return { text: 'A few light showers possible', code: 2 }
+  const cloudy = day.filter((hour) => hour.code === 3).length > day.length / 2
+  return { text: cloudy ? 'Mostly dry, cloudy' : 'Mostly dry', code: cloudy ? 3 : 1 }
 }

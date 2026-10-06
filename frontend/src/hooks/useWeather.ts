@@ -17,7 +17,6 @@ export type ForecastState = { status: 'loading' | 'failed'; forecast: null } | {
 
 const CACHE_KEY_PREFIX = 'galatayo:forecast'
 const CACHE_TTL_MS = 30 * 60 * 1000
-const CACHED_HOURS = 48
 const MANILA: WeatherLocation = { lat: METRO_MANILA_CENTER[0], lng: METRO_MANILA_CENTER[1] }
 
 // Two decimals (~1 km) is plenty for weather and lets nearby places share one cached reading.
@@ -29,14 +28,14 @@ function getCacheKey({ lat, lng }: WeatherLocation) {
   return `${CACHE_KEY_PREFIX}:${roundCoordinate(lat)},${roundCoordinate(lng)}`
 }
 
-// Open-Meteo is free and keyless. 14 days covers plan dates; hourly is trimmed before caching.
+// Open-Meteo is free and keyless. 14 days of hourly data covers plan dates.
 function getForecastUrl({ lat, lng }: WeatherLocation) {
   const params = new URLSearchParams({
     latitude: roundCoordinate(lat),
     longitude: roundCoordinate(lng),
     current: 'temperature_2m,precipitation,weather_code,is_day',
-    hourly: 'temperature_2m,weather_code,precipitation_probability',
-    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset',
+    hourly: 'temperature_2m,weather_code,precipitation_probability,precipitation',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset',
     forecast_days: String(FORECAST_DAYS),
     timezone: 'Asia/Manila',
   })
@@ -45,13 +44,12 @@ function getForecastUrl({ lat, lng }: WeatherLocation) {
 
 type OpenMeteoResponse = {
   current?: { time?: string; temperature_2m?: number; precipitation?: number; weather_code?: number; is_day?: number }
-  hourly?: { time?: string[]; temperature_2m?: number[]; weather_code?: number[]; precipitation_probability?: Array<number | null> }
+  hourly?: { time?: string[]; temperature_2m?: number[]; weather_code?: number[]; precipitation_probability?: Array<number | null>; precipitation?: Array<number | null> }
   daily?: {
     time?: string[]
     weather_code?: number[]
     temperature_2m_max?: number[]
     temperature_2m_min?: number[]
-    precipitation_probability_max?: Array<number | null>
     sunrise?: string[]
     sunset?: string[]
   }
@@ -68,16 +66,15 @@ function parseForecast(data: OpenMeteoResponse | null): Forecast | null {
       temp: Math.round(hourly.temperature_2m?.[index] ?? NaN),
       code: hourly.weather_code?.[index] ?? 0,
       rain: hourly.precipitation_probability?.[index] ?? 0,
+      mm: hourly.precipitation?.[index] ?? 0,
     }))
     .filter((hour) => hour.time.slice(0, 13) >= currentHour && Number.isFinite(hour.temp))
-    .slice(0, CACHED_HOURS)
   const days: DayForecast[] = daily.time
     .map((date, index) => ({
       date,
       code: daily.weather_code?.[index] ?? 0,
       min: Math.round(daily.temperature_2m_min?.[index] ?? NaN),
       max: Math.round(daily.temperature_2m_max?.[index] ?? NaN),
-      rain: daily.precipitation_probability_max?.[index] ?? 0,
       sunrise: daily.sunrise?.[index] ?? '',
       sunset: daily.sunset?.[index] ?? '',
     }))

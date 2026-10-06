@@ -30,7 +30,7 @@
 .gw-credit a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
 
 /* Plan header: the plan day's forecast */
-.gw-plan { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-2); background: var(--fill); }
+.gw-plan { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-2); background: var(--fill); }
 .gw-plan > svg { width: 26px; height: 26px; color: var(--ink); }
 .gw-plan b { display: block; font-size: 15px; font-weight: 600; line-height: 1.3; }
 .gw-plan b + span { display: -webkit-box; overflow: hidden; font-size: 13px; line-height: 1.35; color: var(--ink-2); -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

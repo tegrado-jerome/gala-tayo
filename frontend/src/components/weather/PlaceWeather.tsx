@@ -7,9 +7,9 @@ import { Sheet } from '../ui'
 import WeatherIcon from './WeatherIcon'
 import { useForecast, type WeatherLocation } from '../../hooks/useWeather'
 import {
-  RAIN_LIKELY,
-  describeWeather,
+  currentCondition,
   formatHour,
+  isRainLikelyHour,
   isOutdoorPlace,
   isWaterOrHikePlace,
   manilaHourKey,
@@ -44,15 +44,16 @@ export default function PlaceWeather({ position, place }: { position: WeatherLoc
   const sunsetDay = days.find((day) => day.sunset && day.sunset >= nowKey)
   const tip = outdoor ? outdoorTip(forecast, nowKey) : null
   const safety = isWaterOrHikePlace(place) ? safetyLine(current, upcoming) : null
-  const summary = rainSummary(upcoming)
+  const summary = rainSummary(upcoming, current.code)
+  const condition = currentCondition(current, upcoming)
 
   return (
     <li className="gw-row">
       <button type="button" className="gw-now" aria-haspopup="dialog" onClick={() => setIsOpen(true)}>
-        <WeatherIcon code={current.code} night={!current.isDay} />
+        <WeatherIcon code={condition.code} night={!current.isDay} />
         <span className="min-w-0">
           <b>
-            {current.temp}°C · {describeWeather(current.code)}
+            {current.temp}°C · {condition.label}
           </b>
           <span>{summary}</span>
         </span>
@@ -68,7 +69,7 @@ export default function PlaceWeather({ position, place }: { position: WeatherLoc
 
       <Sheet open={isOpen} onClose={() => setIsOpen(false)} title="Next 12 hours" labelledBy="place-weather-title">
         <p className="g-sm g-mut -mt-2 mb-3">
-          {place.name} · {current.temp}°C, {describeWeather(current.code).toLowerCase()} now
+          {place.name} · {current.temp}°C, {condition.label.toLowerCase()} now
         </p>
         <ol className="gw-hours" aria-label="Hourly forecast">
           {upcoming.map((hour, index) => (
@@ -76,8 +77,8 @@ export default function PlaceWeather({ position, place }: { position: WeatherLoc
               <span className="gw-time">{index === 0 ? 'Now' : formatHour(hour.time)}</span>
               <WeatherIcon code={hour.code} night={isNightHour(hour.time, days)} />
               <span className="gw-temp">{hour.temp}°</span>
-              <span className={hour.rain >= RAIN_LIKELY ? 'gw-rain is-likely' : 'gw-rain'}>
-                <Drop weight={hour.rain >= RAIN_LIKELY ? 'fill' : 'light'} aria-hidden="true" />
+              <span className={isRainLikelyHour(hour) ? 'gw-rain is-likely' : 'gw-rain'}>
+                <Drop weight={isRainLikelyHour(hour) ? 'fill' : 'light'} aria-hidden="true" />
                 <span className="sr-only">Chance of rain </span>
                 {hour.rain}%
               </span>
