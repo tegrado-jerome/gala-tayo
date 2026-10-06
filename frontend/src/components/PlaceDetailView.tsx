@@ -37,7 +37,7 @@ import ReportUserModal from './ReportUserModal'
 import { Button, Chip, Empty, Page, Sheet, Skeleton, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
-import { homeAllTopPickPlaces } from '../data/homeRecommendations'
+import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
@@ -71,7 +71,6 @@ import { formatPlaceLocation } from '../utils/placeLocation'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
-const TOP_PICK_SLUGS = new Set(homeAllTopPickPlaces.map((pick) => normalizePlaceSlug(pick.slug || pick.name)))
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PLACE_DETAIL_COMMUNITY_CACHE_PREFIX = 'galatayo:place-community:'
@@ -1807,7 +1806,7 @@ function PlaceDetailView({
     ...(localAreaName && localAreaName.toLowerCase() !== cityName.toLowerCase() ? [{ label: localAreaName }] : []),
     { label: categoryLabel, href: categoryHref },
   ]
-  const isTopPick = TOP_PICK_SLUGS.has(normalizePlaceSlug(placeSlug || place.name))
+  const isTopPick = isGalaTayoPick(normalizePlaceSlug(placeSlug || place.name))
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
   const commentActionClassName =
     'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'

@@ -11,7 +11,7 @@ function categoryKey(category?: string | null) {
     .trim()
 }
 
-/** Tries each image URL in turn; when none loads, shows a sea-tinted tile with the category icon instead of a grey box. */
+/** Tries each image URL in turn; when none loads, shows a sand tile with the category icon instead of a grey box. */
 function PlaceImage({
   candidates,
   category,
@@ -31,8 +31,8 @@ function PlaceImage({
   if (!src) {
     const Icon = categoryIcons[categoryKey(category)] ?? MapPin
     return (
-      <span aria-hidden="true" className={className} style={{ display: 'grid', placeItems: 'center', background: 'var(--sea-soft)', color: 'var(--sea)', ...style }}>
-        <Icon size={32} strokeWidth={1.75} />
+      <span aria-hidden="true" className={className} style={{ display: 'grid', placeItems: 'center', background: 'var(--fill)', color: 'var(--ink-3)', ...style }}>
+        <Icon size={28} weight="light" />
       </span>
     )
   }

@@ -41,7 +41,7 @@ type CategoryTabsProps = {
   className?: string
 }
 
-/** Icon tabs with an underline on the active one, shared by Home and the listing pages. */
+/** Icon tabs with an ink underline on the active one, shared by Home and the listing pages. */
 function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? '/places' : `/places/categories/${value}`), allLabel = 'All', showFilters = false, className }: CategoryTabsProps) {
   const tabs = [
     { value: 'all', label: allLabel, icon: Sparkles },
@@ -62,15 +62,15 @@ function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? 
         const TabIcon = tab.icon
         const isActive = tab.value === active
         return (
-          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className={`g-cat c-${tab.value} no-underline`}>
-            <TabIcon weight={isActive ? 'fill' : 'duotone'} aria-hidden="true" />
+          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className="g-cat">
+            <TabIcon weight={isActive ? 'fill' : 'light'} aria-hidden="true" />
             {tab.label}
           </InternalLink>
         )
       })}
       {showFilters ? (
-        <InternalLink href="/search" className="g-cat no-underline">
-          <SlidersHorizontal weight="duotone" aria-hidden="true" />
+        <InternalLink href="/search" className="g-cat">
+          <SlidersHorizontal weight="light" aria-hidden="true" />
           Filters
         </InternalLink>
       ) : null}

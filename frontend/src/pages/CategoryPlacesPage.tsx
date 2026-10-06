@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
 import CategoryTabs from '../components/discover/CategoryTabs'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
-import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
+import { ListToolbar, ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
@@ -343,17 +343,15 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
       <header className="mt-5 max-w-[40rem]">
         <h1 className="g-h1">{categoryLabel} places in the Philippines</h1>
-        <p className="g-mut mt-2 min-h-[1.5em]">{payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null}</p>
       </header>
 
-      <SearchPillLink className="g-only-mob mt-4" />
-
       <CategoryTabs active={categorySlug} />
+      <ListToolbar count={payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null} sort="Sorted A–Z" />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
-        <div className="mt-6" aria-busy="true">
+        <div className="mt-2" aria-busy="true">
           <span className="sr-only">Loading {categoryLabel.toLowerCase()} places.</span>
           <MasonrySkeleton count={PAGE_SIZE} />
         </div>
@@ -366,11 +364,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         />
       ) : (
         <section aria-label={`${categoryLabel} places`}>
-          <Masonry className={cx('mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+          <Masonry className={cx('mt-2 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
             {places.map((rawPlace, index) => (
               <PlaceCard
                 key={rawPlace.id}
-                masonryIndex={index}
+                priority={index < 2}
                 place={withLiveDetail(
                   { ...mapSeoPlaceToCard(rawPlace), imageUrl: null, curatedImageUrls: [], budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor },
                   placeDetailsBySlug[rawPlace.slug],

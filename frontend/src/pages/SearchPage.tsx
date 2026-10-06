@@ -35,7 +35,7 @@ function TrendingFeed() {
           Object.fromEntries(
             places.map((place) => [
               place.slug,
-              { id: place.id, category: place.category, budgetMin: place.budget_min != null ? Number(place.budget_min) : null },
+              { id: place.id, category: place.category, budgetMin: place.budget_min != null ? Number(place.budget_min) : null, duration: place.visit_duration ?? null, rating: place.rating ?? null, reviewCount: place.review_count ?? null },
             ]),
           ),
         )
@@ -46,7 +46,7 @@ function TrendingFeed() {
     }
   }, [])
 
-  const places = useMemo(() => homeAllTopPickPlaces.map((place): PhotoCardPlace => ({ ...place, ...detailsBySlug[place.slug] })), [detailsBySlug])
+  const places = useMemo(() => homeAllTopPickPlaces.map((place): PhotoCardPlace => ({ ...place, reviewCount: null, ...detailsBySlug[place.slug] })), [detailsBySlug])
 
   return (
     <section className="min-w-0" aria-labelledby="explore-trending-title">
@@ -61,7 +61,7 @@ function TrendingFeed() {
       />
       <Masonry>
         {places.map((place, index) => (
-          <PhotoCard key={place.slug} place={place} masonryIndex={index} priority={index < 2} onGuestFavorite={(retry) => guestAuth.open('favorite', retry)} />
+          <PhotoCard key={place.slug} place={place} priority={index < 2} onGuestFavorite={(retry) => guestAuth.open('favorite', retry)} />
         ))}
       </Masonry>
       {guestAuth.promptElement}

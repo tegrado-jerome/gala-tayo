@@ -9,11 +9,10 @@ type RailProps = {
   seeAllHref?: string
   seeAllLabel?: string
   headerAside?: ReactNode
-  itemBasis?: number
   children: ReactNode
 }
 
-function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', headerAside, itemBasis, children }: RailProps) {
+function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', headerAside, children }: RailProps) {
   const scrollerRef = useRef<HTMLUListElement | null>(null)
 
   const scrollByPage = (direction: -1 | 1) => {
@@ -49,7 +48,7 @@ function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', headerAsid
       />
       {headerAside ? <div className="mb-4">{headerAside}</div> : null}
       <ul ref={scrollerRef} className="g-hscroll">
-        {Children.map(children, (child) => (child ? <li style={itemBasis ? { flexBasis: itemBasis } : undefined}>{child}</li> : null))}
+        {Children.map(children, (child) => (child ? <li>{child}</li> : null))}
       </ul>
     </section>
   )

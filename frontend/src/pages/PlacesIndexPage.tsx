@@ -4,7 +4,7 @@ import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { Button, Page, SectionHead } from '../components/ui'
+import { Button, Page, PlaceCard, SectionHead } from '../components/ui'
 import { METRO_MANILA_REGION_SLUG, metroManilaAreas, regions, type Destination } from '../data/destinations'
 import { cityRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
@@ -142,15 +142,13 @@ function PlacesIndexPage() {
       />
       <div className="m-top">
         {heroAreas.map((area, index) => (
-          <InternalLink key={area.slug} href={`/places/${area.slug}`} className="g-pc">
-            <span className="g-pc-img block">
-              <PlaceImage candidates={getAreaImageCandidates(area.slug)} priority={index < 2} className="h-full w-full object-cover" />
-            </span>
-            <span className="g-pc-title">
-              <span className="g-h3">{displayCityName(area.name)}</span>
-            </span>
-            <span className="g-pc-meta block">{getCountLabel(area.slug)}</span>
-          </InternalLink>
+          <PlaceCard
+            key={area.slug}
+            href={`/places/${area.slug}`}
+            title={displayCityName(area.name)}
+            media={<PlaceImage candidates={getAreaImageCandidates(area.slug)} priority={index < 2} className="g-pc-media" />}
+            meta={getCountLabel(area.slug)}
+          />
         ))}
       </div>
 

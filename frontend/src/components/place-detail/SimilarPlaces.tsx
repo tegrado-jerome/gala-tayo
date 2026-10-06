@@ -17,7 +17,7 @@ function SimilarPlaces({ areaSlug, areaName, areaHref, currentSlug, onGuestFavor
   if (items.length === 0) return null
   return (
     <div className="pd-sec pd-similar">
-      <Rail title="You might also like" subtitle={`More in ${areaName}`} seeAllHref={areaHref} itemBasis={220}>
+      <Rail title="You might also like" subtitle={`More in ${areaName}`} seeAllHref={areaHref}>
         {items.map((place) => (
           <PhotoCard key={place.id} place={place} onGuestFavorite={onGuestFavorite} />
         ))}

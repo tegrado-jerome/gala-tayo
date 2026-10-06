@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { List } from '@phosphor-icons/react/dist/csr/List'
 import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
@@ -70,7 +70,7 @@ function ExploreSearchBar({
   onSubmit,
   canSubmit = value.trim().length > 0,
   disabled = false,
-  placeholder = 'Search places, cities, or a vibe',
+  placeholder = 'Where to? A place, city or vibe',
   inputId = 'search-page-input',
   className,
 }: {
@@ -89,7 +89,7 @@ function ExploreSearchBar({
   }
 
   return (
-    <form role="search" onSubmit={handleSubmit} className={cx('g-search !border-transparent !bg-[var(--fill)]', className)}>
+    <form role="search" onSubmit={handleSubmit} className={cx('g-where', className)}>
       <Search className="g-ic" aria-hidden="true" />
       <label htmlFor={inputId} className="sr-only">
         Search places, cities, or categories
@@ -103,20 +103,10 @@ function ExploreSearchBar({
         placeholder={placeholder}
         disabled={disabled}
       />
-      <Button type="submit" size="sm" iconOnly aria-label="Search" disabled={disabled || !canSubmit}>
+      <Button type="submit" iconOnly aria-label="Search" disabled={disabled || !canSubmit}>
         <Search />
       </Button>
     </form>
-  )
-}
-
-/** Search pill for listing pages; opens Explore search. */
-function SearchPillLink({ label = 'Search or describe a vibe', className }: { label?: string; className?: string }) {
-  return (
-    <InternalLink href="/search" className={cx('g-search !border-transparent !bg-[var(--fill)] g-sm no-underline', className)}>
-      <Search className="g-ic" aria-hidden="true" />
-      {label}
-    </InternalLink>
   )
 }
 
@@ -293,17 +283,42 @@ function QuickFilterChips({
 }
 
 
-function MasonrySkeleton({ count = 8 }: { count?: number }) {
+function MasonrySkeleton({ count = 8, desktopColumns }: { count?: number; desktopColumns?: 2 | 3 }) {
   return (
-    <Masonry aria-hidden="true">
+    <Masonry aria-hidden="true" desktopColumns={desktopColumns}>
       {Array.from({ length: count }, (_, index) => (
         <div key={index} className="min-w-0">
-          <Skeleton className="aspect-square w-full !rounded-[var(--r-3)]" />
-          <Skeleton className="mt-2.5 h-4 w-3/4" />
-          <Skeleton className="mt-1.5 h-3 w-1/2" />
+          <Skeleton className="aspect-video w-full !rounded-[var(--r-3)]" />
+          <Skeleton className="mt-3 h-3 w-1/3" />
+          <Skeleton className="mt-2 h-4 w-3/4" />
+          <Skeleton className="mt-2 h-3 w-1/2" />
         </div>
       ))}
     </Masonry>
+  )
+}
+
+/** Count on the left; the sort order (and a List/Map switch when the page has a map) on the right. */
+function ListToolbar({ count, sort, view, onViewChange, className }: { count: ReactNode; sort?: string; view?: MobileResultsViewMode; onViewChange?: (view: MobileResultsViewMode) => void; className?: string }) {
+  return (
+    <div className={cx('g-ltool', className)}>
+      <span className="min-w-0 truncate" aria-live="polite">{count}</span>
+      <span className="flex shrink-0 items-center gap-3">
+        {sort ? <b>{sort}</b> : null}
+        {view && onViewChange ? (
+          <span className="g-seg" role="group" aria-label="View">
+            <button type="button" aria-pressed={view === 'cards'} onClick={() => onViewChange('cards')}>
+              <List weight="bold" aria-hidden="true" />
+              List
+            </button>
+            <button type="button" aria-pressed={view === 'map'} onClick={() => onViewChange('map')}>
+              <MapIcon weight="light" aria-hidden="true" />
+              Map
+            </button>
+          </span>
+        ) : null}
+      </span>
+    </div>
   )
 }
 
@@ -314,7 +329,7 @@ function SearchResultsSkeleton() {
       <Skeleton className="h-7 w-56" />
       <Skeleton className="mt-2 h-4 w-40" />
       <div className="mt-6">
-        <MasonrySkeleton />
+        <MasonrySkeleton desktopColumns={2} />
       </div>
     </div>
   )
@@ -400,15 +415,16 @@ function SearchResults({
 
   return (
     <>
-      <div className="g-sec-head !mt-6">
-        <div className="min-w-0">
-          <h1 className="g-h2">{heading}</h1>
-          {subheading ? <div className="g-sub">{subheading}</div> : null}
-        </div>
-      </div>
+      <h1 className="g-h1 mt-6">{heading}</h1>
+      <ListToolbar
+        count={subheading}
+        sort={isDesktop ? 'Best match' : undefined}
+        view={isDesktop ? undefined : mobileView}
+        onViewChange={isDesktop ? undefined : onMobileViewChange}
+      />
 
       <div className="g-split">
-        <section id="search-results-anchor" className="min-w-0 pb-[68px] lg:pb-0" aria-label="Results">
+        <section id="search-results-anchor" className="min-w-0" aria-label="Results">
           {showMobileMap ? (
             <>
               <MapView
@@ -430,12 +446,12 @@ function SearchResults({
               )}
             </>
           ) : (
-            <Masonry desktopColumns={3} className={cx('transition-opacity', isPageLoading && 'pointer-events-none opacity-60')}>
+            <Masonry desktopColumns={2} className={cx('transition-opacity', isPageLoading && 'pointer-events-none opacity-60')}>
               {places.map((place, index) => (
                 <PlaceCard
                   key={place.id}
                   place={place}
-                  masonryIndex={index}
+                  priority={index < 2}
                   selected={selectedPlaceId === place.id}
                   onGuestSave={onGuestSave}
                   onHover={isDesktop ? () => onSelectPlace(place.id) : undefined}
@@ -454,13 +470,6 @@ function SearchResults({
         ) : null}
       </div>
 
-      <Button
-        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 !px-5 shadow-[var(--sh-3)]"
-        onClick={() => onMobileViewChange(mobileView === 'map' ? 'cards' : 'map')}
-      >
-        {mobileView === 'map' ? <List aria-hidden="true" /> : <MapIcon aria-hidden="true" />}
-        {mobileView === 'map' ? 'List' : 'Map'}
-      </Button>
     </>
   )
 }
@@ -538,6 +547,7 @@ function SearchEmptyState({
 
 export {
   ListingBreadcrumb,
+  ListToolbar,
   MasonrySkeleton,
   ExploreSearchBar,
   QuickFilterChips,
@@ -547,6 +557,5 @@ export {
   SearchPagination,
   SearchResults,
   SearchResultsSkeleton,
-  SearchPillLink,
 }
 export type { FilterOption }

@@ -205,7 +205,7 @@ export default function SeoLandingPage({
 
       <article>
         <header className="mt-5 max-w-[46rem]">
-          <p className="m-onb-step">{BRAND_NAME} guide</p>
+          <p className="g-kicker">{BRAND_NAME} guide</p>
           <h1 className="g-h1 mt-1.5 md:text-[40px]">{metadata.h1}</h1>
           <p className="g-mut mt-3 text-[16px] leading-relaxed">{metadata.intro}</p>
         </header>
@@ -246,14 +246,14 @@ export default function SeoLandingPage({
             action={<Button variant="line" href="/places">Browse places</Button>}
           />
         ) : (
-          <ol className="m-rank-grid" aria-label={`${metadata.h1}, ranked`}>
+          <ol className="g-lgrid" aria-label={`${metadata.h1}, ranked`}>
             {items.map((rawPlace, index) => (
               <li key={rawPlace.id} className="m-rank">
                 <span className="m-rank-n" aria-label={`Number ${index + 1}`}>
                   {index + 1}
                 </span>
                 <PlaceCard
-                  masonryIndex={index}
+                  priority={index < 2}
                   place={withLiveDetail({ ...mapSeoPlaceToCard(rawPlace), budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor }, placeDetailsBySlug[rawPlace.slug])}
                   onGuestSave={(retry) => listingGuestAuth.open('favorite', retry)}
                 />

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
 import CategoryTabs from '../components/discover/CategoryTabs'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
-import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
+import { ListToolbar, ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
@@ -375,14 +375,13 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         </nav>
       ) : null}
 
-      <SearchPillLink className="g-only-mob mt-4" />
-
       <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />
+      <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Sorted A–Z" />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
-        <div className="mt-6" aria-busy="true">
+        <div className="mt-2" aria-busy="true">
           <span className="sr-only">Loading places in {areaName}.</span>
           <MasonrySkeleton count={PAGE_SIZE} />
         </div>
@@ -395,11 +394,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         />
       ) : (
         <section aria-label={`Places in ${areaName}`}>
-          <Masonry className={cx('mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+          <Masonry className={cx('mt-2 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
             {allPlaces.map((rawPlace, index) => (
               <PlaceCard
                 key={rawPlace.id}
-                masonryIndex={index}
+                priority={index < 2}
                 place={withLiveDetail(
                   { ...mapSeoPlaceToCard(rawPlace), imageUrl: null, curatedImageUrls: [], budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor },
                   placeDetailsBySlug[rawPlace.slug],

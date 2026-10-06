@@ -1,11 +1,10 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
-import { PlaceCard as KitPlaceCard, MasonryCard, Tag, cx, type PlaceCardTint } from './ui'
-import { formatPlaceCardMeta } from '../utils/placeLocation'
-import { getSulitLevel } from './place-detail/SulitMeter'
+import { PlaceCard as KitPlaceCard, Tag, cx } from './ui'
 import { categoryIcons } from './discover/CategoryTabs'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
@@ -104,9 +103,15 @@ export function formatPricePerHead(budgetMin: number | null | undefined) {
   return budgetMin <= 0 ? 'Free' : `₱${Math.round(budgetMin).toLocaleString('en-PH')}`
 }
 
-export function getSulitScore(budgetMin: number | null | undefined) {
-  if (budgetMin == null || !Number.isFinite(budgetMin)) return null
-  return (5 - getSulitLevel(Math.max(0, budgetMin)).index) * 2
+/** "1-2 hours" → "1–2 hrs", "30 minutes-1 hour" → "30 min–1 hr". */
+export function formatVisitDuration(duration: string | null | undefined) {
+  const text = duration?.trim()
+  if (!text) return null
+  return text
+    .replace(/(\d)\s*-\s*(\d)/g, '$1–$2')
+    .replace(/\s*-\s*/g, '–')
+    .replace(/\bhours?\b/gi, (word) => (word.toLowerCase() === 'hour' ? 'hr' : 'hrs'))
+    .replace(/\bminutes?\b/gi, 'min')
 }
 
 export function isRainSafe(place: Pick<PlaceCardData, 'indoor_outdoor' | 'weather_fit'>) {
@@ -125,6 +130,7 @@ export function withLiveDetail(place: PlaceCardData, live: PlaceDetail | undefin
     rating: live.rating ?? place.rating ?? null,
     ratingCount: live.review_count ?? place.ratingCount ?? null,
     budget_min: place.budget_min ?? live.budget_min ?? null,
+    visit_duration: place.visit_duration ?? live.visit_duration ?? null,
     good_for: place.good_for?.length ? place.good_for : live.good_for,
     indoor_outdoor: live.indoor_outdoor ?? null,
     weather_fit: live.weather_fit ?? null,
@@ -163,17 +169,10 @@ export function getCategoryIcon(category: string | null | undefined): PhosphorIc
   return categoryIcons[key] ?? categoryIconAliases.find(([pattern]) => pattern.test(key))?.[1] ?? MapPin
 }
 
-export function getCategoryTint(category: string | null | undefined): PlaceCardTint {
-  const key = (category ?? '').trim().toLowerCase()
-  if (/caf|coffee|food|restaurant|eat|dining|night|club|pub|bar(?!k)/.test(key)) return 'tara'
-  if (/museum|gallery|art|heritage|church|histor|park|garden|nature|beach|trail/.test(key)) return 'sea'
-  return 'warn'
-}
-
 function getReviewCount(place: PlaceCardData) {
   if (typeof place.ratingCount === 'number' && Number.isFinite(place.ratingCount)) return place.ratingCount
   const parsed = Number.parseInt(place.reviewCount ?? '', 10)
-  return Number.isFinite(parsed) ? parsed : 0
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 type PlaceCardProps = {
@@ -183,12 +182,11 @@ type PlaceCardProps = {
   onOpen?: () => void
   onHover?: () => void
   className?: string
-  /** Renders the masonry photo tile; the index picks its aspect ratio. */
-  masonryIndex?: number
+  priority?: boolean
 }
 
-/** Listing card wired to saved places, prefetch and listing return state. Renders the GT1 kit card. */
-function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, className, masonryIndex }: PlaceCardProps) {
+/** Listing card wired to saved places, prefetch and listing return state. Renders the kit's editorial card. */
+function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, className, priority }: PlaceCardProps) {
   const candidates = useMemo(() => getImageCandidates(place), [place])
   const [failed, setFailed] = useState<string[]>([])
   const imageUrl = candidates.find((candidate) => !failed.includes(candidate)) ?? null
@@ -196,7 +194,6 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
   const [isSaving, setIsSaving] = useState(false)
   const placeId = place.id.trim()
   const saved = [place.slug, placeId].some((key) => isPlaceSaved(key))
-  const rainSafe = isRainSafe(place)
 
   const toggleSave = async () => {
     if (isSaving) return
@@ -217,14 +214,10 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
     if (place.slug) void prefetchPlaceDetail(place.slug)
   }
 
-  const isMasonry = masonryIndex !== undefined
-  const pricePerHead = formatPricePerHead(place.budget_min)
-  const rainSafeFlag = rainSafe ? <Tag tone="solid">Rain-safe</Tag> : null
-
   return (
     <div
       data-search-place-id={place.id}
-      className={cx('min-w-0', selected && !isMasonry && 'rounded-[var(--r-3)] ring-2 ring-[var(--ink)] ring-offset-4 ring-offset-[var(--paper)]', className)}
+      className={cx('min-w-0', className)}
       onMouseEnter={() => {
         prefetch()
         onHover?.()
@@ -237,57 +230,25 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         if (event.target instanceof HTMLImageElement && imageUrl) setFailed((current) => [...current, imageUrl])
       }}
     >
-      {isMasonry ? (
-        <MasonryCard
-          href={getPlaceHref(place)}
-          title={place.name}
-          imageUrl={imageUrl}
-          index={masonryIndex}
-          icon={getCategoryIcon(place.category)}
-          tint={getCategoryTint(place.category)}
-          price={pricePerHead}
-          meta={formatPlaceCardMeta({ category: toTitleCase(place.category), area: place.localArea || place.area, city: place.city }) || null}
-          flag={rainSafeFlag}
-          selected={selected}
-          saved={saved}
-          onToggleSave={() => void toggleSave()}
-        />
-      ) : (
-        <KitPlaceCard
-          href={getPlaceHref(place)}
-          title={place.name}
-          imageUrl={imageUrl}
-          icon={getCategoryIcon(place.category)}
-          tint={getCategoryTint(place.category)}
-          category={toTitleCase(place.category)}
-          area={place.localArea || place.area}
-          city={place.city}
-          rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
-          reviewCount={getReviewCount(place)}
-          pricePerHead={pricePerHead}
-          sulit={getSulitScore(place.budget_min)}
-          flag={rainSafeFlag}
-          saved={saved}
-          onToggleSave={() => void toggleSave()}
-        />
-      )}
-    </div>
-  )
-}
-
-/** Index tile (city or category) with image fallbacks. */
-export function PlaceTile({ href, title, meta, imageUrls, icon, tint }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: PhosphorIcon; tint?: PlaceCardTint }) {
-  const [failed, setFailed] = useState<string[]>([])
-  const imageUrl = imageUrls.find((url) => !failed.includes(url)) ?? null
-
-  return (
-    <div
-      className="min-w-0"
-      onError={() => {
-        if (imageUrl) setFailed((current) => [...current, imageUrl])
-      }}
-    >
-      <KitPlaceCard href={href} title={title} meta={meta} icon={icon} tint={tint} imageUrl={imageUrl} />
+      <KitPlaceCard
+        href={getPlaceHref(place)}
+        title={place.name}
+        imageUrl={imageUrl}
+        icon={getCategoryIcon(place.category)}
+        category={toTitleCase(place.category)}
+        area={place.localArea || place.area}
+        city={place.city}
+        rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
+        reviewCount={getReviewCount(place)}
+        duration={formatVisitDuration(place.visit_duration)}
+        pricePerHead={formatPricePerHead(place.budget_min)}
+        pick={isGalaTayoPick(place.slug)}
+        flag={isRainSafe(place) ? <Tag tone="solid">Rain-safe</Tag> : null}
+        selected={selected}
+        priority={priority}
+        saved={saved}
+        onToggleSave={() => void toggleSave()}
+      />
     </div>
   )
 }
