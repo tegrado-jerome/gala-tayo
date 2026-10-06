@@ -50,7 +50,7 @@ describe("askAiAssistant endpoint", () => {
     assert.ok(types.indexOf("places") > 0 && types.indexOf("places") < types.indexOf("delta"), types.join(","));
     assert.equal(types.at(-1), "final");
     const final = lines.at(-1)!.event.response;
-    assert.equal(final.language, "taglish");
+    assert.equal(final.language, "english");
     assert.ok(final.places.length > 0);
     // Eval runs skip the daily limit, so no usage was taken.
     assert.equal(final.usage.requestCount, 0);

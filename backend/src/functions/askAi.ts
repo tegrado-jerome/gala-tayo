@@ -176,13 +176,6 @@ function buildPlaceGrounding(places: NormalizedPlace[]) {
   return [header, ...lines].join("\n");
 }
 
-const TAGALOG_WORDS = /\b(sa|na|ng|mga|ako|ko|mo|kami|tayo|natin|saan|ano|paano|masarap|mura|murang|hindi|di|po|naman|lang|ba|kain|kumain|gusto|pwede|puwede|tara|kasi|yung|ang|meron|malapit|dito|doon|dun)\b/gi;
-
-/** Two or more common Tagalog words: the reply should be Taglish too. */
-export function isTaglish(message: string) {
-  return (message.match(TAGALOG_WORDS) ?? []).length >= 2;
-}
-
 /** A note when the area has no place of the asked kind (no cafe in Makati), so the answer says so. */
 export function missingKind(message: string, candidates: NormalizedPlace[]) {
   const asked = [...detectCategories(message)].filter((category) => category !== "Food");
@@ -426,8 +419,6 @@ export async function postAskAiChatbot(
     const candidates = uncoveredArea ? [] : selectCandidates(places, message, MAX_GROUNDING_PLACES, locationText, { budgetPerHead, start: null });
     const answer = await generateFromGroq({
       message,
-      // Models drift to English; a closing language rule keeps Taglish questions answered in Taglish.
-      replyLanguage: isTaglish(message) ? "taglish" : "english",
       conversationHistory,
       requestId,
       signal: cancellation.signal,

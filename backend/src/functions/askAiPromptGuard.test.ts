@@ -661,9 +661,12 @@ describe("Ask AI chatbot generation scope", () => {
       });
 
       assert.match(answer, /Ayala Museum/);
-      assert.equal(requestBody?.messages?.at(-1)?.role, "user");
+      // The English reply rule goes last; the user's message comes right before it.
+      assert.equal(requestBody?.messages?.at(-1)?.role, "system");
+      assert.match(requestBody?.messages?.at(-1)?.content ?? "", /Reply in simple, lively English/);
+      assert.equal(requestBody?.messages?.at(-2)?.role, "user");
       assert.equal(
-        requestBody?.messages?.at(-1)?.content,
+        requestBody?.messages?.at(-2)?.content,
         "Plan a quick Ayala Museum gala"
       );
       assert.match(

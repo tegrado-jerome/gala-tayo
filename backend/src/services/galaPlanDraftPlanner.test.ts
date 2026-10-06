@@ -253,7 +253,7 @@ describe("buildFallbackDraft", () => {
     assert.ok(draft);
     assert.deepEqual(draft.stops.map((stop) => stop.place_id), ["park", "food", "cafe"]);
     assert.equal(draft.group_size, 2);
-    assert.equal(draft.title, "Gala sa Makati");
+    assert.equal(draft.title, "Day out in Makati");
   });
 });
 

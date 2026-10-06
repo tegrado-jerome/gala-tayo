@@ -1,7 +1,6 @@
 import type { NormalizedPlace } from "../../domain/places";
 import { isGalaWorthySlug } from "../../utils/galaWorthy";
 import { allowedPrices, claimsHours, hoursBacked, pricesIn } from "./facts";
-import type { ReplyLanguage } from "./language";
 import { OFF_TOPIC_MARKER } from "./prompt";
 import type { AssistantMemory, AssistantMode, Chip, ItineraryBlock, MapBlock, PlaceCard, WeatherBlock } from "./schema";
 import { distanceKm, isIndoor, placePath, travelMode, type ToolLedger } from "./tools";
@@ -65,12 +64,10 @@ function shortSentence(text: string | null, max = 140) {
 }
 
 /** One honest line on why a place fits, only from our own data and the user's stated needs. */
-export function whyLine(place: NormalizedPlace, memory: AssistantMemory, language: ReplyLanguage): string {
+export function whyLine(place: NormalizedPlace, memory: AssistantMemory): string {
   const parts: string[] = [];
-  if (memory.indoor && isIndoor(place)) parts.push(language === "taglish" ? "Indoor, safe sa ulan" : "Indoor, rain-proof");
-  if (memory.budgetPerHead !== null && place.budget_min !== null && place.budget_min <= memory.budgetPerHead) {
-    parts.push(language === "taglish" ? `Pasok sa ₱${memory.budgetPerHead} budget` : `Fits ₱${memory.budgetPerHead} a head`);
-  }
+  if (memory.indoor && isIndoor(place)) parts.push("Indoor, rain-proof");
+  if (memory.budgetPerHead !== null && place.budget_min !== null && place.budget_min <= memory.budgetPerHead) parts.push(`Fits ₱${memory.budgetPerHead} a head`);
   const about = shortSentence(place.description);
   if (about) parts.push(about);
   else if (place.good_for.length) parts.push(`Good for ${place.good_for.slice(0, 3).join(", ").toLowerCase()}`);
@@ -82,7 +79,6 @@ export function selectCards(
   ledger: ToolLedger,
   mode: AssistantMode,
   memory: AssistantMemory,
-  language: ReplyLanguage,
   imageUrl: (place: NormalizedPlace) => string | null
 ): PlaceCard[] {
   const pool = [...ledger.places.values()].filter((place) => isGalaWorthySlug(place.slug));
@@ -107,7 +103,7 @@ export function selectCards(
       imageUrl: imageUrl(place),
       budgetMin: place.budget_min,
       budgetLabel: budgetLabel(place),
-      why: whyLine(place, memory, language),
+      why: whyLine(place, memory),
       latitude: place.latitude,
       longitude: place.longitude,
       goodFor: place.good_for.slice(0, 4),
@@ -148,56 +144,47 @@ export function buildWeather(ledger: ToolLedger): WeatherBlock | null {
 
 /** Follow-up chips that change one thing about the last answer. */
 export function buildChips({
-  language,
   mode,
   memory,
   cards,
   hasItinerary,
   refused,
 }: {
-  language: ReplyLanguage;
   mode: AssistantMode;
   memory: AssistantMemory;
   cards: PlaceCard[];
   hasItinerary: boolean;
   refused: boolean;
 }): Chip[] {
-  const taglish = language === "taglish";
   if (refused) {
     return [
-      { label: taglish ? "Date spot ideas" : "Date ideas", prompt: taglish ? "Date spot na hindi mahal" : "Date ideas that won't break the bank", kind: "refine" },
-      { label: taglish ? "Food trip" : "Food trip", prompt: taglish ? "Saan masarap kumain ngayon?" : "Where's good to eat today?", kind: "refine" },
+      { label: "Date ideas", prompt: "Date ideas that won't break the bank", kind: "refine" },
+      { label: "Food trip", prompt: "Where's good to eat today?", kind: "refine" },
     ];
   }
   if (cards.length === 0) {
     return [
-      { label: "Metro Manila", prompt: taglish ? "Gala sa Metro Manila" : "Ideas in Metro Manila", kind: "refine" },
-      { label: taglish ? "Day trip malapit sa Manila" : "Day trip near Manila", prompt: taglish ? "Day trip malapit sa Manila" : "Day trip near Manila", kind: "refine" },
+      { label: "Metro Manila", prompt: "Ideas in Metro Manila", kind: "refine" },
+      { label: "Day trip near Manila", prompt: "Day trip near Manila", kind: "refine" },
     ];
   }
   const chips: Chip[] = [];
   const priced = cards.filter((card) => card.budgetMin !== null && card.budgetMin > 0);
-  if (priced.length > 0 && memory.budgetPerHead !== 0) chips.push({ label: taglish ? "Mas mura?" : "Cheaper?", prompt: taglish ? "Mas mura?" : "Something cheaper?", kind: "refine" });
+  if (priced.length > 0 && memory.budgetPerHead !== 0) chips.push({ label: "Cheaper?", prompt: "Something cheaper?", kind: "refine" });
   const first = cards[0];
-  chips.push({ label: taglish ? "Malapit lang" : "Nearby", prompt: taglish ? `Ano pa malapit sa ${first.name}?` : `What else is near ${first.name}?`, kind: "refine" });
-  if (!memory.indoor) chips.push({ label: taglish ? "Indoor kasi umuulan" : "Indoor, it's raining", prompt: taglish ? "Indoor na lang, umuulan kasi" : "Indoor options, it's raining", kind: "refine" });
-  if (!hasItinerary && cards.length >= 2) chips.push({ label: taglish ? "Gawing day plan" : "Make it a day plan", prompt: taglish ? `Gawan mo ng day plan${memory.area ? ` sa ${memory.area}` : ""}` : `Turn this into a day plan${memory.area ? ` in ${memory.area}` : ""}`, kind: "plan" });
+  chips.push({ label: "Nearby", prompt: `What else is near ${first.name}?`, kind: "refine" });
+  if (!memory.indoor) chips.push({ label: "Indoor, it's raining", prompt: "Indoor options, it's raining", kind: "refine" });
+  if (!hasItinerary && cards.length >= 2) chips.push({ label: "Make it a day plan", prompt: `Turn this into a day plan${memory.area ? ` in ${memory.area}` : ""}`, kind: "plan" });
   chips.push({ label: "Add to plan", prompt: first.slug, kind: "add_to_plan" });
-  if (mode === "chat" && cards.some((card) => card.latitude !== null)) chips.push({ label: taglish ? "Ipakita sa mapa" : "Show on map", prompt: "", kind: "map" });
+  if (mode === "chat" && cards.some((card) => card.latitude !== null)) chips.push({ label: "Show on map", prompt: "", kind: "map" });
   return chips.slice(0, 5);
 }
 
 /** The answer when no model is reachable: honest, short, built from the tool results alone. */
-export function fallbackText(cards: PlaceCard[], memory: AssistantMemory, language: ReplyLanguage, weather: WeatherBlock | null): string {
-  const taglish = language === "taglish";
-  if (cards.length === 0) {
-    return taglish
-      ? `Wala pa akong swak na lugar${memory.area ? ` sa ${memory.area}` : ""} para diyan. Subukan natin ibang area o budget?`
-      : `I couldn't find a GalaTayo place${memory.area ? ` in ${memory.area}` : ""} for that yet. Want to try another area or budget?`;
-  }
-  const where = memory.area ? (taglish ? ` sa ${memory.area}` : ` in ${memory.area}`) : "";
-  const intro = taglish ? `Heto ang mga swak na puntahan${where}, tingnan mo:` : `Here are good picks${where}:`;
-  const rain = weather?.rainLikely ? (taglish ? ` (${weather.summary.toLowerCase()}, kaya indoor-friendly muna)` : ` (${weather.summary.toLowerCase()})`) : "";
+export function fallbackText(cards: PlaceCard[], memory: AssistantMemory, weather: WeatherBlock | null): string {
+  const where = memory.area ? ` in ${memory.area}` : "";
+  if (cards.length === 0) return `No GalaTayo place${where} for that yet! Want to try another area or budget?`;
+  const rain = weather?.rainLikely ? ` (${weather.summary.toLowerCase()})` : "";
   const lines = cards.slice(0, 4).map((card) => `- **${card.name}**${card.budgetLabel ? ` · ${card.budgetLabel.toLowerCase()}` : ""}`);
-  return [`${intro.replace(/:$/, rain + ":")}`, ...lines].join("\n");
+  return [`Here are great picks${where}${rain}:`, ...lines].join("\n");
 }
