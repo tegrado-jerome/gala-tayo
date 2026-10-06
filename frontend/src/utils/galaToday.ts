@@ -58,6 +58,8 @@ async function fetchPosts(): Promise<GalaTodayPost[]> {
   // The bundled copy (committed daily) renders instantly and in prerender; the API adds anything newer.
   const bundled = ((await import('../data/galaToday.json')).default as unknown as GalaTodayPost[]) ?? []
   let live: GalaTodayPost[] = []
+  // Prerendering (headless) uses the committed posts only, so the build never waits on the API.
+  if (typeof navigator !== 'undefined' && navigator.webdriver) return bundled.sort(byNewest)
   try {
     const response = await apiFetch('/today?limit=30', { method: 'GET' }, 12_000)
     if (response.ok) live = ((await response.json()) as { posts?: GalaTodayPost[] }).posts ?? []
