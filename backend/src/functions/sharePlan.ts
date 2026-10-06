@@ -102,6 +102,14 @@ export function isPreviewBot(userAgent: string | null) {
   return Boolean(userAgent && PREVIEW_BOTS.test(userAgent));
 }
 
+const SHARE_REFS = new Set(["story", "invite", "gc", "copy"]);
+
+/** Carries the share channel (?ref=invite...) through to the plan so the app can count it; anything else is dropped. */
+export function planUrlWithRef(planUrl: string, requestUrl: string) {
+  const ref = new URL(requestUrl).searchParams.get("ref");
+  return ref && SHARE_REFS.has(ref) ? `${planUrl}?ref=${ref}` : planUrl;
+}
+
 const HTML_HEADERS = { "Content-Type": "text/html; charset=utf-8", "X-Robots-Tag": "noindex" };
 
 export async function getPlanSharePage(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -123,7 +131,7 @@ export async function getPlanSharePage(request: HttpRequest, context: Invocation
       title: plan.title,
       description: plan.description,
       stops: items.map((item) => ({ slug: item.places?.slug ?? null, city: item.places?.city ?? null, storageKey: item.places?.storage_key ?? null })),
-      planUrl: `${siteUrl}/gala-plans/${plan.id}`,
+      planUrl: planUrlWithRef(`${siteUrl}/gala-plans/${plan.id}`, request.url),
       shareUrl: request.url.split("?")[0],
     });
     const refresh = !isPreviewBot(request.headers.get("user-agent"));

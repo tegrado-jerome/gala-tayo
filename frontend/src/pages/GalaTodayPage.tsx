@@ -8,10 +8,14 @@ import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, SectionHead } from '
 import { formatPeso, formatPostDate, leadPick, useGalaToday, type GalaTodayPick, type GalaTodayPost } from '../utils/galaToday'
 import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../utils/seo'
+import { trackShare } from '../utils/analytics'
+import { nativeShareChannel, withShareRef } from '../utils/shareRef'
 
 function shareLink(post: GalaTodayPost) {
-  const url = `${getSiteOrigin()}/today/${post.slug}`
-  if (navigator.share) {
+  const channel = nativeShareChannel()
+  const url = withShareRef(`${getSiteOrigin()}/today/${post.slug}`, channel)
+  trackShare({ channel, contentType: 'gala_today', itemId: post.slug })
+  if (channel === 'gc') {
     void navigator.share({ title: post.title, text: post.hook, url }).catch(() => undefined)
     return
   }

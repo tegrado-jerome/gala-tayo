@@ -40,6 +40,8 @@ import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildGalaPlanInviteUrl } from '../../utils/share'
 import { bestDate, formatDateChoice, inviteMessage, lockedDate, splitPolls } from '../../utils/barkadaVotes'
+import { trackShare } from '../../utils/analytics'
+import { withShareRef } from '../../utils/shareRef'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
 
@@ -309,7 +311,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
   const copyInvite = async () => {
     try {
-      await navigator.clipboard.writeText(`${invitation} ${shareUrl}`)
+      await navigator.clipboard.writeText(`${invitation} ${withShareRef(shareUrl, 'copy')}`)
+      trackShare({ channel: 'copy', contentType: 'plan', itemId: plan.id })
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -324,10 +327,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       return
     }
     try {
-      await navigator.share({ title: plan.title, text: invitation, url: shareUrl })
+      await navigator.share({ title: plan.title, text: invitation, url: withShareRef(shareUrl, 'invite') })
     } catch {
       return
     }
+    trackShare({ channel: 'invite', contentType: 'plan', itemId: plan.id })
     setNotice('Invite sent. Hintayin ang Tara nila!')
   }
 

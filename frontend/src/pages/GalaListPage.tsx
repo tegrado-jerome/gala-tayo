@@ -102,7 +102,7 @@ function useShareList() {
   return async (shared: SharedList, count: number) => {
     const willOpenSheet = typeof navigator.share === 'function'
     try {
-      await shareLink({ url: buildGalaListShareUrl(encodeSharedList(shared)), title: shared.name, text: `${shared.name} · ${plural(count, 'place')} on GalaTayo` })
+      await shareLink({ url: buildGalaListShareUrl(encodeSharedList(shared)), title: shared.name, text: `${shared.name} · ${plural(count, 'place')} on GalaTayo`, contentType: 'list' })
       if (!willOpenSheet) showSystemMessage({ title: 'Link copied', description: 'Paste it in the group chat.' })
     } catch (error) {
       if ((error as Error).name !== 'AbortError') showSystemMessage({ title: 'Could not share the list', description: 'Try again.' })

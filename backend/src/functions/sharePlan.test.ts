@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { describePlanShare, isPreviewBot, planDateLabel, renderSharePage } from "./sharePlan";
+import { describePlanShare, isPreviewBot, planDateLabel, planUrlWithRef, renderSharePage } from "./sharePlan";
 
 describe("plan share preview", () => {
   const preview = describePlanShare({
@@ -45,5 +45,14 @@ describe("plan share preview", () => {
     assert.equal(isPreviewBot("facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"), true);
     assert.equal(isPreviewBot("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"), false);
     assert.doesNotMatch(renderSharePage(preview, { refresh: false }), /http-equiv="refresh"/);
+  });
+});
+
+describe("plan share ref", () => {
+  it("passes a known share channel through and drops anything else", () => {
+    const plan = "https://galatayo.app/gala-plans/abc";
+    assert.equal(planUrlWithRef(plan, "https://api.example/api/share/plans/abc?ref=invite"), `${plan}?ref=invite`);
+    assert.equal(planUrlWithRef(plan, "https://api.example/api/share/plans/abc?ref=<script>"), plan);
+    assert.equal(planUrlWithRef(plan, "https://api.example/api/share/plans/abc"), plan);
   });
 });

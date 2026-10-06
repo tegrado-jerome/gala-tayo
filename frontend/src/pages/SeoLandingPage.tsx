@@ -237,7 +237,7 @@ export default function SeoLandingPage({
   const shareGuide = async () => {
     try {
       const hadNativeShare = typeof navigator.share === 'function'
-      await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}` })
+      await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}`, contentType: 'guide', itemId: target.slug })
       setShareNote(hadNativeShare ? null : 'Link copied. I-send mo na sa GC!')
     } catch (error) {
       if ((error as Error).name !== 'AbortError') setShareNote(pageUrl)

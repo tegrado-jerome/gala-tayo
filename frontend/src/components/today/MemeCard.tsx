@@ -5,6 +5,7 @@ import { Button } from '../ui'
 import { leadPick, type GalaTodayPost } from '../../utils/galaToday'
 import { getPlaceCardPhoto } from '../../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../../utils/seo'
+import { withShareRef } from '../../utils/shareRef'
 import { shareImage } from '../../utils/storyCanvas'
 import { renderMemeCard } from './memeCardDraw'
 
@@ -46,7 +47,7 @@ function MemeCard({ post }: { post: GalaTodayPost }) {
         setMessage("Couldn't make the image on this device. Try the link instead.")
         return
       }
-      const result = await shareImage(blob, `galatayo-${post.slug}.png`, post.title, `${post.title} ${getSiteOrigin()}/today/${post.slug}`)
+      const result = await shareImage(blob, `galatayo-${post.slug}.png`, post.title, `${post.title} ${withShareRef(`${getSiteOrigin()}/today/${post.slug}`, 'story')}`)
       if (result === 'downloaded') setMessage('Saved to your downloads. Post it and tag the barkada!')
     } finally {
       setBusy(false)

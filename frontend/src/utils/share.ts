@@ -1,11 +1,16 @@
 import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
 import { getPublicSiteOrigin } from './site'
 import { getApiUrl } from './apiClient'
+import { trackShare } from './analytics'
+import { nativeShareChannel, withShareRef, type ShareChannel } from './shareRef'
 
 type ShareLinkOptions = {
   url: string
   title?: string
   text?: string
+  /** Recorded with GA4's share event. */
+  contentType?: Parameters<typeof trackShare>[0]['contentType']
+  itemId?: string | null
 }
 
 type ShareablePlace = {
@@ -53,7 +58,7 @@ export function buildGalaListShareUrl(query: string) {
   return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
 }
 
-async function copyTextToClipboard(text: string) {
+export async function copyTextToClipboard(text: string) {
   if (navigator.clipboard && window.isSecureContext) {
     await navigator.clipboard.writeText(text)
     return
@@ -77,21 +82,17 @@ async function copyTextToClipboard(text: string) {
   }
 }
 
-export async function shareLink({
-  url,
-  title,
-  text,
-}: ShareLinkOptions): Promise<void> {
-  if (navigator.share) {
-    await navigator.share({
-      title,
-      text,
-      url,
-    })
-    return
+/** Opens the share sheet (or copies the link), tagging the URL with how it was shared. Returns that channel. */
+export async function shareLink({ url, title, text, contentType, itemId }: ShareLinkOptions): Promise<ShareChannel> {
+  const channel = nativeShareChannel()
+  const taggedUrl = withShareRef(url, channel)
+  if (channel === 'gc') {
+    await navigator.share({ title, text, url: taggedUrl })
+  } else {
+    await copyTextToClipboard(taggedUrl)
   }
-
-  await copyTextToClipboard(url)
+  if (contentType) trackShare({ channel, contentType, itemId })
+  return channel
 }
 
 export function buildGalaPlanShareUrl(username: string, slug: string) {
@@ -103,5 +104,7 @@ export async function shareGalaPlanLink(username: string, slug: string, title: s
     url: buildPublicGalaPlanShareUrl(username, slug),
     title,
     text: title,
+    contentType: 'plan',
+    itemId: slug,
   })
 }

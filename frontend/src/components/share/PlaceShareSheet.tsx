@@ -10,6 +10,8 @@ import { renderPlaceStory } from './placeStoryDraw'
 import SaveToListSheet from '../lists/SaveToListSheet'
 import { buildPlaceStoryText, photoCreditLine, type PlaceStoryInput } from '../../utils/placeStory'
 import { getPublicSiteOrigin } from '../../utils/site'
+import { buildPlaceShareUrl } from '../../utils/share'
+import { withShareRef } from '../../utils/shareRef'
 import type { GalaListPlace } from '../../utils/galaListsCore'
 
 export type PlaceShareView = 'menu' | 'story' | 'list' | null
@@ -58,7 +60,8 @@ function PlaceShareSheet({ view, onViewChange, place, photos, listPlace, onShare
         render={() => renderPlaceStory(story)}
         fileName={story.fileName}
         title={story.name}
-        shareText={`${story.name} · ${story.link}`}
+        // The image prints the clean short link; the message carries the full one, tagged as a story share.
+        shareText={`${story.name} · ${withShareRef(buildPlaceShareUrl(place), 'story')}`}
         summary={[story.kicker, story.name, story.line].filter(Boolean).join('. ')}
         label={`Story for ${story.name}`}
         onClose={close}

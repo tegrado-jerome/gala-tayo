@@ -1,3 +1,5 @@
+import { readShareRef, type ShareChannel } from './shareRef'
+
 type AnalyticsEventParams = Record<string, string | number | boolean | undefined | null>
 
 type PageViewParams = {
@@ -184,6 +186,8 @@ async function trackPageView({ pathname }: PageViewParams): Promise<void> {
     page_title: document.title,
     page_location: window.location.href,
     page_path: window.location.pathname + window.location.search,
+    // Which share surface brought this visit (?ref=story|invite|gc|copy). Register "share_ref" as a custom dimension to report on it.
+    share_ref: readShareRef(window.location.search) ?? undefined,
   })
   lastPageViewSignature = signature
 }
@@ -221,6 +225,15 @@ function trackFavoriteAdded({ placeSlug }: FavoriteAddedParams) {
 function trackPlaceShared({ placeSlug }: PlaceSharedParams) {
   trackEvent('place_shared', {
     place_slug: placeSlug ?? undefined,
+  })
+}
+
+/** GA4's recommended "share" event: method is the channel the link was tagged with. */
+function trackShare({ channel, contentType, itemId }: { channel: ShareChannel; contentType: 'place' | 'plan' | 'guide' | 'list' | 'gala_today' | 'saan_tayo' | 'profile'; itemId?: string | null }) {
+  trackEvent('share', {
+    method: channel,
+    content_type: contentType,
+    item_id: itemId ?? undefined,
   })
 }
 
@@ -286,5 +299,6 @@ export {
   trackPlaceViewed,
   trackSearchResultSelected,
   trackSearchSubmitted,
+  trackShare,
   trackSignUpCompleted,
 }

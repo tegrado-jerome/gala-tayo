@@ -1034,6 +1034,8 @@ function PlaceDetailView({
         url: buildPlaceShareUrl(place),
         title: place.name,
         text: place.name,
+        contentType: 'place',
+        itemId: place.slug ?? null,
       })
       trackPlaceShared({
         placeSlug: place.slug ?? null,
