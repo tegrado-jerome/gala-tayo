@@ -178,9 +178,6 @@
 }
 .pd-av-hit { display: grid; place-items: center; min-width: 44px; min-height: 44px; margin: -6px; }
 
-/* Editor's note from the team (kept apart from visitor reviews) */
-.pd-team-note { padding: 18px; border-radius: var(--r-2); background: var(--fill); }
-.pd-team-note .pd-sec-title { margin-top: 4px; }
 
 /* Did you know? — a sand callout with one or two verified facts. */
 .pd-dyk { padding: 18px; border-radius: var(--r-2); background: var(--fill); }
