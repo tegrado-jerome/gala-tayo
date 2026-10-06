@@ -28,14 +28,9 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   return (
     <Page>
       <SeoHead {...seoConfig} />
-      <h1 className="sr-only">{greetingName ? `Tara, ${greetingName}? Places to go around the Philippines` : 'Places to go around the Philippines'}</h1>
       <HomeDiscover
         isRaining={isRaining}
-        greeting={
-          <span aria-hidden="true">
-            Tara{greetingName ? `, ${greetingName}` : ''}, <em>gala</em> tayo?
-          </span>
-        }
+        headline={<h1 className="g-home-title">{greetingName ? `Tara, ${greetingName} — saan ang gala this weekend?` : 'Saan ang gala this weekend?'}</h1>}
         top={
           <>
             {isRaining && weather ? (

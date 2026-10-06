@@ -2,9 +2,9 @@ import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttr
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Medal } from '@phosphor-icons/react/dist/csr/Medal'
 import { createPortal } from 'react-dom'
 import InternalLink from '../InternalLink'
-import { formatPlaceCardMeta } from '../../utils/placeLocation'
 import { resizedMediaUrl } from '../../data/r2Config'
 
 export function cx(...values: Array<string | false | null | undefined>) {
@@ -147,85 +147,111 @@ export function SulitMeter({ score, max = 10 }: { score: number | null | undefin
   )
 }
 
+/** Five forest dots, filled up to the rating. */
+export function SunDots({ rating }: { rating: number }) {
+  const filled = Math.round(rating)
+  return (
+    <span className="g-sun" role="img" aria-label={`Rated ${rating.toFixed(1)} of 5`}>
+      {[1, 2, 3, 4, 5].map((dot) => (
+        <i key={dot} className={dot <= filled ? 'is-f' : undefined} />
+      ))}
+    </span>
+  )
+}
+
+export function PickBadge() {
+  return (
+    <span className="g-pick">
+      <Medal weight="fill" aria-hidden="true" />
+      GalaTayo Pick
+    </span>
+  )
+}
+
 export type PlaceCardProps = {
   href: string
   title: string
   imageUrl?: string | null
+  /** Replaces the `<img>`, e.g. an image with its own fallbacks. */
+  media?: ReactNode
   icon?: PhosphorIcon
+  /** Uppercase line above the name; defaults to "Category · Area". */
+  kicker?: ReactNode
+  /** Plain muted line under the name, for tiles that are not places. */
   meta?: ReactNode
   category?: string | null
   area?: string | null
   city?: string | null
   rating?: number | null
   reviewCount?: number | null
-  tint?: PlaceCardTint
+  duration?: string | null
   pricePerHead?: string | null
-  sulit?: number | null
+  pick?: boolean
   flag?: ReactNode
   saved?: boolean
   onToggleSave?: () => void
+  selected?: boolean
+  priority?: boolean
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
   className?: string
 }
 
-export type PlaceCardTint = 'tara' | 'sea' | 'warn'
-
-const tintInk: Record<PlaceCardTint, string> = { tara: 'var(--tara-ink)', sea: 'var(--sea)', warn: 'var(--warn)' }
-
-const clampTwoLines: CSSProperties = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'normal' }
-
 /**
- * `pricePerHead` "Free" renders as "Free entry". A "Sulit" tag shows only for great value (score 8+ of 10).
- * Without `meta`, the meta line is built from `category`, `area` and `city` as "Category · Area, City".
- * The rating hides when `reviewCount` is known and under 3. The tinted icon sits under the image, so loading or failed media is never a grey box.
+ * Editorial photo card: photo with heart and badge, then kicker, name, sun dots and "duration · fee".
+ * Sun dots only show with 3+ real ratings. `pricePerHead` "Free" renders as "Free entry".
  */
-export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, category, area, city, rating, reviewCount, tint = 'warn', pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
-  const isFree = pricePerHead === 'Free'
-  const metaLine = meta ?? (formatPlaceCardMeta({ category, area, city }) || null)
-  const price = pricePerHead ? (isFree ? 'Free entry' : `${pricePerHead}/head`) : null
-  const showSulit = !isFree && sulit != null && sulit >= 8
-  const shownRating = rating && (reviewCount == null || reviewCount >= 3) ? rating : null
+export function PlaceCard({ href, title, imageUrl, media, icon: FallbackIcon = MapPin, kicker, meta, category, area, city, rating, reviewCount, duration, pricePerHead, pick, flag, saved, onToggleSave, selected, priority, onClick, className }: PlaceCardProps) {
+  const kickerLine = kicker ?? ([category, area || city].filter(Boolean).join(' · ') || null)
+  const price = pricePerHead ? (pricePerHead === 'Free' ? 'Free entry' : `${pricePerHead}/head`) : null
+  const ratingShown = rating && reviewCount != null && reviewCount >= 3 ? rating : null
   return (
-    <InternalLink href={href} className={cx('g-pc', className)}>
-      <div className="g-pc-img" style={{ background: `var(--${tint}-soft)` }}>
-        <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
-          <FallbackIcon size={28} color={tintInk[tint]} strokeWidth={1.75} opacity={0.45} />
-        </span>
-        {imageUrl ? <img className="relative" src={resizedMediaUrl(imageUrl, 'card')} alt="" loading="lazy" decoding="async" /> : null}
-        {flag ? <span className="g-pc-flag">{flag}</span> : null}
-        {onToggleSave ? (
-          <button
-            type="button"
-            className="g-pc-save"
-            aria-pressed={Boolean(saved)}
-            aria-label={saved ? `Remove ${title} from saved` : `Save ${title}`}
-            onClick={(event: MouseEvent) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onToggleSave()
-            }}
-          >
-            <Heart className="g-ic" weight={saved ? 'fill' : 'regular'} />
-          </button>
-        ) : null}
-      </div>
-      <div className="g-pc-title">
-        <span className="g-h3" style={clampTwoLines}>{title}</span>
-      </div>
-      {metaLine ? <div className="g-pc-meta" title={typeof metaLine === 'string' ? metaLine : undefined}>{metaLine}</div> : null}
-      {price || shownRating || showSulit ? (
-        <div className="g-sulit">
-          {price ? <b>{price}</b> : null}
-          {price && shownRating ? <span aria-hidden="true">·</span> : null}
-          {shownRating ? (
-            <span className="text-[var(--ink)]">
-              ★ {shownRating.toFixed(1)}
-              {reviewCount != null ? <span className="g-mut"> ({reviewCount.toLocaleString('en-PH')})</span> : null}
+    <div className={cx('g-pc', selected && 'is-on', className)}>
+      <InternalLink href={href} ariaLabel={title} className="g-pc-link" onClick={onClick}>
+        <span className="g-pc-img">
+          <span className="g-pc-fallback" aria-hidden="true">
+            <FallbackIcon size={28} weight="light" />
+          </span>
+          {media ?? (imageUrl ? <img src={resizedMediaUrl(imageUrl, 'card')} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
+          {pick || flag ? (
+            <span className="g-pc-flag">
+              {pick ? <PickBadge /> : null}
+              {flag}
             </span>
           ) : null}
-          {showSulit ? <Tag tone="ok" className="ml-1">Sulit</Tag> : null}
-        </div>
+        </span>
+        {kickerLine ? <span className="g-kicker g-pc-kicker">{kickerLine}</span> : null}
+        <span className="g-pc-name">{title}</span>
+        {meta ? <span className="g-pc-meta">{meta}</span> : null}
+        {ratingShown ? (
+          <span className="g-pc-line">
+            <SunDots rating={ratingShown} />
+            {reviewCount?.toLocaleString('en-PH')} reviews
+          </span>
+        ) : null}
+        {duration || price ? (
+          <span className="g-pc-line">
+            {duration}
+            {duration && price ? <span aria-hidden="true">·</span> : null}
+            {price ? <b className="g-pc-fee">{price}</b> : null}
+          </span>
+        ) : null}
+      </InternalLink>
+      {onToggleSave ? (
+        <button
+          type="button"
+          className="g-pc-save"
+          aria-pressed={Boolean(saved)}
+          aria-label={saved ? `Remove ${title} from saved` : `Save ${title}`}
+          onClick={(event: MouseEvent) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onToggleSave()
+          }}
+        >
+          <Heart className="g-ic" weight={saved ? 'fill' : 'regular'} />
+        </button>
       ) : null}
-    </InternalLink>
+    </div>
   )
 }
 
@@ -259,8 +285,9 @@ export function Skeleton({ className, style }: { className?: string; style?: CSS
 export function PlaceCardSkeleton() {
   return (
     <div aria-hidden="true">
-      <Skeleton style={{ aspectRatio: '1 / 1' }} />
-      <Skeleton className="mt-3 h-3.5 w-3/4" />
+      <Skeleton className="!rounded-[var(--r-3)]" style={{ aspectRatio: '16 / 9' }} />
+      <Skeleton className="mt-3 h-3 w-1/3" />
+      <Skeleton className="mt-2 h-4 w-3/4" />
       <Skeleton className="mt-2 h-3 w-1/2" />
     </div>
   )
@@ -316,71 +343,7 @@ export function KeyValue({ items }: { items: Array<{ label: ReactNode; value: Re
   )
 }
 
-/** Pinterest-style photo feed: CSS columns, 2 on phones, 3 on tablets, `desktopColumns` from 1024px. */
-export function Masonry({ desktopColumns = 4, className, ...rest }: HTMLAttributes<HTMLDivElement> & { desktopColumns?: 3 | 4 }) {
-  return <div className={cx('g-cat-grid', desktopColumns === 3 && 'is-3', className)} {...rest} />
-}
-
-
-
-export type MasonryCardProps = {
-  href: string
-  title: string
-  imageUrl?: string | null
-  /** Replaces the `<img>`, e.g. an image with its own fallbacks. */
-  media?: ReactNode
-  /** Picks the aspect ratio when real image sizes are unknown. */
-  index?: number
-  price?: string | null
-  meta?: ReactNode
-  flag?: ReactNode
-  icon?: PhosphorIcon
-  tint?: PlaceCardTint
-  saved?: boolean
-  onToggleSave?: () => void
-  selected?: boolean
-  priority?: boolean
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
-  className?: string
-}
-
-/** Listing card for `Masonry`: square photo with a heart, then name, meta and price underneath (Airbnb-style). `index` is kept for older call sites. */
-export function MasonryCard({ href, title, imageUrl, media, price, meta, flag, icon: FallbackIcon = MapPin, tint = 'sea', saved, onToggleSave, selected, priority, onClick, className }: MasonryCardProps) {
-  return (
-    <div className={cx('relative min-w-0', className)}>
-      <InternalLink href={href} ariaLabel={price ? `${title} · ${price}` : title} className="g-pc" onClick={onClick}>
-        <div className="g-pc-img" style={{ background: `var(--${tint}-soft)`, boxShadow: selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' : undefined }}>
-          <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
-            <FallbackIcon size={28} color={tintInk[tint]} opacity={0.45} />
-          </span>
-          {media ?? (imageUrl ? <img className="relative" src={resizedMediaUrl(imageUrl, 'card')} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
-          {flag ? <span className="g-pc-flag">{flag}</span> : null}
-        </div>
-        <div className="g-pc-title">
-          <span className="g-h3" style={clampTwoLines}>{title}</span>
-        </div>
-        {meta ? <div className="g-pc-meta">{meta}</div> : null}
-        {price ? (
-          <div className="g-sulit">
-            <b>{price === 'Free' ? 'Free entry' : `${price}/head`}</b>
-          </div>
-        ) : null}
-      </InternalLink>
-      {onToggleSave ? (
-        <button
-          type="button"
-          className="g-pc-save"
-          aria-pressed={Boolean(saved)}
-          aria-label={saved ? `Remove ${title} from saved` : `Save ${title}`}
-          onClick={(event: MouseEvent) => {
-            event.preventDefault()
-            event.stopPropagation()
-            onToggleSave()
-          }}
-        >
-          <Heart className="g-ic" weight={saved ? 'fill' : 'regular'} />
-        </button>
-      ) : null}
-    </div>
-  )
+/** Listing grid of big photo cards: one column on phones, two on tablets, `desktopColumns` from 1024px. */
+export function Masonry({ desktopColumns = 3, className, ...rest }: HTMLAttributes<HTMLDivElement> & { desktopColumns?: 2 | 3 }) {
+  return <div className={cx('g-lgrid', desktopColumns === 2 && 'is-2', className)} {...rest} />
 }

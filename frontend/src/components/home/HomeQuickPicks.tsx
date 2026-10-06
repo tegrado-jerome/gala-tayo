@@ -55,7 +55,7 @@ function BahalaNaSheet({ pick, spin, onRespin, onClose }: { pick: PhotoCardPlace
   )
 }
 
-/** One-tap picks under the category tiles: random pick, sunset spots, and two budget shortcuts. */
+/** One-tap picks in the Saan tayo card: random pick, sunset spots, and two budget shortcuts. */
 function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
   const [pick, setPick] = useState<PhotoCardPlace | null>(null)
   const [isSpinOpen, setIsSpinOpen] = useState(false)
@@ -76,22 +76,22 @@ function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
   return (
     <>
       <nav className="g-qpicks" aria-label="Quick picks">
-        <button type="button" className="g-qpick is-hot" onClick={() => { spinAgain(); setIsSpinOpen(true) }} disabled={pool.length === 0}>
+        <button type="button" className="g-qpick" onClick={() => { spinAgain(); setIsSpinOpen(true) }} disabled={pool.length === 0}>
           <Shuffle weight="bold" aria-hidden="true" />
           Bahala na!
         </button>
         {sunsetLabel ? (
-          <InternalLink href="/places/categories/park" className="g-qpick no-underline">
-            <SunHorizon weight="duotone" aria-hidden="true" />
+          <InternalLink href="/places/categories/park" className="g-qpick">
+            <SunHorizon weight="light" aria-hidden="true" />
             {sunsetLabel}
           </InternalLink>
         ) : null}
-        <InternalLink href="/search?budget=under-500" className="g-qpick no-underline">
-          <Wallet weight="duotone" aria-hidden="true" />
+        <InternalLink href="/search?budget=under-500" className="g-qpick">
+          <Wallet weight="light" aria-hidden="true" />
           Petsa de peligro
         </InternalLink>
-        <InternalLink href="/search?budget=free" className="g-qpick no-underline">
-          <Gift weight="duotone" aria-hidden="true" />
+        <InternalLink href="/search?budget=free" className="g-qpick">
+          <Gift weight="light" aria-hidden="true" />
           Libre lang
         </InternalLink>
       </nav>

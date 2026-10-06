@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
-import { getCategoryIcon, getCategoryTint } from '../components/PlaceCard'
+import { getCategoryIcon } from '../components/PlaceCard'
 import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { Page, SectionHead } from '../components/ui'
+import { Masonry, Page, PlaceCard, SectionHead } from '../components/ui'
 import { placeCategories } from '../data/placeCategories'
 import { categoryRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
@@ -113,32 +113,22 @@ function PlaceCategoriesIndexPage() {
       </header>
 
       <SectionHead title="What are you in the mood for?" />
-      <div className="m-cgrid">
+      <Masonry>
         {categoryCards.map((category) => {
-          const Icon = getCategoryIcon(category.value)
-          const tint = getCategoryTint(category.value)
           const count = placeCounts[category.value]
+          const slug = categoryRepresentativePlaceSlugs[category.value]
           return (
-            <InternalLink key={category.value} href={`/places/categories/${category.value}`} className="m-ctile">
-              <span className="m-ctile-photo">
-                <span className="m-ctile-ic" style={{ background: `var(--${tint}-soft)`, color: tint === 'tara' ? 'var(--tara-ink)' : `var(--${tint})` }} aria-hidden="true">
-                  <Icon weight="duotone" />
-                </span>
-                <span className="m-ctile-thumb" aria-hidden="true">
-                  <PlaceImage
-                    candidates={getDiscoveryImageCandidates(categoryRepresentativePlaceSlugs[category.value], representativePlaces[categoryRepresentativePlaceSlugs[category.value]])}
-                    category={category.value}
-                  />
-                </span>
-              </span>
-              <span className="min-w-0">
-                <span className="g-h3 block truncate">{category.label}</span>
-                <span className="g-sm g-mut block">{count != null ? `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}` : 'See places'}</span>
-              </span>
-            </InternalLink>
+            <PlaceCard
+              key={category.value}
+              href={`/places/categories/${category.value}`}
+              title={category.label}
+              icon={getCategoryIcon(category.value)}
+              media={<PlaceImage candidates={getDiscoveryImageCandidates(slug, representativePlaces[slug])} category={category.value} className="g-pc-media" />}
+              meta={count != null ? `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}` : 'See places'}
+            />
           )
         })}
-      </div>
+      </Masonry>
     </Page>
   )
 }

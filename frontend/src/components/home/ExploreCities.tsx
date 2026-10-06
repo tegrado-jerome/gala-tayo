@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import PlaceImage from '../discover/PlaceImage'
 import Rail from '../discover/Rail'
 import InternalLink from '../InternalLink'
-import { Button, Chip, Chips, SectionHead } from '../ui'
+import { Button, Chip, Chips, PlaceCard, SectionHead } from '../ui'
 import { METRO_MANILA_REGION_SLUG, featuredDestinations, getRegionBySlug, regions } from '../../data/destinations'
 import { homeCityRecommendations } from '../../data/homeRecommendations'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
@@ -62,19 +62,16 @@ function ExploreCities() {
   return (
     <>
       {destinationTiles.length > 0 ? (
-        <Rail title="Explore the Philippines" subtitle="Beyond Metro Manila" seeAllHref="/places" itemBasis={200}>
+        <Rail title="Explore the Philippines" subtitle="Beyond Metro Manila" seeAllHref="/places">
           {destinationTiles.map((destination) => (
-            <InternalLink key={destination.slug} href={`/places/${destination.slug}`} className="g-pc">
-              <span className="g-pc-img block">
-                <PlaceImage candidates={coverBySlug[destination.slug] ? [coverBySlug[destination.slug]] : []} className="h-full w-full object-cover" />
-              </span>
-              <span className="g-pc-title">
-                <span className="g-h3">{destination.label}</span>
-              </span>
-              <span className="g-pc-meta block">
-                {destination.provinceName} · {formatPlaceCount(placeCounts[destination.slug])}
-              </span>
-            </InternalLink>
+            <PlaceCard
+              key={destination.slug}
+              href={`/places/${destination.slug}`}
+              title={destination.label}
+              media={<PlaceImage candidates={coverBySlug[destination.slug] ? [coverBySlug[destination.slug]] : []} className="g-pc-media" />}
+              kicker={destination.provinceName}
+              meta={formatPlaceCount(placeCounts[destination.slug])}
+            />
           ))}
         </Rail>
       ) : null}
@@ -100,8 +97,8 @@ function ExploreCities() {
         <ul className="g-chips">
           {chips.map((chip) => (
             <li key={chip.slug}>
-              <InternalLink href={`/places/${encodeURIComponent(chip.slug)}`} className="g-chip !h-11 !gap-2 !pl-1.5 no-underline">
-                <PlaceImage candidates={chip.imageUrl ? [chip.imageUrl] : []} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+              <InternalLink href={`/places/${encodeURIComponent(chip.slug)}`} className="g-mood">
+                <PlaceImage candidates={chip.imageUrl ? [chip.imageUrl] : []} />
                 {chip.label}
               </InternalLink>
             </li>
