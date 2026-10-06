@@ -26,11 +26,11 @@ describe("plan share preview", () => {
     const hd = describePlanShare({
       title: "Kain sa Binondo",
       description: null,
-      stops: [{ slug: "dong-bei-dumplings", city: "Manila", storageKey: "places/dong-bei-dumplings/dong-bei-dumplings-1.webp" }],
+      stops: [{ slug: "fort-santiago", city: "Manila", storageKey: "places/fort-santiago/fort-santiago-1.webp" }],
       planUrl: "https://galatayo.app/gala-plans/abc",
       shareUrl: "https://galatayo.app/p/abc",
     });
-    assert.match(hd.imageUrl, /\/places\/dong-bei-dumplings\/hd\/dong-bei-dumplings-1\.webp$/);
+    assert.match(hd.imageUrl, /\/places\/fort-santiago\/hd\/fort-santiago-1(-v\d+)?\.webp$/);
   });
 
   it("renders escaped OG tags and sends people on to the plan", () => {
