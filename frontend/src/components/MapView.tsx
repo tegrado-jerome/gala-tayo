@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
+import { MapCredit } from './ui/MapCredit'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus'
@@ -842,6 +843,7 @@ function MapView({
   return (
     <div className={`w-full min-h-0 select-none overflow-hidden ${containerClassName}`}>
       <MapContainer
+        attributionControl={false}
         center={safeCenter}
         zoom={safeZoom}
         scrollWheelZoom
@@ -903,6 +905,7 @@ function MapView({
             />
           </>
         )}
+        <MapCredit />
       </MapContainer>
     </div>
   )

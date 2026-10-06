@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { MapCredit } from './MapCredit'
 import { MapContainer, Marker, Polyline, TileLayer, useMap } from 'react-leaflet'
 import L, { type LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -77,7 +78,7 @@ export default function GtMap({
 
   return (
     <div className={cx('g-map', tall && 'is-tall', className)} role="region" aria-label={label}>
-      <MapContainer center={center} zoom={coords.length > 0 ? 14 : 12} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+      <MapContainer attributionControl={false} center={center} zoom={coords.length > 0 ? 14 : 12} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} referrerPolicy="strict-origin-when-cross-origin" />
         {route && routeCoords.length > 1 ? (
           <Polyline positions={routeCoords} pathOptions={{ className: 'g-route', weight: 3, dashArray: '2 8', lineCap: 'round' }} />
@@ -92,6 +93,7 @@ export default function GtMap({
           />
         ))}
         <FitBounds points={coords} />
+        <MapCredit />
       </MapContainer>
     </div>
   )

@@ -651,6 +651,8 @@ function PlaceDetailView({
   const hdGallery = usePlaceGalleryPhotos(cleanString(place.slug) || null)
   const hdPhotos = hdGallery ?? []
   const extras = usePlaceExtras(cleanString(place.slug) || null)
+  // Wikipedia isn't shown as a source: only official, news and travel-authority links.
+  const credibleSources = (extras.sources ?? []).filter((url) => !/wiki(pedia|voyage)\.org/i.test(url))
   useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
@@ -2550,6 +2552,8 @@ function PlaceDetailView({
               areaName={areaBreadcrumb.areaName}
               areaHref={areaLink}
               currentSlug={placeSlug}
+              currentId={cleanString(place.id) || null}
+              currentName={cleanString(place.name) || null}
               onGuestFavorite={(retry) => guestAuth.open('favorite', retry)}
             />
           ) : null}
@@ -2590,10 +2594,10 @@ function PlaceDetailView({
             </nav>
           ) : null}
 
-          {extras.sources?.length ? (
+          {credibleSources.length ? (
             <p className="pd-sources g-xs g-mut">
               Facts from{' '}
-              {extras.sources.map((url, index) => (
+              {credibleSources.map((url, index) => (
                 <span key={url}>
                   {index > 0 ? ' · ' : ''}
                   <a href={url} target="_blank" rel="noopener noreferrer nofollow">

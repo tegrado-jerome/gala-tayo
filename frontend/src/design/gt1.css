@@ -692,3 +692,10 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
   .g-hero-collage figcaption { position: absolute; left: 10px; bottom: 10px; padding: 4px 10px; border-radius: var(--r-pill); background: rgb(0 0 0 / 0.55); color: #fff; font: 600 12px/1.2 var(--font-body); }
 }
 .g-head-search.g-head-search-chat { flex: 0 0 auto; max-width: none; border: 0; box-shadow: none; background: transparent; }
+
+/* Map credits: a small ⓘ button that expands to the OpenStreetMap credit. */
+.g-map-credit { position: absolute; right: 8px; bottom: 8px; z-index: 1000; display: flex; align-items: center; gap: 6px; }
+.g-map-credit-btn { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink-2); cursor: pointer; box-shadow: var(--sh-1); }
+.g-map-credit-btn svg { width: 14px; height: 14px; }
+.g-map-credit-text { padding: 4px 10px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink-2); font: 500 11px/1.3 var(--font-body); box-shadow: var(--sh-1); }
+.g-map-credit-text a { color: inherit; text-decoration: underline; }
