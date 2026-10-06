@@ -144,19 +144,39 @@ export function slugifyTitle(date: string, title: string) {
   return `${date}-${base || "gala-today"}`;
 }
 
-export function buildPrompt(signals: TrendSignal[], angle: string, places: TodayPlace[], date: string) {
+// Claims the model may only make when the place's own facts already say them.
+const SUPERLATIVES = ["biggest", "largest", "oldest", "first", "only", "best", "most", "highest", "longest", "tallest", "#1", "number one"];
+
+/** Superlatives in the text that none of the picked places' facts back up. */
+export function unbackedSuperlatives(text: string, facts: string): string[] {
+  const lowerFacts = facts.toLowerCase();
+  return SUPERLATIVES.filter((word) => new RegExp(`(^|\\W)${word.replace("#", "\\#")}(\\W|$)`, "i").test(text) && !lowerFacts.includes(word));
+}
+
+/** Weekdays and rain keep it local (Metro Manila); weekends and holidays rotate through getaway regions. */
+export function chooseRegion(angle: string, weekday: number, seed: number, regionsWithPlaces: string[], metroSlug = "metro-manila"): string {
+  const isGetawayDay = (weekday === 0 || weekday === 6 || angle.startsWith("Holiday")) && !angle.startsWith("Rain");
+  const getaways = regionsWithPlaces.filter((slug) => slug !== metroSlug);
+  if (!isGetawayDay || getaways.length === 0) return metroSlug;
+  return getaways[seed % getaways.length];
+}
+
+export function buildPrompt(signals: TrendSignal[], angle: string, places: TodayPlace[], date: string, areaName = "Metro Manila") {
   const system = `You write "Gala Today" for GalaTayo, a Filipino app of gala-worthy places. One short, very catchy daily post that rides what's hot right now and turns it into a gala plan.
 Voice: Gen Z Pinoy, playful Taglish, meme-literate, warm. Never mean, never about real private people.
 Rules:
 - Pick at most ONE trend from TRENDS that can link naturally to going out (food, a show, a vibe, weather, a viral word or meme). If none fits, use TODAY'S ANGLE instead and set trend_index to -1.
 - Use one meme format from FORMATS for the hook, rewritten for this post. Text only.
-- Recommend exactly 3 places, chosen only from PLACES by slug. Say why using only the facts given for that place. Never invent prices, hours, distances, events or numbers.
+- Recommend exactly 3 places, chosen only from PLACES by slug. All PLACES are in ${areaName}; frame the post for ${areaName}.
+- Say why using only the facts given for that place. Never invent prices, hours, distances, events, numbers or rankings; no superlatives (biggest, oldest, first, best…) unless that place's facts say them.
+- Hook: one punchy line, max 120 characters.
 - Never claim a place is connected to the trend unless the facts say so; the link is the vibe ("same energy", "para sa…").
 - No hedges ("check", "confirm", "may change"), no hashtags, no emojis in the title.
 Return JSON: {"trend_index": number, "meme_format": string, "title": string (max 70 chars), "hook": string (max 140 chars), "body": string (50-100 words), "picks": [{"slug": string, "why": string (max 110 chars)}]}`;
   const user = [
     `DATE: ${date}`,
     `TODAY'S ANGLE: ${angle}`,
+    `AREA: ${areaName}`,
     `FORMATS: ${MEME_FORMATS.join(" | ")}`,
     "TRENDS:",
     ...signals.map((signal, index) => `${index}. ${signal.title} (${signal.source})`),
@@ -189,7 +209,7 @@ export function validateDraft(
     .filter((pick, index, list) => list.findIndex((other) => other.place.slug === pick.place.slug) === index);
 
   if (title.length < 10 || title.length > 80) return { ok: false, reason: "title length" };
-  if (hook.length < 10 || hook.length > 180) return { ok: false, reason: "hook length" };
+  if (hook.length < 10 || hook.length > 140) return { ok: false, reason: "hook length" };
   const words = body.split(" ").length;
   if (words < 35 || words > 130) return { ok: false, reason: "body length" };
   if (picks.length < 3) return { ok: false, reason: "needs 3 valid picks" };
@@ -197,6 +217,9 @@ export function validateDraft(
   if (HEDGE_PATTERN.test(allText)) return { ok: false, reason: "hedge" };
   if (SLOP_PATTERN.test(allText)) return { ok: false, reason: "slop words" };
   if (!isSafeTrend(allText)) return { ok: false, reason: "unsafe topic" };
+  const facts = picks.map((pick) => `${pick.place.name} ${pick.place.summary}`).join(" ");
+  const unbacked = unbackedSuperlatives(allText, facts);
+  if (unbacked.length > 0) return { ok: false, reason: `unbacked claim: ${unbacked.join(", ")}` };
 
   return {
     ok: true,

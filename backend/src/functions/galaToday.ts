@@ -4,10 +4,12 @@ import { generateJsonFromGroq } from "../services/groqChatProvider";
 import { getJsonCacheValue, getRedisClient, setJsonCacheValue } from "../services/redisCacheService";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { getDestinationBySlug, REGIONS } from "../utils/phDestinations";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import {
   buildPrompt,
   calendarAngle,
+  chooseRegion,
   parseGoogleTrendsRss,
   parseNewsRss,
   pickSignals,
@@ -98,11 +100,20 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   const angle = calendarAngle(manilaNow, rainChance, holiday);
 
   const recentSlugs = new Set(posts.slice(0, 7).flatMap((post) => post.picks.map((pick) => pick.slug)));
-  const ranked = summaries
-    .filter((place) => place.description)
-    .sort((left, right) => (SCORES[right.slug] ?? 0) - (SCORES[left.slug] ?? 0));
   const seed = Number(date.replace(/-/g, "")) + posts.length;
-  const places: TodayPlace[] = rotatePlaces(ranked, recentSlugs, seed, 24).map((place) => ({
+  // All three picks come from one region so a post never sends people across the country in one day.
+  const regionOf = (areaSlug: string) => getDestinationBySlug(areaSlug)?.regionSlug ?? null;
+  const counts = new Map<string, number>();
+  for (const place of summaries) {
+    const region = regionOf(place.areaSlug);
+    if (region && place.description) counts.set(region, (counts.get(region) ?? 0) + 1);
+  }
+  const regionSlug = chooseRegion(angle, manilaNow.getUTCDay(), seed, [...counts].filter(([, count]) => count >= 6).map(([slug]) => slug).sort());
+  const areaName = REGIONS.find((region) => region.slug === regionSlug)?.name ?? "Metro Manila";
+  const ranked = summaries
+    .filter((place) => place.description && regionOf(place.areaSlug) === regionSlug)
+    .sort((left, right) => (SCORES[right.slug] ?? 0) - (SCORES[left.slug] ?? 0));
+  const places: TodayPlace[] = rotatePlaces(ranked, recentSlugs, seed, 14).map((place) => ({
     slug: place.slug,
     name: place.name,
     city: place.city ?? "",
@@ -111,9 +122,9 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
     canonicalPath: place.canonicalPath,
   }));
 
-  const { system, user } = buildPrompt(freshSignals, angle, places, date);
+  const { system, user } = buildPrompt(freshSignals, angle, places, date, areaName);
   let lastReason = "no draft";
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const raw = await generateJsonFromGroq({ systemPrompt: system, userMessage: user, requestId: `gala-today-${date}-${attempt}`, maxCompletionTokens: 900 });
     const parsed = extractJsonObject(raw);
     if (!parsed) {

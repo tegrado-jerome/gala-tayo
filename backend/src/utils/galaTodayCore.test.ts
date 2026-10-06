@@ -82,3 +82,12 @@ test("rotation skips recently used places when it can", () => {
   assert.deepEqual(rotated.map((place) => place.slug), ["c", "d"]);
   assert.equal(slugifyTitle("2026-10-06", "Tara na! Ube szn ✨"), "2026-10-06-tara-na-ube");
 });
+
+test("superlatives need backing facts; region choice follows the day", async () => {
+  const { unbackedSuperlatives, chooseRegion } = await import("./galaTodayCore");
+  assert.deepEqual(unbackedSuperlatives("The biggest mall in the country", "A huge bayside mall."), ["biggest"]);
+  assert.deepEqual(unbackedSuperlatives("The oldest church", "Built in 1607, the oldest stone church."), []);
+  assert.equal(chooseRegion("Midweek break", 2, 5, ["calabarzon", "metro-manila"]), "metro-manila");
+  assert.equal(chooseRegion("Weekend", 6, 1, ["calabarzon", "central-luzon", "metro-manila"]), "central-luzon");
+  assert.equal(chooseRegion("Rain likely in Metro Manila today (90% chance)", 6, 1, ["calabarzon", "metro-manila"]), "metro-manila");
+});
