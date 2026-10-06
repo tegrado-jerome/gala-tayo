@@ -32,7 +32,24 @@ type SeoConfig = {
 }
 
 const DEFAULT_TITLE = 'GalaTayo'
-const DEFAULT_DESCRIPTION = 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo.'
+const DEFAULT_DESCRIPTION = 'Find gala-worthy places around the Philippines by city, budget and vibe, then plan the day with your barkada on GalaTayo.'
+const MAX_DESCRIPTION_LENGTH = 155
+
+/** Search results cut descriptions near 155 characters, so keep whole sentences that fit, or end on a clause. */
+function fitDescription(text: string, max = MAX_DESCRIPTION_LENGTH) {
+  const clean = text.replace(/\s+/g, ' ').trim()
+  if (clean.length <= max) return clean
+  let kept = ''
+  for (const sentence of clean.match(/[^.!?]+[.!?]+(?=\s|$)/g) ?? []) {
+    if ((kept + sentence).trim().length > max) break
+    kept += sentence
+  }
+  if (kept.trim().length >= 70) return kept.trim()
+  const cut = clean.slice(0, max - 1)
+  const clause = Math.max(cut.lastIndexOf(', '), cut.lastIndexOf('; '), cut.lastIndexOf(' – '))
+  const end = clause > 80 ? clause : cut.lastIndexOf(' ')
+  return `${cut.slice(0, end).replace(/[\s,;:–-]+$/, '')}…`
+}
 // Link previews (Messenger, Facebook) can't render SVG, so the fallback is a 1200x630 JPG.
 const DEFAULT_OG_IMAGE = '/images/og/galatayo-og.jpg'
 const DEFAULT_LOCALE = 'en_PH'
@@ -112,7 +129,7 @@ function getConfiguredVerificationTags() {
 
 function applySeo(config: SeoConfig) {
   const title = config.title?.trim() || DEFAULT_TITLE
-  const description = config.description?.trim() || DEFAULT_DESCRIPTION
+  const description = fitDescription(config.description?.trim() || DEFAULT_DESCRIPTION)
   const canonicalUrl = config.canonicalPath
     ? getAbsoluteUrl(config.canonicalPath)
     : getAbsoluteUrl(window.location.pathname + window.location.search)
@@ -231,6 +248,7 @@ export {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
   applySeo,
+  fitDescription,
   formatLabelFromSlug,
   getAbsoluteUrl,
   getAreaNameBySlug,

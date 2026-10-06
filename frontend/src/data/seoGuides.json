@@ -8,7 +8,9 @@
       "best cafes in makati",
       "coffee shops in makati",
       "makati cafe guide"
-    ]
+    ],
+    "description": "Coffee spots in Makati worth the trip, from quick espresso stops to long tambay tables, with the starting budget per head for each.",
+    "intro": "Makati has more cafes than any one barkada can try. These are the ones we would actually send you to, with what a cup and a snack will cost."
   },
   {
     "slug": "restaurants-in-quezon-city",
@@ -19,7 +21,9 @@
       "restaurants in quezon city",
       "best food in qc",
       "kainan sa qc"
-    ]
+    ],
+    "description": "Where to eat in Quezon City: Maginhawa food trips, old-school Filipino kitchens and date-night spots, each with a starting budget per head.",
+    "intro": "QC eats well on any budget. Start with the classics, then work your way down Maginhawa when the barkada is hungry again."
   },
   {
     "slug": "museums-in-manila",
@@ -30,7 +34,9 @@
       "museums in manila",
       "art galleries in manila",
       "cultural places in manila"
-    ]
+    ],
+    "description": "Manila museums for a slow, air-conditioned day: the National Museums, Casa Manila and more, with fees and how long to stay.",
+    "intro": "Most of Manila’s best museums are free or close to it. Pair two of them with merienda in Intramuros or Ermita and you have a full day."
   },
   {
     "slug": "parks-in-pasig",
@@ -41,7 +47,9 @@
       "parks in pasig",
       "outdoor places in pasig",
       "pasig walking spots"
-    ]
+    ],
+    "description": "Parks and open spaces around Pasig for a morning walk, a picnic or a cheap barkada afternoon outside the mall.",
+    "intro": "Green space is rare in the city, so these are worth knowing. Go early morning or late afternoon to skip the heat."
   },
   {
     "slug": "date-spots-in-bgc",
@@ -53,7 +61,9 @@
       "date spots in bgc",
       "romantic places in bgc",
       "bgc date ideas"
-    ]
+    ],
+    "description": "Date ideas in BGC: a museum afternoon, a canal-side walk and dinner worth dressing up for, with the budget per head for each stop.",
+    "intro": "BGC makes an easy date because everything is walkable. Start with something to do, end with dinner, and you never need a Grab in between."
   },
   {
     "slug": "family-friendly-places-in-quezon-city",
@@ -64,7 +74,9 @@
       "family-friendly places in quezon city",
       "kids places in qc",
       "family gala in qc"
-    ]
+    ],
+    "description": "Family days out in Quezon City with room for kids and lolas: parks, interactive museums and kainan that welcome big groups.",
+    "intro": "These spots have space to run around, food everyone eats and easy parking or commute, so the whole family can come along."
   },
   {
     "slug": "study-cafes-in-manila",
@@ -76,7 +88,9 @@
       "study cafes in manila",
       "quiet cafes in manila",
       "cafes with wifi in manila"
-    ]
+    ],
+    "description": "Quiet cafes in Manila for studying or working, with outlets, good Wi-Fi and the hours when tables are easiest to get.",
+    "intro": "A good study cafe needs a table you can keep for hours. These are the calm ones, with notes on the best time to go."
   },
   {
     "slug": "chill-spots-in-taguig",
@@ -87,7 +101,9 @@
       "chill spots in taguig",
       "tambayan in taguig",
       "relaxing places in taguig"
-    ]
+    ],
+    "description": "Low-key spots in Taguig for when you just want to sit, eat and talk: open-air walks, cafes and easy hangouts in BGC.",
+    "intro": "No big plan needed. Pick one, stay as long as you like and let the afternoon happen."
   },
   {
     "slug": "kainan-sa-bgc",
@@ -99,7 +115,9 @@
       "kainan sa bgc",
       "restaurants in bgc",
       "food trip in bgc"
-    ]
+    ],
+    "description": "Kainan sa BGC: restaurants in Bonifacio Global City from casual to special-occasion, with the starting budget per head for each.",
+    "intro": "BGC has a restaurant for every mood. These are the ones worth your money, with an idea of the bill before you sit down."
   },
   {
     "slug": "tambayan-sa-makati",
@@ -110,7 +128,9 @@
       "tambayan sa makati",
       "chill spots in makati",
       "makati hangout places"
-    ]
+    ],
+    "description": "Tambayan sa Makati: gardens, cafes and open spaces where the barkada can hang out for hours without spending much.",
+    "intro": "Makati is more than offices. These are the spots to sit, people-watch and talk until it is time for dinner."
   },
   {
     "slug": "saan-mag-date-sa-qc",
@@ -122,7 +142,9 @@
       "saan mag date sa qc",
       "date places in quezon city",
       "qc date spots"
-    ]
+    ],
+    "description": "Saan mag-date sa QC? Art spots, cozy restaurants and walkable streets for a date in Quezon City, with the budget per head for each.",
+    "intro": "QC dates are easy on the wallet and big on character. Mix an art stop with a good dinner and you are set."
   },
   {
     "slug": "things-to-do-in-makati",
@@ -133,7 +155,9 @@
       "things to do in makati",
       "activities in makati",
       "makati gala ideas"
-    ]
+    ],
+    "description": "Things to do in Makati beyond the mall: museums, gardens, food streets and night spots, with fees and the best time to go.",
+    "intro": "Makati packs a lot into a few kilometers. Use this list to plan a day that is more than just shopping."
   },
   {
     "slug": "date-places-in-metro-manila",
@@ -144,7 +168,9 @@
       "date places in metro manila",
       "metro manila date spots",
       "romantic places in metro manila"
-    ]
+    ],
+    "description": "Date places in Metro Manila, from free museum afternoons to dinners worth saving for, each with the budget per head and best time to go.",
+    "intro": "Whether it is a first date or your hundredth, these spots work. Every pick shows what it costs, so there are no surprises at the bill."
   },
   {
     "slug": "study-cafes-in-metro-manila",
@@ -156,7 +182,9 @@
       "study cafes in metro manila",
       "quiet cafes with wifi",
       "best cafes for studying"
-    ]
+    ],
+    "description": "Study cafes across Metro Manila with good Wi-Fi, outlets and tables you can keep, plus the quiet hours for each.",
+    "intro": "Finals week or deadline week, you need a table and a socket. These cafes give you both."
   },
   {
     "slug": "nightlife-in-makati",
@@ -168,7 +196,9 @@
       "bars in makati",
       "clubs in makati",
       "makati night out spots"
-    ]
+    ],
+    "description": "Makati nightlife: Poblacion bars, rooftops and speakeasies, with what a night out costs and how to get home after.",
+    "intro": "Poblacion is the heart of Makati after dark. Start early for a table, and plan your ride home before the last round."
   },
   {
     "slug": "heritage-sites-in-manila",
@@ -180,7 +210,9 @@
       "historical places in manila",
       "intramuros guide",
       "manila landmarks"
-    ]
+    ],
+    "description": "Heritage sites in Manila: Intramuros, Fort Santiago, Binondo and old churches, with entrance fees and the best time to walk them.",
+    "intro": "Manila wears four centuries of history on its streets. Go early morning, wear comfortable shoes and leave room for merienda in Binondo."
   },
   {
     "slug": "cheap-eats-in-manila",
@@ -192,7 +224,9 @@
       "budget food in manila",
       "murang kainan sa manila",
       "manila affordable restaurants"
-    ]
+    ],
+    "description": "Cheap eats in Manila: Binondo dumplings, Divisoria snacks and old favourites where a full meal stays budget-friendly.",
+    "intro": "You do not need a big budget to eat well in Manila. These are the spots where the food is better than the price suggests."
   },
   {
     "slug": "mall-shopping-in-pasig",
@@ -204,7 +238,9 @@
       "shopping in pasig",
       "pasig lifestyle centers",
       "pasig shopping guide"
-    ]
+    ],
+    "description": "Malls in and around Pasig for shopping, food courts and a cool place to wait out the rain, with parking and commute notes.",
+    "intro": "Sometimes the mall is the plan. These are the ones worth the trip."
   },
   {
     "slug": "cinemas-in-quezon-city",
@@ -216,7 +252,9 @@
       "movie theaters in qc",
       "sine sa qc",
       "quezon city movie guide"
-    ]
+    ],
+    "description": "Cinemas in Quezon City and what to pair with the movie, from dinner before the show to dessert after.",
+    "intro": "Movie night is better with a plan for before and after. Start here."
   },
   {
     "slug": "hotels-and-staycations-in-taguig",
@@ -228,7 +266,9 @@
       "staycation in bgc",
       "taguig accommodation",
       "bgc hotel guide"
-    ]
+    ],
+    "description": "Staycation picks in Taguig for a weekend away without leaving the city, with a starting price so you can compare quickly.",
+    "intro": "A night in BGC can feel like a trip. These are the stays worth booking."
   },
   {
     "slug": "barkada-hangouts-in-makati",
@@ -240,7 +280,9 @@
       "group places in makati",
       "tropa gala makati",
       "makati group activities"
-    ]
+    ],
+    "description": "Barkada hangouts in Makati: sharing plates, bars and open spaces where a big group can stay long, with budgets everyone can split.",
+    "intro": "Big group, small budget, no plan yet? These Makati spots fit the whole barkada and keep the bill easy to split."
   },
   {
     "slug": "family-outing-in-manila",
@@ -252,7 +294,9 @@
       "family places in manila",
       "kids friendly manila",
       "manila family day ideas"
-    ]
+    ],
+    "description": "Family outing ideas in Manila: museums, parks and historic walks kids enjoy too, with fees, parking and the best time to go.",
+    "intro": "Manila is full of places that work for every age. Pick one big stop, add a long lunch and call it a family day."
   },
   {
     "slug": "restaurants-in-metro-manila",
@@ -266,7 +310,9 @@
       "restaurants in metro manila with function rooms",
       "restaurants in metro manila for family"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "Restaurants in Metro Manila worth the drive, from Filipino classics to chef-led dining rooms, each with a starting budget per head.",
+    "intro": "This is our shortlist of places to eat across the metro. Every pick shows the starting budget, so you can plan the night around it."
   },
   {
     "slug": "malls-in-metro-manila",
@@ -280,7 +326,9 @@
       "best malls in metro manila",
       "new malls in metro manila"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "The Metro Manila malls worth a trip for more than shopping: bayside sunsets, canals and outdoor streets, with commute notes.",
+    "intro": "Some malls are destinations on their own. These are the ones that make a good gala, rain or shine."
   },
   {
     "slug": "things-to-do-in-metro-manila",
@@ -294,7 +342,9 @@
       "things to do in metro manila philippines",
       "things to do in metro manila reddit"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "Things to do in Metro Manila: bike tours, aquariums, theme parks and creative hubs for a day out, with fees and how long to stay.",
+    "intro": "Beyond eating and malling, the metro has plenty to do. Use these picks to plan a day the barkada will still talk about."
   },
   {
     "slug": "cafes-in-metro-manila",
@@ -308,7 +358,9 @@
       "restaurants in metro manila with function rooms",
       "coffee in metro manila"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "Cafes in Metro Manila with character, from heritage buildings to garden views, with what coffee and a snack will cost.",
+    "intro": "These are cafes worth crossing the city for. Bring a book, a laptop or a friend."
   },
   {
     "slug": "cinemas-in-metro-manila",
@@ -322,7 +374,9 @@
       "theater in metro manila",
       "movies in metro manila film festival 2025"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "Cinemas around Metro Manila and the best spots nearby for dinner before or dessert after the movie.",
+    "intro": "Plan the whole movie night, not just the film."
   },
   {
     "slug": "museums-in-metro-manila",
@@ -336,7 +390,9 @@
       "museums in metro manila reddit",
       "best museums in metro manila"
     ],
-    "addedAt": "2026-10-05"
+    "addedAt": "2026-10-05",
+    "description": "Museums in Metro Manila for art, history and science, from free National Museums to interactive galleries, with fees and time needed.",
+    "intro": "The metro’s museums cover everything from Luna’s Spoliarium to hands-on science. Many are free, so there is no excuse not to go."
   },
   {
     "slug": "malls-in-makati",
@@ -350,6 +406,7 @@
       "malls in makati with cinema",
       "malls in makati philippines"
     ],
+<<<<<<< HEAD
     "addedAt": "2026-10-05"
   },
   {
@@ -364,6 +421,141 @@
       "indoor activities metro manila for adults",
       "indoor activities for kids in metro manila"
     ],
+=======
+    "addedAt": "2026-10-05",
+    "description": "Malls in Makati for shopping, dining and a cool break from the heat, with parking and commute notes.",
+    "intro": "Makati’s malls connect to almost everything. Here is where to go."
+  },
+  {
+    "slug": "things-to-do-in-baguio",
+    "label": "Things to Do in Baguio",
+    "areaSlug": "baguio",
+    "keywords": [
+      "things to do in baguio",
+      "baguio tourist spots",
+      "baguio itinerary"
+    ],
+    "description": "Things to do in Baguio: Burnham Park, the night market, strawberry farms and cafes in the pines, with fees and the best time for each.",
+    "intro": "Baguio rewards early risers and slow walkers. Mix the classic stops with a cafe or two and leave room for the night market.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "where-to-eat-in-baguio",
+    "label": "Where to Eat in Baguio",
+    "areaSlug": "baguio",
+    "category": "food",
+    "keywords": [
+      "where to eat in baguio",
+      "baguio restaurants",
+      "baguio food trip"
+    ],
+    "description": "Where to eat in Baguio: the public market, old-school favourites and cozy restaurants, with the starting budget per head for each.",
+    "intro": "Cold weather makes everything taste better. These are the Baguio meals worth the trip up.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-cebu-city",
+    "label": "Things to Do in Cebu City",
+    "areaSlug": "cebu-city",
+    "keywords": [
+      "things to do in cebu city",
+      "cebu city tourist spots",
+      "cebu itinerary"
+    ],
+    "description": "Things to do in Cebu City: the Santo Niño basilica, Fort San Pedro, Taoist Temple and hilltop views, with fees and the best time to go.",
+    "intro": "Cebu City is where Philippine history began. Start downtown with the heritage stops, then head up to the hills for the view.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-el-nido",
+    "label": "Things to Do in El Nido",
+    "areaSlug": "el-nido",
+    "keywords": [
+      "things to do in el nido",
+      "el nido island hopping",
+      "el nido beaches"
+    ],
+    "description": "Things to do in El Nido: island hopping Tours A and C, Nacpan Beach and Las Cabanas sunsets, with prices and the best time to go.",
+    "intro": "El Nido is all about the water. Book one island-hopping tour, keep a day for the beaches and end every evening at sunset.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-boracay",
+    "label": "Things to Do in Boracay",
+    "areaSlug": "malay-boracay",
+    "keywords": [
+      "things to do in boracay",
+      "boracay activities",
+      "boracay itinerary"
+    ],
+    "description": "Things to do in Boracay beyond White Beach: paraw sailing at sunset, Diniwid, kitesurfing on Bulabog and island snacks, with prices.",
+    "intro": "Boracay is more than one beach. These picks fill your days between swims, from sunset sails to the quieter coves.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-tagaytay",
+    "label": "Things to Do in Tagaytay",
+    "areaSlug": "tagaytay",
+    "keywords": [
+      "things to do in tagaytay",
+      "tagaytay food trip",
+      "tagaytay day trip"
+    ],
+    "description": "Things to do in Tagaytay: Taal views, bulalo, farm-to-table lunches and cafes, an easy day trip from Manila with budgets for each stop.",
+    "intro": "Tagaytay is the classic day trip south of Manila. Come for the cool air and the Taal view, stay for a long lunch.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-siargao",
+    "label": "Things to Do in Siargao",
+    "areaSlug": "general-luna-siargao",
+    "keywords": [
+      "things to do in siargao",
+      "siargao tourist spots",
+      "siargao itinerary"
+    ],
+    "description": "Things to do in Siargao: Cloud 9, Magpupungko rock pools, Maasin River and the coconut road, with tips on tides and the best time to go.",
+    "intro": "Siargao runs on surf time. Check the tide for the rock pools, rent a scooter and let the island set the pace.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-coron",
+    "label": "Things to Do in Coron",
+    "areaSlug": "coron",
+    "keywords": [
+      "things to do in coron",
+      "coron island hopping",
+      "coron lakes"
+    ],
+    "description": "Things to do in Coron: Kayangan and Barracuda lakes, island escapades and the Calauit safari, with prices and how long each takes.",
+    "intro": "Coron has some of the clearest water in the country. Plan around one or two island tours and keep a lazy day for the town.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-vigan",
+    "label": "Things to Do in Vigan",
+    "areaSlug": "vigan",
+    "keywords": [
+      "things to do in vigan",
+      "calle crisologo",
+      "vigan itinerary"
+    ],
+    "description": "Things to do in Vigan: Calle Crisologo, the dancing fountain, empanada stalls and heritage houses, best walked in the cool evening.",
+    "intro": "Vigan is a Spanish-era town you can still walk through. Come late afternoon, eat empanada and stay for the fountain show.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-sagada",
+    "label": "Things to Do in Sagada",
+    "areaSlug": "sagada",
+    "keywords": [
+      "things to do in sagada",
+      "sagada tourist spots",
+      "kiltepan sunrise"
+    ],
+    "description": "Things to do in Sagada: Kiltepan sunrise, Bomod-ok Falls, Lake Danum and lemon pie, with guide fees and the best time to go.",
+    "intro": "Sagada is cold, quiet and worth the long ride. Wake up for the sunrise, hike to the falls and warm up with pie.",
+>>>>>>> 89eec0e (fix(ui,seo,perf): QA round 2 fixes for home, lists, guides and speed)
     "addedAt": "2026-10-06"
   }
 ]

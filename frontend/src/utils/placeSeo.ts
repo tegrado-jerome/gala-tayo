@@ -1,51 +1,29 @@
 import type { PlaceDetailCardData } from '../types/appTypes'
+import { fitDescription } from './seo'
 
-function joinWithAnd(values: string[]) {
-  const filtered = values.filter(Boolean)
-
-  if (filtered.length <= 1) {
-    return filtered[0] ?? ''
-  }
-
-  if (filtered.length === 2) {
-    return `${filtered[0]} and ${filtered[1]}`
-  }
-
-  return `${filtered.slice(0, -1).join(', ')}, and ${filtered[filtered.length - 1]}`
-}
-
+/**
+ * Meta description from the place's own words: its first sentence, then the budget and best time when they still fit.
+ * Kept under 155 characters so search results show it whole.
+ */
 export function buildPlaceDescription(place: PlaceDetailCardData, areaName: string) {
-  const parts: string[] = [`Discover ${place.name} in ${areaName} with ${place.category || 'local place'} details from GalaTayo.`]
+  const text = (place.description ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  const firstSentence = text.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? text
+  const named = firstSentence.toLowerCase().includes(place.name.toLowerCase())
+  const hook = firstSentence
+    ? named
+      ? firstSentence
+      : `${place.name}, ${areaName}: ${firstSentence}`
+    : `${place.name} in ${areaName}${place.category ? `, a ${place.category.toLowerCase()} spot` : ''}.`
 
-  if (place.good_for && place.good_for.length > 0) {
-    parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')} plans.`)
-  }
+  const budget = place.budget_min == null ? null : Number(place.budget_min) <= 0 ? 'Free entry.' : `From ₱${Math.round(Number(place.budget_min)).toLocaleString('en-PH')} per head.`
+  const bestTime = place.best_time_to_visit?.trim().replace(/[.\s]+$/, '')
+  const facts = [budget, bestTime && bestTime.length <= 40 ? `Best ${/^(on|in|at|during|before|after)\b/i.test(bestTime) ? '' : 'time: '}${bestTime.charAt(0).toLowerCase()}${bestTime.slice(1)}.` : null]
 
-  if (place.budget_min != null) {
-    parts.push(`Budget starts at PHP ${place.budget_min}.`)
+  let description = fitDescription(hook)
+  for (const fact of facts) {
+    if (fact && description.length + fact.length + 1 <= 155 && !description.endsWith('…')) description = `${description} ${fact}`
   }
-
-  if (place.best_time_to_visit?.trim()) {
-    parts.push(`Best time to visit: ${place.best_time_to_visit.trim()}.`)
-  }
-
-  const practicalNotes: string[] = []
-  if (place.commute_access?.trim()) {
-    practicalNotes.push('commute')
-  }
-  if (place.parking_info?.trim()) {
-    practicalNotes.push('parking')
-  }
-  if (practicalNotes.length > 0) {
-    parts.push(`Check the ${joinWithAnd(practicalNotes)} details before you go.`)
-  }
-
-  if (place.description?.trim()) {
-    const shortDesc = place.description.replace(/<[^>]*>/g, '').slice(0, 120).replace(/\s+\S*$/, '')
-    if (shortDesc.length > 20) parts.push(`${shortDesc}.`)
-  }
-
-  return `${parts.join(' ')} See location, photos, FAQs, commute notes, parking details, and community context below.`
+  return description
 }
 
 export function buildPlaceFaqSchema(place: PlaceDetailCardData) {

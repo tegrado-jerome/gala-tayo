@@ -5,6 +5,7 @@ import { ChatCircleDots } from '@phosphor-icons/react/dist/csr/ChatCircleDots'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import InternalLink from '../InternalLink'
+import { useAppUser } from '../../context/AppUserContext'
 import { Sheet } from '../ui'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
@@ -15,10 +16,13 @@ import { tabBarLeft, tabBarRight, type NavItem } from './navItems'
 const NO_CHAT_PATHS = ['/plan-with-ai', '/ask-ai/maps', '/ask-ai/map']
 
 function Tab({ item, currentPath }: { item: NavItem; currentPath: string }) {
+  const { session } = useAppUser()
   const TabIcon = item.icon
   const isActive = item.matches(currentPath)
+  // Guests' Home is the indexable landing page; /home is the signed-in app home.
+  const href = item.href === '/home' && !session ? '/' : item.href
   return (
-    <InternalLink href={item.href} aria-current={isActive ? 'page' : undefined}>
+    <InternalLink href={href} aria-current={isActive ? 'page' : undefined}>
       <TabIcon weight={isActive ? 'fill' : 'regular'} aria-hidden="true" />
       {item.label}
     </InternalLink>

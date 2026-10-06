@@ -41,6 +41,8 @@ type PlaceCardData = {
   rating?: number | null
   reviewCount?: string
   ratingCount?: number | null
+  community_rating?: number | null
+  community_review_count?: number | null
   hours?: string
   entranceFee?: string
   website?: string

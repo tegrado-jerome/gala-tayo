@@ -1054,8 +1054,8 @@ function PlaceDetailView({
       }
 
       showSystemMessage({
-        title: result.status === 'already-saved' ? 'Already Saved' : 'Place Saved!',
-        description: result.message,
+        title: result.status === 'already-saved' ? 'Already in Saved' : 'Na-save!',
+        description: 'Find it anytime in Saved.',
       })
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Failed to save favorite.')
@@ -2447,7 +2447,6 @@ function PlaceDetailView({
                     </div>
                   )
                 })}
-                {place.budget_notes ? <small>Prices can change, so check before you go.</small> : null}
               </div>
             </section>
           ) : null}

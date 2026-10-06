@@ -3,7 +3,7 @@ import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDo
 import HomeDiscover from '../components/home/HomeDiscover'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { AvatarStack, Page, SectionHead } from '../components/ui'
+import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
 import { metroManilaAreas } from '../data/destinations'
 import { displayCityName } from '../utils/cityName'
 import type { NavigationSource } from '../utils/navigationLoading'
@@ -50,12 +50,24 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         jsonLd={buildBrandJsonLd()}
       />
       <Page className="pb-10 lg:pb-16">
-        <header data-navigation-source={navigationSource} className="mb-5 min-w-0 text-center md:mb-7">
+        <header data-navigation-source={navigationSource} className="mb-5 min-w-0 md:mb-7">
           <h1 className="g-d1">Gala tayo. Kami na sa plano.</h1>
           <p className="g-mut mt-2 text-[16px]">Find the place, vote on the date, split the bill.</p>
         </header>
 
-        <HomeDiscover />
+        <HomeDiscover
+          top={
+            <div className="g-cta">
+              <p>
+                <b>Plan it with the barkada</b>
+                <span>One link: pick spots, vote on a date, split the bill. Free.</span>
+              </p>
+              <Button variant="ink" href="/signup">
+                Sign up free
+              </Button>
+            </div>
+          }
+        />
 
         <SectionHead title="Less chasing, more gala" sub="One link for the whole barkada" />
         <ol className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6">

@@ -36,6 +36,9 @@ export type PlaceDetail = {
   average_rating?: string | number | null;
   rating?: number | null;
   review_count?: number | null;
+  /** Ratings from members only, without the GalaTayo team's guide ratings. Structured data uses these. */
+  community_rating?: number | null;
+  community_review_count?: number | null;
   location: string;
   address?: string | null;
   city?: string | null;
@@ -150,32 +153,64 @@ function getNullableNumber(value: unknown): number | null {
   return null;
 }
 
-async function getPlaceReviewSummary(placeId: string): Promise<{ averageRating: number | null; reviewCount: number }> {
+// Team accounts post "Guide comment" notes on places; their ratings are not member reviews.
+const TEAM_COMMENT_MARKER = "%— Guide comment —%";
+const TEAM_ACCOUNTS_TTL_MS = 10 * 60 * 1000;
+let teamAccountsCache: { ids: Set<string>; loadedAt: number } | null = null;
+
+async function getTeamAccountIds(): Promise<Set<string>> {
+  if (teamAccountsCache && Date.now() - teamAccountsCache.loadedAt < TEAM_ACCOUNTS_TTL_MS) {
+    return teamAccountsCache.ids;
+  }
+
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await (supabase.from("place_comments") as any)
+    .select("user_id")
+    .ilike("comment", TEAM_COMMENT_MARKER)
+    .limit(1000);
+
+  if (error) {
+    throw error;
+  }
+
+  const ids = new Set(((data || []) as Array<{ user_id?: unknown }>).map((row) => getNullableString(row.user_id)).filter((id): id is string => Boolean(id)));
+  teamAccountsCache = { ids, loadedAt: Date.now() };
+  return ids;
+}
+
+function averageOf(ratings: number[]): number | null {
+  return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 10) / 10 : null;
+}
+
+type ReviewSummary = { averageRating: number | null; reviewCount: number; communityRating: number | null; communityReviewCount: number };
+
+async function getPlaceReviewSummary(placeId: string): Promise<ReviewSummary> {
   try {
     const supabase = await getSupabaseAdminClient();
-    const { data, error, count } = await (supabase.from("place_reviews") as any)
-      .select("rating", { count: "exact" })
-      .eq("place_id", placeId);
+    const [{ data, error, count }, teamIds] = await Promise.all([
+      (supabase.from("place_reviews") as any).select("rating, submitted_by", { count: "exact" }).eq("place_id", placeId),
+      getTeamAccountIds().catch(() => null),
+    ]);
 
     if (error) {
       throw error;
     }
 
-    const ratings = ((data || []) as Array<{ rating?: unknown }>)
-      .map((entry) => getNullableNumber(entry.rating))
-      .filter((rating): rating is number => rating !== null);
+    const entries = ((data || []) as Array<{ rating?: unknown; submitted_by?: unknown }>)
+      .map((entry) => ({ rating: getNullableNumber(entry.rating), author: getNullableString(entry.submitted_by) }))
+      .filter((entry): entry is { rating: number; author: string | null } => entry.rating !== null);
+    const ratings = entries.map((entry) => entry.rating);
+    // Without the team list, no rating counts as a member rating.
+    const communityRatings = teamIds ? entries.filter((entry) => !entry.author || !teamIds.has(entry.author)).map((entry) => entry.rating) : [];
 
-    if (ratings.length === 0) {
-      return { averageRating: null, reviewCount: count ?? 0 };
-    }
-
-    const total = ratings.reduce((sum, rating) => sum + rating, 0);
     return {
-      averageRating: Math.round((total / ratings.length) * 10) / 10,
-      reviewCount: count ?? ratings.length,
+      averageRating: averageOf(ratings),
+      reviewCount: ratings.length ? count ?? ratings.length : count ?? 0,
+      communityRating: averageOf(communityRatings),
+      communityReviewCount: communityRatings.length,
     };
   } catch {
-    return { averageRating: null, reviewCount: 0 };
+    return { averageRating: null, reviewCount: 0, communityRating: null, communityReviewCount: 0 };
   }
 }
 
@@ -834,6 +869,8 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         ...detail,
         rating: reviewSummary.averageRating ?? detail.rating ?? null,
         review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
+        community_rating: reviewSummary.communityRating,
+        community_review_count: reviewSummary.communityReviewCount,
         imageUrl: resolvedImageUrls[0] ?? "",
         curatedImageUrls: resolvedImageUrls,
         approvedImageCount: imageUrls.length,
@@ -867,6 +904,8 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
           ...detail,
           rating: reviewSummary.averageRating ?? detail.rating ?? null,
           review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
+          community_rating: reviewSummary.communityRating,
+          community_review_count: reviewSummary.communityReviewCount,
           imageUrl: resolvedImageUrls[0] ?? "",
           curatedImageUrls: resolvedImageUrls,
           approvedImageCount: imageUrls.length,

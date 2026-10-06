@@ -33,7 +33,7 @@ export function generateSearchCacheKey(
 const CACHE_VERSION = "v2";
 
 export function buildPlaceDetailCacheKey(placeIdOrSlug: string): string {
-  return `${CACHE_VERSION}:place-detail:${sanitizeCachePart(placeIdOrSlug)}`;
+  return `${CACHE_VERSION}:place-detail:v2:${sanitizeCachePart(placeIdOrSlug)}`;
 }
 
 export function buildApprovedPlaceImagesCacheKey(placeId: string): string {

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import PlaceImage from '../discover/PlaceImage'
 import InternalLink from '../InternalLink'
 import { AvatarStack, Button, SectionHead, Skeleton } from '../ui'
-import GtMap, { type MapPoint } from '../ui/GtMap'
+import type { MapPoint } from '../ui/GtMap'
 import { useAppUser } from '../../context/AppUserContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { getGalaPlanBarkada, type GalaPlanMember } from '../../utils/galaPlanBarkadaApi'
 import { getGalaPlan, listMyGalaPlans, type GalaPlanDetail, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, formatDaysUntil, getPlanDate, pickNextPlan } from '../../utils/galaPlanTrip'
+
+const GtMap = lazy(() => import('../ui/GtMap'))
 
 type NextPlan = { plan: GalaPlanSummary; detail: GalaPlanDetail | null; going: GalaPlanMember[] }
 
@@ -53,7 +55,9 @@ function PlanCard({ next }: { next: NextPlan }) {
     >
       <div className="pointer-events-none relative h-[180px] bg-[var(--fill)] md:h-full md:min-h-[220px]" aria-hidden="true">
         {points.length > 0 ? (
-          <GtMap route points={points} className="!h-full !rounded-none !border-0" label={`Route for ${plan.title}`} />
+          <Suspense fallback={null}>
+            <GtMap route points={points} className="!h-full !rounded-none !border-0" label={`Route for ${plan.title}`} />
+          </Suspense>
         ) : (
           <PlaceImage candidates={covers} className="absolute inset-0 h-full w-full object-cover" />
         )}

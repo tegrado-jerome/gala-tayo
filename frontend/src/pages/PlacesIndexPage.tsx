@@ -97,7 +97,7 @@ function PlacesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
       ],
     },
@@ -122,7 +122,7 @@ function PlacesIndexPage() {
         jsonLd={jsonLd}
       />
 
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places' }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Places' }]} />
 
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-[42rem]">

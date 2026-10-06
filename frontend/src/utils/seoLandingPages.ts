@@ -11,6 +11,10 @@ type SeoLandingTarget = {
   displayAreaName?: string | null
   label: string
   keywords: string[]
+  /** Hand-written meta description, under 155 characters. */
+  description?: string
+  /** Two hand-written sentences shown under the guide title. */
+  intro?: string
   addedAt?: string
 }
 
@@ -77,7 +81,8 @@ const GOOD_FOR_LABELS: Record<string, string> = {
   free: 'free',
 }
 
-const MIN_INDEXABLE_GUIDE_PLACES = 6
+// A guide with four or more visible places is a real list; fewer stays noindex until it fills up.
+const MIN_INDEXABLE_GUIDE_PLACES = 4
 
 const INTENT_NOTES: Record<string, (area: string) => string> = {
   date: (area) => `Each pick shows the budget per head and the best time to go, so you can plan a date in ${area} without guessing the bill.`,
@@ -123,6 +128,12 @@ function getLandingPath(slug: string) {
 
 function getLandingTargetBySlug(slug: string) {
   return SEO_LANDING_TARGETS.find((target) => target.slug === slug) ?? null
+}
+
+/** Short subtitle for guide cards, like "Makati · Cafes" or "BGC · Date ideas". */
+function getGuideSubtitle(target: SeoLandingTarget) {
+  const kind = target.category ? `${getPlaceCategoryLabel(target.category)}${target.category === 'food' ? '' : 's'}` : target.goodFor ? `${GOOD_FOR_LABELS[target.goodFor] ?? target.goodFor} ideas` : 'Things to do'
+  return `${getDisplayAreaName(target)} · ${kind.charAt(0).toUpperCase()}${kind.slice(1)}`
 }
 
 function getDisplayAreaName(target: SeoLandingTarget) {
@@ -178,10 +189,12 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   }
 
   const note = (target.goodFor && INTENT_NOTES[target.goodFor]) || (target.category && CATEGORY_NOTES[target.category]) || null
-  const description = `${h1} on ${PRODUCT_NAME}. ${intro}`
   if (note) {
-    intro = `${intro} ${note(scopedAreaName)}`
+    intro = note(scopedAreaName)
   }
+  // Hand-written copy wins; the generated note is the fallback for guides added by the discovery script.
+  intro = target.intro || intro
+  const description = target.description || (note ? note(scopedAreaName) : `${h1}: places to go, what they cost and the best time to visit.`)
 
   return {
     title: `${h1} | ${BRAND_NAME}`,
@@ -193,20 +206,12 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     keywords: target.keywords,
     faqs: [
       {
-        question: `What can I find on ${h1}?`,
-        answer: `This guide collects ${categoryPhrase} recommendations${target.areaSlug ? ` in ${scopedAreaName}` : ' around the Philippines'} and highlights useful context like budget, audience fit, commute notes, and nearby areas.`,
+        question: `How are the places in this guide picked?`,
+        answer: `Every place passed our gala-worthy check: worth the trip, still open, and with real details on budget, best time to visit and who it suits. They are ranked by that score, best first.`,
       },
       {
-        question: `How does ${BRAND_NAME} choose places for this guide?`,
-        answer: `${PRODUCT_NAME} uses approved place data, category matching, and planning signals like who a place is best for, location context, and searchable place details.`,
-      },
-      {
-        question: `What types of places are featured in ${h1}?`,
-        answer: `This guide features ${categoryPhrase}${target.areaSlug ? ` available in ${scopedAreaName}` : ' around the Philippines'}, with a focus on practical details like budget range, commute access, parking availability, and audience fit.`,
-      },
-      {
-        question: `Is ${h1} updated regularly?`,
-        answer: `${PRODUCT_NAME} refreshes this guide as new approved places are added and existing place details are updated, so the picks stay current.`,
+        question: `Can I plan a day around ${h1.toLowerCase()}?`,
+        answer: `Yes. Save the places you like, then start a plan: pick a date, invite the barkada with one link, and split the budget in the app.`,
       },
     ],
   }
@@ -224,5 +229,6 @@ export {
   getRelatedLandingTargets,
   getLandingPath,
   getLandingTargetBySlug,
+  getGuideSubtitle,
 }
 export type { SeoLandingMetadata, SeoLandingTarget }

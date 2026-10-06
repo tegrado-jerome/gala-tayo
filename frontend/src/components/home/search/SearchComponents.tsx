@@ -1,9 +1,8 @@
-import { Fragment, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { List } from '@phosphor-icons/react/dist/csr/List'
 import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { ArrowCounterClockwise as RotateCcw } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise'
-import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { SlidersHorizontal } from '@phosphor-icons/react/dist/csr/SlidersHorizontal'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { X } from '@phosphor-icons/react/dist/csr/X'
@@ -18,7 +17,7 @@ import type { SearchBudgetValue } from '../../../utils/searchParams'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 const QUICK_CATEGORY_IDS = ['cafe', 'food', 'nightlife', 'park']
-const QUICK_CITY_IDS = ['makati', 'quezon-city']
+const QUICK_CITY_IDS = ['baguio', 'cebu-city', 'makati']
 const QUICK_BUDGET: SearchBudgetValue = 'under-500'
 
 type FilterOption<T extends string = string> = { value: T; label: string; group?: string }
@@ -61,53 +60,7 @@ function ListingBreadcrumb({ items, className }: { items: Array<{ label: string;
 }
 
 function SearchPageBreadcrumb({ className }: { className?: string }) {
-  return <ListingBreadcrumb className={className} items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: 'Search' }]} />
-}
-
-function ExploreSearchBar({
-  value,
-  onChange,
-  onSubmit,
-  canSubmit = value.trim().length > 0,
-  disabled = false,
-  placeholder = 'Where to? A place, city or vibe',
-  inputId = 'search-page-input',
-  className,
-}: {
-  value: string
-  onChange: (value: string) => void
-  onSubmit: () => void
-  canSubmit?: boolean
-  disabled?: boolean
-  placeholder?: string
-  inputId?: string
-  className?: string
-}) {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (canSubmit && !disabled) onSubmit()
-  }
-
-  return (
-    <form role="search" onSubmit={handleSubmit} className={cx('g-where', className)}>
-      <Search className="g-ic" aria-hidden="true" />
-      <label htmlFor={inputId} className="sr-only">
-        Search places, cities, or categories
-      </label>
-      <input
-        id={inputId}
-        type="search"
-        enterKeyHint="search"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-      />
-      <Button type="submit" iconOnly aria-label="Search" disabled={disabled || !canSubmit}>
-        <Search />
-      </Button>
-    </form>
-  )
+  return <ListingBreadcrumb className={className} items={[{ label: 'Home', href: '/' }, { label: 'Places', href: '/places' }, { label: 'Search' }]} />
 }
 
 function FilterGroup<T extends string>({
@@ -549,7 +502,6 @@ export {
   ListingBreadcrumb,
   ListToolbar,
   MasonrySkeleton,
-  ExploreSearchBar,
   QuickFilterChips,
   SearchEmptyState,
   SearchFilterPanel,

@@ -29,6 +29,8 @@ export function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardDa
       : [],
     rating: parsedRating,
     ratingCount: place.review_count ?? null,
+    community_rating: place.community_rating ?? null,
+    community_review_count: place.community_review_count ?? null,
     markerRatingText: formatMarkerRatingText(parsedRating),
     category: place.category,
     area: place.area || place.city || '',

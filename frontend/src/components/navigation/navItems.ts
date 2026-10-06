@@ -16,7 +16,7 @@ export type NavItem = {
 const startsWithAny = (pathname: string, prefixes: string[]) =>
   prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
-const home: NavItem = { label: 'Home', href: '/home', icon: House, matches: (p) => isPath(p, '/home') }
+const home: NavItem = { label: 'Home', href: '/home', icon: House, matches: (p) => isPath(p, '/home') || p === '/' }
 const explore: NavItem = { label: 'Explore', href: '/search', icon: Compass, matches: (p) => startsWithAny(p, ['/search', '/places', '/ask-ai']) }
 const plans: NavItem = { label: 'Plans', href: '/gala-plans', icon: CalendarBlank, matches: (p) => startsWithAny(p, ['/gala-plans', '/gala-plan', '/plan-with-ai']) }
 const me: NavItem = {

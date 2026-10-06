@@ -17,7 +17,7 @@ import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
-import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getLandingTargetBySlug, getRelatedLandingTargets } from '../utils/seoLandingPages'
+import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getGuideSubtitle, getLandingTargetBySlug, getRelatedLandingTargets } from '../utils/seoLandingPages'
 import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
 import { resizedMediaUrl } from '../data/r2Config'
@@ -155,6 +155,10 @@ export default function SeoLandingPage({
   const maxBudget = budgets.length ? Math.max(...budgets) : 0
   const budgetRange = !budgets.length ? 'Varies per place' : minBudget === maxBudget ? `${formatPeso(minBudget)} per head` : `${formatPeso(minBudget)} to ${formatPeso(maxBudget)} per head`
   const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
+  // A budget answer from the listed places themselves, so the FAQ says something real.
+  const faqs = budgets.length
+    ? [{ question: `How much should I budget?`, answer: `Starting budgets for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }, ...metadata.faqs]
+    : metadata.faqs
   const updatedLabel = latestUpdate ? new Date(latestUpdate).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : null
   const jsonLd = [
     {
@@ -169,7 +173,7 @@ export default function SeoLandingPage({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: 'Guides', item: `${getSiteOrigin()}/guides` },
         { '@type': 'ListItem', position: 3, name: metadata.h1, item: `${getSiteOrigin()}${metadata.canonicalPath}` },
       ],
@@ -184,7 +188,7 @@ export default function SeoLandingPage({
         name: place.name,
       })),
     },
-    LandingFaqJsonLd({ faqs: metadata.faqs }),
+    LandingFaqJsonLd({ faqs }),
   ]
 
   const CategoryIcon = getCategoryIcon(target.category ?? null)
@@ -201,7 +205,7 @@ export default function SeoLandingPage({
     <Page>
       <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} robots={isThin ? 'noindex,follow' : undefined} jsonLd={jsonLd} />
 
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Guides', href: '/guides' }, { label: metadata.h1 }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: metadata.h1 }]} />
 
       <article>
         <header className="mt-5 max-w-[46rem]">
@@ -274,7 +278,7 @@ export default function SeoLandingPage({
               Good to know
             </h2>
             <div className="m-faq mt-4">
-              {metadata.faqs.map((faq, index) => (
+              {faqs.map((faq, index) => (
                 <details key={faq.question} open={index === 0}>
                   <summary>
                     {faq.question}
@@ -294,7 +298,7 @@ export default function SeoLandingPage({
               {relatedTargets.map((relatedTarget) => (
                 <Row key={relatedTarget.slug} href={`/guides/${relatedTarget.slug}`} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
                   <div className="g-h3 truncate">{relatedTarget.label}</div>
-                  <div className="g-xs g-mut truncate">{relatedTarget.keywords.slice(0, 2).join(' · ')}</div>
+                  <div className="g-xs g-mut truncate">{getGuideSubtitle(relatedTarget)}</div>
                 </Row>
               ))}
               <Row href="/saan-tayo" className="!bg-[var(--tara-soft)] !border-transparent" action={<ChevronRight className="g-ic text-[var(--tara-ink)]" aria-hidden="true" />}>

@@ -576,7 +576,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
             <h2 className="me-head-name">{displayName}</h2>
             <p className="me-head-sub">
               <span className="truncate">@{profile.username}</span>
-              {joined ? <span>· {joined.replace('Joined', 'Contributor since')}</span> : null}
+              {joined ? <span>· {joined.replace('Joined', 'Member since')}</span> : null}
               {profile.is_public ? null : (
                 <Tag className="shrink-0">
                   <Lock aria-hidden="true" />

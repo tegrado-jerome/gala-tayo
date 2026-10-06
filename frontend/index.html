@@ -14,6 +14,17 @@
         } else {
           document.documentElement.dataset.suppressLoader = 'true';
         }
+        // Home's LCP is the editor's pick photo (EDITORS_PICK in HomeDiscover.tsx); start it before the app bundle runs.
+        if (p === '/' || p === '/home') {
+          var hero = 'https://media.galatayo.app/cdn-cgi/image/width=%W,quality=75,format=auto,onerror=redirect/places/fort-santiago/hd/fort-santiago-1.webp';
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.setAttribute('imagesrcset', hero.replace('%W', '640') + ' 640w, ' + hero.replace('%W', '1280') + ' 1280w');
+          link.setAttribute('imagesizes', '(min-width: 1240px) 1176px, calc(100vw - 32px)');
+          link.setAttribute('fetchpriority', 'high');
+          document.head.appendChild(link);
+        }
       })();
     </script>
     <link rel="icon" href="/favicon.ico?v=4" sizes="48x48" />
@@ -23,10 +34,13 @@
     <link rel="dns-prefetch" href="//media.galatayo.app" />
     <link rel="preconnect" href="https://media.galatayo.app" />
     <link rel="dns-prefetch" href="//tile.openstreetmap.org" />
-    <link rel="preconnect" href="https://tile.openstreetmap.org" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+    <!-- Self-hosted variable fonts (latin), so text does not wait on a third-party stylesheet. -->
+    <style>
+      @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url(/fonts/dm-sans-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url(/fonts/dm-sans-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+      @font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 100 900; font-display: swap; src: url(/fonts/fraunces-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 100 900; font-display: swap; src: url(/fonts/fraunces-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+    </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="application-name" content="GalaTayo" />
@@ -58,7 +72,7 @@
       html[data-theme="dark"],
       html[data-theme="dark"] body,
       html[data-theme="dark"] #root {
-        background: #0c1a1d;
+        background: #111111;
       }
 
       .critical-app-loader {
@@ -106,9 +120,10 @@
     <script>
       (function () {
         try {
+          // No saved choice follows the system setting (ThemeContext does the same).
           var storedPreference = localStorage.getItem('galatayo:theme-preference');
-          var preference = storedPreference === 'dark' ? 'dark' : 'light';
-          var resolvedTheme = preference;
+          var preference = storedPreference === 'dark' || storedPreference === 'light' ? storedPreference : 'system';
+          var resolvedTheme = preference === 'system' ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : preference;
           document.documentElement.dataset.theme = resolvedTheme;
           document.documentElement.dataset.themePreference = preference;
           document.documentElement.style.colorScheme = resolvedTheme;

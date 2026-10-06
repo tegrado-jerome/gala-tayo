@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import SearchHub from './SearchHub'
 import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import ExploreShortcuts from '../components/home/search/ExploreShortcuts'
-import { ExploreSearchBar, QuickFilterChips, SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
+import { QuickFilterChips, SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
+import SearchSuggest from '../components/home/search/SearchSuggest'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import { Button, Masonry, Page, SectionHead, Sheet } from '../components/ui'
 import { useBottomNav } from '../context/BottomNavContext'
@@ -14,10 +14,13 @@ import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, rea
 import { budgetOptions, fallbackAreas, fallbackCategories, toCityOptions } from '../components/home/homeHelpers'
 import { homeAllTopPickPlaces } from '../data/homeRecommendations'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
+import { CATEGORY_TAB_ORDER } from '../components/discover/CategoryTabs'
+import { countPlacesByAreaSlug, loadCompactPlaces } from '../utils/compactPlaces'
 import type { SearchBudgetValue } from '../utils/searchParams'
 
-const cityOptions = toCityOptions(fallbackAreas)
-const categoryOptions = fallbackCategories.map((category) => ({ value: category.id, label: category.name }))
+const allCityOptions = toCityOptions(fallbackAreas)
+// Only categories with listed places (no Hotel or Cinema yet).
+const categoryOptions = fallbackCategories.filter((category) => CATEGORY_TAB_ORDER.includes(category.id)).map((category) => ({ value: category.id, label: category.name }))
 const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
 const trendingSlugs = homeAllTopPickPlaces.map((place) => place.slug)
 
@@ -51,7 +54,8 @@ function TrendingFeed() {
   return (
     <section className="min-w-0" aria-labelledby="explore-trending-title">
       <SectionHead
-        title={<span id="explore-trending-title">Trending this week</span>}
+        title={<span id="explore-trending-title">GalaTayo Picks</span>}
+        sub="Top-scored places to start with"
         className="!mt-7"
         action={
           <Button variant="text" href="/places">
@@ -93,6 +97,19 @@ function SearchPage({
   const { setHidden } = useBottomNav()
 
   const hasActiveFilters = Boolean(selectedCity || selectedCategory || selectedBudget)
+  const [areaCounts, setAreaCounts] = useState<Record<string, number> | null>(null)
+  // Cities without places are dead ends, so the filters only offer cities that have some.
+  const cityOptions = useMemo(() => (areaCounts ? allCityOptions.filter((option) => areaCounts[option.value]) : allCityOptions), [areaCounts])
+
+  useEffect(() => {
+    let active = true
+    loadCompactPlaces()
+      .then((places) => active && setAreaCounts(countPlacesByAreaSlug(places)))
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
   const canSearch = Boolean(activeTypedQuery.length > 0 || selectedCategory || selectedCity || selectedBudget)
 
   useEffect(() => {
@@ -192,7 +209,7 @@ function SearchPage({
       <SearchPageBreadcrumb />
       <h1 className="g-h1 mt-4">Saan tayo gagala?</h1>
 
-      <ExploreSearchBar className="mt-4 lg:max-w-[640px]" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
+      <SearchSuggest className="mt-4" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
 
       <QuickFilterChips
         className="mt-4"
@@ -247,15 +264,6 @@ function SearchPage({
 
       <ExploreShortcuts />
       <div aria-hidden="true" className="h-16 lg:hidden" />
-
-      <Button
-        href="/ask-ai/maps"
-        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 !px-5 shadow-[var(--sh-3)]"
-        aria-label="Open the map"
-      >
-        <MapIcon aria-hidden="true" />
-        Map
-      </Button>
 
       <Sheet open={isFilterPanelOpen} onClose={() => setIsFilterPanelOpen(false)} title="Filters" labelledBy="search-filters-title">
         <SearchFilterPanel

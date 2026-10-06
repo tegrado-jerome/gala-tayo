@@ -8,6 +8,7 @@ import { homeCityRecommendations } from '../../data/homeRecommendations'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { displayCityName } from '../../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../../utils/compactPlaces'
+import { getPlaceCardPhoto } from '../../utils/placeGalleryPhotos'
 import { resolveAreaMeta } from '../../utils/routes'
 
 type CityChip = { slug: string; label: string; imageUrl: string | null }
@@ -44,14 +45,16 @@ function ExploreCities() {
   const coverBySlug = useMemo(() => {
     const covers: Record<string, string> = {}
     for (const place of places) {
-      if (place.imageUrl && !covers[place.areaSlug]) covers[place.areaSlug] = place.imageUrl
+      const photo = getPlaceCardPhoto(place.slug) || place.imageUrl
+      if (photo && !covers[place.areaSlug]) covers[place.areaSlug] = photo
     }
     return covers
   }, [places])
   const regionOptions = regions.filter(
     (region) => region.slug === METRO_MANILA_REGION_SLUG || region.destinations.some((destination) => placeCounts[destination.slug]),
   )
-  const destinationTiles = featuredDestinations.filter((destination) => placeCounts[destination.slug])
+  // A destination tile needs a cover photo; an empty sand box says nothing about the place.
+  const destinationTiles = featuredDestinations.filter((destination) => placeCounts[destination.slug] && coverBySlug[destination.slug])
   const chips: CityChip[] =
     regionSlug === METRO_MANILA_REGION_SLUG
       ? metroManilaChips

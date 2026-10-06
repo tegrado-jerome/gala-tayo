@@ -9,11 +9,12 @@ import PhotoCard, { getPlaceHref, type PhotoCardPlace } from '../discover/PhotoC
 import Rail from '../discover/Rail'
 import ExploreCities from './ExploreCities'
 import HomeQuickPicks from './HomeQuickPicks'
+import { requestSearchFocus } from './search/SearchSuggest'
 import InternalLink from '../InternalLink'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import { formatPricePerHead, formatVisitDuration } from '../PlaceCard'
 import { SectionHead, Skeleton, cx } from '../ui'
-import { galaTayoPickSlugs } from '../../data/galaTayoPicks'
+import { galaTayoPickSlugs, getRailPickSlugs } from '../../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { resizedMediaUrl } from '../../data/r2Config'
 import { useListingRail } from '../../hooks/useListingRail'
@@ -21,7 +22,8 @@ import type { PlaceDetail } from '../../types/appTypes'
 import { fetchHomePlaceDetailsBatch } from '../../utils/placeDetailCache'
 import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../../utils/placeGalleryPhotos'
 import { getSeoListingPage } from '../../utils/seoApi'
-import { getLandingTargetBySlug } from '../../utils/seoLandingPages'
+import { METRO_MANILA_REGION_SLUG, getDestinationBySlug } from '../../data/destinations'
+import { MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, getLandingTargetBySlug } from '../../utils/seoLandingPages'
 
 // Editor's pick: the top-scored gala-worthy place. The headline is written from its own description.
 const EDITORS_PICK = { slug: 'fort-santiago', kicker: 'Editor’s pick · Intramuros', headline: 'Walls, river views and Rizal’s final prison' }
@@ -34,23 +36,44 @@ const MOODS = [
   { label: 'Food', href: '/places/categories/food', photoSlug: 'toyo-eatery' },
 ]
 
-const HOME_GUIDES = ['heritage-sites-in-manila', 'museums-in-manila', 'date-spots-in-bgc', 'best-cafes-in-makati', 'things-to-do-in-makati', 'kainan-sa-bgc']
+// Guides shown on Home, nationwide ones included; each only appears once it has enough places and a photo.
+const HOME_GUIDES = [
+  'heritage-sites-in-manila',
+  'things-to-do-in-baguio',
+  'date-spots-in-bgc',
+  'things-to-do-in-cebu-city',
+  'museums-in-manila',
+  'things-to-do-in-el-nido',
+  'restaurants-in-metro-manila',
+  'where-to-eat-in-baguio',
+  'cheap-eats-in-manila',
+  'restaurants-in-quezon-city',
+]
+const FOOD_CATEGORIES = new Set(['food', 'cafe'])
+// Guides outside Metro Manila, listed by name until their places have photos for a cover.
+const COUNTRY_GUIDES = SEO_LANDING_TARGETS.filter((target) => target.areaSlug && getDestinationBySlug(target.areaSlug)?.regionSlug !== METRO_MANILA_REGION_SLUG && target.areaSlug !== METRO_MANILA_REGION_SLUG)
+const RAIL_SIZE = 10
 
+type HomeTab = 'things' | 'food' | 'guides'
+
+/** Only the curated photo manifest says a place really has a photo; the static R2 path is a guess. */
 function photoFor(slug: string | null) {
-  return slug ? getPlaceCardPhoto(slug) || getStaticPlaceImageUrlForSlug(slug) : null
+  return slug ? getPlaceCardPhoto(slug) : null
 }
 
-/** Real details (ids for saving, duration, fee, best time) for every GalaTayo Pick, in score order. */
+const hasPhoto = (slug: string) => Boolean(photoFor(slug))
+const railSlugs = getRailPickSlugs(RAIL_SIZE, hasPhoto, [EDITORS_PICK.slug])
+// Top picks not in the rail, for the weekday card, so it never repeats the rail.
+const extraSlugs = galaTayoPickSlugs.filter((slug) => slug !== EDITORS_PICK.slug && !railSlugs.includes(slug) && hasPhoto(slug)).slice(0, 8)
+
+/** Real details (ids for saving, duration, fee, best time) for the editor's pick, the rail and a few more picks. */
 function usePickDetails() {
   const [details, setDetails] = useState<PlaceDetail[] | null>(null)
   useEffect(() => {
     let isActive = true
-    void fetchHomePlaceDetailsBatch({ slugs: galaTayoPickSlugs, cityImageRequests: [] })
-      .then(({ places }) => {
-        if (!isActive) return
-        const bySlug = new Map(places.map((place) => [place.slug, place]))
-        setDetails(galaTayoPickSlugs.map((slug) => bySlug.get(slug)).filter((place): place is PlaceDetail => Boolean(place)))
-      })
+    const slugs = [EDITORS_PICK.slug, ...railSlugs, ...extraSlugs]
+    void fetchHomePlaceDetailsBatch({ slugs, cityImageRequests: [] })
+      .then(({ places }) => isActive && setDetails(places))
       .catch(() => isActive && setDetails([]))
     return () => {
       isActive = false
@@ -81,7 +104,7 @@ function toPhotoCardPlace(place: PlaceDetail): PhotoCardPlace {
 function WhereTo() {
   return (
     <div className="g-where">
-      <InternalLink href="/search" className="g-where-main">
+      <InternalLink href="/search" className="g-where-main" onClick={requestSearchFocus}>
         <Search weight="bold" aria-hidden="true" />
         Where to?
       </InternalLink>
@@ -92,22 +115,23 @@ function WhereTo() {
   )
 }
 
-function TextTabs() {
+const TABS: Array<{ id: HomeTab; label: string; icon: typeof Compass }> = [
+  { id: 'things', label: 'Things to do', icon: Compass },
+  { id: 'food', label: 'Food', icon: ForkKnife },
+  { id: 'guides', label: 'Guides', icon: BookOpen },
+]
+
+/** Text tabs that switch the content below in place, like Tripadvisor's home tabs. */
+function TextTabs({ active, onChange }: { active: HomeTab; onChange: (tab: HomeTab) => void }) {
   return (
-    <nav className="g-ttabs" aria-label="Explore">
-      <InternalLink href="/home" className="g-ttab" aria-current="page">
-        <Compass weight="light" aria-hidden="true" />
-        Things to do
-      </InternalLink>
-      <InternalLink href="/places/categories/food" className="g-ttab">
-        <ForkKnife weight="light" aria-hidden="true" />
-        Food
-      </InternalLink>
-      <InternalLink href="/guides" className="g-ttab">
-        <BookOpen weight="light" aria-hidden="true" />
-        Guides
-      </InternalLink>
-    </nav>
+    <div className="g-ttabs" role="tablist" aria-label="Explore">
+      {TABS.map(({ id, label, icon: Icon }) => (
+        <button key={id} type="button" role="tab" id={`home-tab-${id}`} aria-selected={active === id} aria-controls="home-tab-panel" className="g-ttab" onClick={() => onChange(id)}>
+          <Icon weight="light" aria-hidden="true" />
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -118,7 +142,7 @@ function MoodPills() {
         const photo = photoFor(mood.photoSlug)
         return (
           <InternalLink key={mood.label} href={mood.href} className="g-mood">
-            {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" loading="lazy" decoding="async" /> : null}
+            {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" width={32} height={32} loading="lazy" decoding="async" /> : null}
             {mood.label}
           </InternalLink>
         )
@@ -133,7 +157,18 @@ function EditorsPick({ place }: { place: PlaceDetail | undefined }) {
   const href = place ? getPlaceHref(toPhotoCardPlace(place)) : getPlaceHref({ id: EDITORS_PICK.slug, slug: EDITORS_PICK.slug, name: 'Fort Santiago', city: 'Manila', area: 'Intramuros' })
   return (
     <InternalLink href={href} className="g-feat">
-      {photo ? <img src={resizedMediaUrl(photo, 'hero')} alt="" fetchPriority="high" decoding="async" /> : null}
+      {photo ? (
+        <img
+          src={resizedMediaUrl(photo, 'hero')}
+          srcSet={`${resizedMediaUrl(photo, 'card')} 640w, ${resizedMediaUrl(photo, 'hero')} 1280w`}
+          sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
+          width={1280}
+          height={720}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+        />
+      ) : null}
       <span className="g-feat-body">
         <span className="g-feat-kicker block">{EDITORS_PICK.kicker}</span>
         <span className="g-feat-title block">{EDITORS_PICK.headline}</span>
@@ -153,9 +188,9 @@ function RailSkeleton() {
   )
 }
 
-/** Picks whose own best time to visit says weekday: a real hint that weekends get busy. */
+/** Picks (outside the rail) whose own best time to visit says weekday: a real hint that weekends get busy. */
 function WeekdayCard({ places }: { places: PlaceDetail[] }) {
-  const weekday = places.filter((place) => /^weekday/i.test(place.best_time_to_visit?.trim() ?? '')).slice(0, 2)
+  const weekday = places.filter((place) => extraSlugs.includes(place.slug) && /^weekday/i.test(place.best_time_to_visit?.trim() ?? '')).slice(0, 2)
   if (weekday.length === 0) return null
   return (
     <section className="min-w-0">
@@ -173,51 +208,63 @@ function WeekdayCard({ places }: { places: PlaceDetail[] }) {
   )
 }
 
-type GuideCover = { slug: string; label: string; photo: string | null; total: number }
+type GuideCover = { slug: string; label: string; category: string | null; photo: string; total: number }
 
-/** Each guide is pictured by its own first place with a photo, like the guide page hero. */
+let guideCoversRequest: Promise<GuideCover[]> | null = null
+
+/** Each guide is pictured by its first place with a photo; guides without enough places or a photo stay off Home. */
+function loadGuideCovers() {
+  guideCoversRequest ??= Promise.all(
+    HOME_GUIDES.map(async (slug): Promise<GuideCover | null> => {
+      const target = getLandingTargetBySlug(slug)
+      if (!target) return null
+      const page = await getSeoListingPage({ areaSlug: target.areaSlug ?? null, category: target.category ?? null, goodFor: target.goodFor ?? null, page: 1, pageSize: 10 }).catch(() => null)
+      if (!page || page.total < MIN_INDEXABLE_GUIDE_PLACES) return null
+      const photo = page.items.map((item) => photoFor(item.slug)).find(Boolean) || page.items.find((item) => item.imageUrl)?.imageUrl
+      return photo ? { slug, label: target.label, category: target.category ?? null, photo, total: page.total } : null
+    }),
+  ).then((covers) => covers.filter((cover): cover is GuideCover => cover !== null))
+  return guideCoversRequest
+}
+
 function useGuideCovers() {
-  const [covers, setCovers] = useState<GuideCover[]>([])
+  const [covers, setCovers] = useState<GuideCover[] | null>(null)
   useEffect(() => {
-    const controller = new AbortController()
-    const targets = HOME_GUIDES.map((slug) => getLandingTargetBySlug(slug)).filter((target): target is NonNullable<typeof target> => Boolean(target))
-    void Promise.all(
-      targets.map(async (target) => {
-        const page = await getSeoListingPage({ areaSlug: target.areaSlug ?? null, category: target.category ?? null, goodFor: target.goodFor ?? null, page: 1, pageSize: 10, signal: controller.signal })
-        const lead = page.items.find((item) => item.imageUrl)
-        return { slug: target.slug, label: target.label, photo: (lead && photoFor(lead.slug)) || lead?.imageUrl || null, total: page.total }
-      }),
-    )
-      .then((loaded) => setCovers(loaded.filter((cover) => cover.total > 0 && cover.photo).slice(0, 4)))
-      .catch(() => undefined)
-    return () => controller.abort()
+    let isActive = true
+    void loadGuideCovers().then((loaded) => isActive && setCovers(loaded))
+    return () => {
+      isActive = false
+    }
   }, [])
   return covers
 }
 
-function Guides() {
-  const covers = useGuideCovers()
-  if (covers.length === 0) return null
+function Guides({ covers, title = 'Guides', limit = 4, showAll = false }: { covers: GuideCover[] | null; title?: string; limit?: number; showAll?: boolean }) {
+  if (covers !== null && covers.length === 0) return null
   return (
     <section className="min-w-0">
       <SectionHead
-        title="Guides"
+        title={title}
         action={
           <InternalLink href="/guides" className="g-btn g-btn-text">
             All guides
           </InternalLink>
         }
       />
-      <div className="g-guides">
-        {covers.map((cover) => (
-          <InternalLink key={cover.slug} href={`/guides/${cover.slug}`} className="g-guide">
-            <span className="g-guide-img">{cover.photo ? <img src={resizedMediaUrl(cover.photo, 'card')} alt="" loading="lazy" decoding="async" /> : null}</span>
-            <b>{cover.label}</b>
-            <small>
-              {cover.total} {cover.total === 1 ? 'place' : 'places'}
-            </small>
-          </InternalLink>
-        ))}
+      <div className={cx('g-guides', showAll && 'is-all')}>
+        {covers === null
+          ? Array.from({ length: 2 }, (_, index) => <Skeleton key={index} className="aspect-[3/2] !rounded-[var(--r-2)]" />)
+          : covers.slice(0, limit).map((cover) => (
+              <InternalLink key={cover.slug} href={`/guides/${cover.slug}`} className="g-guide">
+                <span className="g-guide-img">
+                  <img src={resizedMediaUrl(cover.photo, 'card')} alt="" width={640} height={427} loading="lazy" decoding="async" />
+                </span>
+                <b>{cover.label}</b>
+                <small>
+                  {cover.total} {cover.total === 1 ? 'place' : 'places'}
+                </small>
+              </InternalLink>
+            ))}
       </div>
     </section>
   )
@@ -255,42 +302,79 @@ function ListingRail({ title, subtitle, href, category, onGuestFavorite }: { tit
   )
 }
 
-/** Editorial home: headline, Where to?, tabs, mood pills, editor's pick, picks rail, guides, Saan tayo. Shared by Home and the guest landing page. */
+/** Editorial home: headline, Where to?, tabs, then the tab's content. Shared by Home and the guest landing page. */
 function HomeDiscover({ isRaining = false, headline, top, className }: { isRaining?: boolean; headline?: ReactNode; top?: ReactNode; className?: string }) {
   const guestAuth = useGuestAuthPrompt()
   const pickDetails = usePickDetails()
+  const guideCovers = useGuideCovers()
+  const [tab, setTab] = useState<HomeTab>('things')
   const openGuestFavorite = (retry: () => void) => guestAuth.open('favorite', retry)
-  const picks = useMemo(() => (pickDetails ?? []).filter((place) => place.slug !== EDITORS_PICK.slug).map(toPhotoCardPlace), [pickDetails])
+  const picks = useMemo(() => {
+    const bySlug = new Map((pickDetails ?? []).map((place) => [place.slug, place]))
+    return railSlugs.map((slug) => bySlug.get(slug)).filter((place): place is PlaceDetail => Boolean(place)).map(toPhotoCardPlace)
+  }, [pickDetails])
+  const foodGuides = useMemo(() => guideCovers && guideCovers.filter((cover) => cover.category && FOOD_CATEGORIES.has(cover.category)), [guideCovers])
 
   return (
     <div className={cx('min-w-0', className)}>
       {headline}
       <WhereTo />
-      <TextTabs />
-      <MoodPills />
       {top}
-      <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
+      <TextTabs active={tab} onChange={setTab} />
 
-      {pickDetails ? (
-        picks.length > 0 ? (
-          <Rail title="GalaTayo Picks" subtitle="Our top-scored gala-worthy places" seeAllHref="/places">
-            {picks.map((place, index) => (
-              <PhotoCard key={place.slug ?? place.id} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
-            ))}
-          </Rail>
-        ) : null
-      ) : (
-        <section className="min-w-0">
-          <SectionHead title="GalaTayo Picks" sub="Our top-scored gala-worthy places" />
-          <RailSkeleton />
-        </section>
-      )}
+      <div id="home-tab-panel" role="tabpanel" aria-labelledby={`home-tab-${tab}`} className="min-w-0">
+        {tab === 'food' ? (
+          <>
+            <ListingRail title="Food picks" subtitle="Kainan worth the trip, best first" href="/places/categories/food" category="food" onGuestFavorite={openGuestFavorite} />
+            <ListingRail title="Cafes" href="/places/categories/cafe" category="cafe" onGuestFavorite={openGuestFavorite} />
+            <Guides covers={foodGuides} title="Food guides" limit={4} />
+          </>
+        ) : tab === 'guides' ? (
+          <>
+            <Guides covers={guideCovers} title="Guides" limit={HOME_GUIDES.length} showAll />
+            {COUNTRY_GUIDES.length > 0 ? (
+              <section className="min-w-0">
+                <SectionHead title="Around the country" sub="Baguio, Cebu, Palawan and more" />
+                <ul className="g-chips">
+                  {COUNTRY_GUIDES.map((target) => (
+                    <li key={target.slug}>
+                      <InternalLink href={`/guides/${target.slug}`} className="g-chip">
+                        {target.label}
+                      </InternalLink>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <MoodPills />
+            <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
 
-      {isRaining ? <ListingRail title="Rainy day? Indoor picks" subtitle="Museums to wait out the ulan" href="/places/categories/museum" category="museum" onGuestFavorite={openGuestFavorite} /> : null}
-      {pickDetails ? <WeekdayCard places={pickDetails} /> : null}
-      <Guides />
-      <SaanTayoCard pool={picks} />
-      <ExploreCities />
+            {pickDetails ? (
+              picks.length > 0 ? (
+                <Rail title="GalaTayo Picks" subtitle="Top-scored places around the country" seeAllHref="/places">
+                  {picks.map((place, index) => (
+                    <PhotoCard key={place.slug ?? place.id} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
+                  ))}
+                </Rail>
+              ) : null
+            ) : (
+              <section className="min-w-0">
+                <SectionHead title="GalaTayo Picks" sub="Top-scored places around the country" />
+                <RailSkeleton />
+              </section>
+            )}
+
+            {isRaining ? <ListingRail title="Rainy day? Indoor picks" subtitle="Museums to wait out the ulan" href="/places/categories/museum" category="museum" onGuestFavorite={openGuestFavorite} /> : null}
+            {pickDetails ? <WeekdayCard places={pickDetails} /> : null}
+            <Guides covers={guideCovers} />
+            <SaanTayoCard pool={picks} />
+            <ExploreCities />
+          </>
+        )}
+      </div>
       {guestAuth.promptElement}
     </div>
   )

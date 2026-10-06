@@ -246,14 +246,15 @@ export default function SharedPlacePage({
   function buildPlaceSchemaExtras(detail: NonNullable<typeof place>) {
     const latitude = Number(detail.latitude ?? detail.coordinates?.lat)
     const longitude = Number(detail.longitude ?? detail.coordinates?.lng)
-    const rating = Number(detail.rating)
-    const reviewCount = Number(detail.ratingCount ?? String(detail.reviewCount ?? "").replace(/D/g, ""))
+    // Same rule as the sun dots: a score only from 3+ member ratings, never the team's own.
+    const rating = Number(detail.community_rating)
+    const reviewCount = Number(detail.community_review_count ?? 0)
     const budget = detail.budget_min == null ? null : Number(detail.budget_min)
     return {
       ...(Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0)
         ? { geo: { '@type': 'GeoCoordinates', latitude, longitude } }
         : {}),
-      ...(rating > 0 && reviewCount > 0
+      ...(rating > 0 && reviewCount >= 3
         ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(rating.toFixed(1)), reviewCount, bestRating: 5, worstRating: 1 } }
         : {}),
       ...(budget != null && Number.isFinite(budget)
@@ -273,7 +274,7 @@ export default function SharedPlacePage({
             {
               '@type': 'BreadcrumbList',
               itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Home', item: `${getPublicSiteOrigin()}/home` },
+                { '@type': 'ListItem', position: 1, name: 'Home', item: `${getPublicSiteOrigin()}/` },
                 { '@type': 'ListItem', position: 2, name: 'Places', item: `${getPublicSiteOrigin()}/places` },
                 ...(categoryBreadcrumbMeta
                   ? [

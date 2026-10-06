@@ -2,13 +2,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
   type PropsWithChildren,
 } from 'react'
 
-export type ThemePreference = 'light' | 'dark'
+/** 'system' (no saved choice) follows the phone or computer setting. */
+export type ThemePreference = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'galatayo:theme-preference'
@@ -27,9 +29,15 @@ type ThemeProviderProps = PropsWithChildren
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+function readSystemTheme(): ResolvedTheme {
+  return typeof window !== 'undefined' && window.matchMedia?.(DARK_QUERY).matches ? 'dark' : 'light'
+}
+
 function readStoredThemePreference(): ThemePreference {
   if (typeof window === 'undefined') {
-    return 'light'
+    return 'system'
   }
 
   try {
@@ -41,7 +49,7 @@ function readStoredThemePreference(): ThemePreference {
     // localStorage may be unavailable, ignore
   }
 
-  return 'light'
+  return 'system'
 }
 
 function clearThemeSwitchingSchedule() {
@@ -89,7 +97,16 @@ function endThemeSwitchingAfterCommit() {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => readStoredThemePreference())
-  const resolvedTheme: ResolvedTheme = themePreference
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(readSystemTheme)
+  const resolvedTheme: ResolvedTheme = themePreference === 'system' ? systemTheme : themePreference
+
+  useEffect(() => {
+    const query = window.matchMedia?.(DARK_QUERY)
+    if (!query) return
+    const handleChange = () => setSystemTheme(query.matches ? 'dark' : 'light')
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
+  }, [])
 
   useLayoutEffect(() => {
     if (typeof document === 'undefined') {
@@ -105,7 +122,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
     const themeColorMeta = document.querySelector('meta[name="theme-color"]')
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#0c1a1d' : '#FFFAF4')
+      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#111111' : '#ffffff')
     }
 
     if (root.dataset[THEME_SWITCHING_ATTRIBUTE] === 'true') {

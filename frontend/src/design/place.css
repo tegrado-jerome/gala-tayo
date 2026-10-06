@@ -9,7 +9,7 @@
 .pd-pg-tile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter 300ms var(--ease-g); }
 .pd-pg-tile:hover img { filter: brightness(0.92); }
 .pd-pg-tile:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
-.pd-pg-empty { display: grid; place-items: center; height: 240px; padding: 0 24px; text-align: center; color: var(--ink); }
+.pd-pg-empty { display: grid; place-items: center; height: 286px; padding: 0 24px; text-align: center; color: var(--ink); }
 .pd-pg-top { position: absolute; inset: 0 0 auto 0; display: flex; align-items: center; gap: 4px; padding: 10px 10px; pointer-events: none; }
 .pd-pg-top > * { pointer-events: auto; }
 .pd-pg-tools { position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; }
@@ -21,6 +21,7 @@
 @media (min-width: 1024px) {
   .pd-pg-wrap { margin-inline: 0; border-radius: var(--r-2); overflow: hidden; }
   .pd-pg { height: 460px; gap: 8px; background: var(--paper); }
+  .pd-pg-empty { height: 460px; }
   .pd-pg-top { display: none; }
   .pd-pg-tools { left: 10px; bottom: 10px; }
   .pd-pg-all { right: 14px; bottom: 10px; }

@@ -18,7 +18,7 @@ const NO_CHAT_PATHS = ['/', '/ask-ai/maps', '/ask-ai/map', '/plan-with-ai']
 export function BrandMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
-      <rect width="64" height="64" rx="18" fill="#111111" />
+      <rect className="g-logo-tile" x="1" y="1" width="62" height="62" rx="17" fill="#111111" />
       <path d="M20 35a12 12 0 0 1 24 0Z" fill="#34e0a1" />
       <rect x="12" y="38" width="40" height="4" rx="2" fill="#fff" />
       <rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75" />
@@ -52,7 +52,8 @@ function SiteHeader({ pathname }: { pathname: string }) {
           <>
             <nav aria-label="Primary" className="g-nav">
               {primaryNav.map((item) => (
-                <InternalLink key={item.href} href={item.href} aria-current={item.matches(pathname) ? 'page' : undefined}>
+                // Guests' Home is the indexable landing page; /home is the signed-in app home.
+                <InternalLink key={item.href} href={item.href === '/home' && !session ? '/' : item.href} aria-current={item.matches(pathname) ? 'page' : undefined}>
                   {item.label}
                 </InternalLink>
               ))}
