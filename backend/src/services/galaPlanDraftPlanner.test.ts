@@ -1,7 +1,28 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { NormalizedPlace } from "../domain/places";
-import { buildFallbackDraft, detectLocationIntent, findUncoveredArea, keepStopsNearby, parseDraft, parseGroupSize, resolvePlanDate, resolvePromptDate, scheduleStops, selectCandidates, wantsEvening } from "./galaPlanDraftPlanner";
+import {
+  buildFallbackDraft,
+  cleanNote,
+  detectLocationIntent,
+  ensureMeal,
+  findUncoveredArea,
+  fitBudget,
+  keepStopsNearby,
+  parseBudgetPerHead,
+  parseDraft,
+  parseGroupSize,
+  parsePlanConstraints,
+  parseTimeWindow,
+  placesForArea,
+  requiredMeal,
+  resolvePlanDate,
+  resolvePromptDate,
+  scheduleStops,
+  selectCandidates,
+  servesMeal,
+  wantsEvening,
+} from "./galaPlanDraftPlanner";
 
 function place(overrides: Partial<NormalizedPlace>): NormalizedPlace {
   return {
@@ -260,5 +281,154 @@ describe("plan sense rules", () => {
     const out = scheduleStops([stop("m"), stop("k")], new Map([market, cafe].map((p) => [p.id, p])), { sunsetMinutes: 17 * 60 + 40, wantsSunset: false });
     const marketStop = out.find((s) => s.place_id === "m")!;
     assert.ok(Number(marketStop.time.split(":")[0]) >= 19);
+  });
+});
+
+const at = (hours: number, minutes = 0) => hours * 60 + minutes;
+
+describe("parseBudgetPerHead", () => {
+  it("reads per-head budgets in English and Taglish", () => {
+    assert.equal(parseBudgetPerHead("Chill na Sabado sa Intramuros, 4 kami, ₱800 each", 4), 800);
+    assert.equal(parseBudgetPerHead("Tagaytay, 5 kami, tig-₱1,500", 5), 1500);
+    assert.equal(parseBudgetPerHead("museum day, PHP 600 per head", 3), 600);
+    assert.equal(parseBudgetPerHead("Gimik sa Poblacion, ₱1k each", 3), 1000);
+  });
+
+  it("splits a group or couple budget", () => {
+    assert.equal(parseBudgetPerHead("Date night sa BGC, ₱2k for two", 2), 1000);
+    assert.equal(parseBudgetPerHead("Dinner and a movie in BGC for two, ₱2,000 budget", 2), 1000);
+    assert.equal(parseBudgetPerHead("Murang date sa QC, ₱500 lang total para sa dalawa", 2), 250);
+    assert.equal(parseBudgetPerHead("Barkada outing, ₱6,000 total", 6), 1000);
+  });
+
+  it("ignores prompts without a budget and stray small numbers", () => {
+    assert.equal(parseBudgetPerHead("Chill day sa Makati, 4 kami", 4), null);
+    assert.equal(parseBudgetPerHead("simula 2pm hanggang 8pm", null), null);
+  });
+});
+
+describe("parseTimeWindow", () => {
+  it("reads Taglish start and end words", () => {
+    assert.deepEqual(parseTimeWindow("Chill na Sabado sa Intramuros, 4 kami, ₱800 each, simula 2pm hanggang gabi"), { start: at(14), end: at(21) });
+    assert.deepEqual(parseTimeWindow("Food trip sa Binondo, umaga hanggang tanghali"), { start: at(9), end: at(13) });
+    assert.deepEqual(parseTimeWindow("alas-3 ng hapon hanggang alas-8 ng gabi"), { start: at(15), end: at(20) });
+  });
+
+  it("reads English clock ranges", () => {
+    assert.deepEqual(parseTimeWindow("Baguio cafe hopping for 2, from 10am to 4pm"), { start: at(10), end: at(16) });
+    assert.deepEqual(parseTimeWindow("museum hop 2-6pm"), { start: at(14), end: at(18) });
+    assert.deepEqual(parseTimeWindow("Tagaytay day trip, alis 8am"), { start: at(8), end: null });
+  });
+
+  it("treats evening words as a start only when they aren't the end", () => {
+    assert.equal(parseTimeWindow("Date night sa BGC").start, at(17, 30));
+    assert.equal(parseTimeWindow("Chill day, until gabi").start, null);
+    assert.deepEqual(parseTimeWindow("Date sa BGC, ₱2k"), { start: null, end: null });
+  });
+});
+
+describe("requiredMeal", () => {
+  it("asks for dinner on date nights and evening-long plans", () => {
+    assert.equal(requiredMeal("Date night sa BGC", { start: null, end: null }), "dinner");
+    assert.equal(requiredMeal("Chill sa Intramuros", { start: at(14), end: at(21) }), "dinner");
+    assert.equal(requiredMeal("Food trip sa Binondo", { start: at(9), end: at(13) }), "lunch");
+    assert.equal(requiredMeal("Museum morning", { start: at(9), end: at(12) }), null);
+  });
+
+  it("combines into plan constraints", () => {
+    assert.deepEqual(parsePlanConstraints("Chill na Sabado sa Intramuros, 4 kami, ₱800 each, simula 2pm hanggang gabi", 4), {
+      budgetPerHead: 800,
+      start: at(14),
+      end: at(21),
+      meal: "dinner",
+    });
+  });
+});
+
+describe("area aliases", () => {
+  const taguig = [
+    place({ id: "bhs", name: "Bonifacio High Street", category: "Mall", city: "Taguig", area: "Bonifacio Global City", latitude: 14.5508, longitude: 121.0509 }),
+    place({ id: "venice", name: "Venice Grand Canal Mall", category: "Mall", city: "Taguig", area: "McKinley Hill", latitude: 14.5355, longitude: 121.0503 }),
+  ];
+  const poblacion = place({ id: "alamat", name: "Alamat", category: "Food", city: "Makati", area: "Poblacion", latitude: 14.5649, longitude: 121.0303, budget_min: 600 });
+  const ermita = place({ id: "clock", name: "Manila Clock Tower Museum", category: "Museum", city: "Manila", area: "Ermita", latitude: 14.5896, longitude: 120.9813, budget_min: 100 });
+  const ayala = place({ id: "ayala", name: "Ayala Museum", category: "Museum", city: "Makati", area: "Ayala Center", latitude: 14.5534, longitude: 121.0236, budget_min: 450 });
+  const chele = place({ id: "chele", name: "Gallery by Chele", category: "Food", city: "Taguig", area: "Bonifacio Global City", latitude: 14.553, longitude: 121.048, budget_min: 3500 });
+  const all = [...taguig, poblacion, ermita, ayala, chele];
+
+  it("maps nicknames to cities", () => {
+    assert.deepEqual([...detectLocationIntent(all, "Date night sa BGC").cities], ["taguig"]);
+    assert.deepEqual([...detectLocationIntent(all, "Quiet cafes in QC").cities], ["quezon city"]);
+    assert.deepEqual([...detectLocationIntent(all, "Food trip sa Binondo").cities], ["manila"]);
+    assert.deepEqual([...detectLocationIntent(all, "Things to do in Metro Manila").cities], []);
+  });
+
+  it("lets a small area reach a short ride out, never across the metro", () => {
+    const ids = placesForArea(all, detectLocationIntent(all, "Date night sa BGC")).map((entry) => entry.id);
+    assert.ok(ids.includes("alamat"), "Poblacion is a short ride from BGC");
+    assert.equal(ids.includes("clock"), false, "Ermita is across the metro");
+  });
+
+  it("leaves out stops over budget and venues closed for a night plan", () => {
+    const ids = selectCandidates(all, "Date night sa BGC, ₱2k for two", 30, undefined, { budgetPerHead: 1000, start: at(17, 30) }).map((entry) => entry.id);
+    assert.equal(ids.includes("chele"), false, "₱3,500 dinner is over ₱1,000 a head");
+    assert.equal(ids.includes("ayala"), false, "museums close before a 5:30 PM start");
+    assert.ok(ids.includes("bhs"));
+  });
+});
+
+describe("cleanNote", () => {
+  const ayala = place({ name: "Ayala Museum", category: "Museum", description: "Art and history museum in the Ayala Center. Great dioramas." });
+
+  it("strips prices, refs and the bare place name", () => {
+    assert.equal(cleanNote("Ayala Museum, 2xPHP450", ayala), "Art and history museum in the Ayala Center.");
+    assert.equal(cleanNote("p3 - Cheap eats, PHP 200 each, good for groups", ayala), "Cheap eats, good for groups");
+    assert.equal(cleanNote("Ayala Museum: art date bago dinner (₱450)", ayala), "Art date bago dinner");
+  });
+
+  it("keeps a good note as is", () => {
+    assert.equal(cleanNote("Libre-ish na art date bago dinner", ayala), "Libre-ish na art date bago dinner");
+  });
+});
+
+describe("meal and budget rules", () => {
+  const mall = place({ id: "mall", name: "High Street", category: "Mall", budget_min: 0 });
+  const cheap = place({ id: "cheap", name: "Little Tokyo", category: "Food", budget_min: 500, latitude: 14.56, longitude: 121.02 });
+  const pricey = place({ id: "pricey", name: "Fancy", category: "Food", budget_min: 3000, latitude: 14.55, longitude: 121.02 });
+  const museum = place({ id: "museum", name: "Mind Museum", category: "Museum", budget_min: 625 });
+  const byId = new Map([mall, cheap, pricey, museum].map((entry) => [entry.id, entry]));
+  const stop = (id: string) => ({ place_id: id, time: "", minutes: 60, note: "" });
+
+  it("adds a dinner that fits the budget when the plan has none", () => {
+    const out = ensureMeal([stop("mall"), stop("museum")], [mall, cheap, pricey, museum], "dinner", 1200);
+    assert.deepEqual(out.map((entry) => entry.place_id), ["mall", "museum", "cheap"]);
+    assert.equal(out[2].time, "19:00");
+  });
+
+  it("drops the priciest non-meal stop to fit the budget", () => {
+    const out = fitBudget([stop("museum"), stop("mall"), stop("cheap")], byId, 800);
+    assert.deepEqual(out.map((entry) => entry.place_id), ["mall", "cheap"]);
+  });
+
+  it("never starts before the asked time and ends by the asked end", () => {
+    const out = scheduleStops([stop("cheap"), stop("mall"), stop("museum")], byId, { sunsetMinutes: at(17, 40), wantsSunset: false, notBefore: at(14), notAfter: at(15) });
+    assert.ok(Number(out[0].time.slice(0, 2)) >= 14, `first stop at ${out[0].time}`);
+    assert.equal(out.length, 2);
+  });
+});
+
+describe("meal fit", () => {
+  it("skips eateries whose hours rule the meal out", () => {
+    assert.equal(servesMeal(place({ best_time_to_visit: "Late morning to mid-afternoon on weekdays" }), "dinner"), false);
+    assert.equal(servesMeal(place({ best_time_to_visit: "Evening to late night" }), "dinner"), true);
+    assert.equal(servesMeal(place({ best_time_to_visit: "Dinner, Tuesday to Saturday" }), "lunch"), false);
+    assert.equal(servesMeal(place({ best_time_to_visit: null }), "lunch"), true);
+  });
+
+  it("counts a cafe picked for dinner as the meal", () => {
+    const cafe = place({ id: "cafe", name: "1919 Grand Cafe", category: "Cafe" });
+    const lumpia = place({ id: "lumpia", name: "Lumpia House", category: "Food", best_time_to_visit: "Evening" });
+    const stops = [{ place_id: "cafe", time: "", minutes: 60, note: "Light dinner in Binondo" }];
+    assert.deepEqual(ensureMeal(stops, [cafe, lumpia], "dinner").map((stop) => stop.place_id), ["cafe"]);
   });
 });

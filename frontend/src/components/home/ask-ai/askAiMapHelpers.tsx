@@ -751,7 +751,9 @@ export function normalizePlaces(value: unknown): AskAiMapPlace[] {
         (candidate as Record<string, unknown>).reviewCountText
     )
 
-    if (normalizedReviewCount !== null && normalizedReviewCount < 5) {
+    // GalaTayo places are curated, so they show even with few reviews; the review floor only screens Google results.
+    const isGalaTayoPlace = normalizedId.startsWith('galatayo:') || (typeof candidate.galatayoPath === 'string' && candidate.galatayoPath.startsWith('/places/'))
+    if (!isGalaTayoPlace && normalizedReviewCount !== null && normalizedReviewCount < 5) {
       return []
     }
 

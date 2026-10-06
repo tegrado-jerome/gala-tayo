@@ -1,5 +1,6 @@
 import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
 import { getPublicSiteOrigin } from './site'
+import { getApiUrl } from './apiClient'
 
 type ShareLinkOptions = {
   url: string
@@ -35,6 +36,15 @@ export function buildPublicGalaPlanShareUrl(username: string, slug: string) {
 
 export function buildPrivateGalaPlanShareUrl(planId: string) {
   return `${getPublicSiteOrigin()}/gala-plans/${encodeURIComponent(planId)}`
+}
+
+/**
+ * The link to send for a plan: a small API page with the plan's own preview card (name, date,
+ * first stop photo) that forwards to the plan. Sharing never changes who can open the plan.
+ */
+export function buildGalaPlanInviteUrl(planId: string) {
+  const url = getApiUrl(`/share/plans/${encodeURIComponent(planId)}`)
+  return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
 }
 
 async function copyTextToClipboard(text: string) {

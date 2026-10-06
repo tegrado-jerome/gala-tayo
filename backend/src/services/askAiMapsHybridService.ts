@@ -11,6 +11,7 @@ import {
 import { getActiveNormalizedPlaces } from "../domain/places";
 import { resolveAreaSlug } from "../utils/seoPlaces";
 import { detectCategories } from "./galaPlanDraftPlanner";
+import { detectAliasedCities, locationText, mentionsPhrase } from "../utils/areaAliases";
 
 let GoogleGenAIForMaps = GoogleGenAI;
 const DEFAULT_SEARCH_AREA = "Metro Manila, Philippines";
@@ -2376,28 +2377,75 @@ function getCandidateKey(candidate: GeminiCandidate, area: GeoapifyResolvedArea)
 
 type GalaTayoMatch = { coordinates: { latitude: number; longitude: number }; path: string };
 
-/** GalaTayo places near the search area that fit the query, used when Gemini returns nothing. */
-async function searchGalaTayoPlaces(intent: AskAiMapIntent, area: GeoapifyResolvedArea, limit: number): Promise<AskAiMapGroundedPlace[]> {
+/** The city the search asks for, as stored on places ("quezon city" for "QC" or "Quezon City, Metro Manila"). */
+export function resolveGalaTayoCity(intent: Pick<AskAiMapIntent, "rawQuery" | "searchAreaText">, areaLabel: string, knownCities: string[]): string | null {
+  const aliased = [...detectAliasedCities(`${intent.rawQuery} ${intent.searchAreaText ?? ""}`).cities][0];
+  if (aliased) return aliased;
+  const text = locationText(`${intent.searchAreaText ?? ""} ${areaLabel.split(",")[0] ?? ""}`);
+  return knownCities.filter((city) => mentionsPhrase(text, city)).sort((a, b) => b.length - a.length)[0] ?? null;
+}
+
+/** One plain line from the place's own data, saying how far it is when it sits outside the asked area. */
+export function galaTayoReason(place: { description: string | null; category: string; area: string | null; city: string | null; best_time_to_visit: string | null }, outside: { km: number; areaName: string } | null) {
+  const sentence = firstSentenceOf(place.description) || `A ${place.category.toLowerCase()} in ${place.area || place.city || "the area"}.`;
+  if (!outside) return sentence;
+  return `${place.area || place.city}, about ${outside.km.toFixed(1)} km from ${outside.areaName}. ${sentence}`;
+}
+
+export type GalaTayoSearch = { places: AskAiMapGroundedPlace[]; city: string | null; inCityCount: number; areaName: string };
+
+/** The area as the person said it ("QC", "BGC") when short, else the city, else the geocoded label. */
+export function galaTayoAreaName(searchAreaText: string | null, areaLabel: string, city: string | null) {
+  const said = (searchAreaText ?? "").split(",")[0]?.trim() ?? "";
+  if (said && said.length <= 20 && !/philippines/i.test(said)) return said;
+  if (city) return city.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  return areaLabel.split(",")[0]?.trim() || "the search area";
+}
+
+const CATEGORY_PLURALS: Record<string, string> = { Food: "food spots", Activity: "activities", Cafe: "cafes", Museum: "museums", Park: "parks", Mall: "malls", Heritage: "heritage spots", Nightlife: "bars", Hotel: "hotels", Cinema: "cinemas" };
+
+/** "cafes" when every result is a cafe, else the generic label. */
+export function galaTayoPlaceLabel(categories: string[], fallback: string) {
+  const unique = [...new Set(categories)];
+  return fallback === "places" && unique.length === 1 ? CATEGORY_PLURALS[unique[0]] ?? fallback : fallback;
+}
+
+/**
+ * GalaTayo places that fit the query, used when Gemini returns nothing. When the search names a city
+ * ("QC"), places in that city come first; nearby ones only fill in, labelled with their distance.
+ */
+async function searchGalaTayoPlaces(intent: AskAiMapIntent, area: GeoapifyResolvedArea, limit: number): Promise<GalaTayoSearch> {
   const maxDistanceKm = Math.max(8, Math.min(30, area.radiusMeters / 1000));
   const categories = detectCategories(intent.rawQuery);
   const words = normalizeKey(intent.rawQuery).split(" ").filter((word) => word.length > 3);
-  const nearby = (await getActiveNormalizedPlaces())
-    .filter((place) => place.latitude != null && place.longitude != null)
-    .map((place) => ({ place, distanceKm: getDistanceKm(area.center, { latitude: place.latitude!, longitude: place.longitude! }) }))
-    .filter(({ place, distanceKm }) => distanceKm <= maxDistanceKm && (categories.size === 0 || categories.has(place.category)));
+  const all = (await getActiveNormalizedPlaces()).filter((place) => place.latitude != null && place.longitude != null);
+  const city = resolveGalaTayoCity(intent, area.label, [...new Set(all.map((place) => (place.city ?? "").toLowerCase()).filter(Boolean))]);
+  const nickname = [...detectAliasedCities(intent.rawQuery).aliases][0];
+  // "BGC" or "QC" as typed reads better than a geocoded "BGC Greenway Park".
+  const areaName = nickname
+    ? nickname.length <= 3 ? nickname.toUpperCase() : nickname.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase())
+    : galaTayoAreaName(intent.searchAreaText, area.label, city);
+  const inCity = (place: (typeof all)[number]) => city !== null && (place.city ?? "").toLowerCase() === city;
 
-  return nearby
+  const ranked = all
+    .map((place) => ({ place, distanceKm: getDistanceKm(area.center, { latitude: place.latitude!, longitude: place.longitude! }) }))
+    .filter(({ place, distanceKm }) => (inCity(place) || distanceKm <= maxDistanceKm) && (categories.size === 0 || categories.has(place.category)))
     .map((entry) => {
       const haystack = normalizeKey([entry.place.name, entry.place.category, ...entry.place.tags, ...entry.place.good_for].join(" "));
       const wordHits = words.filter((word) => haystack.includes(word)).length;
-      return { ...entry, wordHits, score: wordHits * 2 + (entry.place.average_rating ?? 0) / 2.5 - entry.distanceKm / 5 };
+      const cityBonus = inCity(entry.place) ? 100 : 0;
+      return { ...entry, wordHits, score: cityBonus + wordHits * 2 + (entry.place.average_rating ?? 0) / 2.5 - entry.distanceKm / 5 };
     })
     // With no known category ("ramen"), only places that actually mention the words count.
     .filter((entry) => categories.size > 0 || entry.wordHits > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
+    .slice(0, limit);
+  const inCityCount = ranked.filter((entry) => inCity(entry.place)).length;
+
+  const places = ranked
     .map(({ place, distanceKm }): AskAiMapGroundedPlace => {
-      const reason = firstSentenceOf(place.description) || `Listed on GalaTayo as a ${place.category.toLowerCase()} in ${place.city ?? "the area"}.`;
+      const outside = city !== null && !inCity(place) ? { km: distanceKm, areaName } : null;
+      const reason = galaTayoReason(place, outside);
       return {
         id: `galatayo:${place.id}`,
         name: place.name,
@@ -2432,6 +2480,20 @@ async function searchGalaTayoPlaces(intent: AskAiMapIntent, area: GeoapifyResolv
         galatayoPath: `/places/${encodeURIComponent(resolveAreaSlug(place.city, place.area).slug)}/${encodeURIComponent(place.slug)}`,
       };
     });
+  return { places, city, inCityCount, areaName };
+}
+
+/** GalaTayo places are curated and always shown; other results need at least 5 reviews when a count is known. */
+export function isShownPlace(place: Pick<AskAiMapGroundedPlace, "id" | "galatayoPath" | "reviewCount">) {
+  if (place.id.startsWith("galatayo:") || place.galatayoPath) return true;
+  return typeof place.reviewCount !== "number" || place.reviewCount >= 5;
+}
+
+/** The answer line for GalaTayo results, honest about how many are really in the asked city. */
+export function galaTayoAnswerText(placeLabel: string, areaName: string, total: number, inCityCount: number, hasCity: boolean) {
+  if (!hasCity || inCityCount === total) return `Found ${total} ${placeLabel} in ${areaName}.`;
+  if (inCityCount === 0) return `No ${placeLabel} in ${areaName} on GalaTayo yet. These are the closest ones.`;
+  return `GalaTayo has ${inCityCount} ${placeLabel.replace(/s$/, inCityCount === 1 ? "" : "s")} in ${areaName} so far, plus the closest ones nearby.`;
 }
 
 function firstSentenceOf(text: string | null) {
@@ -2940,44 +3002,9 @@ function formatWhyThisFitsDistance(distanceKm: number): string {
   return `${distanceKm.toFixed(1)}km`;
 }
 
-function getWhyThisFitsEmoji(intent: AskAiMapIntent): string {
-  switch (intent.categoryIntent) {
-    case "mall":
-      return " 🛍️";
-    case "restaurant":
-    case "samgyup":
-      return " 🍽️";
-    case "cafe":
-      return " ☕";
-    case "park":
-      return " 🌿";
-    case "cinema":
-      return " 🎬";
-    case "museum":
-      return " 🖼️";
-    case "hotel":
-    case "resort":
-      return " 🧳";
-    case "bar":
-    case "karaoke":
-      return " 🎤";
-    case "activity":
-    case "tourist_spot":
-      return " ✨";
-    default:
-      return " 📍";
-  }
-}
-
-function appendWhyThisFitsEmoji(text: string, intent: AskAiMapIntent): string {
-  const cleaned = normalizeWhitespace(text);
-  if (!cleaned) {
-    return "";
-  }
-  if (/\p{Extended_Pictographic}/u.test(cleaned)) {
-    return cleaned;
-  }
-  return `${cleaned}${getWhyThisFitsEmoji(intent)}`;
+/** Reasons read as plain text: emoji the model added are removed. */
+function stripEmoji(text: string): string {
+  return normalizeWhitespace(text.replace(/[\p{Extended_Pictographic}️]/gu, ""));
 }
 
 function getShortPlaceArea(place: AskAiMapGroundedPlace): string | null {
@@ -3027,7 +3054,7 @@ function getRatingEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisF
   }
 
   if (hasRating) {
-    return `Rating-wise, may ${place.rating!.toFixed(1)} stars siya sa Maps, pero check reviews pa rin bago pumunta.`;
+    return `Rating-wise, may ${place.rating!.toFixed(1)} stars siya sa Maps.`;
   }
 
   return "Rating-wise, hindi malinaw sa available map data, so treat it as shortlist option muna.";
@@ -3044,14 +3071,14 @@ function getAccessEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisF
 
   if (input.wantsWalkable) {
     if (distanceKm !== null && distanceKm <= 1.2) {
-      return `Access-wise, mukhang walkable siya at around ${formatWhyThisFitsDistance(distanceKm)} from the search area, pero check actual route and crossings.`;
+      return `Access-wise, mukhang walkable siya at around ${formatWhyThisFitsDistance(distanceKm)} from the search area.`;
     }
 
     if (distanceKm !== null) {
-      return `Access-wise, around ${formatWhyThisFitsDistance(distanceKm)} siya from the search area, so check if kaya lakarin or mas okay ang short ride.`;
+      return `Access-wise, around ${formatWhyThisFitsDistance(distanceKm)} siya from the search area.`;
     }
 
-    return "Access-wise, near siya sa requested search area, pero check map directions muna kung kayang lakarin.";
+    return "Access-wise, near siya sa requested search area.";
   }
 
   if (distanceKm !== null) {
@@ -3067,7 +3094,7 @@ function getBudgetEvidenceSentence(input: WhyThisFitsInput): string | null {
   }
 
   const budgetLabel = typeof input.budgetAmount === "number" ? `PHP ${input.budgetAmount}` : "budget";
-  return `Budget-wise, possible ${budgetLabel} shortlist siya, pero check current prices or promos since wala tayong verified live menu/rate.`;
+  return `Budget-wise, possible ${budgetLabel} shortlist siya.`;
 }
 
 function getOpenNowEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
@@ -3121,7 +3148,7 @@ function buildGroundedWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMap
     getGeneralEvidenceSentence(place, input),
   ], 4);
 
-  return appendWhyThisFitsEmoji(prioritySentences.slice(0, 3).join(" "), intent);
+  return stripEmoji(prioritySentences.slice(0, 3).join(" "));
 }
 
 function sentenceLooksLikeMetadata(sentence: string, place: AskAiMapGroundedPlace): boolean {
@@ -3242,7 +3269,7 @@ function sanitizeWhyThisFits(text: string, place: AskAiMapGroundedPlace, intent:
     return "";
   }
 
-  return appendWhyThisFitsEmoji(cleaned, intent);
+  return stripEmoji(cleaned);
 }
 
 function buildWhyThisFitsFallback(input: WhyThisFitsInput): string {
@@ -4104,7 +4131,10 @@ async function buildAskAiMapResponse(args: {
   modelUsed: string;
   explanationSource: "gemini_maps_grounding" | "backend_template";
   signal?: AbortSignal;
+  galatayo?: { city: string | null; inCityCount: number; areaName: string } | null;
 }): Promise<AskAiMapsSearchResult> {
+  // Same rule as the app: outside results with fewer than 5 reviews aren't shown, so they don't count as results.
+  args = { ...args, places: args.places.filter(isShownPlace) };
   const counts = getTargetCounts(args.intent);
   const pinCount = args.places.filter((place) => place.hasPin).length;
   const resultMeta: AskAiMapsResultMeta = {
@@ -4138,6 +4168,8 @@ async function buildAskAiMapResponse(args: {
       : await generateWhyThisFitsBatch(args.places.slice(0, counts.max), args.intent, args.signal);
 
   const places = args.places.slice(0, counts.max).map((place, index) => {
+    // GalaTayo reasons come from the place's own data and are already clean.
+    if (args.mode === "galatayo_places" && place.whyThisFits) return { ...place, reason: place.whyThisFits };
     const groqExplanation = groqExplanations?.[String(index)] ?? (args.explanationSource === "gemini_maps_grounding" || args.mode === "galatayo_places" ? place.whyThisFits ?? null : null);
     const sanitizedGroqExplanation =
       groqExplanation && normalizeText(groqExplanation)
@@ -4178,7 +4210,15 @@ async function buildAskAiMapResponse(args: {
     mode: args.mode,
     query: args.intent.rawQuery,
     searchArea: args.searchArea,
-    answerText: `Found ${places.length} ${placeLabel} in ${areaLabel}.`,
+    answerText: args.galatayo
+      ? galaTayoAnswerText(
+          galaTayoPlaceLabel(places.map((place) => place.category ?? ""), placeLabel),
+          args.galatayo.areaName || areaLabel,
+          places.length,
+          args.galatayo.inCityCount,
+          args.galatayo.city !== null,
+        )
+      : `Found ${places.length} ${placeLabel} in ${areaLabel}.`,
     summary: `Showing ${pinCount} pin${pinCount === 1 ? "" : "s"} and ${places.length - pinCount} card${places.length - pinCount === 1 ? "" : "s"}.`,
     resultMeta,
     places,
@@ -4316,7 +4356,11 @@ export async function searchAskAiMaps(
   let finalPlaces: AskAiMapGroundedPlace[];
   let mode: AskAiMapsSearchResult["mode"];
 
-  const galatayoPlaces = verifiedGeminiPlaces.length > 0 ? [] : await searchGalaTayoPlaces(intent, area, counts.max).catch(() => []);
+  const galatayo: GalaTayoSearch =
+    verifiedGeminiPlaces.length > 0
+      ? { places: [], city: null, inCityCount: 0, areaName: "" }
+      : await searchGalaTayoPlaces(intent, area, counts.max).catch(() => ({ places: [], city: null, inCityCount: 0, areaName: "" }));
+  const galatayoPlaces = galatayo.places;
 
   if (verifiedGeminiPlaces.length > 0) {
     finalPlaces = verifiedGeminiPlaces;
@@ -4357,7 +4401,8 @@ export async function searchAskAiMaps(
     mode = finalPlaces.length > 0 ? "geoapify_fallback_only" : "no_verified_results";
   }
 
-  finalPlaces = rankVerifiedPlaces(dedupePlaces(finalPlaces), intent).slice(0, counts.max);
+  // GalaTayo results keep their own order: places in the asked city first, then the closest ones.
+  finalPlaces = mode === "galatayo_places" ? finalPlaces.slice(0, counts.max) : rankVerifiedPlaces(dedupePlaces(finalPlaces), intent).slice(0, counts.max);
 
   const geoapifyCoordinateFilledCount = finalPlaces.filter(
     (place) =>
@@ -4395,6 +4440,7 @@ export async function searchAskAiMaps(
 
   return buildAskAiMapResponse({
     mode,
+    galatayo: mode === "galatayo_places" ? { city: galatayo.city, inCityCount: galatayo.inCityCount, areaName: galatayo.areaName } : null,
     intent,
     searchArea: area.label,
     places: finalPlaces,

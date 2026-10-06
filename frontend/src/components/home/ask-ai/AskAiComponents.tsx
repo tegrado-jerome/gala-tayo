@@ -100,7 +100,10 @@ function useAnswerComponents(sources: AskAiSource[] | undefined): Components {
       ...markdownComponents,
       strong: ({ children }) => {
         const text = typeof children === 'string' ? children : Array.isArray(children) && children.every((child) => typeof child === 'string') ? children.join('') : null
-        const path = text ? byName.get(text.trim().toLowerCase()) : undefined
+        // Models often write "Po‑Heng" with a non-breaking hyphen; match it as a plain one.
+        const key = text?.trim().toLowerCase().replace(/[‐-―]/g, '-')
+        // "Gallery by Chele (BGC)" still links to Gallery by Chele.
+        const path = key ? byName.get(key) ?? [...byName.entries()].find(([name]) => key.includes(name) || (key.length >= 6 && name.includes(key)))?.[1] : undefined
         return path ? (
           <InternalLink href={path} className="font-semibold underline decoration-[var(--tara)] decoration-2 underline-offset-2">
             {children}
@@ -432,7 +435,6 @@ function AskAiModePanel({
             {isSubmitting ? <Square aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}
           </Button>
         </div>
-        <p className="g-xs g-fnt mt-2 text-center">AI can be wrong. Double-check before you go.</p>
       </div>
     </div>
   )

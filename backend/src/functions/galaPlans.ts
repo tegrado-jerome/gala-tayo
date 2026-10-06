@@ -293,7 +293,7 @@ async function attachPlaceImages(items: ItemRow[]): Promise<ItemRow[]> {
   }
 }
 
-async function getPlanItems(planIds: string[], previewOnly = false) {
+export async function getPlanItems(planIds: string[], previewOnly = false) {
   if (planIds.length === 0) return new Map<string, ItemRow[]>();
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plan_items") as any)

@@ -36,6 +36,7 @@ export type GuestAuthVariant =
   | 'contribute-photo'
   | 'saved-page'
   | 'plans-page'
+  | 'plan-rsvp'
   | 'passport-page'
   | 'account-page'
 
@@ -161,6 +162,14 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
     title: 'Log in to plan with your barkada',
     description: 'Build a gala, share one link, and let everyone RSVP and vote.',
     benefits: ['Plan with AI in one sentence', 'Share a Tara? link with friends', 'Split the bill with Hatian'],
+  },
+  'plan-rsvp': {
+    guestTitle: 'Sabihin mong sasama ka',
+    icon: CalendarPlus,
+    label: 'Invite',
+    title: 'Log in to RSVP to this gala',
+    description: 'Tell the host if you’re in and vote on the stops. It takes a few seconds.',
+    benefits: ['RSVP and vote on stops', 'See who else is going', 'Track your share in Hatian'],
   },
   'passport-page': {
     guestTitle: 'Collect city stamps',

@@ -161,13 +161,20 @@ export async function patchGalaPlanMember(request: HttpRequest, context: Invocat
   try {
     const user = await getCurrentUser(request);
     const plan = await loadViewablePlan(String(request.params.id ?? ""), user.id);
-    if (!plan || plan.user_id !== user.id) return json(404, { message: "Gala plan not found." });
-
     const memberId = String(request.params.userId ?? "");
+    // The host settles anyone; a member can only mark their own share as paid.
+    if (!plan || (plan.user_id !== user.id && memberId !== user.id)) return json(404, { message: "Gala plan not found." });
+
     const paid = (await readBody(request)).paid;
     if (!isUuid(memberId) || typeof paid !== "boolean") return json(400, { message: "A member and paid status are required." });
 
     const supabase = await getSupabaseAdminClient();
+    if (plan.user_id !== user.id) {
+      const existing = check(
+        await (supabase.from("gala_plan_members") as any).select("user_id").eq("plan_id", plan.id).eq("user_id", memberId).maybeSingle()
+      );
+      if (!existing) return json(400, { message: "RSVP to the gala first." });
+    }
     check(
       await (supabase.from("gala_plan_members") as any).upsert(
         { plan_id: plan.id, user_id: memberId, paid, updated_at: new Date().toISOString() },

@@ -20,6 +20,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "seoListings",
   "sitemapXml",
   "robotsTxt",
+  "planSharePage",
   "placeDetail",
   "placeDetailsBatch",
   "placePhotos",
