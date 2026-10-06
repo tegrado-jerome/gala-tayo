@@ -31,7 +31,7 @@ describe("describeListShare", () => {
     });
     assert.equal(preview.title, "Rainy day");
     assert.equal(preview.description, "2 places · Manila. A Gala list by @maria on GalaTayo.");
-    assert.match(preview.imageUrl, /places\/fort-santiago\/hd\/fort-santiago-1\.webp$/);
+    assert.match(preview.imageUrl, /places\/fort-santiago\/hd\/fort-santiago-1(-v\d+)?\.webp$/);
   });
 
   it("escapes the list name in the preview page", () => {

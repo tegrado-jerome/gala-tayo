@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getActiveNormalizedPlaces } from "../domain/places";
-import { hasCuratedPhoto } from "../utils/hdPhotos";
+import { hasCuratedPhoto, hdPhotoKey } from "../utils/hdPhotos";
 import { getConfiguredSiteUrl } from "../utils/siteUrl";
 import { isPreviewBot, renderSharePage, socialImageUrl, type PlanSharePreview } from "./sharePlan";
 
@@ -36,11 +36,11 @@ export function describeListShare(input: {
   const cities = Array.from(new Set(input.places.map((place) => place.city).filter((city): city is string => Boolean(city)))).slice(0, 2);
   const parts = [count > 0 ? `${count} ${count === 1 ? "place" : "places"}` : null, cities.join(", ") || null].filter(Boolean);
   const byLine = input.list.by ? `A Gala list by @${input.list.by}` : "A Gala list";
-  const photoSlug = input.places.find((place) => hasCuratedPhoto(place.slug))?.slug;
+  const photoKey = hdPhotoKey(input.places.find((place) => hasCuratedPhoto(place.slug))?.slug, "full");
   return {
     title: input.list.name,
     description: `${parts.length ? `${parts.join(" · ")}. ` : ""}${byLine} on GalaTayo.`,
-    imageUrl: photoSlug ? socialImageUrl(`places/${photoSlug}/hd/${photoSlug}-1.webp`) : DEFAULT_IMAGE,
+    imageUrl: photoKey ? socialImageUrl(photoKey) : DEFAULT_IMAGE,
     planUrl: input.listUrl,
     shareUrl: input.shareUrl,
   };
