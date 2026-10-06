@@ -17,7 +17,8 @@ export type Passport =
       total_checkins: number
       unique_places: number
       streak_weeks: number
-      recent: Array<{ place_id: string; name: string; slug: string | null; city: string | null; created_at: string }>
+      /** `id` is missing on older API versions; without it a visit can't be removed. */
+      recent: Array<{ id?: string; place_id: string; name: string; slug: string | null; city: string | null; created_at: string }>
       /** Last 13 months of check-ins for Gala Wrapped; missing on older API versions. */
       history?: Array<{ place_id: string; city: string | null; category: string | null; created_at: string }>
     }
@@ -35,6 +36,11 @@ async function request<T>(path: string, session: Session | null | undefined, ini
 
 export function getMyPassport(session?: Session | null) {
   return request<Passport>('/me/passport', session)
+}
+
+/** Removes one of your check-ins (a mistaken stamp); returns the updated passport. */
+export function removeCheckin(checkinId: string, session?: Session | null) {
+  return request<Passport>(`/me/checkins/${encodeURIComponent(checkinId)}`, session, { method: 'DELETE' })
 }
 
 export function checkInAtPlace(placeId: string, coords: { latitude: number; longitude: number }, session?: Session | null) {

@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react/dist/csr/X'
 import { Button, buttonClass, cx } from '../ui'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, getPlanDate } from '../../utils/galaPlanTrip'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { buildPrivateGalaPlanShareUrl } from '../../utils/share'
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/bodyScrollLock'
 
@@ -85,7 +85,7 @@ function placePins(items: GalaPlanDetail['items']) {
   return stops.map((item, index) => ({
     ...positions[index],
     n: index + 1,
-    imageUrls: [item.place.image_url, getStaticPlaceImageUrlForSlug(item.place.slug)].filter((url): url is string => Boolean(url)),
+    imageUrls: getPlacePhotoCandidates(item.place.slug, item.place.image_url),
   }))
 }
 
@@ -138,6 +138,27 @@ async function loadImage(urls: string[]): Promise<StoryImage> {
     } finally {
       window.clearTimeout(timer)
     }
+  }
+  return null
+}
+
+function probeImage(url: string, crossOrigin: boolean) {
+  return new Promise<boolean>((resolve) => {
+    const image = new Image()
+    if (crossOrigin) image.crossOrigin = 'anonymous'
+    image.onload = () => resolve(true)
+    image.onerror = () => resolve(false)
+    image.src = url
+  })
+}
+
+/**
+ * The first photo of a stop that actually loads, for the on-screen preview. Tried with CORS first
+ * (media.galatayo.app allows galatayo.app), then plainly, since showing a photo needs no CORS.
+ */
+async function firstLoadingPhoto(urls: string[]) {
+  for (const url of urls) {
+    if ((await probeImage(url, true)) || (await probeImage(url, false))) return url
   }
   return null
 }
@@ -330,7 +351,7 @@ function downloadBlob(blob: Blob, fileName: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 4000)
 }
 
-function StoryCard({ story }: { story: Story }) {
+function StoryCard({ story, photos }: { story: Story; photos: Array<string | null> }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
   const reduceMotion = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
   const routePoints = story.pins.map((pin) => `${pin.x},${pin.y}`).join(' ')
@@ -382,8 +403,8 @@ function StoryCard({ story }: { story: Story }) {
         <g key={pin.n} className="motion-safe:animate-[g-fade_400ms_var(--ease-g)_both]" style={{ animationDelay: `${200 + index * 160}ms` }}>
           <circle cx={pin.x} cy={pin.y} r={PIN_R} style={{ fill: 'var(--on-ink)' }} />
           <circle cx={pin.x} cy={pin.y} r={PIN_R - 8} style={{ fill: 'var(--fill-2)' }} />
-          {pin.imageUrls[0] ? (
-            <image href={pin.imageUrls[0]} x={pin.x - PIN_R + 8} y={pin.y - PIN_R + 8} width={(PIN_R - 8) * 2} height={(PIN_R - 8) * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}c${pin.n})`} />
+          {photos[index] ? (
+            <image href={photos[index]!} x={pin.x - PIN_R + 8} y={pin.y - PIN_R + 8} width={(PIN_R - 8) * 2} height={(PIN_R - 8) * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}c${pin.n})`} />
           ) : null}
           <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={27} style={{ fill: 'var(--on-ink)' }} />
           <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={23} style={{ fill: STORY_MINT }} />
@@ -443,8 +464,17 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
   const [isSharing, setIsSharing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
+  const [photos, setPhotos] = useState<Array<string | null>>([])
+
   useEffect(() => {
     pngRef.current = renderStoryPng(story)
+    let isActive = true
+    void Promise.all(story.pins.map((pin) => firstLoadingPhoto(pin.imageUrls))).then((found) => {
+      if (isActive) setPhotos(found)
+    })
+    return () => {
+      isActive = false
+    }
   }, [story])
 
   useEffect(() => {
@@ -499,7 +529,7 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
         className="overflow-hidden rounded-[var(--r-4)] shadow-[var(--sh-3)] ring-1 ring-[color-mix(in_srgb,var(--on-ink)_14%,transparent)] motion-safe:animate-[g-up_320ms_var(--ease-g)_both]"
         style={{ aspectRatio: '9 / 16', height: 'min(calc(100dvh - 120px), calc((100vw - 32px) * 16 / 9), 860px)' }}
       >
-        <StoryCard story={story} />
+        <StoryCard story={story} photos={photos} />
       </div>
       <div className="flex w-full max-w-[420px] gap-3">
         <Button variant="soft" className="flex-1" onClick={onClose}>

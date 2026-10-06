@@ -7,7 +7,7 @@ import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
 import goodForTags from "../data/goodForTags.json";
 import galaScores from "../data/galaScores.json";
-import hdPhotoSlugs from "../data/hdPhotoSlugs.json";
+import { hasCuratedPhoto } from "./hdPhotos";
 import { DESTINATIONS, getDestinationBySlug, getLocationNamesForAreaSlug, getRegionBySlug, resolveDestination } from "./phDestinations";
 
 type PlaceRow = Record<string, unknown>;
@@ -82,12 +82,7 @@ const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
 // Gala-worthy scores (0-100) from the place scoring; unscored places rank after scored ones.
 const GALA_SCORES: Record<string, number> = galaScores;
-// Places with curated HD photos in R2 (mirrors the keys of frontend/src/data/placeCardPhotos.json).
-const HD_PHOTO_SLUGS = new Set<string>(hdPhotoSlugs);
-
-export function hasCuratedPhoto(slug: string | null | undefined): boolean {
-  return Boolean(slug && HD_PHOTO_SLUGS.has(slug.trim().toLowerCase()));
-}
+export { hasCuratedPhoto };
 
 function getGalaScore(slug: string | null | undefined): number {
   return (slug && GALA_SCORES[slug.trim().toLowerCase()]) || 0;

@@ -1,6 +1,7 @@
 import type { PlaceDetail } from '../types/appTypes'
 import { R2_PUBLIC_BASE_URL } from './r2Config'
 import { resolvePlaceImageCandidates } from '../utils/placeImageCandidates'
+import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 
 const categoryOverviewRepresentativeSlug = 'national-museum-of-natural-history'
 
@@ -90,7 +91,14 @@ function getStaticPlaceImageUrlForSlug(placeSlug?: string | null) {
   }
 
   const imageSlug = placeImageSlugAliases[normalizedSlug] || normalizedSlug
-  return `${R2_PUBLIC_BASE_URL}/places/${imageSlug}/${imageSlug}-1.webp`
+  // Curated HD photos live under /hd/; the flat <slug>-1.webp path only exists for older uploads.
+  return getPlaceCardPhoto(imageSlug) ?? `${R2_PUBLIC_BASE_URL}/places/${imageSlug}/${imageSlug}-1.webp`
+}
+
+/** Photo URLs to try in order for a place outside its own page (plans, stories, previews): HD card photo first. */
+function getPlacePhotoCandidates(placeSlug: string | null | undefined, ...imageUrls: Array<string | null | undefined>) {
+  const urls = [getPlaceCardPhoto(placeSlug?.trim().toLowerCase()), ...imageUrls.map((url) => url?.trim()), getStaticPlaceImageUrlForSlug(placeSlug)]
+  return [...new Set(urls.filter((url): url is string => Boolean(url)))]
 }
 
 function getPlaceDetailImageUrl(place?: PlaceDetail | null) {
@@ -123,5 +131,6 @@ export {
   getDiscoveryImageCandidates,
   getDiscoveryImageUrl,
   getPlaceDetailImageUrl,
+  getPlacePhotoCandidates,
   getStaticPlaceImageUrlForSlug,
 }

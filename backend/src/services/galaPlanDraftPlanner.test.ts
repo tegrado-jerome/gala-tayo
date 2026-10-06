@@ -3,8 +3,23 @@ import { describe, it } from "node:test";
 import type { NormalizedPlace } from "../domain/places";
 import {
   buildFallbackDraft,
+  fillGaps,
   cleanNote,
+  cleanSummary,
+  clampStay,
+  describeStop,
   detectLocationIntent,
+  driveMinutesFromManila,
+  defaultStart,
+  dropOffHoursFood,
+  ensureRequested,
+  isDarkOutdoor,
+  orderByTimeOfDay,
+  parseDeparture,
+  preferInArea,
+  requestedKinds,
+  tightenRoute,
+  topUpStops,
   ensureMeal,
   findUncoveredArea,
   fitBudget,
@@ -425,10 +440,167 @@ describe("meal fit", () => {
     assert.equal(servesMeal(place({ best_time_to_visit: null }), "lunch"), true);
   });
 
-  it("counts a cafe picked for dinner as the meal", () => {
+  it("never counts a cafe picked for dinner as the meal", () => {
     const cafe = place({ id: "cafe", name: "1919 Grand Cafe", category: "Cafe" });
     const lumpia = place({ id: "lumpia", name: "Lumpia House", category: "Food", best_time_to_visit: "Evening" });
     const stops = [{ place_id: "cafe", time: "", minutes: 60, note: "Light dinner in Binondo" }];
-    assert.deepEqual(ensureMeal(stops, [cafe, lumpia], "dinner").map((stop) => stop.place_id), ["cafe"]);
+    assert.deepEqual(ensureMeal(stops, [cafe, lumpia], "dinner").map((stop) => stop.place_id), ["cafe", "lumpia"]);
+    assert.equal(cleanNote("Light dinner sa Binondo, sulit!", cafe), describeStop(cafe));
+    assert.equal(cleanNote("Kape muna bago dinner, chill lang", cafe), "Kape muna bago dinner, chill lang");
+  });
+});
+
+describe("plan intent rules (QA round 2)", () => {
+  const at = (hours: number, minutes = 0) => hours * 60 + minutes;
+  const stop = (id: string, time = "", note = "", minutes = 60) => ({ place_id: id, time, minutes, note });
+  const pastry = place({ id: "pastry", name: "Apologue Coffee & Pastry", category: "Cafe", city: "Manila", budget_min: 160, best_time_to_visit: "Afternoon after a Binondo food crawl" });
+  const quietCafe = place({ id: "quiet", name: "Quiet Cafe", category: "Cafe", city: "Quezon City", latitude: 14.64, longitude: 121.05 });
+  const qcDinner = place({ id: "qc-dinner", name: "Deo Gracias", category: "Food", city: "Quezon City", budget_min: 800, best_time_to_visit: "Dinner for date night", latitude: 14.63, longitude: 121.04 });
+  const market = place({ id: "market", name: "Sunday Market", category: "Food", city: "Makati", budget_min: 250, best_time_to_visit: "Early Sunday morning" });
+
+  it("reads the asked stops in order, plus the meal the plan needs", () => {
+    assert.deepEqual(requestedKinds("Study date sa QC, tahimik na cafe tapos dinner"), ["cafe", "dinner"]);
+    assert.deepEqual(requestedKinds("Museum day then drinks sa Poblacion"), ["museum", "nightlife"]);
+    assert.deepEqual(requestedKinds("Intramuros walk simula 2pm hanggang gabi", "dinner"), ["dinner"]);
+  });
+
+  it("adds a real dinner restaurant, never a pastry cafe as dinner", () => {
+    const out = ensureRequested([stop("pastry", "18:30", "Dinner and pastries")], [pastry, quietCafe, qcDinner, market], ["cafe", "dinner"]);
+    assert.equal(out.picks.get("cafe"), "pastry");
+    assert.equal(out.picks.get("dinner"), "qc-dinner");
+    assert.deepEqual(out.missing, []);
+  });
+
+  it("says what it could not find instead of faking it", () => {
+    const out = ensureRequested([stop("qc-dinner")], [qcDinner, market], ["cafe", "dinner"]);
+    assert.deepEqual(out.missing, ["cafe"]);
+    assert.deepEqual(out.stops.map((entry) => entry.place_id), ["qc-dinner"]);
+  });
+
+  it("keeps a BGC date in BGC/Taguig when a place there does the job", () => {
+    const bgc = detectLocationIntent([], "Date night sa BGC");
+    const bgcDinner = place({ id: "bgc-dinner", name: "Gallery by Chele", category: "Food", city: "Taguig", budget_min: 1500, best_time_to_visit: "Friday or Saturday dinner", latitude: 14.55, longitude: 121.05 });
+    const shangDinner = place({ id: "mandaluyong-dinner", name: "Juniper", category: "Food", city: "Mandaluyong", budget_min: 1000, best_time_to_visit: "Dinner for dates", latitude: 14.58, longitude: 121.056 });
+    const walk = place({ id: "bhs", name: "Bonifacio High Street", category: "Mall", city: "Taguig", budget_min: 0, latitude: 14.551, longitude: 121.051 });
+    const swapped = preferInArea([stop("bhs"), stop("mandaluyong-dinner")], [walk, shangDinner, bgcDinner], bgc, new Map([["dinner", "mandaluyong-dinner"]]), 2000);
+    assert.deepEqual(swapped.stops.map((entry) => entry.place_id), ["bhs", "bgc-dinner"]);
+    assert.deepEqual(swapped.outside, []);
+
+    const tight = preferInArea([stop("bhs"), stop("mandaluyong-dinner")], [walk, shangDinner, bgcDinner], bgc, new Map([["dinner", "mandaluyong-dinner"]]), 1200);
+    assert.deepEqual(tight.stops.map((entry) => entry.place_id), ["bhs", "mandaluyong-dinner"]);
+    assert.deepEqual(tight.outside.map((entry) => entry.id), ["mandaluyong-dinner"]);
+  });
+
+  it("caps stays: no four-hour lunch, even to fill a gap before a sunset stop", () => {
+    assert.equal(clampStay(place({ category: "Food" }), 240), 120);
+    assert.equal(clampStay(place({ category: "Cafe" }), 20), 45);
+    const lunch = place({ id: "lunch", name: "Leslie's", category: "Food", city: "Tagaytay", latitude: 14.1, longitude: 120.94 });
+    const ridge = place({ id: "ridge", name: "Sky Ranch", category: "Park", city: "Tagaytay", latitude: 14.101, longitude: 120.941, best_time_to_visit: "Late afternoon to sunset" });
+    const byId = new Map([lunch, ridge].map((entry) => [entry.id, entry]));
+    const out = scheduleStops([stop("lunch", "12:00", "Lunch with a view", 90), stop("ridge", "", "Sunset views", 60)], byId, { sunsetMinutes: at(17, 50), wantsSunset: true });
+    assert.ok(out[0].minutes <= 120, `lunch lasts ${out[0].minutes} min`);
+  });
+
+  it("leaves out parks after dark unless the park is known for its evenings", () => {
+    assert.equal(isDarkOutdoor(place({ category: "Park", best_time_to_visit: "Weekday mornings" }), at(20, 10), at(17, 45)), true);
+    assert.equal(isDarkOutdoor(place({ category: "Park", best_time_to_visit: "Late afternoon to evening" }), at(20, 10), at(17, 45)), false);
+    assert.equal(isDarkOutdoor(place({ category: "Park" }), at(15), at(17, 45)), false);
+
+    const dinner = place({ id: "dinner", name: "Dinner", category: "Food", best_time_to_visit: "Dinner" });
+    const grove = place({ id: "grove", name: "Picnic Grove", category: "Park", best_time_to_visit: "Weekday mornings", latitude: 14.551, longitude: 121.021 });
+    const bar = place({ id: "bar", name: "Bar", category: "Nightlife", latitude: 14.552, longitude: 121.022 });
+    const byId = new Map([dinner, grove, bar].map((entry) => [entry.id, entry]));
+    const out = scheduleStops([stop("dinner", "19:00", "Dinner"), stop("grove", "20:10"), stop("bar", "21:00")], byId, { sunsetMinutes: at(17, 45), wantsSunset: false, notBefore: at(18) });
+    assert.deepEqual(out.map((entry) => entry.place_id), ["dinner", "bar"]);
+  });
+
+  it("orders by time of day: the asked cafe, then dinner, then the bar", () => {
+    const bar = place({ id: "bar", name: "Bar", category: "Nightlife" });
+    const byId = new Map([pastry, qcDinner, bar, quietCafe].map((entry) => [entry.id, entry]));
+    const picks = new Map<"cafe" | "dinner", string>([["cafe", "quiet"], ["dinner", "qc-dinner"]]);
+    const out = orderByTimeOfDay([stop("bar"), stop("qc-dinner"), stop("quiet")], byId, picks);
+    assert.deepEqual(out.map((entry) => entry.place_id), ["quiet", "qc-dinner", "bar"]);
+  });
+
+  it("goes nearest-next between daytime stops", () => {
+    const a = place({ id: "a", category: "Heritage", latitude: 14.59, longitude: 120.97 });
+    const far = place({ id: "far", category: "Heritage", latitude: 14.65, longitude: 121.05 });
+    const near = place({ id: "near", category: "Museum", latitude: 14.591, longitude: 120.971 });
+    const byId = new Map([a, far, near].map((entry) => [entry.id, entry]));
+    assert.deepEqual(orderByTimeOfDay([stop("a"), stop("far"), stop("near")], byId).map((entry) => entry.place_id), ["a", "near", "far"]);
+  });
+
+  it("runs 'hanggang gabi' plans into the evening with a nearby night spot", () => {
+    assert.equal(parseTimeWindow("Intramuros simula 2pm hanggang gabi").end, at(21));
+    const dinner = place({ id: "dinner", name: "Barbara's", category: "Food", city: "Manila", latitude: 14.589, longitude: 120.975 });
+    const bridge = place({ id: "bridge", name: "Jones Bridge", category: "Heritage", city: "Manila", best_time_to_visit: "Sunset to blue hour, when the lamps turn on", latitude: 14.596, longitude: 120.977 });
+    const museum = place({ id: "museum", name: "Casa Manila", category: "Museum", city: "Manila", best_time_to_visit: "Weekday mornings", latitude: 14.589, longitude: 120.975 });
+    const out = fillGaps([stop("dinner", "18:00", "Dinner", 90)], [dinner, bridge, museum], { end: at(21), sunsetMinutes: at(17, 45) });
+    assert.deepEqual(out.map((entry) => entry.place_id), ["dinner", "bridge"]);
+  });
+
+  it("leaves morning-only eateries out of evening plans", () => {
+    const byId = new Map([market, qcDinner].map((entry) => [entry.id, entry]));
+    assert.deepEqual(dropOffHoursFood([stop("market"), stop("qc-dinner")], byId, true).map((entry) => entry.place_id), ["qc-dinner"]);
+    assert.equal(dropOffHoursFood([stop("market")], byId, false).length, 1);
+  });
+
+  it("drops a summary that is really internal notes or promises stops the plan lacks", () => {
+    const byId = new Map([pastry, qcDinner].map((entry) => [entry.id, entry]));
+    const stops = [stop("pastry", "15:00"), stop("qc-dinner", "18:30")];
+    assert.equal(cleanSummary("4 ka, 14:00-21:00, 4 stops, dinner at Binondo, sunset at Intramuros", stops, byId, at(17, 45)), "");
+    assert.equal(cleanSummary("Kape at chika, tapos sunset walk", stops, byId, at(17, 45)), "");
+    assert.equal(cleanSummary("Kape muna, tapos dinner na pang-date", stops, byId, at(17, 45)), "Kape muna, tapos dinner na pang-date");
+    assert.equal(cleanSummary("Chill hapon sa Apologue Coffee & Pastry", stops, byId, at(17, 45)), "");
+  });
+
+  it("starts a provincial day after the drive from the asked leave time", () => {
+    assert.equal(parseDeparture("Tagaytay day trip, alis 7am, 4 kami"), at(7));
+    assert.equal(parseDeparture("Tagaytay day, leave at 6:30"), at(6, 30));
+    assert.equal(parseDeparture("Tagaytay day trip"), null);
+    const drive = driveMinutesFromManila(place({ city: "Tagaytay", latitude: 14.1153, longitude: 120.9621 }));
+    assert.ok(drive !== null && drive >= 75 && drive <= 120, `drive ${drive} min`);
+  });
+
+  it("starts whole days in the morning, cafe-then-dinner in the afternoon, date nights at 5 PM", () => {
+    assert.equal(defaultStart("Baguio weekend: cafes, views and a good dinner"), null);
+    assert.equal(defaultStart("Study date sa QC, tahimik na cafe tapos dinner"), at(14));
+    assert.equal(defaultStart("Museum day in Manila then dinner"), at(13));
+    assert.equal(defaultStart("Date night sa BGC"), at(17));
+    assert.equal(defaultStart("Chill Saturday sa Makati"), null);
+  });
+
+  it("never puts two meals back to back when a sight can go between", () => {
+    const breakfast = place({ id: "breakfast", category: "Food", latitude: 14.1, longitude: 120.94 });
+    const lunch = place({ id: "lunch", category: "Food", latitude: 14.11, longitude: 120.95 });
+    const park = place({ id: "park", category: "Park", latitude: 14.12, longitude: 120.96 });
+    const byId = new Map([breakfast, lunch, park].map((entry) => [entry.id, entry]));
+    const out = orderByTimeOfDay([stop("breakfast"), stop("lunch"), stop("park")], byId, new Map([["breakfast", "breakfast"]]));
+    assert.deepEqual(out.map((entry) => entry.place_id), ["breakfast", "park", "lunch"]);
+  });
+
+  it("puts lunch at midday on a whole-day plan", () => {
+    const ids = ["breakfast", "cafe", "grove", "lunch", "ridge", "ranch"];
+    const categories: Record<string, string> = { breakfast: "Food", cafe: "Cafe", grove: "Park", lunch: "Food", ridge: "Park", ranch: "Activity" };
+    const byId = new Map(ids.map((id, index) => [id, place({ id, category: categories[id], latitude: 14.1 + index * 0.001, longitude: 120.95 })]));
+    const picks = new Map<"breakfast" | "lunch", string>([["breakfast", "breakfast"], ["lunch", "lunch"]]);
+    const out = orderByTimeOfDay([stop("breakfast", "08:30"), stop("cafe"), stop("grove"), stop("ridge"), stop("ranch"), stop("lunch", "12:00")], byId, picks);
+    assert.deepEqual(out.map((entry) => entry.place_id), ["breakfast", "cafe", "grove", "lunch", "ridge", "ranch"]);
+  });
+
+  it("leaves out unasked stops far from the asked ones", () => {
+    const fairview = place({ id: "fairview", category: "Park", city: "Quezon City", latitude: 14.71, longitude: 121.07 });
+    const cubao = place({ id: "cubao", category: "Activity", city: "Quezon City", latitude: 14.62, longitude: 121.05 });
+    const byId = new Map([fairview, cubao, qcDinner].map((entry) => [entry.id, entry]));
+    const out = tightenRoute([stop("fairview"), stop("cubao"), stop("qc-dinner")], byId, new Set(["qc-dinner"]));
+    assert.deepEqual(out.map((entry) => entry.place_id), ["cubao", "qc-dinner"]);
+  });
+
+  it("tops a one-stop plan up with a place that is open at that hour", () => {
+    const museum = place({ id: "museum", category: "Museum", city: "Quezon City" });
+    const expo = place({ id: "expo", category: "Activity", city: "Quezon City", best_time_to_visit: "Late afternoon into the evening" });
+    const qc = detectLocationIntent([], "Study date sa QC");
+    const out = topUpStops([stop("qc-dinner")], [museum, expo, qcDinner], { start: at(17), sunsetMinutes: at(17, 45), location: qc });
+    assert.deepEqual(out.map((entry) => entry.place_id), ["expo", "qc-dinner"]);
   });
 });

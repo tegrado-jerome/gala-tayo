@@ -379,6 +379,13 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
               {draft.date_source === 'default' ? <span className="g-xs">(next Saturday, tap to change)</span> : null}
             </div>
             {draft.summary ? <p className="g-sm mt-2 leading-relaxed">{draft.summary}</p> : null}
+            {draft.notes?.length ? (
+              <ul className="g-sm mt-3 grid gap-1.5 rounded-[var(--r-3)] bg-[var(--fill)] px-4 py-3">
+                {draft.notes.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            ) : null}
 
             <div className="g-tstats mt-4" style={{ ['--n' as string]: 3 }}>
               <div className="g-tstat">
@@ -432,7 +439,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
-            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ng AI ang plano na ito. Times and fares are estimates.</p>
+            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ni Tara AI. Edit anything bago i-save.</p>
             <Button variant="text" size="sm" onClick={startOver}>
               Start over
             </Button>

@@ -9,7 +9,20 @@ import {
   getLocationNamesForAreaSlug,
   inferProvincialDestinationsFromQuery,
   resolveDestination,
+  resolveKnownArea,
 } from "./phDestinations";
+
+describe("resolveKnownArea", () => {
+  it("reads provinces, cities and regions from GalaTayo's own list before any geocoder", () => {
+    const batangas = resolveKnownArea("Batangas");
+    assert.equal(batangas?.kind, "province");
+    assert.ok(batangas && batangas.center[0] > 13.5 && batangas.center[0] < 14.2, `Batangas centre ${batangas?.center}`);
+    assert.equal(resolveKnownArea("Baguio")?.kind, "city");
+    assert.equal(resolveKnownArea("Baguio, Philippines")?.label, "Baguio");
+    assert.equal(resolveKnownArea("Makati")?.radiusKm, 5);
+    assert.equal(resolveKnownArea("Hogwarts"), null);
+  });
+});
 import { validateSearchQuery } from "./searchQueryValidation";
 import { resolveAreaSlug } from "./seoPlaces";
 

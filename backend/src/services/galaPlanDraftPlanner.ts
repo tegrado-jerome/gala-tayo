@@ -1,7 +1,7 @@
 import type { NormalizedPlace } from "../domain/places";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
-import { detectAliasedCities, isNearManila, locationText, mentionsPhrase } from "../utils/areaAliases";
+import { AREA_ALIASES, detectAliasedCities, isNearManila, locationText, mentionsPhrase } from "../utils/areaAliases";
 import { getSunsetMinutes } from "../utils/sunTimes";
 
 const MAX_CANDIDATES = 60;
@@ -226,10 +226,11 @@ export function buildSystemPrompt(plan: { date: string; weekday: string; sunsetM
   return `You plan one-day outings ("gala") in the Philippines for GalaTayo. When the request names no place, plan in Metro Manila.
 The gala is on ${plan.weekday}, ${plan.date}. Sunset is about ${formatClock12(plan.sunsetMinutes)}.
 Pick ${MIN_STOPS}-${MAX_STOPS} stops ONLY from CANDIDATES, by their ref (p1, p2...). Never invent places. Always return at least ${MIN_STOPS} stops: if nothing fits exactly, use the closest fitting candidates (a mall for a movie, a cafe for snacks).
-Stay in the area the request names. Keep travel short and use realistic 24h times: lunch 11:00-14:00, dinner 17:30-21:00, bars after 19:00, museums close about 16:00-17:00, a sunset stop starts about 45 min before sunset. Durations 30-240 minutes.
-${rules.length ? `${rules.join("\n")}\n` : ""}Write the title, summary and notes in the same language mix as the request (Taglish in, Taglish out). Notes are one friendly sentence on why the stop fits; never put prices, refs, "2x" or the place name in a note.
+Stay in the area the request names. Include every kind of stop the request asks for, in the order it asks ("cafe tapos dinner" = a Cafe first, then dinner at a Food place). A Cafe is never the lunch or dinner stop.
+Use realistic 24h times in time-of-day order: breakfast 7:00-10:30, lunch 11:00-14:00, dinner 17:30-21:00, bars after 19:00, museums close about 16:00-17:00, parks and outdoor walks only in daylight, a sunset stop starts about 45 min before sunset. Durations: meals 60-120 min, cafes 45-90, parks and sights 30-90, museums and malls 60-150.
+${rules.length ? `${rules.join("\n")}\n` : ""}Write the title, summary and notes in the same language mix as the request (Taglish in, Taglish out). The summary is one short line on the vibe of the day, with no times, counts, prices or place names. Notes are one friendly sentence on why the stop fits; never put prices, refs, "2x" or the place name in a note.
 Reply with JSON only:
-{"title": string (max 60 chars), "summary": string (max 140 chars), "group_size": integer (1 if not stated), "stops": [{"ref": "p1", "time": "HH:MM", "minutes": integer, "note": string (max 80 chars)}]}`;
+{"title": string (max 60 chars), "summary": string (max 120 chars), "group_size": integer (1 if not stated), "stops": [{"ref": "p1", "time": "HH:MM", "minutes": integer, "note": string (max 80 chars)}]}`;
 }
 
 export function buildUserMessage(prompt: string, candidates: NormalizedPlace[]) {
@@ -478,6 +479,9 @@ export function parseTimeWindow(prompt: string): { start: number | null; end: nu
     // Day words that aren't the end of a range ("hanggang gabi") set the start.
     const withoutEnd = text.replace(/\b(?:hanggang|until|till|up to)\s+\S+(?:\s+\S+)?/g, " ");
     start = DAY_PARTS.find(([pattern]) => pattern.test(withoutEnd))?.[1] ?? null;
+    // "Museum day then dinner": the day starts with the museum, not at dinner time.
+    const daytimeAsk = requestedKinds(withoutEnd).some((kind) => kind === "museum" || kind === "cafe" || kind === "lunch" || kind === "breakfast");
+    if (start === 17 * 60 + 30 && daytimeAsk) start = null;
   }
   if (start !== null && end !== null && end <= start) end = null;
   return { start, end };
@@ -551,12 +555,47 @@ function distanceKm(a: Point, b: Point) {
   return 6371 * 2 * Math.asin(Math.sqrt(h));
 }
 
+/** Streets add about 30% to the straight-line distance; up to 1.5 km by road is a walk. */
+const ROAD_FACTOR = 1.3;
+const WALK_MAX_ROAD_KM = 1.5;
+
 /** Minutes to get between two stops: walk when close, otherwise a city ride with traffic. */
 export function travelMinutes(from: NormalizedPlace, to: NormalizedPlace) {
   const km = distanceKm(from, to);
   if (km === null) return 20;
-  if (km < 1.2) return Math.max(5, Math.ceil(km * 13));
+  if (km * ROAD_FACTOR <= WALK_MAX_ROAD_KM) return Math.max(5, Math.ceil(((km * ROAD_FACTOR) / 4.5) * 60));
   return Math.min(120, Math.round(10 + km * 3));
+}
+
+/** How long a stop sensibly lasts: a lunch is never four hours, a museum never twenty minutes. */
+const STAY_MINUTES: Record<string, { min: number; max: number }> = {
+  Food: { min: 60, max: 120 },
+  Cafe: { min: 45, max: 90 },
+  Park: { min: 30, max: 90 },
+  Heritage: { min: 30, max: 90 },
+  Museum: { min: 60, max: 150 },
+  Mall: { min: 60, max: 150 },
+  Cinema: { min: 120, max: 180 },
+  Nightlife: { min: 60, max: 150 },
+  Activity: { min: 45, max: 180 },
+  Hotel: { min: 60, max: 240 },
+};
+
+export function clampStay(place: NormalizedPlace, minutes: number) {
+  const range = STAY_MINUTES[place.category] ?? { min: 30, max: 120 };
+  return Math.min(range.max, Math.max(range.min, minutes));
+}
+
+const NIGHT_TIME = /\b(evening|night|nights|after dark|blue hour|lights|sunset onward|late[- ]night)\b/i;
+
+/** Places that work after dark: bars, night markets, and spots whose best time is the evening. */
+export function isNightFriendly(place: NormalizedPlace) {
+  return place.category === "Nightlife" || NIGHT_VENUE.test(place.name) || NIGHT_TIME.test(place.best_time_to_visit ?? "");
+}
+
+/** Parks and outdoor walks are daytime stops unless the place is known for its evenings. */
+export function isDarkOutdoor(place: NormalizedPlace, start: number, sunsetMinutes: number) {
+  return place.category === "Park" && start >= sunsetMinutes + 15 && !isNightFriendly(place);
 }
 
 const roundTo5 = (minutes: number) => Math.round(minutes / 5) * 5;
@@ -565,14 +604,36 @@ const roundTo5 = (minutes: number) => Math.round(minutes / 5) * 5;
  * Re-times stops so meals land in meal windows, the sunset stop meets the sunset,
  * venues are open, and each start allows for travel from the previous stop.
  */
-export function scheduleStops(
-  stops: DraftStop[],
-  placesById: Map<string, NormalizedPlace>,
-  options: { sunsetMinutes: number; wantsSunset: boolean; notBefore?: number; notAfter?: number; fixedStart?: boolean }
-): DraftStop[] {
+type ScheduleOptions = { sunsetMinutes: number; wantsSunset: boolean; notBefore?: number; notAfter?: number; fixedStart?: boolean; dinnerFrom?: number };
+
+/** An opening time the place's own best-time text states: "Right at 9 PM opening", "opens at 5 PM". */
+export function statedOpening(place: NormalizedPlace): number | null {
+  const text = place.best_time_to_visit ?? "";
+  const match = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s+opening\b/i) ?? text.match(/\bopens?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  return match ? readClock(match[1], match[2], match[3].toLowerCase()) : null;
+}
+
+/** Times the stops, then leaves out parks that would land after dark and times the rest again. */
+export function scheduleStops(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, options: ScheduleOptions): DraftStop[] {
+  const timed = timeStops(stops, placesById, options);
+  const dark = new Set(
+    timed.filter((stop) => isDarkOutdoor(placesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, options.sunsetMinutes)).map((stop) => stop.place_id)
+  );
+  if (dark.size === 0 || timed.length - dark.size < MIN_STOPS) return timed;
+  return timeStops(
+    stops.filter((stop) => !dark.has(stop.place_id)),
+    placesById,
+    options
+  );
+}
+
+function timeStops(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, options: ScheduleOptions): DraftStop[] {
   const items = stops
-    .map((stop) => ({ stop: { ...stop }, place: placesById.get(stop.place_id)!, clock: parseClock(stop.time) }))
-    .filter((item) => item.place);
+    .filter((stop) => placesById.has(stop.place_id))
+    .map((stop) => {
+      const place = placesById.get(stop.place_id)!;
+      return { stop: { ...stop, minutes: clampStay(place, stop.minutes) }, place, clock: parseClock(stop.time) };
+    });
 
   // Only one sunset stop makes sense; when sunset was asked for and no stop says so, the last outdoor stop takes it.
   const classify = () => {
@@ -609,8 +670,12 @@ export function scheduleStops(
       const target = options.sunsetMinutes - 45;
       return { min: target, max: target + 20 };
     }
-    const base = WINDOWS[kind];
-    const opening = kind === "general" ? CATEGORY_OPENING[items[index].place.category] : undefined;
+    const place = items[index].place;
+    // "Hanggang gabi": dinner waits so the evening isn't over by 7 PM. A stated opening ("9 PM opening") wins.
+    const floor = Math.max(kind === "dinner" ? (options.dinnerFrom ?? 0) : 0, statedOpening(place) ?? 0);
+    const base = { min: Math.max(WINDOWS[kind].min, floor), max: Math.max(WINDOWS[kind].max, floor + 60) };
+    // Landmarks known for their evenings (a lit-up bridge, a plaza) have no closing time.
+    const opening = kind === "general" && !isNightFriendly(place) ? CATEGORY_OPENING[place.category] : undefined;
     return opening ? { min: Math.max(base.min, opening.min), max: Math.min(base.max, opening.max) } : base;
   };
 
@@ -619,7 +684,8 @@ export function scheduleStops(
     const window = windowFor(index);
     let start: number;
     if (index === 0) {
-      start = Math.max(item.clock ?? 10 * 60, window.min, options.notBefore ?? 0);
+      // With an asked start ("alis 7am", "simula 2pm") and no clock from the model, the day starts then.
+      start = Math.max(options.fixedStart && options.notBefore ? options.notBefore : (item.clock ?? 10 * 60), window.min, options.notBefore ?? 0);
       if (kinds[0] !== "sunset") start = Math.min(start, Math.max(window.max, window.min));
       // The asked start time wins over a meal window ("simula 2pm" never starts at 10:30).
       start = Math.max(start, options.notBefore ?? 0);
@@ -641,7 +707,8 @@ export function scheduleStops(
     const shift = Math.max(0, Math.min(gap - 15, shiftRoom));
     for (let j = 0; j < index; j++) starts[j] += shift;
     gap -= shift;
-    if (gap > 30) previous.stop.minutes = Math.min(240, previous.stop.minutes + gap - 15);
+    // Linger a little, never into a three-hour meal: the rest stays free time.
+    if (gap > 30) previous.stop.minutes = clampStay(previous.place, previous.stop.minutes + Math.min(30, gap - 15));
   }
 
   return items
@@ -716,6 +783,13 @@ export function cleanNote(raw: string, place: NormalizedPlace) {
     .trim();
   const words = note.match(/[a-zñ]{2,}/gi) ?? [];
   if (words.length < 3 || note.toLowerCase() === name) return describeStop(place);
+  // Only an eatery is the meal: a cafe or park note that calls itself "dinner" would mislead ("bago dinner" is fine).
+  if (place.category !== "Food" && /(?<!\b(?:bago|before|after|pagkatapos|then|tapos)[\s-]+)\b(dinner|hapunan|supper|lunch|tanghalian|dining|dine)\b/i.test(note)) {
+    return describeStop(place);
+  }
+  // A note that sells a bar, market or restaurant as a cafe ("quiet spot for study and coffee") describes a different place.
+  const servesCoffee = place.category === "Cafe" || /\b(caf[eé]|coffee)(?![a-z])/i.test(`${place.name} ${place.tags.join(" ")}`);
+  if (!servesCoffee && /\b(caf[eé]s?|coffee|kape|sip|latte)(?![a-z])/i.test(note)) return describeStop(place);
   note = note.charAt(0).toUpperCase() + note.slice(1);
   return note.length > 120 ? `${note.slice(0, 117).trimEnd()}...` : note;
 }
@@ -728,10 +802,126 @@ export function servesMeal(place: NormalizedPlace, meal: "lunch" | "dinner") {
   return /\b(lunch|noon|afternoon|midday|day|anytime|any time)\b/.test(best) || !/\b(dinner|evening|night|breakfast)\b/.test(best);
 }
 
+// ---------------------------------------------------------------------------
+// Intent: the kinds of stops the request names ("tahimik na cafe tapos dinner") must all be there.
+// ---------------------------------------------------------------------------
+
+export type RequestedKind = "breakfast" | "cafe" | "museum" | "lunch" | "dinner" | "nightlife";
+
+const REQUEST_WORDS: Array<[RequestedKind, RegExp]> = [
+  ["breakfast", /\b(breakfast|almusal|brunch)\b/],
+  ["cafe", /\b(cafes?|coffee|kape|kapihan)\b/],
+  ["museum", /\b(museums?|museo)\b/],
+  ["lunch", /\b(lunch|tanghalian)\b/],
+  ["dinner", /\b(dinner|hapunan|supper|date night)\b/],
+  ["nightlife", /\b(bars?|inuman|cocktails?|drinks)\b/],
+];
+
+/** The kinds of stops a request asks for, in the order it names them, plus the meal the plan needs. */
+export function requestedKinds(prompt: string, meal: "lunch" | "dinner" | null = null): RequestedKind[] {
+  const text = prompt.toLowerCase();
+  const found = REQUEST_WORDS.map(([kind, pattern]) => ({ kind, at: text.search(pattern) }))
+    .filter((entry) => entry.at >= 0)
+    .sort((a, b) => a.at - b.at)
+    .map((entry) => entry.kind);
+  if (meal && !found.includes(meal)) found.push(meal);
+  return found;
+}
+
+/** True when the place can be the stop the request asked for. A cafe is never the meal. */
+export function fitsKind(place: NormalizedPlace, kind: RequestedKind) {
+  switch (kind) {
+    case "cafe":
+      // "Café by the Ruins" is filed as a restaurant but is a café all the same.
+      return place.category === "Cafe" || (place.category === "Food" && /\b(caf[eé]|coffee)(?![a-z])/i.test(place.name));
+    case "museum":
+      return place.category === "Museum";
+    case "nightlife":
+      return place.category === "Nightlife";
+    case "breakfast":
+      return place.category === "Food" && /\b(breakfast|morning|brunch|anytime|any time)\b/i.test(place.best_time_to_visit ?? "breakfast");
+    case "lunch":
+    case "dinner":
+      // A pasalubong shop sells food but is not a sit-down meal.
+      return (
+        place.category === "Food" &&
+        servesMeal(place, kind) &&
+        !/\bbreakfast\b/i.test(place.name) &&
+        !(place.tags.includes("pasalubong") && !place.tags.includes("restaurant"))
+      );
+  }
+}
+
+const KIND_LABEL: Record<RequestedKind, string> = {
+  breakfast: "breakfast place",
+  cafe: "cafe",
+  museum: "museum",
+  lunch: "lunch spot",
+  dinner: "dinner restaurant",
+  nightlife: "bar",
+};
+
+const KIND_TIME: Partial<Record<RequestedKind, string>> = { breakfast: "08:00", lunch: "12:00", dinner: "19:00", nightlife: "20:30" };
+
 /**
- * Makes sure a plan that needs a meal has one: adds the closest Food candidate that fits the
- * remaining budget, replacing the last non-food stop when the plan is full.
+ * Adds every requested kind of stop the plan is missing, from the candidates that fit the remaining
+ * budget: in the asked area first, then closest to the plan. Kinds no candidate fits are returned as
+ * `missing` so the plan can say so instead of pretending.
  */
+export function ensureRequested(
+  stops: DraftStop[],
+  candidates: NormalizedPlace[],
+  kinds: RequestedKind[],
+  { budgetPerHead = null, location }: { budgetPerHead?: number | null; location?: LocationIntent } = {}
+): { stops: DraftStop[]; missing: RequestedKind[]; overBudget: Set<RequestedKind>; picks: Map<RequestedKind, string> } {
+  const byId = new Map(candidates.map((place) => [place.id, place]));
+  let kept = stops.filter((stop) => byId.has(stop.place_id));
+  const missing: RequestedKind[] = [];
+  const overBudget = new Set<RequestedKind>();
+  const picks = new Map<RequestedKind, string>();
+
+  for (const kind of kinds) {
+    const already = kept.find((stop) => ![...picks.values()].includes(stop.place_id) && fitsKind(byId.get(stop.place_id)!, kind));
+    if (already) {
+      picks.set(kind, already.place_id);
+      continue;
+    }
+    // Only the asked-for stops count against the budget here; fitBudget trims the rest later.
+    const asked = new Set(picks.values());
+    const spent = kept.filter((stop) => asked.has(stop.place_id)).reduce((sum, stop) => sum + (byId.get(stop.place_id)?.budget_min ?? 0), 0);
+    const left = budgetPerHead === null ? Infinity : budgetPerHead - spent;
+    const anchor = byId.get(kept.at(-1)?.place_id ?? "");
+    const used = new Set(kept.map((stop) => stop.place_id));
+    const inArea = (place: NormalizedPlace) => (location && hasLocation(location) ? matchesLocation(place, location) : true);
+    const pick = candidates
+      .filter((place) => fitsKind(place, kind) && !used.has(place.id) && (place.budget_min ?? 0) <= left)
+      .sort(
+        (a, b) =>
+          Number(inArea(b)) - Number(inArea(a)) ||
+          Number(a.budget_min === null) - Number(b.budget_min === null) ||
+          (anchor ? (distanceKm(anchor, a) ?? 99) - (distanceKm(anchor, b) ?? 99) : 0)
+      )[0];
+    if (!pick) {
+      missing.push(kind);
+      if (candidates.some((place) => fitsKind(place, kind) && !used.has(place.id) && inArea(place))) overBudget.add(kind);
+      continue;
+    }
+    // A full plan gives up its last stop that no request asked for.
+    if (kept.length >= MAX_STOPS) {
+      const dropIndex = kept.map((stop) => asked.has(stop.place_id)).lastIndexOf(false);
+      if (dropIndex === -1) {
+        missing.push(kind);
+        continue;
+      }
+      kept = kept.filter((_, index) => index !== dropIndex);
+    }
+    kept = [...kept, { place_id: pick.id, time: KIND_TIME[kind] ?? "", minutes: DEFAULT_MINUTES[pick.category] ?? 60, note: describeStop(pick) }];
+    picks.set(kind, pick.id);
+  }
+  return { stops: kept, missing, overBudget, picks };
+}
+
+/** Makes sure a plan that needs a meal has a real one (a Food place that serves it), never a cafe. */
 export function ensureMeal(
   stops: DraftStop[],
   candidates: NormalizedPlace[],
@@ -740,42 +930,325 @@ export function ensureMeal(
 ): DraftStop[] {
   if (!meal) return stops;
   const byId = new Map(candidates.map((place) => [place.id, place]));
-  const mealWords = meal === "dinner" ? /\b(dinner|hapunan|supper)\b/i : /\b(lunch|tanghalian)\b/i;
-  const hasMeal = stops.some((stop) => {
-    const place = byId.get(stop.place_id);
-    // A cafe the model picked "for dinner" counts as the meal.
-    return place?.category === "Food" || (place?.category === "Cafe" && mealWords.test(stop.note));
-  });
-  if (hasMeal) return stops;
-
-  const kept = stops.length >= MAX_STOPS ? stops.slice(0, -1) : stops;
-  const spent = kept.reduce((sum, stop) => sum + (byId.get(stop.place_id)?.budget_min ?? 0), 0);
-  const left = budgetPerHead === null ? Infinity : budgetPerHead - spent;
-  const anchor = byId.get(kept.at(-1)?.place_id ?? "");
-  const used = new Set(kept.map((stop) => stop.place_id));
-  const food = candidates
-    .filter((place) => place.category === "Food" && !used.has(place.id) && (place.budget_min ?? 0) <= left && servesMeal(place, meal))
-    // Prefer a known price over an unknown one, then the closest to the plan.
-    .sort((a, b) => Number(a.budget_min === null) - Number(b.budget_min === null) || (anchor ? (distanceKm(anchor, a) ?? 99) - (distanceKm(anchor, b) ?? 99) : 0))[0];
-  if (!food) return stops;
-
-  const mealStop: DraftStop = {
-    place_id: food.id,
-    time: meal === "dinner" ? "19:00" : "12:00",
-    minutes: DEFAULT_MINUTES.Food,
-    note: describeStop(food),
-  };
-  return meal === "lunch" && kept.length > 1 ? [kept[0], mealStop, ...kept.slice(1)] : [...kept, mealStop];
+  if (stops.some((stop) => byId.get(stop.place_id)?.category === "Food")) return stops;
+  return ensureRequested(stops, candidates, [meal], { budgetPerHead }).stops;
 }
 
-/** Drops the priciest non-meal stops until the plan fits the budget per head (always keeps two). */
-export function fitBudget(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, budgetPerHead: number | null): DraftStop[] {
+/** Evening plans leave out eateries that only open for breakfast or lunch (a morning market at 7 PM). */
+export function dropOffHoursFood(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, evening: boolean) {
+  return stops.filter((stop) => {
+    const place = placesById.get(stop.place_id);
+    if (!place || place.category !== "Food") return true;
+    if (evening) return servesMeal(place, "dinner");
+    // A day plan keeps an eatery only for a meal it serves at the time it was given (no lunch spot at 6 PM).
+    const clock = parseClock(stop.time);
+    if (clock === null || clock < 10 * 60 + 30) return true;
+    return servesMeal(place, clock >= 16 * 60 ? "dinner" : "lunch");
+  });
+}
+
+const TIME_RANK = { breakfast: 0, day: 1, dinner: 3, night: 4 } as const;
+
+/**
+ * Puts stops in time-of-day order: breakfast first, dinner after the daytime stops, bars last.
+ * Daytime stops keep the order asked for but go nearest-next, so the route doesn't zigzag.
+ */
+export function orderByTimeOfDay(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, picks: Map<RequestedKind, string> = new Map()) {
+  const rank = (stop: DraftStop) => {
+    const place = placesById.get(stop.place_id);
+    if (!place) return TIME_RANK.day;
+    if (picks.get("breakfast") === place.id) return TIME_RANK.breakfast;
+    if (place.category === "Nightlife") return TIME_RANK.night;
+    if (picks.get("dinner") === place.id) return TIME_RANK.dinner;
+    // The sunset stop closes the daytime part of the plan.
+    if (place.category !== "Food" && SUNSET_WORDS.test(stop.note)) return TIME_RANK.dinner - 0.5;
+    // After dinner, only places that work at night stay late.
+    if (picks.has("dinner") && isNightFriendly(place) && stops.indexOf(stop) > stops.findIndex((other) => other.place_id === picks.get("dinner"))) return TIME_RANK.dinner + 0.5;
+    return TIME_RANK.day;
+  };
+  const sorted = stops.map((stop, index) => ({ stop, index, rank: rank(stop) })).sort((a, b) => a.rank - b.rank || a.index - b.index);
+
+  const result: DraftStop[] = [];
+  for (let start = 0; start < sorted.length; ) {
+    let end = start;
+    while (end < sorted.length && sorted[end].rank === sorted[start].rank) end++;
+    const group = sorted.slice(start, end).map((entry) => entry.stop);
+    if (sorted[start].rank === TIME_RANK.day && group.length > 2) {
+      // The first daytime stop stays (often the asked cafe or sight); the rest go nearest-next.
+      const route = [group.shift()!];
+      while (group.length) {
+        const from = placesById.get(route.at(-1)!.place_id)!;
+        group.sort((a, b) => (distanceKm(from, placesById.get(a.place_id)!) ?? 99) - (distanceKm(from, placesById.get(b.place_id)!) ?? 99));
+        route.push(group.shift()!);
+      }
+      result.push(...route);
+    } else {
+      result.push(...group);
+    }
+    start = end;
+  }
+
+  // Lunch lands at midday: after the stops timed before noon, or after the first half of the day's stops.
+  const lunchIndex = picks.has("lunch") ? result.findIndex((stop) => stop.place_id === picks.get("lunch")) : -1;
+  if (lunchIndex > -1) {
+    const [lunch] = result.splice(lunchIndex, 1);
+    const daytime = result.filter((stop) => rank(stop) <= TIME_RANK.day);
+    const allTimed = daytime.length > 0 && daytime.every((stop) => parseClock(stop.time) !== null);
+    const before = allTimed ? daytime.filter((stop) => parseClock(stop.time)! < 12 * 60).at(-1) : daytime[Math.ceil(daytime.length / 2) - 1];
+    result.splice(before ? result.indexOf(before) + 1 : 0, 0, lunch);
+  }
+
+  // No two meals in a row: a daytime sight from later in the day goes between them.
+  const isFood = (stop: DraftStop) => placesById.get(stop.place_id)?.category === "Food";
+  for (let index = 0; index < result.length - 1; index++) {
+    if (!isFood(result[index]) || !isFood(result[index + 1])) continue;
+    const spacer = result.findIndex((stop, other) => other > index + 1 && !isFood(stop) && rank(stop) === TIME_RANK.day);
+    if (spacer === -1) continue;
+    const [moved] = result.splice(spacer, 1);
+    result.splice(index + 1, 0, moved);
+  }
+  return result;
+}
+
+/** Whether a place can be visited starting at `start`: open then, and not a park in the dark. */
+function canVisitAt(place: NormalizedPlace, start: number, sunsetMinutes: number) {
+  if (start >= sunsetMinutes) return isNightFriendly(place);
+  const opening = CATEGORY_OPENING[place.category];
+  return isNightFriendly(place) || !opening || opening.max - 30 >= start;
+}
+
+type FillOptions = { end: number | null; sunsetMinutes: number; budgetPerHead?: number | null; location?: LocationIntent; maxKm?: number };
+
+/**
+ * Fills idle time in a timed plan: long gaps between stops (a morning breakfast, then nothing until
+ * a sunset ride) and, when the plan should run to an end ("hanggang gabi", a whole day trip), the
+ * time after the last stop. Each gap gets the nearest place open at that hour (after dark, only
+ * places that work at night: a bar, a lit-up bridge, a night market).
+ */
+export function fillGaps(stops: DraftStop[], candidates: NormalizedPlace[], { end, sunsetMinutes, budgetPerHead = null, location, maxKm = 3 }: FillOptions): DraftStop[] {
+  const byId = new Map(candidates.map((place) => [place.id, place]));
+  const result = [...stops];
+  for (let index = 0; index < result.length && result.length < MAX_STOPS; index++) {
+    const current = result[index];
+    const from = byId.get(current.place_id);
+    if (!from) continue;
+    const free = (parseClock(current.time) ?? 0) + current.minutes;
+    const next = result[index + 1];
+    const nextPlace = next ? byId.get(next.place_id) : undefined;
+    const until = next ? (parseClock(next.time) ?? free) : end;
+    if (until === null || until - free < (next ? 90 : 75)) continue;
+    const spent = result.reduce((sum, stop) => sum + (byId.get(stop.place_id)?.budget_min ?? 0), 0);
+    const left = budgetPerHead === null ? Infinity : budgetPerHead - spent;
+    const used = new Set(result.map((stop) => stop.place_id));
+    const pick = candidates
+      .filter(
+        (place) =>
+          !used.has(place.id) &&
+          place.category !== "Food" &&
+          (place.budget_min ?? 0) <= left &&
+          (distanceKm(from, place) ?? 99) <= maxKm &&
+          canVisitAt(place, free + travelMinutes(from, place), sunsetMinutes) &&
+          (!location || !hasLocation(location) || matchesLocation(place, location))
+      )
+      .sort((a, b) => (distanceKm(from, a) ?? 99) - (distanceKm(from, b) ?? 99))[0];
+    if (!pick) continue;
+    const arrive = free + travelMinutes(from, pick);
+    const room = until - arrive - (nextPlace ? travelMinutes(pick, nextPlace) : 0);
+    if (room < 30) continue;
+    // The caller re-times the plan; this estimate tells the next pass where the day stands.
+    result.splice(index + 1, 0, { place_id: pick.id, time: formatClock(arrive), minutes: clampStay(pick, Math.min(DEFAULT_MINUTES[pick.category] ?? 60, room)), note: describeStop(pick) });
+  }
+  return result;
+}
+
+/** A plan for a named area ("date sa BGC") starts there when any place in the area is open at that hour. */
+export function ensureAreaStop(
+  stops: DraftStop[],
+  candidates: NormalizedPlace[],
+  location: LocationIntent,
+  { start, sunsetMinutes, keep = new Set() }: { start: number; sunsetMinutes: number; keep?: Set<string> }
+): DraftStop[] {
+  if (!hasLocation(location)) return stops;
+  const byId = new Map(candidates.map((place) => [place.id, place]));
+  if (stops.some((stop) => byId.has(stop.place_id) && matchesLocation(byId.get(stop.place_id)!, location))) return stops;
+  const used = new Set(stops.map((stop) => stop.place_id));
+  const pick = candidates.find((place) => !used.has(place.id) && place.category !== "Food" && matchesLocation(place, location) && canVisitAt(place, start, sunsetMinutes));
+  if (!pick) return stops;
+  let kept = stops;
+  if (kept.length >= MAX_STOPS) {
+    const dropIndex = kept.map((stop) => keep.has(stop.place_id)).lastIndexOf(false);
+    if (dropIndex === -1) return stops;
+    kept = kept.filter((_, index) => index !== dropIndex);
+  }
+  return [{ place_id: pick.id, time: "", minutes: DEFAULT_MINUTES[pick.category] ?? 60, note: describeStop(pick) }, ...kept];
+}
+
+/** How far a city plan's stops may sit from its asked-for stops: a short ride, not across Quezon City. */
+const ROUTE_KM = 6;
+
+/**
+ * Leaves out stops nobody asked for that sit far from the ones they did ask for (a Fairview park on
+ * a Diliman dinner date). Provincial day trips spread wider, so the caller passes a bigger reach.
+ */
+export function tightenRoute(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, keep: Set<string>, maxKm = ROUTE_KM): DraftStop[] {
+  const anchors = stops.filter((stop) => keep.has(stop.place_id)).map((stop) => placesById.get(stop.place_id)).filter((place): place is NormalizedPlace => Boolean(place));
+  const centre = centreOf(anchors);
+  if (!centre) return stops;
+  return stops.filter((stop) => {
+    const place = placesById.get(stop.place_id);
+    return !place || keep.has(stop.place_id) || (distanceKm(centre, place) ?? 0) <= maxKm;
+  });
+}
+
+/** Tops a thin plan up to two stops with the best-ranked place that is open when the plan runs. */
+export function topUpStops(
+  stops: DraftStop[],
+  candidates: NormalizedPlace[],
+  { start, sunsetMinutes, location }: { start: number; sunsetMinutes: number; location?: LocationIntent }
+): DraftStop[] {
+  const byId = new Map(candidates.map((place) => [place.id, place]));
+  let result = [...stops];
+  const hasFood = () => result.some((stop) => byId.get(stop.place_id)?.category === "Food");
+  while (result.length < MIN_STOPS) {
+    const used = new Set(result.map((stop) => stop.place_id));
+    const open = candidates.filter(
+      (place) =>
+        !used.has(place.id) &&
+        !(hasFood() && place.category === "Food") &&
+        canVisitAt(place, start, sunsetMinutes) &&
+        (!location || !hasLocation(location) || matchesLocation(place, location))
+    );
+    // Near the stops already in the plan: the best-ranked place within a short ride, else the nearest.
+    const centre = centreOf(result.map((stop) => byId.get(stop.place_id)).filter((place): place is NormalizedPlace => Boolean(place)));
+    const near = (place: NormalizedPlace) => (centre ? (distanceKm(centre, place) ?? 99) : 0);
+    const pick = open.find((place) => near(place) <= ROUTE_KM) ?? [...open].sort((a, b) => near(a) - near(b))[0];
+    if (!pick) break;
+    result = [{ place_id: pick.id, time: "", minutes: DEFAULT_MINUTES[pick.category] ?? 60, note: describeStop(pick) }, ...result];
+  }
+  return result;
+}
+
+/** A short name for the asked area: "BGC" for the alias, else the city. */
+export function areaLabel(location: LocationIntent) {
+  const alias = [...(location.areaWords ?? [])][0];
+  if (alias) return alias.length <= 4 ? alias.toUpperCase() : alias.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  const city = [...location.cities][0];
+  return city ? city.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()) : null;
+}
+
+/**
+ * Swaps stops outside the asked area for an in-area place that does the same job (same category,
+ * same meal, fits the budget). Asked-for stops with no in-area match move to the place nearest the
+ * area and are listed so the plan can say why; other outside stops are left out.
+ */
+export function preferInArea(
+  stops: DraftStop[],
+  candidates: NormalizedPlace[],
+  location: LocationIntent,
+  picks: Map<RequestedKind, string>,
+  budgetPerHead: number | null = null
+): { stops: DraftStop[]; outside: NormalizedPlace[] } {
+  if (!hasLocation(location)) return { stops, outside: [] };
+  const byId = new Map(candidates.map((place) => [place.id, place]));
+  const result = [...stops];
+  const outside: NormalizedPlace[] = [];
+  const dropped = new Set<number>();
+  result.forEach((stop, index) => {
+    const place = byId.get(stop.place_id);
+    if (!place || matchesLocation(place, location)) return;
+    const kind = [...picks.entries()].find(([, id]) => id === place.id)?.[0];
+    const spent = result.reduce((sum, other) => sum + (other === stop ? 0 : (byId.get(other.place_id)?.budget_min ?? 0)), 0);
+    const left = budgetPerHead === null ? Infinity : budgetPerHead - spent;
+    const used = new Set(result.map((other) => other.place_id));
+    const doesTheJob = (other: NormalizedPlace) =>
+      !used.has(other.id) && other.category === place.category && (!kind || fitsKind(other, kind)) && (other.budget_min ?? 0) <= left;
+    const swap = candidates.find((other) => doesTheJob(other) && matchesLocation(other, location));
+    if (swap) {
+      result[index] = { ...stop, place_id: swap.id, note: describeStop(swap) };
+      if (kind) picks.set(kind, swap.id);
+      return;
+    }
+    // A stop nobody asked for that only exists outside the area is left out.
+    if (!kind) {
+      dropped.add(index);
+      return;
+    }
+    // Nothing in the area does the job: the place closest to the area's own stops does.
+    const centre = centreOf(result.map((other) => byId.get(other.place_id)).filter((other): other is NormalizedPlace => Boolean(other && matchesLocation(other, location))));
+    const nearest = centre
+      ? candidates.filter(doesTheJob).sort((a, b) => (distanceKm(centre, a) ?? 99) - (distanceKm(centre, b) ?? 99))[0]
+      : undefined;
+    const chosen = nearest && centre && (distanceKm(centre, nearest) ?? 99) < (distanceKm(centre, place) ?? 99) ? nearest : place;
+    if (chosen !== place) {
+      result[index] = { ...stop, place_id: chosen.id, note: describeStop(chosen) };
+      if (kind) picks.set(kind, chosen.id);
+    }
+    outside.push(chosen);
+  });
+  return { stops: result.filter((_, index) => !dropped.has(index)), outside };
+}
+
+/**
+ * Keeps the model's one-line summary only when it is a human line that matches the final plan:
+ * no times, counts or prices, and no meal, cafe, sunset or bar the plan doesn't have.
+ */
+export function cleanSummary(summary: string, stops: DraftStop[], placesById: Map<string, NormalizedPlace>, sunsetMinutes: number) {
+  const text = summary.replace(/\s+/g, " ").trim();
+  if (!text || text.length > 160 || /\d/.test(text) || /\b(stops?|ka,|am|pm|php|₱)\b/i.test(text)) return "";
+  const places = stops.map((stop) => ({ stop, place: placesById.get(stop.place_id) })).filter((entry) => entry.place);
+  const has = (test: (place: NormalizedPlace, start: number) => boolean) => places.some(({ stop, place }) => test(place!, parseClock(stop.time) ?? 0));
+  const claims: Array<[RegExp, boolean]> = [
+    [/\b(dinner|hapunan|supper)\b/i, has((place, start) => place.category === "Food" && start >= 17 * 60)],
+    [/\b(lunch|tanghalian)\b/i, has((place, start) => place.category === "Food" && start >= 10 * 60 + 30 && start < 15 * 60)],
+    [/\b(cafes?|coffee|kape)\b/i, has((place) => place.category === "Cafe")],
+    [/\b(sunset|golden hour|paglubog)\b/i, has((place, start) => place.category !== "Food" && Math.abs(start - (sunsetMinutes - 45)) <= 45)],
+    [/\b(museums?|museo)\b/i, has((place) => place.category === "Museum")],
+    [/\b(bars?|inuman|drinks?|cocktails?)\b/i, has((place) => place.category === "Nightlife")],
+  ];
+  if (claims.some(([pattern, present]) => pattern.test(text) && !present)) return "";
+  // The summary must not name a place (place names belong to the stops) or an area the plan isn't in.
+  const lower = text.toLowerCase();
+  if (places.some(({ place }) => lower.includes(place!.name.toLowerCase()))) return "";
+  const planAreas = places.map(({ place }) => `${place!.city ?? ""} ${place!.area ?? ""} ${place!.name}`.toLowerCase()).join(" ");
+  const otherAreas = new Set([...placesById.values()].map((place) => (place.city ?? "").toLowerCase()).filter(Boolean));
+  for (const [alias, city] of Object.entries(AREA_ALIASES)) {
+    otherAreas.add(alias);
+    otherAreas.add(city);
+  }
+  if ([...otherAreas].some((area) => mentionsPhrase(lower, area) && !planAreas.includes(area) && !planAreas.includes(AREA_ALIASES[area] ?? "\u0000"))) return "";
+  return text;
+}
+
+/** "alis 7am", "leave at 6:30" -> the time the group leaves home, in minutes. */
+export function parseDeparture(prompt: string): number | null {
+  const match = prompt.toLowerCase().match(new RegExp(String.raw`\b(?:alis|aalis|leave|leaving|depart|departure|byahe|biyahe)\s+(?:at\s+|ng\s+|by\s+)?${CLOCK}`));
+  // "alis 7" means the morning.
+  return match ? readClock(match[1], match[2], match[3] ?? (Number(match[1]) <= 11 ? "am" : undefined)) : null;
+}
+
+/** Drive time from central Manila to a provincial stop: road distance at expressway pace, plus getting out of the city. */
+export function driveMinutesFromManila(place: NormalizedPlace) {
+  const km = distanceKm(MANILA_CENTRE, place);
+  if (km === null) return null;
+  return Math.round((20 + ((km * ROAD_FACTOR) / 60) * 60) / 15) * 15;
+}
+
+export function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return [hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : null, rest ? `${rest} min` : null].filter(Boolean).join(" ");
+}
+
+export { formatClock12, KIND_LABEL };
+
+/** Drops the priciest stops nobody asked for until the plan fits the budget per head (always keeps two). */
+export function fitBudget(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, budgetPerHead: number | null, keep: Set<string> = new Set()): DraftStop[] {
   if (budgetPerHead === null) return stops;
   const cost = (stop: DraftStop) => placesById.get(stop.place_id)?.budget_min ?? 0;
   let kept = [...stops];
   while (kept.length > MIN_STOPS && kept.reduce((sum, stop) => sum + cost(stop), 0) > budgetPerHead) {
     const foodCount = kept.filter((stop) => placesById.get(stop.place_id)?.category === "Food").length;
-    const droppable = kept.filter((stop) => placesById.get(stop.place_id)?.category !== "Food" || foodCount > 1);
+    const droppable = kept.filter((stop) => !keep.has(stop.place_id) && (placesById.get(stop.place_id)?.category !== "Food" || foodCount > 1));
     if (droppable.length === 0) break;
     const priciest = droppable.reduce((max, stop) => (cost(stop) > cost(max) ? stop : max));
     if (cost(priciest) === 0) break;
@@ -814,7 +1287,7 @@ export function buildFallbackDraft(prompt: string, candidates: NormalizedPlace[]
 
   return {
     title: city ? `Gala sa ${city}` : "Gala plan",
-    summary: "A quick plan from GalaTayo places. Swap or reorder stops, then save.",
+    summary: "",
     group_size: parseGroupSize(prompt) ?? 1,
     stops: picks.map((place) => ({
       place_id: place.id,
@@ -835,6 +1308,25 @@ export function wantsEvening(prompt: string) {
   // "hanggang gabi" (until night) is when the day ends, not when it starts.
   const text = prompt.replace(/\b(?:hanggang|until|till|up to)\s+\S+(?:\s+\S+)?/gi, " ");
   return /\b(date night|night out|gabi|evening|tonight|mamayang gabi|dinner|hapunan|inuman|nightlife|after work|after office)\b/i.test(text);
+}
+
+const WHOLE_DAY = /\b(day ?trip|whole day|full day|buong araw|weekend|day tour|road ?trip)\b/i;
+
+/** "Tagaytay day trip", "Baguio weekend": a whole day out, so the plan should run into the afternoon. */
+export function wantsWholeDay(prompt: string) {
+  return WHOLE_DAY.test(prompt);
+}
+
+/**
+ * When the plan starts if the request gives no time: whole days start in the morning, "cafe tapos
+ * dinner" in the afternoon (a museum a bit earlier, before it closes), date nights at 5 PM.
+ */
+export function defaultStart(prompt: string): number | null {
+  if (wantsWholeDay(prompt) || !wantsEvening(prompt)) return null;
+  const kinds = requestedKinds(prompt);
+  if (kinds.includes("museum")) return 13 * 60;
+  if (kinds.some((kind) => kind === "cafe" || kind === "lunch" || kind === "breakfast")) return 14 * 60;
+  return 17 * 60;
 }
 
 /**

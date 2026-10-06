@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo, useSyncExternalStore } from 'react'
 import { Skeleton } from '../ui'
 import type { MapPoint } from '../ui/GtMap'
 import type { TimelineStop } from './PlanTimeline'
+import { getPlacePhoto } from '../../utils/placePhoto'
 
 const GtMap = lazy(() => import('../ui/GtMap'))
 
@@ -24,7 +25,7 @@ function PlanRouteMap({ stops, className, tall, label = 'Route map' }: { stops: 
     () =>
       stops.flatMap((stop, index) =>
         stop.place.latitude != null && stop.place.longitude != null
-          ? [{ id: stop.key, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const, imageUrl: stop.place.image_url ?? null }]
+          ? [{ id: stop.key, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const, imageUrl: getPlacePhoto({ slug: stop.place.slug, photo_url: stop.place.image_url }) }]
           : [],
       ),
     [stops],

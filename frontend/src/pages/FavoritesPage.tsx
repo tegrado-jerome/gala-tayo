@@ -101,7 +101,7 @@ function FavoritesPage() {
     listFavoriteGalaPlans(session)
       .then((data) => {
         if (!isMounted) return
-        const photos = data.plans.flatMap((plan) => (plan.preview_places ?? []).map((place) => place.image_url?.trim()).filter((url): url is string => Boolean(url)))
+        const photos = data.plans.flatMap((plan) => (plan.preview_places ?? []).map((place) => getPlacePhoto({ slug: place.slug, photo_url: place.image_url })).filter((url): url is string => Boolean(url)))
         setSavedPlans({ count: data.plans.length, photos: Array.from(new Set(photos)) })
       })
       .catch(() => {

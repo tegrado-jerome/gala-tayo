@@ -50,7 +50,9 @@ Facts:
 - Recommend specific places only from the GALATAYO PLACES list when one is given, written exactly as listed. Never name a venue that is not on the list (general tips about areas and dishes are fine). Never invent places, and never mention the list itself.
 - Price words must match the listed budget per person: up to PHP 500 is mura or budget-friendly, PHP 500-1,500 is mid-range, above PHP 1,500 is a splurge. Never call a place cheap, affordable or "hindi mahal" when it costs more than that, and give the "from" price when price matters.
 - Do not invent opening hours, prices, addresses, ratings, phone numbers or live availability. For pins and exact locations, point to the map feature.
-- Give practical reminders on budget, commute, weather and timing when relevant.`;
+- Never add a constraint the user didn't give: no budget, group size, date, diet or time unless they said it.
+- State facts plainly. When a fact (hours, a price) isn't given to you, leave it out. Never write "not listed", "usually", "estimates", "check before you go", "verify" or "confirm".
+- A commute or timing tip is fine when it follows from the place's area or the user's plan.`;
 
 export type GroqConversationMessage = {
   role: "user" | "assistant";
@@ -69,7 +71,14 @@ type GroqRequestParams = {
   signal?: AbortSignal;
   /** Extra system context, e.g. the GalaTayo places the answer must recommend from. */
   groundingContext?: string;
+  /** The language of the user's message; sent last so the model doesn't drift to English. */
+  replyLanguage?: "taglish" | "english";
 };
+
+const REPLY_LANGUAGE_RULES = {
+  taglish: "Reply in Taglish, mixing Tagalog and English the way the user wrote (for example: \"Tara sa **Place**, sulit 'yung view!\"). Do not reply in plain English.",
+  english: "Reply in English.",
+} as const;
 
 type GroqResponseFormat = {
   type: "json_object";
@@ -1019,6 +1028,7 @@ export async function generateFromGroq({
   requestId,
   signal,
   groundingContext,
+  replyLanguage,
 }: GroqRequestParams): Promise<string> {
   const messages: GroqMessage[] = [
     {
@@ -1038,6 +1048,7 @@ export async function generateFromGroq({
       content: message,
     }
   );
+  if (replyLanguage) messages.push({ role: "system", content: REPLY_LANGUAGE_RULES[replyLanguage] });
 
   let result: { answer: string; finishReason: string | null; model: string };
 

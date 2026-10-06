@@ -544,6 +544,9 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-toast-body { min-width: 0; padding-top: 6px; }
 .g-toast-title { font-weight: 600; }
 .g-toast-desc { margin-top: 2px; font-size: 13px; color: var(--ink-2); }
+.g-toast-act { align-self: center; flex: 0 0 auto; min-height: 44px; margin: -6px -8px -6px auto; padding: 0 12px; border-radius: var(--r-pill); font: 600 14px/1 var(--font-body); color: var(--sea); text-decoration: underline; text-underline-offset: 3px; }
+.g-toast-act:hover { background: var(--fill); }
+.g-toast-act:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .g-toast.is-ok .g-toast-ic { background: var(--ok-soft); color: var(--ok); }
 .g-toast.is-bad { border-color: color-mix(in srgb, var(--bad) 40%, var(--line-2)); background: color-mix(in srgb, var(--bad-soft) 55%, var(--surface)); }
 .g-toast.is-bad .g-toast-ic { background: var(--bad-soft); color: var(--bad); }

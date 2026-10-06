@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getActiveNormalizedPlaces } from "../domain/places";
-import { hasCuratedPhoto } from "../utils/seoPlaces";
+import { hasCuratedPhoto } from "../utils/hdPhotos";
 import { getConfiguredSiteUrl } from "../utils/siteUrl";
 import { isPreviewBot, renderSharePage, socialImageUrl, type PlanSharePreview } from "./sharePlan";
 

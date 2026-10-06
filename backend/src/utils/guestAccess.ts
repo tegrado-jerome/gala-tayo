@@ -58,6 +58,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "historyPlaceView",
   // Passport check-ins
   "myPassport",
+  "myCheckinDelete",
   "placeCheckin",
   // Own gala plans
   "listMyGalaPlans",
