@@ -406,22 +406,6 @@
       "malls in makati with cinema",
       "malls in makati philippines"
     ],
-<<<<<<< HEAD
-    "addedAt": "2026-10-05"
-  },
-  {
-    "slug": "indoor-activities-in-metro-manila",
-    "label": "Indoor Activities in Metro Manila",
-    "areaSlug": "metro-manila",
-    "goodFor": "rainy-day",
-    "keywords": [
-      "indoor activities in metro manila",
-      "kids activities in metro manila",
-      "best indoor activities in metro manila",
-      "indoor activities metro manila for adults",
-      "indoor activities for kids in metro manila"
-    ],
-=======
     "addedAt": "2026-10-05",
     "description": "Malls in Makati for shopping, dining and a cool break from the heat, with parking and commute notes.",
     "intro": "Makati’s malls connect to almost everything. Here is where to go."
@@ -555,7 +539,20 @@
     ],
     "description": "Things to do in Sagada: Kiltepan sunrise, Bomod-ok Falls, Lake Danum and lemon pie, with guide fees and the best time to go.",
     "intro": "Sagada is cold, quiet and worth the long ride. Wake up for the sunrise, hike to the falls and warm up with pie.",
->>>>>>> 89eec0e (fix(ui,seo,perf): QA round 2 fixes for home, lists, guides and speed)
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "indoor-activities-in-metro-manila",
+    "label": "Indoor Activities in Metro Manila",
+    "areaSlug": "metro-manila",
+    "goodFor": "rainy-day",
+    "keywords": [
+      "indoor activities in metro manila",
+      "kids activities in metro manila",
+      "best indoor activities in metro manila",
+      "indoor activities metro manila for adults",
+      "indoor activities for kids in metro manila"
+    ],
     "addedAt": "2026-10-06"
   }
 ]
