@@ -26,6 +26,7 @@ export const AREA_ALIASES: Record<string, string> = {
   luneta: "manila",
   "rizal park": "manila",
   divisoria: "manila",
+  maynila: "manila",
   qc: "quezon city",
   "q.c.": "quezon city",
   cubao: "quezon city",

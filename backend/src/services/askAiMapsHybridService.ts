@@ -336,7 +336,7 @@ const ASK_AI_MAPS_DEFAULT_GEMINI_MODELS = [
 const ASK_AI_MAPS_DEFAULT_GROQ_WHY_MODELS = [
   "openai/gpt-oss-120b",
   "openai/gpt-oss-20b",
-  "qwen/qwen3.6-27b",
+  "qwen/qwen3.8-27b",
 ];
 const GEOAPIFY_GEOCODE_ENDPOINT = "https://api.geoapify.com/v1/geocode/search";
 const GEOAPIFY_PLACES_ENDPOINT = "https://api.geoapify.com/v2/places";
