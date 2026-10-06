@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 import { getPlanById, getProfilesByUserIds, isActive, isUuid, mapOwner, type PlanRow } from "./galaPlans";
 import { ensureGuestProfile } from "./profileHelpers";
+import { pollKind, validateTaggedPoll } from "../utils/barkadaPollKinds";
 
 type Rsvp = "going" | "maybe" | "no";
 type MemberRow = { user_id: string; rsvp: Rsvp; paid: boolean };
@@ -208,6 +209,13 @@ export async function postGalaPlanPoll(request: HttpRequest, context: Invocation
     if (!question || options.length < 2) return json(400, { message: "Add a question and at least 2 options." });
 
     const supabase = await getSupabaseAdminClient();
+    if (pollKind(question) !== "regular") {
+      const existing = check(
+        await (supabase.from("gala_plan_polls") as any).select("question").eq("plan_id", plan.id)
+      ) as Array<{ question: string }>;
+      const invalid = validateTaggedPoll(question, options, existing.map((row) => row.question));
+      if (invalid) return json(400, { message: invalid });
+    }
     const poll = check(
       await (supabase.from("gala_plan_polls") as any).insert({ plan_id: plan.id, created_by: user.id, question }).select("id").single()
     ) as { id: string };

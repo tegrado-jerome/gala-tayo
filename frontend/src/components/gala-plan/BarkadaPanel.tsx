@@ -12,10 +12,15 @@ import {
   voteGalaPlanPoll,
   type GalaPlanBarkada,
   type GalaPlanMember,
+  type GalaPlanPoll,
   type GalaPlanRsvp,
 } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail, GalaPlanOwner } from '../../utils/galaPlansApi'
-import SwipeVote from './SwipeVote'
+import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { splitPolls } from '../../utils/barkadaVotes'
+import { formatPeso } from '../../utils/galaPlanTrip'
+import { KailanPoll, SpotDeck, TaraBurst } from './BarkadaVotes'
+import SwipeVote, { type SwipeCard } from './SwipeVote'
 
 export type ReadyBarkada = Extract<GalaPlanBarkada, { available: true }>
 
@@ -70,6 +75,7 @@ function useAction(onChange: (barkada: GalaPlanBarkada) => void) {
 
 export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
   const { error, run } = useAction(onChange)
+  const [burst, setBurst] = useState(0)
   const going = barkada.members.filter((member) => member.rsvp === 'going')
   const maybe = barkada.members.filter((member) => member.rsvp === 'maybe').length
   const canJoin = canJoinPlan(plan, session)
@@ -87,19 +93,20 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               type="button"
               aria-pressed={barkada.viewer_rsvp === option.value}
               className={cx(option.value === 'going' && 'is-go')}
-              onClick={() =>
-                canJoin
-                  ? void run(() => setGalaPlanRsvp(plan.id, option.value, session))
-                  : guestAuth.open('plan-rsvp', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
-              }
+              onClick={() => {
+                if (option.value === 'going' && barkada.viewer_rsvp !== 'going') setBurst((count) => count + 1)
+                if (canJoin) void run(() => setGalaPlanRsvp(plan.id, option.value, session))
+                else guestAuth.open('plan-rsvp', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
+              }}
             >
               {option.label}
+              {option.value === 'going' ? <TaraBurst play={burst} /> : null}
             </button>
           ))}
         </div>
       ) : null}
       <div className="mt-3.5 flex min-w-0 items-center gap-2.5">
-        {going.length > 0 ? <AvatarStack people={toStackPeople(going)} /> : null}
+        {going.length > 0 ? <AvatarStack people={toStackPeople(going)} live /> : null}
         <span className="g-sm min-w-0">
           <b>{going.length} tara</b>
           {maybe ? <span className="g-mut"> · {maybe} baka</span> : null}
@@ -203,20 +210,48 @@ function PollComposer({ plan, session, onChange }: Omit<BarkadaProps, 'barkada'>
   )
 }
 
-export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
+function pollCards(plan: GalaPlanDetail, poll: GalaPlanPoll): SwipeCard[] {
+  return poll.options.map((option) => {
+    const label = option.label.trim().toLowerCase()
+    const place = plan.items.find((item) => item.place.id === option.place_id || item.place.name.trim().toLowerCase() === label)?.place
+    return {
+      id: option.id,
+      title: option.label,
+      image: place ? place.image_url || getStaticPlaceImageUrlForSlug(place.slug) || null : null,
+      meta: place ? [place.category, place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') : null,
+      votes: option.votes,
+      voters: option.voters,
+      isMine: poll.viewer_option_id === option.id,
+    }
+  })
+}
+
+export function PollsPanel({ plan, barkada, session, onChange, onPlanChange }: BarkadaProps & { onPlanChange: (plan: GalaPlanDetail) => void }) {
   const { error, run } = useAction(onChange)
   const isOwner = plan.viewer_is_owner
   const canJoin = canJoinPlan(plan, session)
   const guestAuth = useGuestAuthPrompt()
   const [swipePollId, setSwipePollId] = useState<string | null>(null)
-  const swipePoll = barkada.polls.find((poll) => poll.id === swipePollId)
+  const { regular, dates, spots } = splitPolls(barkada.polls)
+  const swipePoll = regular.find((poll) => poll.id === swipePollId)
+  const voteProps = { plan, session, onChange, onPlanChange }
 
   return (
     <div className="grid gap-4">
       {guestAuth.promptElement}
-      {swipePoll ? <SwipeVote plan={plan} poll={swipePoll} session={session} onChange={onChange} onClose={() => setSwipePollId(null)} /> : null}
+      {swipePoll ? (
+        <SwipeVote
+          title={swipePoll.question}
+          cards={pollCards(plan, swipePoll)}
+          onTara={(card) => voteGalaPlanPoll(plan.id, swipePoll.id, card.id, session)}
+          onChange={onChange}
+          onClose={() => setSwipePollId(null)}
+        />
+      ) : null}
+      <KailanPoll {...voteProps} dates={dates} />
+      <SpotDeck {...voteProps} spots={spots} />
       {barkada.polls.length === 0 && !isOwner ? <Empty title="Wala pang poll" description="When the host opens a vote, it shows up here." /> : null}
-      {barkada.polls.map((poll) => (
+      {regular.map((poll) => (
         <Panel as="article" key={poll.id}>
           <div className="flex items-start justify-between gap-3">
             <h3 className="g-h3 min-w-0">{poll.question}</h3>
