@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { ChatsCircle } from '@phosphor-icons/react/dist/csr/ChatsCircle'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { FilmSlate as Clapperboard } from '@phosphor-icons/react/dist/csr/FilmSlate'
@@ -27,6 +28,11 @@ import {
 } from '../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, formatTime24, getPlanLegs, type TravelLeg } from '../utils/galaPlanTrip'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
+import { trackShare } from '../utils/analytics'
+import { gcInviteText } from '../utils/barkadaVotes'
+import { encodeSharedList } from '../utils/galaListsCore'
+import { buildGalaListShareUrl, copyTextToClipboard } from '../utils/share'
+import { withShareRef } from '../utils/shareRef'
 import '../design/plans.css'
 
 type Status = 'idle' | 'building' | 'ready' | 'saving' | 'error'
@@ -118,6 +124,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const [canRetry, setCanRetry] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [submittedPrompt, setSubmittedPrompt] = useState('')
+  const [gcNote, setGcNote] = useState<string | null>(null)
   const autoStartedRef = useRef(false)
   const promptRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -232,6 +239,30 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Could not save the plan. Try again.')
       setStatus('ready')
+    }
+  }
+
+  // The draft isn't saved yet, so friends get its stops as a shareable Gala list (no sign-in needed to open it).
+  const sendToGc = async () => {
+    if (!draft) return
+    const listUrl = buildGalaListShareUrl(encodeSharedList({ name: draft.title, slugs: stops.map((stop) => stop.place.slug), by: null }))
+    const text = gcInviteText({ stops: stops.map((stop) => stop.place.name), when: draft.date ? dateLabel : null, perHead })
+    setGcNote(null)
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: draft.title, text, url: withShareRef(listUrl, 'gc') })
+      } catch {
+        return
+      }
+      trackShare({ channel: 'gc', contentType: 'plan' })
+      return
+    }
+    try {
+      await copyTextToClipboard(`${text}\n${withShareRef(listUrl, 'copy')}`)
+      trackShare({ channel: 'copy', contentType: 'plan' })
+      setGcNote('Copied! I-paste mo na sa GC.')
+    } catch {
+      setGcNote('Hindi ma-copy. Try again.')
     }
   }
 
@@ -437,6 +468,16 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
               />
             </div>
           </div>
+
+          <Button variant="line" block className="mt-4" onClick={() => void sendToGc()}>
+            <ChatsCircle aria-hidden="true" />
+            Send to GC
+          </Button>
+          {gcNote ? (
+            <p role="status" className="g-sm g-mut mt-2 text-center">
+              {gcNote}
+            </p>
+          ) : null}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
             <p className="g-xs g-fnt min-w-0 flex-1">Gawa ni Tara AI. Edit anything bago i-save.</p>

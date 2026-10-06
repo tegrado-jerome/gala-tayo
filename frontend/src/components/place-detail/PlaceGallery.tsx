@@ -60,6 +60,8 @@ function ImageSourceInfo() {
 
 type PhotoGridProps = {
   photos: string[]
+  /** Tiles to lay out even before their photos are known, so the grid and hero size stay put. */
+  reservedTiles?: number
   placeName: string
   onBroken: (url: string) => void
   onOpen: (index: number) => void
@@ -70,20 +72,21 @@ type PhotoGridProps = {
 }
 
 /** Editorial photo grid: one big photo and two small ones, with an "All photos" pill. Full-bleed on phones. */
-export function PhotoGrid({ photos, placeName, onBroken, onOpen, showAddPhotoAction, onContribute, overlay }: PhotoGridProps) {
+export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOpen, showAddPhotoAction, onContribute, overlay }: PhotoGridProps) {
   const shown = photos.slice(0, 3)
+  const tileCount = shown.length > 0 ? Math.min(3, Math.max(shown.length, reservedTiles)) : 0
 
   return (
     <div className="pd-pg-wrap">
       {shown.length > 0 ? (
-        <div className={cx('pd-pg', `n-${shown.length}`)}>
+        <div className={cx('pd-pg', `n-${tileCount}`)}>
           {shown.map((photo, index) => (
             <button key={photo} type="button" className="pd-pg-tile" onClick={() => onOpen(index)} aria-label={`Open photo ${index + 1} of ${photos.length}`}>
               <img
                 src={resizedMediaUrl(photo, index === 0 ? 'hero' : 'card')}
                 // Phones show the big photo about 2/3 of the screen wide, so they get the 640px file.
                 srcSet={index === 0 ? `${resizedMediaUrl(photo, 'card')} 640w, ${resizedMediaUrl(photo, 'hero')} 1280w` : undefined}
-                sizes={index === 0 ? (shown.length === 1 ? '(min-width: 1024px) 1176px, 100vw' : '(min-width: 1024px) 784px, 67vw') : undefined}
+                sizes={index === 0 ? (tileCount === 1 ? '(min-width: 1024px) 1176px, 100vw' : '(min-width: 1024px) 784px, 67vw') : undefined}
                 width={index === 0 ? 1280 : 640}
                 height={index === 0 ? 960 : 480}
                 alt={index === 0 ? placeName : ''}
@@ -93,6 +96,9 @@ export function PhotoGrid({ photos, placeName, onBroken, onOpen, showAddPhotoAct
                 onError={() => onBroken(photo)}
               />
             </button>
+          ))}
+          {Array.from({ length: tileCount - shown.length }, (_, index) => (
+            <span key={`reserved-${index}`} className="pd-pg-tile" aria-hidden="true" />
           ))}
         </div>
       ) : (

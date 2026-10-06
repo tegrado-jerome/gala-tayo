@@ -12,6 +12,8 @@ import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, buildBrand
 
 const footerLinks = [
   { href: '/about', label: 'About' },
+  { href: '/gala-tayo-meaning', label: 'What "gala tayo" means' },
+  { href: '/long-weekends-2027-philippines', label: 'Long weekends 2027' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
 ]
@@ -61,9 +63,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
       .catch(() => undefined)
     return () => controller.abort()
   }, [])
-  const popularGuides = SEO_LANDING_TARGETS.filter(
-    (target) => !['cinema', 'hotel'].includes(target.category ?? '') && (!guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
-  )
+  const popularGuides = SEO_LANDING_TARGETS.filter((target) => !guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
 
 
   useEffect(() => {

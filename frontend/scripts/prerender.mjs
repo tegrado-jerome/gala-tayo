@@ -12,8 +12,8 @@ import { renderPreviewCard } from './seo/og-card.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
 const siteOrigin = (process.env.VITE_SITE_URL || 'https://galatayo.app').replace(/\/+$/, '')
-// 4173 is on the API's CORS allow list.
-const port = 4173
+// 4173 is on the API's CORS allow list; PRERENDER_PORT lets a second run share the machine.
+const port = Number(process.env.PRERENDER_PORT || 4173)
 const localOrigin = `http://localhost:${port}`
 // Each page makes about one call to an API endpoint limited to 60/min per IP (area pages: 30/min).
 const minMsPerPage = Number(process.env.PRERENDER_MIN_MS_PER_PAGE || 1100)
@@ -80,7 +80,7 @@ async function readFrontendPaths() {
   const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
   // Gala Today posts are committed daily into src/data/galaToday.json by the SEO daily workflow.
   const todayPosts = JSON.parse(await readFile(path.join(root, 'src/data/galaToday.json'), 'utf8'))
-  return ['/saan-tayo', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
+  return ['/saan-tayo', '/gala-tayo-meaning', '/long-weekends-2027-philippines', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
 }
 
 const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
@@ -149,6 +149,8 @@ async function snapshot(page, routePath) {
       'meta[name="google-site-verification"]',
       'meta[name="msvalidate.01"]',
       'script[type="application/ld+json"]',
+      // CSS chunks the route loaded at runtime; without them the first paint is unstyled and shifts.
+      'link[rel="stylesheet"]',
     ]
     const head = headSelectors
       .flatMap((selector) => [...document.head.querySelectorAll(selector)])
@@ -178,7 +180,18 @@ function buildHtml(shellHtml, { head, body }) {
     html = html.replace(pattern, '')
   }
 
-  html = html.replace('</head>', `    ${head.join('\n    ')}\n  </head>`)
+  // The shell already links its own stylesheet; add only the route's extra ones.
+  const tags = head.filter((tag) => !tag.startsWith('<link') || !html.includes(tag.match(/href="([^"]+)"/)?.[1] ?? tag))
+  // Marks a finished page: index.html hides the welcome splash and main.tsx keeps this HTML on screen until the app is ready.
+  html = html.replace('<html lang="en-PH">', '<html lang="en-PH" data-prerendered>')
+  // The finished HTML paints without JavaScript, so public/boot.js starts the app after first paint.
+  const preloads = [...html.matchAll(/\s*<link rel="modulepreload" crossorigin href="([^"]+)">/g)]
+  for (const match of preloads) html = html.replace(match[0], '')
+  html = html.replace(
+    /<script type="module" crossorigin src="([^"]+)"><\/script>/,
+    (_, entry) => `<script defer src="/boot.js" data-entry="${entry}" data-preload="${preloads.map((match) => match[1]).join(' ')}"></script>`,
+  )
+  html = html.replace('</head>', `    ${tags.join('\n    ')}\n  </head>`)
   return html.replace(/<div id="root"><\/div>/, () => `<div id="root">${body}</div>`)
 }
 
@@ -240,11 +253,11 @@ function buildLlmsTxt(pages) {
     '- Contact for corrections: officialgalatayo@gmail.com',
     '',
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
-    ...section('Guides', (routePath) => routePath.startsWith('/guides')),
+    ...section('Guides', (routePath) => routePath.startsWith('/guides') || routePath.startsWith('/long-weekends')),
     ...section('Gala Today (daily trend picks)', (routePath) => routePath.startsWith('/today')),
     ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
     ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
-    ...section('About', (routePath) => ['/about', '/privacy', '/terms'].includes(routePath)),
+    ...section('About', (routePath) => ['/about', '/gala-tayo-meaning', '/privacy', '/terms'].includes(routePath)),
   ].join('\n')
 }
 

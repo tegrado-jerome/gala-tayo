@@ -495,7 +495,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
     if (!profile?.username) return
     const canNativeShare = typeof navigator.share === 'function'
     try {
-      await shareLink({ url: `${getPublicSiteOrigin()}/u/${encodeURIComponent(profile.username)}`, title: `@${profile.username} on GalaTayo` })
+      await shareLink({ url: `${getPublicSiteOrigin()}/u/${encodeURIComponent(profile.username)}`, title: `@${profile.username} on GalaTayo`, contentType: 'profile' })
       if (!canNativeShare) showSystemMessage({ title: 'Link copied', description: 'Your profile link is ready to paste.' })
     } catch (error) {
       if ((error as Error).name !== 'AbortError') showSystemMessage({ title: 'Could not share', description: 'Try again in a bit.' })

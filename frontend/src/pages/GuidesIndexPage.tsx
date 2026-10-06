@@ -118,6 +118,12 @@ function GuidesIndexPage() {
       <header className="mt-5">
         <h1 className="g-h1">Gala guides</h1>
         <p className="g-mut mt-2 max-w-[52ch]">Short lists of where to go, ranked best first, with the budget per head on every pick.</p>
+        <p className="g-sm mt-3">
+          Planning ahead?{' '}
+          <InternalLink href="/long-weekends-2027-philippines" className="font-semibold underline underline-offset-[3px]">
+            Long weekends 2027 and where to go
+          </InternalLink>
+        </p>
       </header>
 
       {isLoading ? (

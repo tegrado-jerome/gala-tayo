@@ -648,7 +648,8 @@ function PlaceDetailView({
     place.curatedImageUrl,
     ...(place.curatedImageUrls ?? []),
   ])
-  const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
+  const hdGallery = usePlaceGalleryPhotos(cleanString(place.slug) || null)
+  const hdPhotos = hdGallery ?? []
   const extras = usePlaceExtras(cleanString(place.slug) || null)
   useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
@@ -1033,6 +1034,8 @@ function PlaceDetailView({
         url: buildPlaceShareUrl(place),
         title: place.name,
         text: place.name,
+        contentType: 'place',
+        itemId: place.slug ?? null,
       })
       trackPlaceShared({
         placeSlug: place.slug ?? null,
@@ -2313,6 +2316,8 @@ function PlaceDetailView({
     <Page className="pt-0 lg:pt-8">
       <PhotoGrid
         photos={galleryPhotos}
+        // Nearly every place with HD photos has three or more; keep their slots while the manifest loads so the hero doesn't resize.
+        reservedTiles={hdGallery === null ? 3 : 0}
         placeName={place.name}
         onBroken={markPhotoBroken}
         onOpen={setAllPhotosIndex}

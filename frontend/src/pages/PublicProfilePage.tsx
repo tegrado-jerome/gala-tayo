@@ -155,7 +155,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     if (!loadedProfile) return
     const canNativeShare = typeof navigator.share === 'function'
     try {
-      await shareLink({ url: `${getPublicSiteOrigin()}/u/${encodeURIComponent(loadedProfile.username)}`, title: `@${loadedProfile.username} on GalaTayo` })
+      await shareLink({ url: `${getPublicSiteOrigin()}/u/${encodeURIComponent(loadedProfile.username)}`, title: `@${loadedProfile.username} on GalaTayo`, contentType: 'profile' })
       if (!canNativeShare) showSystemMessage({ title: 'Link copied', description: 'The profile link is ready to paste.' })
     } catch (error) {
       if ((error as Error).name !== 'AbortError') showSystemMessage({ title: 'Could not share', description: 'Try again in a bit.' })

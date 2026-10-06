@@ -45,6 +45,8 @@ const exactLabels: Record<string, string> = {
   '/forgot-password': 'Forgot password',
   '/onboarding': 'Onboarding',
   '/about': 'About',
+  '/gala-tayo-meaning': 'What "gala tayo" means',
+  '/long-weekends-2027-philippines': 'Long weekends 2027',
   '/guides': 'Guides',
   '/terms': 'Terms',
   '/privacy': 'Privacy',

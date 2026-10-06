@@ -22,7 +22,7 @@ import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetad
 import { shareLink } from '../utils/share'
 import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
-import { resizedMediaUrl } from '../data/r2Config'
+import { heroSrcSet, resizedMediaUrl } from '../data/r2Config'
 
 function LandingFaqJsonLd({ faqs }: { faqs: Array<{ question: string; answer: string }> }) {
   return {
@@ -237,7 +237,7 @@ export default function SeoLandingPage({
   const shareGuide = async () => {
     try {
       const hadNativeShare = typeof navigator.share === 'function'
-      await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}` })
+      await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}`, contentType: 'guide', itemId: target.slug })
       setShareNote(hadNativeShare ? null : 'Link copied. I-send mo na sa GC!')
     } catch (error) {
       if ((error as Error).name !== 'AbortError') setShareNote(pageUrl)
@@ -297,7 +297,14 @@ export default function SeoLandingPage({
         {heroPlace?.imageUrl ? (
           <figure>
             <div className="m-hero">
-              <img src={resizedMediaUrl(heroPlace.imageUrl, 'hero')} alt={heroPlace.name} fetchPriority="high" decoding="async" />
+              <img
+                src={resizedMediaUrl(heroPlace.imageUrl, 'hero')}
+                srcSet={heroSrcSet(heroPlace.imageUrl)}
+                sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
+                alt={heroPlace.name}
+                fetchPriority="high"
+                decoding="async"
+              />
             </div>
             <figcaption className="m-caption">Pictured: {heroPlace.name}</figcaption>
           </figure>

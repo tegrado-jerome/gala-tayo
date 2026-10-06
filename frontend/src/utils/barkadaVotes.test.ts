@@ -4,6 +4,7 @@ import type { GalaPlanPoll } from './galaPlanBarkadaApi'
 import {
   bestDate,
   formatDateChoice,
+  gcInviteText,
   inviteMessage,
   kailanQuestion,
   lockedDate,
@@ -85,4 +86,13 @@ test('formats dates and the Taglish invite', () => {
   assert.equal(formatDateChoice({ date: '2026-10-10', time: '09:00' }), 'Sat, Oct 10 · 9 AM')
   assert.equal(inviteMessage('Intramuros', 'Sat, Oct 10'), 'Sama ka? Gala tayo sa Intramuros on Sat, Oct 10 👉')
   assert.equal(inviteMessage('Intramuros', null), 'Sama ka? Gala tayo sa Intramuros 👉')
+})
+
+test('gcInviteText: invite, route and cost for the group chat', () => {
+  assert.equal(
+    gcInviteText({ stops: ['Fort Santiago', 'Binondo Chinatown'], when: 'Sat, Oct 10', perHead: 1200 }),
+    'Sama ka? Gala tayo sa Fort Santiago on Sat, Oct 10 👉\nFort Santiago → Binondo Chinatown\nMga ₱1,200 each. G?',
+  )
+  assert.equal(gcInviteText({ stops: ['Intramuros'], when: null, perHead: null }), 'Sama ka? Gala tayo sa Intramuros 👉\nG?')
+  assert.equal(gcInviteText({ stops: ['Rizal Park'], when: null, perHead: 0 }), 'Sama ka? Gala tayo sa Rizal Park 👉\nLibre lang! G?')
 })

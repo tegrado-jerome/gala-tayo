@@ -134,3 +134,10 @@ export function formatDateChoice(choice: Pick<DateChoice, 'date' | 'time'>) {
 export function inviteMessage(where: string, when: string | null) {
   return `Sama ka? Gala tayo sa ${where}${when ? ` on ${when}` : ''} 👉`
 }
+
+/** The group-chat message for a Plan with AI draft: the invite, the route and the cost each. */
+export function gcInviteText({ stops, when, perHead }: { stops: string[]; when: string | null; perHead: number | null }) {
+  const route = stops.length > 1 ? `\n${stops.join(' → ')}` : ''
+  const cost = perHead ? `\nMga ₱${perHead.toLocaleString('en-PH')} each. G?` : perHead === 0 ? '\nLibre lang! G?' : '\nG?'
+  return `${inviteMessage(stops[0] ?? 'labas', when)}${route}${cost}`
+}

@@ -23,7 +23,7 @@ export function getPlaceLeadPhoto(slug: string | null | undefined) {
   return getPlaceCardPhoto(slug)?.replace(/-card\.webp$/, '.webp') ?? null
 }
 
-/** Every HD photo for one place. The full manifest is loaded on demand so cards don't pay for it. */
+/** Every HD photo for one place, or null while the manifest is still loading. The full manifest is loaded on demand so cards don't pay for it. */
 export function usePlaceGalleryPhotos(slug: string | null | undefined) {
   const [photos, setPhotos] = useState<{ slug: string; list: PlaceGalleryPhoto[] } | null>(null)
 
@@ -38,5 +38,6 @@ export function usePlaceGalleryPhotos(slug: string | null | undefined) {
     }
   }, [slug])
 
-  return photos && photos.slug === slug ? photos.list : []
+  if (photos && photos.slug === slug) return photos.list
+  return slug && cardPhotoBySlug[slug] ? null : []
 }

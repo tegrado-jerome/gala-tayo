@@ -229,48 +229,6 @@
     "intro": "You do not need a big budget to eat well in Manila. These are the spots where the food is better than the price suggests."
   },
   {
-    "slug": "mall-shopping-in-pasig",
-    "label": "Mall Shopping in Pasig",
-    "areaSlug": "pasig",
-    "category": "mall",
-    "keywords": [
-      "malls in pasig",
-      "shopping in pasig",
-      "pasig lifestyle centers",
-      "pasig shopping guide"
-    ],
-    "description": "Malls in and around Pasig for shopping, food courts and a cool place to wait out the rain, with parking and commute notes.",
-    "intro": "Sometimes the mall is the plan. These are the ones worth the trip."
-  },
-  {
-    "slug": "cinemas-in-quezon-city",
-    "label": "Cinemas in Quezon City",
-    "areaSlug": "quezon-city",
-    "category": "cinema",
-    "keywords": [
-      "cinemas in quezon city",
-      "movie theaters in qc",
-      "sine sa qc",
-      "quezon city movie guide"
-    ],
-    "description": "Cinemas in Quezon City and what to pair with the movie, from dinner before the show to dessert after.",
-    "intro": "Movie night is better with a plan for before and after. Start here."
-  },
-  {
-    "slug": "hotels-and-staycations-in-taguig",
-    "label": "Hotels and Staycations in Taguig",
-    "areaSlug": "taguig",
-    "category": "hotel",
-    "keywords": [
-      "hotels in taguig",
-      "staycation in bgc",
-      "taguig accommodation",
-      "bgc hotel guide"
-    ],
-    "description": "Staycation picks in Taguig for a weekend away without leaving the city, with a starting price so you can compare quickly.",
-    "intro": "A night in BGC can feel like a trip. These are the stays worth booking."
-  },
-  {
     "slug": "barkada-hangouts-in-makati",
     "label": "Barkada Hangouts in Makati",
     "areaSlug": "makati",
@@ -315,22 +273,6 @@
     "intro": "This is our shortlist of places to eat across the metro. Every pick shows the starting budget, so you can plan the night around it."
   },
   {
-    "slug": "malls-in-metro-manila",
-    "label": "Malls in Metro Manila",
-    "areaSlug": "metro-manila",
-    "category": "mall",
-    "keywords": [
-      "malls in metro manila",
-      "malls in metro manila philippines",
-      "malls in metro manila open today",
-      "best malls in metro manila",
-      "new malls in metro manila"
-    ],
-    "addedAt": "2026-10-05",
-    "description": "The Metro Manila malls worth a trip for more than shopping: bayside sunsets, canals and outdoor streets, with commute notes.",
-    "intro": "Some malls are destinations on their own. These are the ones that make a good gala, rain or shine."
-  },
-  {
     "slug": "things-to-do-in-metro-manila",
     "label": "Things to Do in Metro Manila",
     "areaSlug": "metro-manila",
@@ -363,22 +305,6 @@
     "intro": "These are cafes worth crossing the city for. Bring a book, a laptop or a friend."
   },
   {
-    "slug": "cinemas-in-metro-manila",
-    "label": "Cinemas in Metro Manila",
-    "areaSlug": "metro-manila",
-    "category": "cinema",
-    "keywords": [
-      "cinemas in metro manila",
-      "cinemas in metro manila with imax",
-      "movies in metro manila",
-      "theater in metro manila",
-      "movies in metro manila film festival 2025"
-    ],
-    "addedAt": "2026-10-05",
-    "description": "Cinemas around Metro Manila and the best spots nearby for dinner before or dessert after the movie.",
-    "intro": "Plan the whole movie night, not just the film."
-  },
-  {
     "slug": "museums-in-metro-manila",
     "label": "Museums in Metro Manila",
     "areaSlug": "metro-manila",
@@ -393,22 +319,6 @@
     "addedAt": "2026-10-05",
     "description": "Museums in Metro Manila for art, history and science, from free National Museums to interactive galleries, with fees and time needed.",
     "intro": "The metro’s museums cover everything from Luna’s Spoliarium to hands-on science. Many are free, so there is no excuse not to go."
-  },
-  {
-    "slug": "malls-in-makati",
-    "label": "Malls in Makati",
-    "areaSlug": "makati",
-    "category": "mall",
-    "keywords": [
-      "malls in makati",
-      "malls in makati city",
-      "malls in makati area",
-      "malls in makati with cinema",
-      "malls in makati philippines"
-    ],
-    "addedAt": "2026-10-05",
-    "description": "Malls in Makati for shopping, dining and a cool break from the heat, with parking and commute notes.",
-    "intro": "Makati’s malls connect to almost everything. Here is where to go."
   },
   {
     "slug": "things-to-do-in-baguio",
