@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
-import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
-import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
-import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
-import { Path } from '@phosphor-icons/react/dist/csr/Path'
 import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import PlanRouteMap, { useIsDesktop } from '../components/gala-plan/PlanRouteMap'
-import { TripCover } from '../components/gala-plan/PlanSummaryCard'
+import { PlanCover } from '../components/gala-plan/PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
 import { Avatar, Button, Empty, Page, Panel, SectionHead, Skeleton, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
@@ -153,53 +149,51 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
       <div className={cx('g-plan-split', hasRoute ? 'has-map' : 'mx-auto max-w-[760px]')}>
         <div className="min-w-0">
-          <div className="g-plan-cover">
-            <TripCover stops={items.map((item) => item.place)} priority />
-            <div className="g-plan-bar">
-              <InternalLink href={profileHref} className="g-round" ariaLabel={`Back to @${plan.owner?.username || username}`}>
-                <ArrowLeft />
-              </InternalLink>
-              <button
-                type="button"
-                className="g-round is-wide"
-                aria-pressed={plan.viewer_has_hearted}
-                aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
-                onClick={() => void toggleHeart()}
-              >
-                <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
-                {plan.hearts_count}
-              </button>
-            </div>
-          </div>
+          <PlanCover
+            stops={items.map((item) => item.place)}
+            kicker={`Barkada plan · ${formatGalaPlanDate(plan.description)}`}
+            title={plan.title}
+            sub={[city, `${items.length} ${items.length === 1 ? 'stop' : 'stops'}`].filter(Boolean).join(' · ')}
+            bar={
+              <>
+                <InternalLink href={profileHref} className="g-round" ariaLabel={`Back to @${plan.owner?.username || username}`}>
+                  <ArrowLeft />
+                </InternalLink>
+                <button
+                  type="button"
+                  className="g-round is-wide"
+                  aria-pressed={plan.viewer_has_hearted}
+                  aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
+                  onClick={() => void toggleHeart()}
+                >
+                  <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} />
+                  {plan.hearts_count}
+                </button>
+              </>
+            }
+          />
 
-          <header className="mt-5">
-            <InternalLink href={profileHref} className="inline-flex min-h-11 items-center gap-2 no-underline">
-              <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
-              <span className="g-sm g-mut">
-                <b className="text-[var(--ink)]">{ownerName}</b> shared this gala
-              </span>
-            </InternalLink>
-            <h1 className="g-h1 mt-1">{plan.title}</h1>
-            <div className="g-sm g-mut mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
-              <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" aria-hidden="true" />{formatGalaPlanDate(plan.description)}</span>
-              {city ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" aria-hidden="true" />{city}</span> : null}
-            </div>
-          </header>
+          <InternalLink href={profileHref} className="mt-3 inline-flex min-h-11 items-center gap-2 no-underline">
+            <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
+            <span className="g-sm g-mut">
+              <b className="text-[var(--ink)]">{ownerName}</b> shared this gala
+            </span>
+          </InternalLink>
 
           <div className="g-tstats mt-4" style={{ ['--n' as string]: totalKm > 0 ? 3 : 2 }}>
             <div className="g-tstat">
               <b>{items.length}</b>
-              <span><MapPin aria-hidden="true" />{items.length === 1 ? 'stop' : 'stops'}</span>
+              <span>{items.length === 1 ? 'stop' : 'stops'}</span>
             </div>
             {totalKm > 0 ? (
               <div className="g-tstat">
                 <b>{totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`}</b>
-                <span><Path aria-hidden="true" />route</span>
+                <span>route</span>
               </div>
             ) : null}
             <div className="g-tstat">
               <b>{formatPeso(perHead)}</b>
-              <span><Coins aria-hidden="true" />solo, est.</span>
+              <span>per head, est.</span>
             </div>
           </div>
 
@@ -233,7 +227,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
           <div className="mt-8">
             <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A gala like ${plan.title}`)}`}>
-              <Sparkles style={{ color: 'var(--tara-ink)' }} />
+              <Sparkles />
               Plan your own with AI
             </Button>
           </div>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { LinkSimple } from '@phosphor-icons/react/dist/csr/LinkSimple'
 import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple'
@@ -12,32 +13,47 @@ import '../../design/plans.css'
 
 type CoverStop = { slug?: string | null; image_url?: string | null; category?: string | null }
 
-/** Stops that have a photo, as image candidates for the cover tiles. */
-function coverTiles(stops: CoverStop[]) {
+/** Image candidates for the first stop that has a photo. */
+function coverTile(stops: CoverStop[]) {
   return stops
     .map((stop) => ({ category: stop.category ?? null, candidates: [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug ?? '')].filter((url): url is string => Boolean(url)) }))
-    .filter((tile) => tile.candidates.length > 0)
-    .slice(0, 3)
+    .find((tile) => tile.candidates.length > 0)
 }
 
-/** Photo collage from the plan's stops: 1 photo, 2 side by side, or 1 big + 2 small. */
+/** Cover photo from the plan's first stop with a photo, or a quiet sand tile. */
 export function TripCover({ stops, wide, className, priority }: { stops: CoverStop[]; wide?: boolean; className?: string; priority?: boolean }) {
-  const tiles = coverTiles(stops)
+  const tile = coverTile(stops)
   return (
-    <div className={cx('g-trip-cover', wide && 'is-wide', tiles.length >= 2 && `is-${tiles.length}`, className)} aria-hidden="true">
-      {tiles.length === 0 ? (
-        <span className="grid place-items-center" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
-          <MapTrifold size={36} weight="duotone" />
-        </span>
+    <div className={cx('g-trip-cover', wide && 'is-wide', className)} aria-hidden="true">
+      {tile ? (
+        <PlaceImage candidates={tile.candidates} category={tile.category} priority={priority} className="h-full w-full" />
       ) : (
-        tiles.map((tile, index) => <PlaceImage key={index} candidates={tile.candidates} category={tile.category} priority={priority && index === 0} className="h-full w-full" />)
+        <span className="g-trip-blank">
+          <MapTrifold size={36} weight="light" />
+        </span>
       )}
     </div>
   )
 }
 
 export function hasCoverPhoto(stops: CoverStop[]) {
-  return coverTiles(stops).length > 0
+  return Boolean(coverTile(stops))
+}
+
+/** Plan page header: full-bleed cover photo with the kicker, plan name and a short line over it. */
+export function PlanCover({ stops, kicker, title, sub, bar }: { stops: CoverStop[]; kicker: ReactNode; title: ReactNode; sub?: ReactNode; bar?: ReactNode }) {
+  const hasPhoto = hasCoverPhoto(stops)
+  return (
+    <header className={cx('g-plan-cover', hasPhoto && 'has-photo')}>
+      {hasPhoto ? <TripCover stops={stops} priority /> : null}
+      {bar ? <div className="g-plan-bar">{bar}</div> : null}
+      <div className="g-plan-cover-text">
+        <p className="g-plan-cover-kick">{kicker}</p>
+        <h1 className="g-plan-cover-title">{title}</h1>
+        {sub ? <p className="g-plan-cover-sub">{sub}</p> : null}
+      </div>
+    </header>
+  )
 }
 
 export function planStatus(plan: Pick<GalaPlanSummary, 'description'>) {
@@ -47,7 +63,7 @@ export function planStatus(plan: Pick<GalaPlanSummary, 'description'>) {
   return { label: formatDaysUntil(days), tone: days === 0 ? ('sea' as const) : ('solid' as const), date }
 }
 
-/** Trip card for the plans list, like Wanderlog's "My trips": cover collage, title, date and stops. */
+/** Editorial trip card for the plans list: cover photo, kicker with date and stops, serif title. */
 export function TripCard({ plan, showOwner = false, wide = false }: { plan: GalaPlanSummary; showOwner?: boolean; wide?: boolean }) {
   const status = planStatus(plan)
   const dateText = status.date ? status.date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Anytime'
@@ -60,9 +76,11 @@ export function TripCard({ plan, showOwner = false, wide = false }: { plan: Gala
     <InternalLink href={`/gala-plans/${plan.id}`} className="g-trip">
       <div className="relative">
         <TripCover stops={plan.preview_places ?? []} wide={wide} priority={wide} />
-        <span className="g-trip-flag">
-          <Tag tone={status.tone === 'sea' ? 'neutral' : 'solid'} className={status.tone === 'sea' ? 'is-sea' : undefined}>{status.label}</Tag>
-        </span>
+        {status.date ? (
+          <span className="g-trip-flag">
+            <Tag tone="solid" className={status.tone === 'sea' ? 'is-ok' : undefined}>{status.label}</Tag>
+          </span>
+        ) : null}
         {plan.viewer_is_owner ? (
           <span className="g-trip-vis" title={isPublic ? 'On your profile' : 'Link only'}>
             {isPublic ? <LinkSimple aria-hidden="true" /> : <LockSimple aria-hidden="true" />}
@@ -70,8 +88,8 @@ export function TripCard({ plan, showOwner = false, wide = false }: { plan: Gala
           </span>
         ) : null}
       </div>
-      <h3 className={cx(wide ? 'g-h2' : 'g-h3', 'mt-2.5 line-clamp-2')}>{plan.title}</h3>
-      <p className="g-pc-meta mt-0.5">{[dateText, stops].join(' · ')}</p>
+      <span className="g-trip-kick">{[dateText, stops].join(' · ')}</span>
+      <h3 className={cx('g-trip-title', wide && 'is-lg')}>{plan.title}</h3>
       {(showOwner && ownerName) || hearts > 0 ? (
         <div className="g-trip-foot">
           {showOwner && ownerName ? (
@@ -82,7 +100,7 @@ export function TripCard({ plan, showOwner = false, wide = false }: { plan: Gala
           ) : null}
           {hearts > 0 ? (
             <span className="g-xs g-mut ml-auto inline-flex shrink-0 items-center gap-1">
-              <Heart weight="fill" className="h-3.5 w-3.5" style={{ color: 'var(--tara)' }} aria-hidden="true" />
+              <Heart weight="fill" className="h-3.5 w-3.5" style={{ color: 'var(--ink)' }} aria-hidden="true" />
               {hearts}
               <span className="sr-only">{hearts === 1 ? 'heart' : 'hearts'}</span>
             </span>

@@ -82,7 +82,7 @@ function ChangePasswordPage() {
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
           <div className="flex items-start gap-3 rounded-[var(--r-3)] bg-[var(--fill)] p-4">
             <span className="me-ic !bg-[var(--surface)]" aria-hidden="true">
-              <LockKey weight="duotone" />
+              <LockKey weight="light" />
             </span>
             <div className="min-w-0">
               <p className="g-h3">How it works</p>

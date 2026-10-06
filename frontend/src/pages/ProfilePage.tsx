@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
+import { Fire } from '@phosphor-icons/react/dist/csr/Fire'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import { ChatCenteredText } from '@phosphor-icons/react/dist/csr/ChatCenteredText'
@@ -51,6 +54,7 @@ import { daysUntil, getPlanDate } from '../utils/galaPlanTrip'
 import { getMyPassport, type CityStamp } from '../utils/passportApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { shareLink } from '../utils/share'
+import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteOrigin } from '../utils/site'
 import '../design/me.css'
 
@@ -124,7 +128,7 @@ export function joinedLabel(value: string | null | undefined) {
 type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
 type PassportSummary = { stamps: CityStamp[]; places: number; streak: number }
 
-/** Airbnb-style account row: duotone icon tile, title, one-line subtitle, caret. Renders a link, a button, or a switch. */
+/** Account row: sand icon tile, title, one-line subtitle, caret. Renders a link, a button, or a switch. */
 export function MeRow({
   icon: Icon,
   title,
@@ -152,7 +156,7 @@ export function MeRow({
   const body = (
     <>
       <span className={cx('me-ic', tone && `is-${tone}`)} aria-hidden="true">
-        <Icon weight="duotone" />
+        <Icon weight="light" />
       </span>
       <span className="me-row-t">
         <b>{title}</b>
@@ -181,16 +185,15 @@ export function MeRow({
   )
 }
 
-/** Plan tile for a `me-tiles` grid: 4:3 cover photo, title, one meta line. */
+/** Trip tile for a `me-tiles` grid: cover photo with the serif title over it, one meta line below. */
 export function PlanTile({ href, title, imageUrl, tag, meta }: { href: string; title: string; imageUrl?: string | null; tag?: string; meta: string }) {
   return (
     <InternalLink href={href} className="me-tile" ariaLabel={title}>
-      <span className="me-tile-art">
-        <CalendarBlank size={28} weight="duotone" aria-hidden="true" />
-        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : null}
+      <span className={cx('me-tile-art', imageUrl && 'has-photo')}>
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : <CalendarBlank size={28} weight="light" aria-hidden="true" />}
         {tag ? <Tag tone="solid">{tag}</Tag> : null}
+        <span className="me-tile-t">{title}</span>
       </span>
-      <span className="me-tile-t">{title}</span>
       <span className="me-tile-s block">{meta}</span>
     </InternalLink>
   )
@@ -262,16 +265,16 @@ function GuestProfile({ session }: { session: Session }) {
     <Page narrow>
       <h1 className="g-h1">Profile</h1>
 
-      <section className="mt-5 rounded-[var(--r-4)] p-5" style={{ background: 'var(--tara-soft)' }} aria-labelledby="guest-banner-title">
+      <section className="mt-5 rounded-[var(--r-3)] bg-[var(--fill)] p-5" aria-labelledby="guest-banner-title">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--surface)]" aria-hidden="true">
-            <UserIcon weight="duotone" className="h-6 w-6" />
+            <UserIcon weight="light" className="h-6 w-6" />
           </span>
           <div className="min-w-0">
             <p className="g-xs g-mut">
               <Tag>Guest</Tag> #{session.user.id.slice(0, 4)}
             </p>
-            <h2 id="guest-banner-title" className="g-h3 mt-1">Create an account to keep your stuff</h2>
+            <h2 id="guest-banner-title" className="g-h2 mt-1">Create an account to keep your stuff</h2>
           </div>
         </div>
         <p className="g-sm mt-2">Right now your saves, plans and stamps live on this device only. An account keeps them and syncs them everywhere.</p>
@@ -284,7 +287,7 @@ function GuestProfile({ session }: { session: Session }) {
       <nav aria-label="Your stuff" className="me-sec">
         <h2>Your gala</h2>
         <div className="me-rows">
-          <MeRow icon={StampIcon} tone="tara" title="Passport" sub={stampCount ? plural(stampCount, 'city stamp') : 'Tap “I’m here” at a spot to earn a city stamp'} href="/passport" />
+          <MeRow icon={StampIcon} title="Passport" sub={stampCount ? plural(stampCount, 'city stamp') : 'Tap “I’m here” at a spot to earn a city stamp'} href="/passport" />
           <MeRow icon={Heart} title="Saved" sub={savedCount ? plural(savedCount, 'saved place') : 'Tap the heart on a place to keep it'} href="/favorites" />
           <MeRow icon={CalendarBlank} title="Gala plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
           <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
@@ -533,59 +536,55 @@ function AccountProfilePage({ session }: ProfilePageProps) {
       : 'Tap “I’m here” at a spot to earn a city stamp'
     : 'City stamps and your weekly streak'
 
+  const badges: Array<{ key: string; icon: PhosphorIcon; label: string; sub?: string }> = [
+    ...(passportData && passportData.places > 0 ? [{ key: 'first-check-in', icon: MapPin, label: 'First check-in', sub: plural(passportData.places, 'place') }] : []),
+    ...(plans.status === 'ready' && plans.data.some((plan) => plan.viewer_is_owner) ? [{ key: 'plan-maker', icon: CalendarCheck, label: 'Plan maker', sub: plural(plans.data.filter((plan) => plan.viewer_is_owner).length, 'plan') }] : []),
+    ...(passportData && passportData.streak > 0 ? [{ key: 'streak', icon: Fire, label: `${passportData.streak}-week streak` }] : []),
+    ...(passportData ? passportData.stamps.slice(0, STAMP_PREVIEW_LIMIT).map((stamp) => ({ key: `stamp-${stamp.city}`, icon: StampIcon, label: stamp.city, sub: plural(stamp.places, 'spot') })) : []),
+  ]
+  const savedPlaces = favorites.flatMap((favorite) => (favorite.place ? [favorite.place] : []))
+  const byCity = new Map<string, typeof savedPlaces>()
+  for (const place of savedPlaces) {
+    const city = place.city?.trim()
+    if (city) byCity.set(city, [...(byCity.get(city) ?? []), place])
+  }
+  const savedLists = [
+    ...(savedPlaces.length > 0 ? [{ key: 'all', label: 'All saved', count: savedPlaces.length, photo: savedPlaces.map(getPlacePhoto).find(Boolean) ?? null }] : []),
+    ...(byCity.size > 1
+      ? Array.from(byCity, ([city, places]) => ({ key: city, label: city, count: places.length, photo: places.map(getPlacePhoto).find(Boolean) ?? null }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 4)
+      : []),
+  ]
+
   return (
     <Page>
-      <h1 className="g-h1">Profile</h1>
+      <h1 className="sr-only">Profile</h1>
 
       {isLoading && !profile ? (
-        <div className="me-card mt-5" aria-label="Loading profile">
-          <div className="me-id">
-            <Skeleton className="h-24 w-24 !rounded-full" />
-            <Skeleton className="mt-3 h-5 w-32" />
-          </div>
-          <div className="grid gap-3">
-            <Skeleton className="h-10" />
-            <Skeleton className="h-10" />
-            <Skeleton className="h-10" />
-          </div>
+        <div className="me-head" aria-label="Loading profile">
+          <Skeleton className="h-24 w-24 !rounded-full" />
+          <Skeleton className="mt-3 h-6 w-40" />
+          <Skeleton className="mt-2 h-4 w-48" />
         </div>
       ) : null}
 
       {profile ? (
-        <div className="mt-5 grid items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-16">
-          <aside className="min-w-0 lg:sticky lg:top-24">
-            <section className="me-card" aria-label="Your profile">
-              <div className="me-id">
-                <ProfileAvatar profile={{ ...profile, display_name: currentProfile?.displayName }} size="xxl" />
-                <h2 className="g-h2">{displayName}</h2>
-                <p className="me-id-sub">
-                  <span className="truncate">@{profile.username}</span>
-                  {profile.is_public ? null : (
-                    <Tag className="shrink-0">
-                      <Lock aria-hidden="true" />
-                      Private
-                    </Tag>
-                  )}
-                </p>
-                {joined ? <p className="g-xs g-fnt mt-1">{joined}</p> : null}
-              </div>
-              <div className="me-nums">
-                <InternalLink href="/passport" className="me-num" ariaLabel={`${passportData?.places ?? 0} places visited, open passport`}>
-                  <b>{passportData ? passportData.places : '–'}</b>
-                  <span>{passportData?.places === 1 ? 'Place visited' : 'Places visited'}</span>
-                </InternalLink>
-                <InternalLink href="/gala-plans" className="me-num" ariaLabel={`${planCount ?? 0} plans, open gala plans`}>
-                  <b>{planCount ?? '–'}</b>
-                  <span>{planCount === 1 ? 'Plan' : 'Plans'}</span>
-                </InternalLink>
-                <InternalLink href="/favorites" className="me-num" ariaLabel={`${savedCount} saved places, open saved`}>
-                  <b>{savedCount}</b>
-                  <span>Saved</span>
-                </InternalLink>
-              </div>
-            </section>
-
-            <p className="me-social mt-2">
+        <div className="mx-auto max-w-[760px]">
+          <section className="me-head" aria-label="Your profile">
+            <ProfileAvatar profile={{ ...profile, display_name: currentProfile?.displayName }} size="xxl" />
+            <h2 className="me-head-name">{displayName}</h2>
+            <p className="me-head-sub">
+              <span className="truncate">@{profile.username}</span>
+              {joined ? <span>· {joined.replace('Joined', 'Contributor since')}</span> : null}
+              {profile.is_public ? null : (
+                <Tag className="shrink-0">
+                  <Lock aria-hidden="true" />
+                  Private
+                </Tag>
+              )}
+            </p>
+            <p className="me-social">
               <button type="button" onClick={() => void openList('followers')}>
                 <b>{profile.followers_count ?? 0}</b>
                 <span>{profile.followers_count === 1 ? 'follower' : 'followers'}</span>
@@ -598,173 +597,199 @@ function AccountProfilePage({ session }: ProfilePageProps) {
               {followRequests.length > 0 ? (
                 <>
                   <i className="g-fnt not-italic" aria-hidden="true">·</i>
-                  <Tag tone="tara">{followRequests.length} pending</Tag>
+                  <Tag tone="ok">{followRequests.length} pending</Tag>
                 </>
               ) : null}
             </p>
-
             {profile.bio ? (
-              <p className="mt-2 max-w-[60ch] text-[15px] leading-relaxed">{profile.bio}</p>
+              <p className="me-head-bio">{profile.bio}</p>
             ) : (
-              <p className="g-sm g-mut mt-2">
-                Add a short bio so people know your vibe before they follow.{' '}
+              <p className="g-sm g-mut mt-1 max-w-[44ch]">
+                Add a short bio so people know your vibe.{' '}
                 <InternalLink href="/account-settings" className="font-semibold text-[var(--ink)] underline underline-offset-2">
                   Add bio
                 </InternalLink>
               </p>
             )}
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button variant="line" block href="/account-settings">
+            <div className="mt-4 flex justify-center gap-2">
+              <Button variant="line" size="sm" href="/account-settings">
                 <PencilSimple aria-hidden="true" />
                 Edit profile
               </Button>
-              <Button variant="line" block onClick={() => void handleShare()}>
+              <Button variant="line" size="sm" onClick={() => void handleShare()}>
                 <ShareNetwork aria-hidden="true" />
                 Share
               </Button>
             </div>
-          </aside>
+          </section>
 
-          <div className="min-w-0">
-            {errorMessage ? (
-              <p role="alert" className="g-sm mb-4" style={{ color: 'var(--bad)' }}>
-                {errorMessage}
-              </p>
-            ) : null}
+          <div className="me-cnt">
+            <InternalLink href="/passport" className="me-cnt-i" ariaLabel={`${passportData?.places ?? 0} places visited, open passport`}>
+              <b>{passportData ? passportData.places : '–'}</b>
+              <span>Visited</span>
+            </InternalLink>
+            <InternalLink href="/gala-plans" className="me-cnt-i" ariaLabel={`${planCount ?? 0} plans, open gala plans`}>
+              <b>{planCount ?? '–'}</b>
+              <span>{planCount === 1 ? 'Plan' : 'Plans'}</span>
+            </InternalLink>
+            <InternalLink href="/favorites" className="me-cnt-i" ariaLabel={`${savedCount} saved places, open saved`}>
+              <b>{savedCount}</b>
+              <span>Saved</span>
+            </InternalLink>
+          </div>
 
-            {showFollowRequests ? (
-              <section className="me-sec !mt-0 mb-8">
-                <h2>Follow requests</h2>
-                <p className="me-sec-sub">{profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}</p>
-                {followRequests.length === 0 ? (
-                  <p className="g-sm g-mut">Walang pending requests.</p>
-                ) : (
-                  <div>
-                    {followRequests.map((request) => (
-                      <div key={request.id} className="me-prow">
-                        <ProfileAvatar profile={request.follower} size="sm" />
-                        <InternalLink href={`/u/${encodeURIComponent(request.follower.username)}`}>
-                          <span className="g-h3 block truncate">@{request.follower.username}</span>
-                          <span className="g-sm g-mut block truncate">{request.follower.bio || 'Wants to follow you.'}</span>
-                        </InternalLink>
-                        <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
-                          Accept
-                        </Button>
-                        <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
-                          Reject
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            ) : null}
+          {errorMessage ? (
+            <p role="alert" className="g-sm mt-4" style={{ color: 'var(--bad)' }}>
+              {errorMessage}
+            </p>
+          ) : null}
 
-            <SectionHead
-              title="Your plans"
-              sub={planCount ? plural(planCount, 'plan') : undefined}
-              className="!mt-0"
-              action={planCount && planCount > PLAN_PREVIEW_LIMIT ? <Button variant="text" size="sm" href="/gala-plans">See all</Button> : undefined}
-            />
-            {plans.status === 'loading' ? (
-              <div className="me-tiles" aria-label="Loading plans">
-                {Array.from({ length: 2 }, (_, index) => (
-                  <div key={index}>
-                    <Skeleton className="!rounded-[var(--r-3)]" style={{ aspectRatio: '4 / 3' }} />
-                    <Skeleton className="mt-2 h-4 w-3/4" />
-                  </div>
-                ))}
-              </div>
-            ) : plans.status === 'error' ? (
-              <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
-            ) : plans.data.length === 0 ? (
-              <Empty
-                title="Wala pang plans."
-                description="Describe your gala in one line and let Tara draft it."
-                action={
-                  <Button variant="tara" href="/plan-with-ai">
-                    <Sparkle aria-hidden="true" />
-                    Plan with AI
-                  </Button>
-                }
-              />
-            ) : (
-              <div className="me-tiles">
-                {plans.data.slice(0, PLAN_PREVIEW_LIMIT).map((plan) => {
-                  const placeCount = plan.places_count ?? plan.place_count ?? 0
-                  const hearts = plan.hearts_count ?? plan.heart_count ?? 0
+          {badges.length > 0 ? (
+            <section aria-labelledby="me-badges">
+              <SectionHead title={<span id="me-badges">Badges</span>} action={<Button variant="text" size="sm" href="/passport">Passport</Button>} />
+              <ul className="me-badges">
+                {badges.map((badge) => {
+                  const BadgeIcon = badge.icon
                   return (
-                    <PlanTile
-                      key={plan.id}
-                      href={`/gala-plans/${encodeURIComponent(plan.id)}`}
-                      title={plan.title}
-                      imageUrl={plan.preview_places?.[0]?.image_url}
-                      tag={plan.visibility === 'public' ? 'Public' : 'Private'}
-                      meta={[planDateLabel(plan), plural(placeCount, 'stop'), hearts ? plural(hearts, 'heart') : null].filter(Boolean).join(' · ')}
-                    />
+                    <li key={badge.key}>
+                      <BadgeIcon weight="fill" aria-hidden="true" />
+                      <b>{badge.label}</b>
+                      {badge.sub ? <span>{badge.sub}</span> : null}
+                    </li>
                   )
                 })}
-              </div>
-            )}
+              </ul>
+            </section>
+          ) : null}
 
-            {passportData && passportData.stamps.length > 0 ? (
-              <>
-                <SectionHead title="City stamps" sub={plural(passportData.stamps.length, 'stamp')} action={<Button variant="text" size="sm" href="/passport">Open passport</Button>} />
-                <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-1 pb-2 [scrollbar-width:none]">
-                  {passportData.stamps.slice(0, STAMP_PREVIEW_LIMIT).map((stamp, index) => (
-                    <span key={stamp.city} className="me-stamp is-got is-sm" style={{ '--g-rot': `${index % 2 ? 5 : -6}deg` } as CSSProperties} role="img" aria-label={`${stamp.city}, ${plural(stamp.places, 'spot')}`}>
-                      <span>
-                        <b>{stamp.city}</b>
-                        <span>{plural(stamp.places, 'spot')}</span>
-                      </span>
-                    </span>
+          <SectionHead
+            title="Your trips"
+            sub={planCount ? plural(planCount, 'plan') : undefined}
+            action={planCount && planCount > PLAN_PREVIEW_LIMIT ? <Button variant="text" size="sm" href="/gala-plans">All</Button> : undefined}
+          />
+          {plans.status === 'loading' ? (
+            <div className="me-tiles" aria-label="Loading plans">
+              {Array.from({ length: 2 }, (_, index) => (
+                <Skeleton key={index} className="!rounded-[var(--r-3)]" style={{ aspectRatio: '4 / 3' }} />
+              ))}
+            </div>
+          ) : plans.status === 'error' ? (
+            <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
+          ) : plans.data.length === 0 ? (
+            <div className="me-empty">
+              <p className="g-sm">Wala pang trips. Describe your gala in one line and Tara drafts it.</p>
+              <Button variant="ink" size="sm" href="/plan-with-ai">
+                <Sparkle aria-hidden="true" />
+                Plan with AI
+              </Button>
+            </div>
+          ) : (
+            <div className="me-tiles">
+              {plans.data.slice(0, PLAN_PREVIEW_LIMIT).map((plan) => {
+                const placeCount = plan.places_count ?? plan.place_count ?? 0
+                const hearts = plan.hearts_count ?? plan.heart_count ?? 0
+                return (
+                  <PlanTile
+                    key={plan.id}
+                    href={`/gala-plans/${encodeURIComponent(plan.id)}`}
+                    title={plan.title}
+                    imageUrl={plan.preview_places?.[0]?.image_url}
+                    tag={plan.visibility === 'public' ? undefined : 'Private'}
+                    meta={[planDateLabel(plan), plural(placeCount, 'stop'), hearts ? plural(hearts, 'heart') : null].filter(Boolean).join(' · ')}
+                  />
+                )
+              })}
+            </div>
+          )}
+
+          <SectionHead title="Saved" action={savedPlaces.length > 0 ? <Button variant="text" size="sm" href="/favorites">See all</Button> : undefined} />
+          {savedLists.length > 0 ? (
+            <ul className="me-saved">
+              {savedLists.map((list) => (
+                <li key={list.key}>
+                  <InternalLink href="/favorites" className="me-saved-pill">
+                    {list.photo ? <img src={list.photo} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true"><Heart weight="light" /></span>}
+                    {list.label} · {list.count}
+                  </InternalLink>
+                </li>
+              ))}
+              <li>
+                <InternalLink href="/gala-plans/favorites" className="me-saved-pill">
+                  <span aria-hidden="true"><Heart weight="fill" /></span>
+                  Saved plans
+                </InternalLink>
+              </li>
+            </ul>
+          ) : (
+            <p className="g-sm g-mut">Tap the heart on a place to keep it here.</p>
+          )}
+
+          {showFollowRequests ? (
+            <section className="me-sec">
+              <h2>Follow requests</h2>
+              <p className="me-sec-sub">{profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}</p>
+              {followRequests.length === 0 ? (
+                <p className="g-sm g-mut">Walang pending requests.</p>
+              ) : (
+                <div>
+                  {followRequests.map((request) => (
+                    <div key={request.id} className="me-prow">
+                      <ProfileAvatar profile={request.follower} size="sm" />
+                      <InternalLink href={`/u/${encodeURIComponent(request.follower.username)}`}>
+                        <span className="g-h3 block truncate">@{request.follower.username}</span>
+                        <span className="g-sm g-mut block truncate">{request.follower.bio || 'Wants to follow you.'}</span>
+                      </InternalLink>
+                      <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
+                        Accept
+                      </Button>
+                      <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
+                        Reject
+                      </Button>
+                    </div>
                   ))}
                 </div>
-              </>
-            ) : null}
+              )}
+            </section>
+          ) : null}
 
-            <nav aria-label="Your stuff" className="me-sec">
-              <h2>Your gala</h2>
-              <div className="me-rows">
-                <MeRow icon={StampIcon} tone="tara" title="Passport" sub={passportSub} href="/passport" />
-                <MeRow icon={Heart} title="Saved" sub={savedCount ? plural(savedCount, 'saved place') : 'Tap the heart on a place to keep it'} href="/favorites" />
-                <MeRow icon={CalendarBlank} title="Gala plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
-                <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
-                <MeRow icon={UserPlus} tone="sea" title="Find friends" sub="Build your barkada" href="/find-friends" />
-                <MeRow icon={Eye} title="View public profile" sub="See what others see" href={`/u/${encodeURIComponent(profile.username || '')}`} />
-              </div>
-            </nav>
-
-            <nav aria-label="Account" className="me-sec">
-              <h2>Account</h2>
-              <div className="me-rows">
-                <MeRow icon={GearSix} title="Account settings" sub="Name, username, photo, privacy" href="/account-settings" />
-                <MeRow icon={LockKey} title="Change password" sub="Update how you log in" href="/account-settings/change-password" />
-                <MeRow icon={ShieldCheck} title="Privacy center" sub="Data requests and account deletion" href="/privacy-center" />
-                <MeRow
-                  icon={isDark ? Sun : Moon}
-                  title="Dark mode"
-                  sub={isDark ? 'On' : 'Off'}
-                  checked={isDark}
-                  onClick={() => setThemePreference(isDark ? 'light' : 'dark')}
-                />
-              </div>
-            </nav>
-
-            <nav aria-label="Community and help" className="me-sec">
-              <h2>Community</h2>
-              <div className="me-rows">
-                <MeRow icon={MapPinPlus} title="Submit a place" sub="Know a spot we’re missing?" href="/submit-place" />
-                <MeRow icon={Notepad} title="My submissions" sub="Review status of places you sent" href="/submissions" />
-                <MeRow icon={ChatCenteredText} title="Send feedback" sub="Tell us what to fix or add" href="/feedback" />
-                <MeRow icon={Flag} title="My reports" sub="Reports you filed" href="/reports" />
-              </div>
-            </nav>
-
-            <div className="me-rows mt-6 border-t border-[var(--line-2)] pt-2">
-              <MeRow icon={SignOut} title={isSigningOut ? 'Logging out...' : 'Log out'} onClick={() => void handleSignOut()} disabled={isSigningOut} />
+          <nav aria-label="Your stuff" className="me-sec">
+            <h2>Your gala</h2>
+            <div className="me-rows">
+              <MeRow icon={StampIcon} title="Passport" sub={passportSub} href="/passport" />
+              <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
+              <MeRow icon={UserPlus} title="Find friends" sub="Build your barkada" href="/find-friends" />
+              <MeRow icon={Eye} title="View public profile" sub="See what others see" href={`/u/${encodeURIComponent(profile.username || '')}`} />
             </div>
+          </nav>
+
+          <nav aria-label="Account" className="me-sec">
+            <h2>Account</h2>
+            <div className="me-rows">
+              <MeRow icon={GearSix} title="Account settings" sub="Name, username, photo, privacy" href="/account-settings" />
+              <MeRow icon={LockKey} title="Change password" sub="Update how you log in" href="/account-settings/change-password" />
+              <MeRow icon={ShieldCheck} title="Privacy center" sub="Data requests and account deletion" href="/privacy-center" />
+              <MeRow
+                icon={isDark ? Sun : Moon}
+                title="Dark mode"
+                sub={isDark ? 'On' : 'Off'}
+                checked={isDark}
+                onClick={() => setThemePreference(isDark ? 'light' : 'dark')}
+              />
+            </div>
+          </nav>
+
+          <nav aria-label="Community and help" className="me-sec">
+            <h2>Community</h2>
+            <div className="me-rows">
+              <MeRow icon={MapPinPlus} title="Submit a place" sub="Know a spot we’re missing?" href="/submit-place" />
+              <MeRow icon={Notepad} title="My submissions" sub="Review status of places you sent" href="/submissions" />
+              <MeRow icon={ChatCenteredText} title="Send feedback" sub="Tell us what to fix or add" href="/feedback" />
+              <MeRow icon={Flag} title="My reports" sub="Reports you filed" href="/reports" />
+            </div>
+          </nav>
+
+          <div className="me-rows mt-6 border-t border-[var(--line)] pt-2">
+            <MeRow icon={SignOut} title={isSigningOut ? 'Logging out...' : 'Log out'} onClick={() => void handleSignOut()} disabled={isSigningOut} />
           </div>
         </div>
       ) : !isLoading ? (

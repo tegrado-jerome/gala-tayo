@@ -13,6 +13,8 @@ const H = 1920
 const PIN_R = 64
 const ROUTE_BOX = { left: 170, right: 910, top: 780, bottom: 1440 }
 const MAX_PINS = 8
+/** Mint accent: reads on the ink story background (the ink-on-ink "tara" token would vanish). */
+const STORY_MINT = '#34E0A1'
 
 type Pin = { x: number; y: number; n: number; imageUrl: string | null }
 
@@ -133,7 +135,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HTMLImageElement | null>) {
   const ink = token('--ink')
-  const tara = token('--tara')
+  const tara = STORY_MINT
   const sea = token('--sea')
   const white = token('--on-ink')
   const fill2 = token('--fill-2')
@@ -244,7 +246,7 @@ function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HT
 
     ctx.fillStyle = white
     ctx.font = `700 44px ${display}`
-    ctx.fillText('New stamp!', 280, 1630)
+    ctx.fillText('Barkada gala', 280, 1630)
     ctx.globalAlpha = 0.75
     ctx.font = `500 30px ${body}`
     ctx.fillText(story.caption, 280, 1680)
@@ -337,7 +339,7 @@ function StoryCard({ story }: { story: Story }) {
         <rect key={index} x={60 + index * (segment + 16)} y={72} width={segment} height={8} rx={4} style={{ fill: 'var(--on-ink)' }} opacity={index === 0 ? 1 : 0.3} />
       ))}
 
-      <text x={60} y={210} style={{ fill: 'var(--tara)', font: '700 34px var(--font-body)', letterSpacing: '3px' }}>
+      <text x={60} y={210} style={{ fill: STORY_MINT, font: '700 34px var(--font-body)', letterSpacing: '3px' }}>
         {story.eyebrow}
       </text>
       {story.lines.map((line, index) => (
@@ -350,7 +352,7 @@ function StoryCard({ story }: { story: Story }) {
         <polyline
           points={routePoints}
           fill="none"
-          style={{ stroke: 'var(--tara)' }}
+          style={{ stroke: STORY_MINT }}
           strokeWidth={8}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -367,7 +369,7 @@ function StoryCard({ story }: { story: Story }) {
             <image href={pin.imageUrl} x={pin.x - PIN_R + 8} y={pin.y - PIN_R + 8} width={(PIN_R - 8) * 2} height={(PIN_R - 8) * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}c${pin.n})`} />
           ) : null}
           <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={27} style={{ fill: 'var(--on-ink)' }} />
-          <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={23} style={{ fill: 'var(--tara)' }} />
+          <circle cx={pin.x + PIN_R * 0.72} cy={pin.y - PIN_R * 0.72} r={23} style={{ fill: STORY_MINT }} />
           <text x={pin.x + PIN_R * 0.72} y={pin.y - PIN_R * 0.72 + 1} textAnchor="middle" dominantBaseline="central" style={{ fill: 'var(--ink)', font: '700 26px var(--font-body)' }}>
             {pin.n}
           </text>
@@ -393,7 +395,7 @@ function StoryCard({ story }: { story: Story }) {
             ))}
           </g>
           <text x={280} y={1630} style={{ fill: 'var(--on-ink)', font: '700 44px var(--font-display)' }}>
-            New stamp!
+            Barkada gala
           </text>
           <text x={280} y={1680} opacity={0.75} style={{ fill: 'var(--on-ink)', font: '500 30px var(--font-body)' }}>
             {story.caption}
@@ -406,7 +408,7 @@ function StoryCard({ story }: { story: Story }) {
       )}
 
       <rect x={60} y={1782} width={60} height={60} rx={16} style={{ fill: 'var(--on-ink)' }} />
-      <path d="M77 1816a13 13 0 0 1 26 0Z" style={{ fill: 'var(--tara)' }} />
+      <path d="M77 1816a13 13 0 0 1 26 0Z" style={{ fill: STORY_MINT }} />
       <rect x={72} y={1820} width={36} height={5} rx={2.5} style={{ fill: 'var(--ink)' }} />
       <rect x={79} y={1830} width={22} height={5} rx={2.5} style={{ fill: 'var(--ink)' }} />
       <text x={138} y={1826} style={{ fill: 'var(--on-ink)', font: '700 42px var(--font-display)', letterSpacing: '-1px' }}>
@@ -490,7 +492,8 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
         <button
           ref={shareRef}
           type="button"
-          className={cx(buttonClass({ variant: 'tara' }), 'flex-[2]')}
+          className={cx(buttonClass({ variant: 'ink' }), 'flex-[2]')}
+          style={{ background: STORY_MINT, color: '#111111' }}
           onClick={() => void share()}
           data-loading={isSharing || undefined}
           aria-busy={isSharing || undefined}
@@ -509,7 +512,21 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
 }
 
 /** Drop-in button that opens the recap story for a plan. */
-export function RecapStoryButton({ plan, friends, className }: { plan: GalaPlanDetail; friends?: number; className?: string }) {
+export function RecapStoryButton({
+  plan,
+  friends,
+  className,
+  variant = 'soft',
+  label = 'Recap story',
+  size,
+}: {
+  plan: GalaPlanDetail
+  friends?: number
+  className?: string
+  variant?: 'soft' | 'line' | 'ink'
+  label?: string
+  size?: 'sm'
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const openerRef = useRef<HTMLButtonElement | null>(null)
   const close = useCallback(() => {
@@ -519,9 +536,9 @@ export function RecapStoryButton({ plan, friends, className }: { plan: GalaPlanD
 
   return (
     <>
-      <button ref={openerRef} type="button" className={cx(buttonClass({ variant: 'soft' }), className)} onClick={() => setIsOpen(true)} disabled={plan.items.length === 0}>
+      <button ref={openerRef} type="button" className={cx(buttonClass({ variant, size }), className)} onClick={() => setIsOpen(true)} disabled={plan.items.length === 0}>
         <Film aria-hidden="true" />
-        Recap story
+        {label}
       </button>
       {isOpen ? <RecapStory plan={plan} friends={friends} onClose={close} /> : null}
     </>

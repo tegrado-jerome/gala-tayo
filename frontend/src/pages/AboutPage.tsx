@@ -59,7 +59,7 @@ function AboutPage() {
       <article className="mt-2">
         <header className="m-art-head">
           <span className="m-art-ic" aria-hidden="true">
-            <MapTrifold weight="duotone" />
+            <MapTrifold weight="light" />
           </span>
           <p className="m-onb-step">About</p>
           <h1 className="g-h1 mt-1.5">About GalaTayo</h1>
@@ -83,7 +83,7 @@ function AboutPage() {
         <div className="m-feat mt-5">
           {aboutHighlights.map(({ title, body, icon: Icon }) => (
             <section key={title}>
-              <Icon weight="duotone" aria-hidden="true" />
+              <Icon weight="light" aria-hidden="true" />
               <h3 className="g-h3 mt-3">{title}</h3>
               <p className="g-sm g-mut mt-1 leading-relaxed">{body}</p>
             </section>

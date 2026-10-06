@@ -320,7 +320,7 @@ function LegalPage({ type }: LegalPageProps) {
       <article className="m-legal">
         <header className="m-art-head border-0 pb-0">
           <span className="m-art-ic" aria-hidden="true">
-            {isTerms ? <Scales weight="duotone" /> : <ShieldCheck weight="duotone" />}
+            {isTerms ? <Scales weight="light" /> : <ShieldCheck weight="light" />}
           </span>
           <p className="m-onb-step">{isTerms ? 'Terms of service' : 'Privacy policy'}</p>
           <h1 className="g-h1 mt-1.5">{title}</h1>

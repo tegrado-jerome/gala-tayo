@@ -30,7 +30,7 @@ const starterPrompts: Array<{ label: string; prompt: string; icon: PhosphorIcon 
   { label: 'Budget picks', prompt: 'Suggest budget-friendly places to visit', icon: Coins },
 ]
 
-/** Tara, the GalaTayo AI: a coral sparkle avatar. */
+/** Tara, the GalaTayo AI: an ink sparkle avatar. */
 export function TaraAvatar({ large = false }: { large?: boolean }) {
   return (
     <span className={large ? 'm-tara is-lg' : 'm-tara'} aria-hidden="true">
@@ -215,7 +215,7 @@ const ChatMessageList = memo(function ChatMessageList({
         <div className="m-starters">
           {starterPrompts.map(({ label, prompt, icon: Icon }) => (
             <button key={label} type="button" className="m-starter" disabled={isLimitReached && isRegistered} onClick={() => onSend(prompt)}>
-              <Icon weight="duotone" aria-hidden="true" />
+              <Icon weight="light" aria-hidden="true" />
               {label}
             </button>
           ))}

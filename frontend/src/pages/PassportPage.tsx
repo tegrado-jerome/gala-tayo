@@ -254,7 +254,7 @@ function PassportPage({ session }: { session: Session }) {
                       const body = (
                         <>
                           <span className="me-thumb" aria-hidden="true">
-                            <MapPin weight="duotone" />
+                            <MapPin weight="light" />
                           </span>
                           <span className="me-tl-t">
                             <b>{checkin.name}</b>

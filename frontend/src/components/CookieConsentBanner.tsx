@@ -14,7 +14,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
 
   return (
     <section aria-label="Cookie consent" className="m-cookie flex-wrap sm:flex-nowrap">
-      <Cookie weight="duotone" aria-hidden="true" />
+      <Cookie weight="light" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="g-sm font-semibold leading-5">Cookies, okay lang?</p>
         <p className="g-xs g-mut leading-4">

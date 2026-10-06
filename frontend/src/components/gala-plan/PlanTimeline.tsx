@@ -1,4 +1,3 @@
-import { Fragment } from 'react'
 import { ArrowDown } from '@phosphor-icons/react/dist/csr/ArrowDown'
 import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp'
 import { Car } from '@phosphor-icons/react/dist/csr/Car'
@@ -34,82 +33,79 @@ function formatKm(km: number) {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`
 }
 
-function LegRow({ leg }: { leg: TravelLeg }) {
+function LegLine({ leg }: { leg: TravelLeg }) {
   const Icon = leg.mode === 'walk' ? PersonSimpleWalk : Car
   return (
-    <li className="g-tl-leg" aria-label={leg.mode === 'walk' ? `Walk about ${leg.minutes} minutes to the next stop` : `Grab about ${leg.minutes} minutes to the next stop`}>
-      <span className="g-tl-leg-ic" aria-hidden="true">
-        <Icon weight="bold" />
-      </span>
-      <span className="g-tl-leg-txt" aria-hidden="true">
+    <p className="pl-day-leg">
+      <Icon weight="light" aria-hidden="true" />
+      <span>
         <b>{leg.mode === 'walk' ? `${leg.minutes} min walk` : `Grab ~${leg.minutes} min`}</b>
-        {leg.mode === 'ride' ? <span>~{formatPeso(leg.fare)}</span> : null}
-        <span>{formatKm(leg.km)}</span>
+        {leg.mode === 'ride' ? ` · ~${formatPeso(leg.fare)}` : ''} · {formatKm(leg.km)}
+        <span className="sr-only"> to the next stop</span>
       </span>
-    </li>
+    </p>
   )
 }
 
-/** Wanderlog-style itinerary: numbered coral dots on a rail, photo on the right, travel time on the line between stops. */
+/** Day cards: serif time, stop photo, name and note, then the travel leg to the next stop. */
 function PlanTimeline({ stops, onMove, onRemove, animate = false }: PlanTimelineProps) {
   return (
-    <ol className="g-tl">
+    <ol className="pl-days">
       {stops.map((stop, index) => {
         const leg = index < stops.length - 1 ? estimateLeg(stop.place, stops[index + 1].place) : null
         const placeHref = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
         const meta = [stop.place.category, stop.place.area || stop.place.city, stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null].filter(Boolean)
         const images = [stop.place.image_url, getStaticPlaceImageUrlForSlug(stop.place.slug)].filter((url): url is string => Boolean(url))
-        const hasWhen = Boolean(stop.time || stop.minutes)
 
         return (
-          <Fragment key={stop.key}>
-            <li
-              className={animate ? 'motion-safe:animate-[g-up_320ms_var(--ease-g)_both]' : undefined}
-              style={animate ? { animationDelay: `${index * 70}ms` } : undefined}
-            >
-              <span className="g-tl-dot" aria-hidden="true">{index + 1}</span>
-              <div className="g-tl-stop">
-                <div className="g-tl-body">
-                  {hasWhen ? (
-                    <p className="g-tl-when">
-                      {stop.time ? <b>{stop.time}</b> : null}
-                      {stop.time && stop.minutes ? <span aria-hidden="true">·</span> : null}
-                      {stop.minutes ? <span>{stop.minutes} min</span> : null}
-                    </p>
-                  ) : null}
-                  <InternalLink href={placeHref} className="g-tl-name g-h3 line-clamp-2">
-                    <span className="sr-only">Stop {index + 1}: </span>
-                    {stop.place.name}
-                  </InternalLink>
-                  {meta.length > 0 ? <p className="g-sm g-mut mt-0.5 truncate">{meta.join(' · ')}</p> : null}
-                  {stop.note ? <p className="g-tl-note line-clamp-3">{stop.note}</p> : null}
-                </div>
-                <div className="g-tl-thumb">
-                  <PlaceImage candidates={images} category={stop.place.category} className="h-full w-full" />
-                </div>
-                {onMove || onRemove ? (
-                  <div className="g-tl-tools">
-                    {onMove ? (
-                      <>
-                        <Button variant="soft" size="sm" iconOnly onClick={() => onMove(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
-                          <ArrowUp />
-                        </Button>
-                        <Button variant="soft" size="sm" iconOnly onClick={() => onMove(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
-                          <ArrowDown />
-                        </Button>
-                      </>
-                    ) : null}
-                    {onRemove ? (
-                      <Button variant="soft" size="sm" iconOnly onClick={() => onRemove(index)} aria-label={`Remove ${stop.place.name}`}>
-                        <X />
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
+          <li
+            key={stop.key}
+            className={animate ? 'pl-day motion-safe:animate-[g-up_320ms_var(--ease-g)_both]' : 'pl-day'}
+            style={animate ? { animationDelay: `${index * 70}ms` } : undefined}
+          >
+            {stop.time || stop.minutes ? (
+              <p className="pl-day-when">
+                {stop.time ? <time>{stop.time}</time> : null}
+                {stop.minutes ? <span>{stop.minutes} min</span> : null}
+              </p>
+            ) : null}
+            <div className="pl-day-row">
+              <div className="pl-day-photo">
+                <PlaceImage candidates={images} category={stop.place.category} className="h-full w-full" />
+                <span className="pl-day-n" aria-hidden="true">{index + 1}</span>
               </div>
-            </li>
-            {leg ? <LegRow leg={leg} /> : null}
-          </Fragment>
+              <div className="min-w-0">
+                <InternalLink href={placeHref} className="pl-day-name line-clamp-2">
+                  <span className="sr-only">Stop {index + 1}: </span>
+                  {stop.place.name}
+                </InternalLink>
+                {meta.length > 0 ? <p className="pl-day-meta">{meta.join(' · ')}</p> : null}
+                {stop.note ? <p className="pl-day-note line-clamp-3">{stop.note}</p> : null}
+              </div>
+              {onMove || onRemove ? (
+                <div className="pl-day-tools">
+                  {onMove ? (
+                    <>
+                      <Button variant="soft" size="sm" iconOnly onClick={() => onMove(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
+                        <ArrowUp />
+                      </Button>
+                      <Button variant="soft" size="sm" iconOnly onClick={() => onMove(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
+                        <ArrowDown />
+                      </Button>
+                    </>
+                  ) : null}
+                  {onRemove ? (
+                    <Button variant="soft" size="sm" iconOnly onClick={() => onRemove(index)} aria-label={`Remove ${stop.place.name}`}>
+                      <X />
+                    </Button>
+                  ) : null}
+                </div>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+            </div>
+            {leg ? <LegLine leg={leg} /> : null}
+          </li>
         )
       })}
     </ol>

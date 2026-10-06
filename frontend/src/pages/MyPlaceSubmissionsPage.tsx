@@ -99,7 +99,7 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
             {submissions.map((submission) => (
               <article key={submission.id} className="me-status">
                 <span className="me-thumb" aria-hidden="true">
-                  <MapPinPlus weight="duotone" />
+                  <MapPinPlus weight="light" />
                   {submission.images[0]?.imageUrl ? <img src={submission.images[0].imageUrl} alt="" loading="lazy" decoding="async" /> : null}
                 </span>
                 <div className="min-w-0 flex-1">

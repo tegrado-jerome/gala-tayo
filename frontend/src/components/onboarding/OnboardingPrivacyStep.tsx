@@ -58,7 +58,7 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
               onClick={() => onUpdate({ profileVisibility: option.value })}
               className="m-choice"
             >
-              <Icon weight="duotone" aria-hidden="true" />
+              <Icon weight="light" aria-hidden="true" />
               <span className="min-w-0 pr-8">
                 <span className="g-h3 block">{option.title}</span>
                 <span className="g-sm g-mut mt-1 block leading-5">{option.description}</span>

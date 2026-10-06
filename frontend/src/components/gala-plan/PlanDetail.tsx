@@ -1,29 +1,25 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { ArrowsDownUp as ArrowDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
-import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { LinkSimple as Link2 } from '@phosphor-icons/react/dist/csr/LinkSimple'
-import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { DotsThree as MoreHorizontal } from '@phosphor-icons/react/dist/csr/DotsThree'
-import { Path } from '@phosphor-icons/react/dist/csr/Path'
 import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
 import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
 import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
-import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import DestructiveConfirmModal from '../DestructiveConfirmModal'
 import InternalLink from '../InternalLink'
+import PlaceImage from '../discover/PlaceImage'
 import { Avatar, AvatarStack, Button, Empty, Page, Sheet, Skeleton, Tabs, Tag, cx } from '../ui'
 import { MembersList, PollsPanel, RsvpPanel, personAvatar, personName } from './BarkadaPanel'
 import BudgetPanel from './BudgetPanel'
 import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
-import { TripCover, hasCoverPhoto } from './PlanSummaryCard'
+import { PlanCover } from './PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from './PlanTimeline'
 import { RecapStoryButton } from './RecapStory'
 import { getGalaPlanBarkada, setGalaPlanRsvp, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
@@ -38,6 +34,7 @@ import {
   type GalaPlanDetail,
 } from '../../utils/galaPlansApi'
 import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs } from '../../utils/galaPlanTrip'
+import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
@@ -99,22 +96,9 @@ function BackLink() {
   )
 }
 
-function StatCell({ icon: Icon, value, label, onClick, ariaLabel }: { icon: PhosphorIcon; value: ReactNode; label: ReactNode; onClick?: () => void; ariaLabel?: string }) {
-  const content = (
-    <>
-      <b>{value}</b>
-      <span>
-        <Icon aria-hidden="true" />
-        {label}
-      </span>
-    </>
-  )
-  if (!onClick) return <div className="g-tstat">{content}</div>
-  return (
-    <button type="button" className="g-tstat" onClick={onClick} aria-label={ariaLabel}>
-      {content}
-    </button>
-  )
+function joinNames(names: string[]) {
+  if (names.length <= 2) return names.join(' and ')
+  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`
 }
 
 function PlanDetail({ planId, session }: { planId: string; session?: Session | null }) {
@@ -180,11 +164,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       <Page className="pt-0 md:pt-6">
         <div aria-label="Loading plan" className="g-plan-split has-map">
           <div>
-            <Skeleton className="-mx-4 h-[240px] rounded-none md:mx-0 md:h-[320px] md:rounded-[var(--r-4)]" />
-            <Skeleton className="mt-5 h-8 w-2/3" />
-            <Skeleton className="mt-3 h-4 w-1/2" />
-            <Skeleton className="mt-5 h-[72px]" />
-            <Skeleton className="mt-8 h-40" />
+            <Skeleton className="-mx-4 h-[320px] rounded-none md:mx-0 md:h-[400px] md:rounded-[var(--r-4)]" />
+            <Skeleton className="mt-5 h-16" />
+            <Skeleton className="mt-6 h-6 w-1/3" />
+            <Skeleton className="mt-3 h-24" />
+            <Skeleton className="mt-6 h-24" />
           </div>
           <Skeleton className="g-only-desk h-[calc(100vh-128px)] rounded-[var(--r-4)]" />
         </div>
@@ -197,25 +181,26 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const description = parseGalaPlanDescription(plan.description).description
   const readyBarkada = barkada?.available ? barkada : null
   const going = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'going') : []
-  const maybeCount = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'maybe').length : 0
-  const perHead = estimatePerHead(plan.items, Math.max(1, going.length))
+  const maybe = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'maybe') : []
+  const passing = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'no') : []
+  const groupSize = Math.max(1, going.length)
+  const perHead = estimatePerHead(plan.items, groupSize)
+  const paidCount = going.filter((member) => member.paid).length
   const shareUrl = buildPrivateGalaPlanShareUrl(plan.id)
   const cover = plan.items.find((item) => item.place.image_url)?.place.image_url
   const coverStops = plan.items.map((item) => item.place)
-  const hasPhotos = hasCoverPhoto(coverStops)
+  const storyStop = plan.items.find((item) => item.place.image_url || getStaticPlaceImageUrlForSlug(item.place.slug))?.place
   const lastStop = plan.items[plan.items.length - 1]
   const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
   const hasRoute = plan.items.some((item) => item.place.latitude != null && item.place.longitude != null)
-  const coverIsMap = !hasPhotos && hasRoute && !isDesktop
   const hostName = plan.owner?.display_name?.trim() || (plan.owner?.username ? `@${plan.owner.username}` : null)
 
   const viewerMember = readyBarkada?.members.find((member) => member.user_id === session?.user?.id)
   const host = readyBarkada?.members.find((member) => member.is_owner)
   const hostFirstName = (host ? personName(host.profile) : plan.owner?.display_name || plan.owner?.username || 'the host').split(' ')[0]
   const owesHost = Boolean(viewerMember && !viewerMember.is_owner && viewerMember.rsvp === 'going' && perHead > 0)
-  const costLine = owesHost ? (viewerMember?.paid ? `settled with ${hostFirstName}` : `you owe ${hostFirstName}`) : perHead > 0 ? 'per head, est.' : 'nothing to split'
-  const costLabel = owesHost ? (viewerMember?.paid ? 'settled' : `owe ${hostFirstName}`) : 'each, est.'
+  const costLabel = owesHost ? (viewerMember?.paid ? `settled with ${hostFirstName}` : `you owe ${hostFirstName}`) : 'per head, est.'
 
   const moveStop = async (index: number, direction: -1 | 1) => {
     const next = [...plan.items]
@@ -336,7 +321,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           {cover ? (
             <img src={resizedMediaUrl(cover, 'card')} alt="" loading="lazy" />
           ) : (
-            <span className="grid place-items-center" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }} aria-hidden="true">
+            <span className="grid place-items-center" style={{ background: 'var(--fill)', color: 'var(--ink-2)' }} aria-hidden="true">
               <CalendarDays className="g-ic" />
             </span>
           )}
@@ -352,7 +337,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         </div>
       </figure>
       <div className="mt-3 flex gap-2">
-        <Button variant={plan.viewer_is_owner ? 'tara' : 'ink'} className="min-w-0 flex-1" onClick={() => void copyLink()}>
+        <Button variant="ink" className="min-w-0 flex-1" onClick={() => void copyLink()}>
           {copied ? <Check /> : <Link2 />}
           {copied ? 'Link copied' : 'Copy link'}
         </Button>
@@ -414,21 +399,39 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
       onClick={() => void heart()}
     >
-      <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
+      <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} />
       {plan.heart_count}
     </button>
   ) : null
 
-  const stats = [
-    <StatCell key="stops" icon={MapPin} value={stops.length} label={stops.length === 1 ? 'stop' : 'stops'} onClick={() => openTab('itinerary')} ariaLabel={`${stops.length} stops. Open itinerary`} />,
-    totalKm > 0 ? <StatCell key="km" icon={Path} value={totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`} label="route" /> : null,
-    <StatCell key="cost" icon={Coins} value={formatPeso(perHead)} label={costLabel} onClick={() => openTab('hatian')} ariaLabel={`${formatPeso(perHead)} ${costLine}. Open hatian`} />,
-    readyBarkada ? (
-      <StatCell key="going" icon={UsersThree} value={going.length} label="going" onClick={() => openTab('barkada')} ariaLabel={`${going.length} tara, ${maybeCount} baka. Open barkada`} />
-    ) : null,
-  ].filter(Boolean)
+  const coverSub = [
+    `${stops.length} ${stops.length === 1 ? 'stop' : 'stops'}`,
+    totalKm > 0 ? (totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`) : null,
+    readyBarkada && readyBarkada.members.length > 1 ? `${readyBarkada.members.length} in the barkada` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
-  const routeMap = hasRoute ? <PlanRouteMap stops={stops} className={isDesktop || coverIsMap ? undefined : 'mb-6'} label={`Route map for ${plan.title}`} /> : null
+  const rsvpLine =
+    going.length === 0 && maybe.length === 0
+      ? 'No replies yet'
+      : [`${going.length} going`, maybe.length ? `${maybe.length} maybe` : null].filter(Boolean).join(', ')
+  const rsvpSub =
+    maybe.length > 0
+      ? `${joinNames(maybe.map((member) => personName(member.profile).split(' ')[0]))} said baka`
+      : passing.length > 0
+        ? `${passing.length} can't make it`
+        : going.length <= 1
+          ? 'Send the link so the barkada can reply'
+          : 'Everyone who replied is in'
+
+  const splitCells = [
+    { value: formatPeso(perHead), label: costLabel },
+    groupSize > 1 ? { value: formatPeso(perHead * groupSize), label: 'group total' } : null,
+    groupSize > 1 && perHead > 0 ? { value: `${paidCount}/${groupSize}`, label: 'paid' } : { value: String(stops.length), label: stops.length === 1 ? 'stop' : 'stops' },
+  ].filter((cell): cell is { value: string; label: string } => cell !== null)
+
+  const routeMap = hasRoute ? <PlanRouteMap stops={stops} className={isDesktop ? undefined : 'mb-6'} label={`Route map for ${plan.title}`} /> : null
 
   return (
     <Page className="pt-0 md:pt-6 lg:pt-8">
@@ -456,58 +459,49 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
       <div className={cx('g-plan-split', hasRoute ? 'has-map' : 'mx-auto max-w-[760px]')}>
         <div className="min-w-0">
-          <div className="g-plan-cover">
-            {coverIsMap ? routeMap : <TripCover stops={coverStops} priority />}
-            <div className="g-plan-bar">
-              <InternalLink href="/gala-plans" className="g-round" ariaLabel="Back to plans">
-                <ArrowLeft />
-              </InternalLink>
-              {heroActions ? <div className="flex gap-2">{heroActions}</div> : null}
-            </div>
+          <PlanCover
+            stops={coverStops}
+            kicker={`Barkada plan · ${dateText ?? 'Date TBD'}`}
+            title={plan.title}
+            sub={coverSub}
+            bar={
+              <>
+                <InternalLink href="/gala-plans" className="g-round" ariaLabel="Back to plans">
+                  <ArrowLeft />
+                </InternalLink>
+                {heroActions ? <div className="flex gap-2">{heroActions}</div> : null}
+              </>
+            }
+          />
+
+          <div className="g-sm g-mut mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {days !== null ? <Tag tone={days === 0 ? 'ok' : 'neutral'}>{formatDaysUntil(days)}</Tag> : null}
+            {hostName ? (
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={hostName} size={20} />
+                <span className="truncate">Hosted by {hostName}</span>
+              </span>
+            ) : null}
+            {plan.viewer_is_owner ? <span>{plan.visibility === 'public' ? 'On your profile' : 'Link only'}</span> : null}
           </div>
 
-          <header className="mt-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {days !== null ? <Tag tone={days === 0 ? 'sea' : 'neutral'}>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
-              {plan.viewer_is_owner ? <span className="g-xs g-mut">{plan.visibility === 'public' ? 'On your profile' : 'Link only'}</span> : null}
-            </div>
-            <h1 className="g-h1 mt-2">{plan.title}</h1>
-            <div className="g-sm g-mut mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                {dateText ?? 'Any day'}
-              </span>
-              {hostName ? (
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={hostName} size={20} />
-                  <span className="truncate">Hosted by {hostName}</span>
-                </span>
-              ) : null}
-            </div>
-          </header>
-
-          <div className="g-tstats mt-4" style={{ ['--n' as string]: stats.length }}>{stats}</div>
-
-          {description ? <p className="g-sm mt-4 max-w-[65ch] leading-relaxed">{description}</p> : null}
+          {description ? <p className="mt-3 max-w-[65ch] text-[15px] leading-relaxed">{description}</p> : null}
           {notice ? <p role="status" className="g-sm mt-3 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{notice}</p> : null}
 
           {readyBarkada ? (
-            <div className="mt-4 flex min-h-14 items-center gap-3 rounded-[var(--r-3)] border border-[var(--line-2)] px-3 py-2">
-              {going.length > 0 ? (
-                <AvatarStack people={going.map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={30} />
-              ) : (
-                <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[var(--fill)]" aria-hidden="true">
-                  <UserPlus className="h-4 w-4" style={{ color: 'var(--ink-2)' }} />
-                </span>
-              )}
-              <button type="button" className="g-sm min-h-11 min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-[var(--ink)]" onClick={() => openTab('barkada')}>
-                <b>{going.length} tara</b>
-                <span className="g-mut"> · {maybeCount} baka</span>
+            <div className="g-rsvp-strip mt-5">
+              <button type="button" className="g-rsvp-strip-txt" onClick={() => openTab('barkada')}>
+                <b>{rsvpLine}</b>
+                <span>{rsvpSub}</span>
               </button>
-              <Button variant="soft" size="sm" onClick={() => setIsInviteOpen(true)}>
-                <UserPlus />
-                Invite
-              </Button>
+              {going.length + maybe.length > 0 ? (
+                <AvatarStack people={[...going, ...maybe].map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={32} />
+              ) : null}
+              {plan.viewer_is_owner ? (
+                <Button variant="line" size="sm" iconOnly aria-label="Invite the barkada" onClick={() => setIsInviteOpen(true)}>
+                  <UserPlus />
+                </Button>
+              ) : null}
             </div>
           ) : null}
 
@@ -517,18 +511,17 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             </div>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {plan.items.length > 0 ? <RecapStoryButton plan={plan} friends={going.length || readyBarkada?.members.length || 0} className="flex-1 lg:flex-none" /> : null}
-            <Button variant="line" className="g-only-desk" onClick={() => void share()}>
+          <div className="g-only-desk mt-4 flex flex-wrap gap-2">
+            <Button variant="line" onClick={() => void share()}>
               <Share />
               Share
             </Button>
-            {readyBarkada ? null : (
-              <Button variant="line" className="g-only-desk" onClick={() => setIsInviteOpen(true)}>
+            {plan.viewer_is_owner || !readyBarkada ? (
+              <Button variant="ink" onClick={() => setIsInviteOpen(true)}>
                 <UserPlus />
                 Invite barkada
               </Button>
-            )}
+            ) : null}
           </div>
 
           <div ref={tabsRef} className="mt-7 scroll-mt-20">
@@ -548,11 +541,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 />
               ) : (
                 <>
-                  {!isDesktop && !coverIsMap ? routeMap : null}
+                  {!isDesktop ? routeMap : null}
                   <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
-                  <div className="mt-5 flex flex-wrap gap-2 pl-10">
+                  <div className="mt-6 flex flex-wrap gap-2">
                     <Button variant="soft" size="sm" onClick={suggestNextStop}>
-                      <Sparkles style={{ color: 'var(--tara-ink)' }} />
+                      <Sparkles />
                       Suggest next stop
                     </Button>
                     {plan.viewer_is_owner && stops.length > 1 ? (
@@ -562,7 +555,35 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                       </Button>
                     ) : null}
                   </div>
-                  <p className="g-xs g-fnt mt-3 pl-10">Travel times and fares are rough Grab and walking estimates.</p>
+                  <p className="g-xs g-mut mt-3">Travel times and fares are rough Grab and walking estimates.</p>
+
+                  <section aria-labelledby="plan-split-title" className="mt-8">
+                    <h2 id="plan-split-title" className="g-h2 mb-3">Budget</h2>
+                    <button type="button" className="g-tstats" style={{ ['--n' as string]: splitCells.length }} onClick={() => openTab('hatian')} aria-label={`${splitCells.map((cell) => `${cell.value} ${cell.label}`).join(', ')}. Open hatian`}>
+                      {splitCells.map((cell) => (
+                        <span key={cell.label} className="g-tstat">
+                          <b>{cell.value}</b>
+                          <span>{cell.label}</span>
+                        </span>
+                      ))}
+                    </button>
+                  </section>
+
+                  <section className="g-story mt-6" aria-labelledby="plan-story-title">
+                    <span className="g-story-mock" aria-hidden="true">
+                      {storyStop ? (
+                        <PlaceImage candidates={[storyStop.image_url, getStaticPlaceImageUrlForSlug(storyStop.slug)].filter((url): url is string => Boolean(url))} category={storyStop.category} className="h-full w-full" />
+                      ) : (
+                        <span />
+                      )}
+                      <b>{plan.title}</b>
+                    </span>
+                    <div className="min-w-0">
+                      <h2 id="plan-story-title" className="g-story-t">Share as a story</h2>
+                      <p className="g-story-s">A 9:16 picture of the route for IG or FB stories.</p>
+                      <RecapStoryButton plan={plan} friends={going.length || readyBarkada?.members.length || 0} variant="line" size="sm" label="Make story" />
+                    </div>
+                  </section>
                 </>
               )
             ) : null}
@@ -584,7 +605,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             Share
           </Button>
           {plan.viewer_is_owner ? (
-            <Button variant="tara" className="min-w-0 flex-[1.5]" onClick={() => setIsInviteOpen(true)}>
+            <Button variant="ink" className="min-w-0 flex-[1.5]" onClick={() => setIsInviteOpen(true)}>
               <UserPlus />
               Invite barkada
             </Button>
@@ -594,7 +615,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               Sasama ka na
             </Button>
           ) : (
-            <Button variant="tara" className="min-w-0 flex-[1.5]" onClick={() => void joinPlan()}>
+            <Button variant="ink" className="min-w-0 flex-[1.5]" onClick={() => void joinPlan()}>
               Tara, sasama ako!
             </Button>
           )}

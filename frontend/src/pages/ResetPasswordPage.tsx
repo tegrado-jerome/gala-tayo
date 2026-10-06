@@ -117,7 +117,7 @@ function ResetPasswordPage() {
     return (
       <AuthCard
         bar="Reset password"
-        icon={<TriangleAlert weight="duotone" style={{ color: 'var(--warn)' }} />}
+        icon={<TriangleAlert weight="light" style={{ color: 'var(--warn)' }} />}
         title="Invalid or expired link"
         sub="This password reset link is no longer valid. Request a new one and use it right away."
       >

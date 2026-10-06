@@ -239,11 +239,11 @@ function GuestAuthPromptBody({
   return (
     <>
       <div className="flex items-start gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px]" style={{ background: 'var(--tara-soft)', color: 'var(--tara-ink)' }} aria-hidden="true">
-          <Icon weight="duotone" className="h-7 w-7" />
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--fill)] text-[var(--ink)]" aria-hidden="true">
+          <Icon weight="light" className="h-7 w-7" />
         </span>
         <div className="min-w-0 flex-1 pt-0.5">
-          <h2 id={titleId} className="g-h3 text-[17px]">
+          <h2 id={titleId} className="g-h2">
             {title}
           </h2>
           <p className="g-sm g-mut mt-1 leading-5">{description}</p>

@@ -25,7 +25,7 @@ button.me-num:not(:disabled) { cursor: pointer; }
 @media (min-width: 768px) { .me-card { padding: 28px 24px; gap: 20px; } .me-num b { font-size: 24px; } }
 
 /* ---------- Account rows (Airbnb profile tab) ---------- */
-.me-sec { margin-top: 32px; }
+.me-sec { margin-top: 36px; }
 .me-sec > h2 { font: 600 20px/1.2 var(--font-display); letter-spacing: -0.015em; margin-bottom: 4px; }
 .me-sec > .me-sec-sub { font-size: 13px; color: var(--ink-2); margin: -2px 0 8px; }
 .me-rows { display: flex; flex-direction: column; margin-inline: -8px; }
@@ -55,23 +55,62 @@ button.me-num:not(:disabled) { cursor: pointer; }
 [aria-checked='true'] .me-switch::after, input:checked + .me-switch::after { transform: translateX(20px); }
 input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-/* ---------- Plan tiles (Airbnb "past trips") ---------- */
-.me-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
-@media (min-width: 768px) { .me-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 20px; } }
+/* ---------- Contributor header (Tripadvisor profile: centred, serif name) ---------- */
+.me-head { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 8px; text-align: center; }
+.me-head-name { margin-top: 12px; max-width: 100%; font: 600 28px/1.15 var(--font-display); letter-spacing: -0.015em; overflow-wrap: anywhere; }
+.me-head-sub { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; max-width: 100%; font-size: 13px; color: var(--ink-2); }
+.me-head-bio { margin-top: 6px; max-width: 52ch; font-size: 15px; line-height: 1.55; }
+.me-head .me-social { margin-top: 2px; }
+@media (min-width: 768px) { .me-head-name { font-size: 34px; } }
+
+/* Counts row: serif numbers between hairlines */
+.me-cnt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 20px; padding: 14px 0; border-block: 1px solid var(--line); text-align: center; }
+.me-cnt-i { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 56px; color: var(--ink); text-decoration: none; }
+.me-cnt-i + .me-cnt-i { border-left: 1px solid var(--line); }
+.me-cnt-i b { font: 600 24px/1 var(--font-display); letter-spacing: -0.01em; }
+.me-cnt-i span { font-size: 12px; color: var(--ink-2); }
+.me-cnt-i:hover b { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.me-cnt-i:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-1); }
+@media (min-width: 768px) { .me-cnt-i b { font-size: 28px; } .me-cnt-i span { font-size: 13px; } }
+
+/* Earned badges: sand tiles, forest fill icons */
+.me-badges { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 4px; overflow-x: auto; list-style: none; scrollbar-width: none; }
+.me-badges::-webkit-scrollbar { display: none; }
+.me-badges li { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 104px; min-height: 96px; padding: 12px 6px; border-radius: var(--r-3); background: var(--fill); text-align: center; }
+.me-badges svg { width: 28px; height: 28px; margin-bottom: 4px; color: var(--sea); }
+.me-badges b { max-width: 100%; font-size: 12px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.me-badges span { font-size: 11px; color: var(--ink-2); }
+@media (min-width: 768px) { .me-badges { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; } }
+
+/* ---------- Trip tiles: photo with serif title over it ---------- */
+.me-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 10px; }
+@media (min-width: 768px) { .me-tiles { gap: 20px 16px; } }
 .me-tile { display: block; min-width: 0; color: inherit; text-decoration: none; }
-.me-tile-art { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--sea-soft); color: var(--sea); }
+.me-tile-art { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--fill); color: var(--ink-3); }
 .me-tile-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
+.me-tile-art.has-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0, 0, 0, 0.72)); }
 .me-tile:hover .me-tile-art img { transform: scale(1.03); }
-.me-tile-art .g-tag { position: absolute; top: 8px; left: 8px; }
-.me-tile-t { margin-top: 8px; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.me-tile-s { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-tile-art .g-tag { position: absolute; z-index: 1; top: 8px; left: 8px; }
+.me-tile-t { position: absolute; z-index: 1; left: 10px; right: 10px; bottom: 8px; color: var(--ink); font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.me-tile-art.has-photo .me-tile-t { color: #ffffff; }
+.me-tile-s { margin-top: 6px; font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--r-3); background: var(--fill); }
+
+/* Saved lists: sand pills with a round photo */
+.me-saved { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+.me-saved-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 16px 4px 4px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font-size: 14px; font-weight: 500; text-decoration: none; }
+.me-saved-pill:hover { background: var(--fill-2); }
+.me-saved-pill > img, .me-saved-pill > span { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; }
+.me-saved-pill > span { display: grid; place-items: center; background: var(--surface); }
+.me-saved-pill > span svg { width: 18px; height: 18px; }
+.me-saved-pill:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* ---------- Wishlists (Airbnb saved collections with a photo collage) ---------- */
 .me-wls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
 @media (min-width: 768px) { .me-wls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; } }
 @media (min-width: 1200px) { .me-wls { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .me-wl { display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
-.me-wl-art { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; aspect-ratio: 1 / 1; border-radius: var(--r-3); overflow: hidden; background: var(--surface); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); transition: box-shadow var(--t) var(--ease-g); }
+.me-wl-art { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; aspect-ratio: 1 / 1; border-radius: var(--r-3); overflow: hidden; background: var(--surface); transition: box-shadow var(--t) var(--ease-g); }
 .me-wl-art > * { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; background: var(--fill); color: var(--ink-3); }
 .me-wl-art > :first-child { grid-row: span 2; }
 .me-wl-art.is-1 > :first-child { grid-column: span 2; }
