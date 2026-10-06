@@ -315,7 +315,7 @@ function SaanTayoCard({ pool }: { pool: PhotoCardPlace[] }) {
       <InternalLink href="/saan-tayo" className="g-saan-main">
         <span className="min-w-0">
           <b>Saan tayo?</b>
-          <span>3 taps, we pick for your group</span>
+          <span>Bahala na! We deal 3 picks for the GC</span>
         </span>
         <span className="g-saan-go">Start</span>
       </InternalLink>

@@ -380,9 +380,9 @@ export default function SeoLandingPage({
               <Row href="/saan-tayo" className="!bg-[var(--tara-soft)] !border-transparent" action={<ChevronRight className="g-ic text-[var(--tara-ink)]" aria-hidden="true" />}>
                 <div className="g-h3 flex items-center gap-2 truncate">
                   <Shuffle className="h-4 w-4 shrink-0 text-[var(--tara-ink)]" aria-hidden="true" />
-                  Saan tayo? Pick 3 for me
+                  Saan tayo? Bahala na!
                 </div>
-                <div className="g-xs g-mut truncate">By city, budget and who you're with</div>
+                <div className="g-xs g-mut truncate">Near you, rain-smart, vote in the GC</div>
               </Row>
             </div>
           </aside>
