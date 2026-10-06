@@ -189,22 +189,38 @@ function RailSkeleton() {
   )
 }
 
+/** "Weekday mornings; chinese new year…" → "Weekday mornings": the first clause, sentence-cased. */
+function shortBestTime(value: string) {
+  const first = value.split(/[;(]/)[0].trim().replace(/[.,]$/, '')
+  return first.charAt(0).toUpperCase() + first.slice(1)
+}
+
 /** Picks (outside the rail) whose own best time to visit says weekday: a real hint that weekends get busy. */
 function WeekdayCard({ places }: { places: PlaceDetail[] }) {
-  const weekday = places.filter((place) => extraSlugs.includes(place.slug) && /^weekday/i.test(place.best_time_to_visit?.trim() ?? '')).slice(0, 2)
+  const weekday = places.filter((place) => extraSlugs.includes(place.slug) && /^weekday/i.test(place.best_time_to_visit?.trim() ?? '')).slice(0, 4)
   if (weekday.length === 0) return null
   return (
     <section className="min-w-0">
-      <SectionHead title="Mas okay sa weekday" sub="From each place’s best time to visit" />
-      {weekday.map((place) => (
-        <InternalLink key={place.slug} href={getPlaceHref(toPhotoCardPlace(place))} className="g-busy text-[var(--ink)] no-underline">
-          <UsersThree weight="fill" aria-hidden="true" />
-          <span className="min-w-0">
-            <b>{place.name}</b>
-            <span>Best time: {place.best_time_to_visit?.trim().toLowerCase()}</span>
-          </span>
-        </InternalLink>
-      ))}
+      <SectionHead title="Mas okay sa weekday" sub="Quieter on weekdays, per each place’s best time to visit" />
+      <ul className="g-weekday">
+        {weekday.map((place) => {
+          const photo = photoFor(place.slug)
+          return (
+            <li key={place.slug}>
+              <InternalLink href={getPlaceHref(toPhotoCardPlace(place))} className="g-weekday-item">
+                <span className="g-weekday-img">{photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <UsersThree weight="fill" aria-hidden="true" />}</span>
+                <span className="min-w-0">
+                  <b>{place.name}</b>
+                  <span>
+                    <UsersThree weight="fill" aria-hidden="true" />
+                    {shortBestTime(place.best_time_to_visit ?? '')}
+                  </span>
+                </span>
+              </InternalLink>
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }

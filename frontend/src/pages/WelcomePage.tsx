@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import HomeDiscover from '../components/home/HomeDiscover'
 import InternalLink from '../components/InternalLink'
@@ -6,8 +6,9 @@ import SeoHead from '../components/SeoHead'
 import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
 import { metroManilaAreas } from '../data/destinations'
 import { displayCityName } from '../utils/cityName'
+import { countPlacesByAreaSlug, loadCompactPlaces } from '../utils/compactPlaces'
 import type { NavigationSource } from '../utils/navigationLoading'
-import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
+import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
 
 const footerLinks = [
   { href: '/about', label: 'About' },
@@ -32,7 +33,38 @@ function Step({ n, title, body, art }: { n: number; title: string; body: string;
   )
 }
 
+const KNOWN_EMPTY_CITIES = new Set(['caloocan', 'malabon', 'muntinlupa', 'navotas', 'pateros', 'valenzuela'])
+
 function WelcomePage({ navigationSource = 'push' }: { navigationSource?: NavigationSource }) {
+  // City chips skip cities without a gala-worthy place (known empty ones first, exact counts once loaded).
+  const [cityAreas, setCityAreas] = useState(() => metroManilaAreas.filter((area) => !KNOWN_EMPTY_CITIES.has(area.slug)))
+  useEffect(() => {
+    let active = true
+    void loadCompactPlaces()
+      .then((places) => {
+        const counts = countPlacesByAreaSlug(places)
+        if (active) setCityAreas(metroManilaAreas.filter((area) => counts[area.slug]))
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Popular guides: only guides with enough gala-worthy places (same rule as /guides), never cinema or hotel lists.
+  const [guideTotals, setGuideTotals] = useState<Record<string, number> | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/data/place-listings/guides.json', { signal: controller.signal })
+      .then((response) => (response.ok && (response.headers.get('content-type') || '').includes('json') ? (response.json() as Promise<Array<{ slug: string; total: number }>>) : null))
+      .then((list) => list && setGuideTotals(Object.fromEntries(list.map((guide) => [guide.slug, guide.total]))))
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+  const popularGuides = SEO_LANDING_TARGETS.filter(
+    (target) => !['cinema', 'hotel'].includes(target.category ?? '') && (!guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
+  )
+
 
   useEffect(() => {
     const w = window as unknown as Record<string, (() => void) | undefined>
@@ -107,12 +139,13 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           />
         </ol>
 
-        <details className="group mt-10 max-w-[760px] text-[14px] text-[var(--ink-2)]">
+        <details className="group mt-10 text-[14px] text-[var(--ink-2)]">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold text-[var(--ink)] [&::-webkit-details-marker]:hidden">
             About GalaTayo
             <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+            <div className="flex flex-col gap-2">
             <p>
               Gala Tayo (written GalaTayo) is a free place discovery app for gala-worthy places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
               the whole idea: find a place, invite the barkada, and go.
@@ -129,11 +162,12 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               </InternalLink>
               .
             </p>
-          </div>
+            </div>
 
-          <h3 className="mt-5 font-semibold text-[var(--ink)]">Browse Metro Manila by city</h3>
+            <div>
+          <h3 className="font-semibold text-[var(--ink)]">Browse Metro Manila by city</h3>
           <ul className="g-chips mt-2">
-            {metroManilaAreas.map((area) => (
+            {cityAreas.map((area) => (
               <li key={area.slug}>
                 <InternalLink href={`/places/${area.slug}`} className="g-chip">
                   {displayCityName(area.name)}
@@ -154,10 +188,12 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             </InternalLink>{' '}
             Pick a city, budget per head and who you&apos;re with, and get 3 places to go.
           </p>
+            </div>
+          </div>
 
           <h3 className="mt-5 font-semibold text-[var(--ink)]">Popular guides</h3>
           <ul className="g-chips mt-2">
-            {SEO_LANDING_TARGETS.map((target) => (
+            {popularGuides.map((target) => (
               <li key={target.slug}>
                 <InternalLink href={`/guides/${target.slug}`} className="g-chip">
                   {target.label}
