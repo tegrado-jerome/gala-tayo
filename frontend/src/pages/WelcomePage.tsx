@@ -82,12 +82,13 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         jsonLd={buildBrandJsonLd()}
       />
       <Page className="pb-10 lg:pb-16">
-        <header data-navigation-source={navigationSource} className="mb-5 min-w-0 md:mb-7">
-          <h1 className="g-d1">Gala tayo. Kami na sa plano.</h1>
-          <p className="g-mut mt-2 text-[16px]">Find the place, vote on the date, split the bill.</p>
-        </header>
-
         <HomeDiscover
+          headline={
+            <header data-navigation-source={navigationSource} className="mb-5 min-w-0 md:mb-7">
+              <h1 className="g-d1">Gala tayo. Kami na sa plano.</h1>
+              <p className="g-mut mt-2 text-[16px]">Find the place, vote on the date, split the bill.</p>
+            </header>
+          }
           top={
             <div className="g-cta">
               <p>

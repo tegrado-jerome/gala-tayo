@@ -116,6 +116,28 @@ function WhereTo() {
   )
 }
 
+// Wide screens only: three iconic places balance the hero (the editor's pick below is Fort Santiago).
+const HERO_SLUGS = [
+  { slug: 'chocolate-hills-carmen', label: 'Chocolate Hills, Bohol' },
+  { slug: 'el-nido-tour-a-lagoons', label: 'El Nido, Palawan' },
+  { slug: 'batad-rice-terraces-banaue', label: 'Batad, Ifugao' },
+]
+
+function HeroCollage() {
+  const photos = HERO_SLUGS.map((item) => ({ ...item, photo: getPlaceCardPhoto(item.slug) })).filter((item) => item.photo)
+  if (photos.length < 3) return null
+  return (
+    <div className="g-hero-collage" aria-hidden="true">
+      {photos.map((item) => (
+        <figure key={item.slug}>
+          <img src={item.photo ?? ''} alt="" loading="lazy" decoding="async" />
+          <figcaption>{item.label}</figcaption>
+        </figure>
+      ))}
+    </div>
+  )
+}
+
 const TABS: Array<{ id: HomeTab; label: string; icon: typeof Compass }> = [
   { id: 'things', label: 'Things to do', icon: Compass },
   { id: 'food', label: 'Food', icon: ForkKnife },
@@ -334,9 +356,14 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
 
   return (
     <div className={cx('min-w-0', className)}>
-      {headline}
-      <WhereTo />
-      {top}
+      <div className="g-hero">
+        <div className="g-hero-main">
+          {headline}
+          <WhereTo />
+          {top}
+        </div>
+        <HeroCollage />
+      </div>
       <TextTabs active={tab} onChange={setTab} />
 
       <div id="home-tab-panel" role="tabpanel" aria-labelledby={`home-tab-${tab}`} className="min-w-0">

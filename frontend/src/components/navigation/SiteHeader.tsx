@@ -39,8 +39,8 @@ export function BrandLogo({ className = '' }: { className?: string }) {
 function SiteHeader({ pathname }: { pathname: string }) {
   const { currentUser, currentProfile, session, isGuest } = useAppUser()
   const isMinimal = MINIMAL_PATHS.some((path) => isPath(pathname, path))
-  // The search page has its own big search bar, so the header one would be a duplicate.
-  const showSearch = !isPath(pathname, '/search')
+  // Search and Home have their own big search box, so the header one would be a duplicate there.
+  const showSearch = !isPath(pathname, '/search') && pathname !== '/' && !isPath(pathname, '/home')
   const showChat = !NO_CHAT_PATHS.some((path) => isPath(pathname, path))
 
   return (
@@ -61,7 +61,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
               ))}
             </nav>
 
-            <div className="g-head-search">
+            {showSearch || showChat ? <div className={showSearch ? 'g-head-search' : 'g-head-search g-head-search-chat'}>
               {showSearch ? <InternalLink href="/search" className="g-head-search-link" ariaLabel="Search places">
                 <Search className="g-ic" aria-hidden="true" />
                 <span className="truncate">Search places around the Philippines</span>
@@ -72,7 +72,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
                   Ask AI
                 </button>
               ) : null}
-            </div>
+            </div> : null}
 
             <div className="g-head-right">
               {showSearch ? (
