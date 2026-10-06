@@ -1733,9 +1733,8 @@ function PlaceDetailView({
   }
   const quickTake = cleanString(place.description) || cleanString(place.reason)
   const commuteText = cleanString(place.commute_access)
-  // Team posts are editor's notes, not visitor reviews: shown on their own and never counted as tips.
+  // Old team posts are not visitor reviews, so they are never shown or counted as tips.
   const isTeamNote = (comment: PlaceComment) => TEAM_COMMENT_PREFIX.test(comment.comment)
-  const teamNotes = comments.filter((comment) => !isCommentDeleted(comment) && isTeamNote(comment))
   const memberComments = comments.filter((comment) => !isTeamNote(comment))
   const visibleCommentCount = countThreadComments(memberComments)
   const closePlaceConcern = () => {
@@ -2527,16 +2526,6 @@ function PlaceDetailView({
             </Button>
           </section>
 
-          {teamNotes.length > 0 ? (
-            <aside className="pd-sec pd-team-note" aria-labelledby="place-team-note">
-              <p className="g-kicker">From the GalaTayo team</p>
-              <h2 id="place-team-note" className="pd-sec-title">Editor’s note</h2>
-              {teamNotes.slice(0, 1).map((note) => (
-                <p key={note.id} className="pd-prose">{note.comment.replace(TEAM_COMMENT_PREFIX, '')}</p>
-              ))}
-              <p className="g-xs g-mut mt-2">Written by our team to help you plan. Not a visitor review.</p>
-            </aside>
-          ) : null}
 
           <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
             <h2 id="place-reviews" className="pd-sec-title">
