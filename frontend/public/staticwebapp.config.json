@@ -294,6 +294,10 @@
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
+      "route": "/og/*",
+      "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
       "route": "/data/place-listings/*",
       "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
     },

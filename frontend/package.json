@@ -13,7 +13,8 @@
     "test:unit": "node --experimental-strip-types --test src/utils/guestSessionCore.test.ts src/utils/barkadaVotes.test.ts src/utils/shareFeatures.test.ts",
     "validate": "npm run lint -- --quiet && npm run build",
     "preview": "vite preview",
-    "prerender": "node scripts/prerender.mjs"
+    "prerender": "node scripts/prerender.mjs",
+    "seo:check": "node scripts/seo/check-pages.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

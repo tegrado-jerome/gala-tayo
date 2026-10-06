@@ -5,6 +5,8 @@ import { getPublicSiteOrigin } from './site'
 type OpenGraphImage = {
   url: string
   alt?: string
+  width?: number
+  height?: number
 }
 
 type SeoConfig = {
@@ -154,11 +156,12 @@ function applySeo(config: SeoConfig) {
   updateOrCreateMeta('meta[property="og:locale"]', { property: 'og:locale', content: locale })
   updateOrCreateMeta('meta[property="og:image"]', { property: 'og:image', content: imageUrl })
   updateOrCreateMeta('meta[property="og:image:alt"]', { property: 'og:image:alt', content: imageAlt })
-  if (config.image?.url) {
-    removeBySelector('meta[property="og:image:width"], meta[property="og:image:height"]')
+  const imageSize = config.image?.url ? config.image : { width: 1200, height: 630 }
+  if (imageSize.width && imageSize.height) {
+    updateOrCreateMeta('meta[property="og:image:width"]', { property: 'og:image:width', content: String(imageSize.width) })
+    updateOrCreateMeta('meta[property="og:image:height"]', { property: 'og:image:height', content: String(imageSize.height) })
   } else {
-    updateOrCreateMeta('meta[property="og:image:width"]', { property: 'og:image:width', content: '1200' })
-    updateOrCreateMeta('meta[property="og:image:height"]', { property: 'og:image:height', content: '630' })
+    removeBySelector('meta[property="og:image:width"], meta[property="og:image:height"]')
   }
   updateOrCreateMeta('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' })
   updateOrCreateMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: title })

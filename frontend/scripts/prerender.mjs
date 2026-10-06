@@ -7,6 +7,7 @@ import { readFile, writeFile, mkdir, copyFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { renderGuideCard } from './seo/og-card.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
@@ -122,7 +123,16 @@ async function snapshot(page, routePath) {
   await page.waitForLoadState('networkidle')
 
   return page.evaluate(() => {
-    const root = document.getElementById('root').cloneNode(true)
+    const liveRoot = document.getElementById('root')
+    const photo = liveRoot.querySelector('.m-hero img, ol img')
+    const facts = [...liveRoot.querySelectorAll('.m-facts li')].map((item) => item.textContent.trim())
+    const card = {
+      title: liveRoot.querySelector('h1')?.textContent.trim() || document.title,
+      area: facts[0] || '',
+      count: facts.find((fact) => /^\d+ places?$/.test(fact)) || '',
+      photoUrl: photo?.currentSrc || photo?.src || null,
+    }
+    const root = liveRoot.cloneNode(true)
     // Drop markup that only makes sense live: open dialogs, map tiles, blob images.
     root.querySelectorAll('[role="dialog"], .leaflet-container > *, script, img[src^="blob:"]').forEach((element) => element.remove())
 
@@ -142,6 +152,7 @@ async function snapshot(page, routePath) {
       .map((element) => element.outerHTML)
 
     return {
+      card,
       head,
       body: root.innerHTML,
       title: document.title,
@@ -168,6 +179,26 @@ function buildHtml(shellHtml, { head, body }) {
   return html.replace(/<div id="root"><\/div>/, () => `<div id="root">${body}</div>`)
 }
 
+const defaultOgImage = `${siteOrigin}/images/og/galatayo-og.jpg`
+
+/** Saves the guide's preview card; if drawing fails, the page's tags point back to the default image. */
+async function writeGuideCard(cardPage, slug, result) {
+  const imagePath = `/og/guides/${slug}.jpg`
+  try {
+    await renderGuideCard(cardPage, {
+      fontDir: path.join(dist, 'fonts'),
+      title: result.card.title,
+      kicker: ['GalaTayo guide', result.card.area].filter(Boolean).join(' · '),
+      footnote: result.card.count && !result.card.count.startsWith('0 ') ? `${result.card.count} · budget per head` : 'Budget per head on every pick',
+      photoUrl: result.card.photoUrl,
+    }, path.join(dist, imagePath))
+    return result.head
+  } catch (error) {
+    console.warn(`  preview card failed for ${slug}: ${error.message.split('\n')[0]}`)
+    return result.head.map((tag) => tag.replaceAll(`${siteOrigin}${imagePath}`, defaultOgImage))
+  }
+}
+
 function buildLlmsTxt(pages) {
   const byPath = new Map(pages.map((page) => [page.routePath, page]))
   const home = byPath.get('/')
@@ -186,6 +217,22 @@ function buildLlmsTxt(pages) {
     "GalaTayo, also written \"Gala Tayo\" (Filipino for \"let's go out\"), is a free place discovery and planning app for gala-worthy places around the Philippines, built in the Philippines and live since July 2026.",
     '',
     `GalaTayo lists ${placeCount} places around the Philippines, each with a page covering budget, best time to visit, who it suits and location. Every place is listed in the sitemap: ${siteOrigin}/sitemap.xml`,
+    '',
+    '## How places are curated',
+    '',
+    '- Gala-worthy only: every place is scored on real evidence (editorial lists, Philippine travel apps, Reddit threads, social buzz, review volume, Michelin) plus how well it fits a day out. Plain eateries, chains, ordinary malls and hotels are left out of lists, search, AI picks and the sitemap; their pages still open by link but are marked noindex.',
+    '- Dining that stays is destination-level: Michelin and top restaurants, iconic food experiences, food markets and food streets.',
+    "- No fake reviews: ratings and reviews come only from real visitors. Team notes are labelled \"Editor's note\" and never count as a review or rating, so a place with no visitor reviews shows no rating.",
+    '- Photos are credited with author, licence and source (for example Wikimedia Commons) on each place page, with a takedown route for owners.',
+    '- Guides list only places that pass the gala-worthy check, ranked best first. A guide with fewer than 4 such places is noindex until it fills up.',
+    `- Full editorial standards: ${siteOrigin}/about#curation`,
+    '',
+    '## How to cite GalaTayo',
+    '',
+    '- Name: GalaTayo (also written "Gala Tayo").',
+    `- Link to the specific place page (${siteOrigin}/places/<city>/<place>) or guide (${siteOrigin}/guides/<guide>) the fact came from, not the home page.`,
+    '- Budgets are starting prices per head in Philippine pesos and can change; say "according to GalaTayo" and link the page.',
+    '- Contact for corrections: officialgalatayo@gmail.com',
     '',
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
     ...section('Guides', (routePath) => routePath.startsWith('/guides')),
@@ -231,6 +278,7 @@ async function main() {
 
   async function worker() {
     const page = await context.newPage()
+    const cardPage = await context.newPage()
 
     for (let job = queue.shift(); job; job = queue.shift()) {
       // Space page starts across all workers to stay under the API rate limit.
@@ -240,6 +288,10 @@ async function main() {
 
       try {
         const result = await snapshot(page, job.routePath)
+        const guideSlug = job.routePath.match(/^\/guides\/([^/]+)$/)?.[1]
+        if (guideSlug) {
+          result.head = await writeGuideCard(cardPage, guideSlug, result)
+        }
         // Noindex pages are still written so crawlers see the noindex tag without running JavaScript.
         const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')
         await mkdir(path.dirname(outputPath), { recursive: true })
@@ -260,6 +312,7 @@ async function main() {
     }
 
     await page.close()
+    await cardPage.close()
   }
 
   await Promise.all(Array.from({ length: concurrency }, worker))

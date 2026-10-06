@@ -1,6 +1,7 @@
 import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getPublicSiteOrigin } from './site'
+import destinationData from '../data/phDestinations.json'
 import seoGuides from '../data/seoGuides.json'
 
 type SeoLandingTarget = {
@@ -62,6 +63,9 @@ function buildBrandJsonLd() {
       description: BRAND_DESCRIPTION,
       url: `${origin}/`,
       logo: `${origin}/favicon.png`,
+      foundingDate: '2026-07',
+      email: 'officialgalatayo@gmail.com',
+      publishingPrinciples: `${origin}/about#curation`,
       areaServed: { '@type': 'Country', name: 'Philippines' },
     },
   ]
@@ -109,17 +113,36 @@ const CATEGORY_NOTES: Record<string, (area: string) => string> = {
   cinema: (area) => `Cinemas in ${area} and what to pair them with before or after the movie.`,
 }
 
-function getRelatedLandingTargets(target: SeoLandingTarget, limit = 6) {
-  const score = (candidate: SeoLandingTarget) =>
-    (candidate.areaSlug && candidate.areaSlug === target.areaSlug ? 2 : 0) +
-    (candidate.goodFor && candidate.goodFor === target.goodFor ? 1 : 0) +
-    (candidate.category && candidate.category === target.category ? 1 : 0)
+/** The region an area slug belongs to: a city's region, a region itself, or a province's region ("bohol" is in Central Visayas). */
+function getRegionSlugForArea(areaSlug: string | null | undefined) {
+  if (!areaSlug) return null
+  const region = destinationData.regions.find((candidate) => candidate.slug === areaSlug || candidate.provinces.some((province) => province.slug === areaSlug || province.cities.some((city) => city.slug === areaSlug)))
+  return region?.slug ?? null
+}
 
-  return SEO_LANDING_TARGETS.filter((candidate) => candidate.slug !== target.slug)
-    .map((candidate) => ({ candidate, score: score(candidate) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map(({ candidate }) => candidate)
+/** City or region page with every place for a guide's area; province guides link to their region. */
+function getGuideAreaHub(target: SeoLandingTarget) {
+  const hubSlug = getAreaLabelBySlug(target.areaSlug) ? target.areaSlug : getRegionSlugForArea(target.areaSlug)
+  const name = getAreaLabelBySlug(hubSlug)
+  return hubSlug && name ? { href: `/places/${hubSlug}`, name } : null
+}
+
+const guideKind = (target: SeoLandingTarget) => target.category || (target.goodFor ? `for:${target.goodFor}` : 'things-to-do')
+
+/** Guides for the same area (or region) first, then the same kind of guide elsewhere: the internal links between landing pages. */
+function getRelatedLandingTargets(target: SeoLandingTarget) {
+  const region = getRegionSlugForArea(target.areaSlug)
+  const others = SEO_LANDING_TARGETS.filter((candidate) => candidate.slug !== target.slug)
+  const nearby = others
+    .filter((candidate) => region && getRegionSlugForArea(candidate.areaSlug) === region)
+    .sort((a, b) => Number(b.areaSlug === target.areaSlug) - Number(a.areaSlug === target.areaSlug) || Number(guideKind(b) === guideKind(target)) - Number(guideKind(a) === guideKind(target)))
+    .slice(0, 4)
+  const similar = others.filter((candidate) => guideKind(candidate) === guideKind(target) && !nearby.includes(candidate)).slice(0, 4)
+  return { nearby, similar }
+}
+
+function getGuideOgImagePath(slug: string) {
+  return `/og/guides/${encodeURIComponent(slug)}.jpg`
 }
 
 function getLandingPath(slug: string) {
@@ -207,10 +230,10 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     faqs: [
       {
         question: `How are the places in this guide picked?`,
-        answer: `Every place passed our gala-worthy check: worth the trip, still open, and with real details on budget, best time to visit and who it suits. They are ranked by that score, best first.`,
+        answer: `Only gala-worthy places make the list. Each one is scored on real evidence, like editorial lists, Philippine travel apps, Reddit threads, review volume and Michelin, plus how well it fits a day out. Plain eateries, chains and ordinary malls are left out, and the rest are ranked best first.`,
       },
       {
-        question: `Can I plan a day around ${h1.toLowerCase()}?`,
+        question: `Can I plan a whole day from this guide?`,
         answer: `Yes. Save the places you like, then start a plan: pick a date, invite the barkada with one link, and split the budget in the app.`,
       },
     ],
@@ -227,6 +250,8 @@ export {
   MIN_INDEXABLE_GUIDE_PLACES,
   buildLandingMetadata,
   getRelatedLandingTargets,
+  getGuideAreaHub,
+  getGuideOgImagePath,
   getLandingPath,
   getLandingTargetBySlug,
   getGuideSubtitle,

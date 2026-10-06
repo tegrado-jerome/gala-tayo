@@ -553,6 +553,120 @@
       "indoor activities metro manila for adults",
       "indoor activities for kids in metro manila"
     ],
+    "addedAt": "2026-10-06",
+    "description": "Indoor things to do in Metro Manila when it pours: The Mind Museum, Ayala Museum, Art in Island, Star City and cafes worth the trip.",
+    "intro": "Rain doesn't have to cancel the gala. Every pick here is indoors, from The Mind Museum and Ayala Museum to Star City's rides, so you only need to get there dry."
+  },
+  {
+    "slug": "date-ideas-in-makati",
+    "label": "Date Ideas in Makati",
+    "areaSlug": "makati",
+    "goodFor": "date",
+    "keywords": [
+      "date ideas in makati",
+      "date spots in makati",
+      "saan mag date sa makati",
+      "romantic restaurants in makati",
+      "date night makati"
+    ],
+    "description": "Date ideas in Makati: dinner at Toyo Eatery or Blackbird, Ayala Museum, Salcedo market mornings and rooftop drinks, with budgets per head.",
+    "intro": "Makati does date night at every price point. Start at Ayala Museum, walk Ayala Triangle Gardens at dusk, then go big at Toyo Eatery or keep it easy over yakitori in Little Tokyo.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "weekend-getaways-from-manila",
+    "label": "Weekend Getaways from Manila",
+    "areaSlug": "calabarzon",
+    "displayAreaName": "Calabarzon",
+    "keywords": [
+      "weekend getaways from manila",
+      "road trips from manila",
+      "out of town trips near manila",
+      "day trips from manila",
+      "weekend trip near manila"
+    ],
+    "description": "Weekend getaways a drive from Manila: Masungi, Anilao dives, Tagaytay dinners, Taal heritage houses and Lucban, with budgets per head.",
+    "intro": "You don't need a flight for a proper break. Rizal, Cavite, Laguna, Batangas and Quezon put mountain trails, dive sites, heritage towns and Tagaytay's ridge-view dinners a few hours' drive from Manila.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-bohol",
+    "label": "Things to Do in Bohol",
+    "areaSlug": "bohol",
+    "displayAreaName": "Bohol",
+    "keywords": [
+      "things to do in bohol",
+      "bohol tourist spots",
+      "bohol itinerary",
+      "panglao things to do",
+      "bohol countryside tour"
+    ],
+    "description": "Things to do in Bohol: the Chocolate Hills, tarsiers in Corella, the Loboc River, Balicasag snorkeling and Alona Beach, with budgets per head.",
+    "intro": "Bohol rewards a road trip. Do the countryside loop for the Chocolate Hills, the tarsiers in Corella and lunch on the Loboc River, then give Panglao a full day for Balicasag and Alona Beach.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-palawan",
+    "label": "Things to Do in Palawan",
+    "areaSlug": "palawan",
+    "displayAreaName": "Palawan",
+    "keywords": [
+      "things to do in palawan",
+      "palawan tourist spots",
+      "palawan itinerary",
+      "el nido or coron",
+      "palawan island hopping"
+    ],
+    "description": "Things to do in Palawan: El Nido island hopping, Coron's Kayangan Lake, the Underground River and Nacpan Beach, with budgets per head.",
+    "intro": "Palawan is three trips in one: El Nido's lagoons, Coron's lakes and Puerto Princesa's Underground River. Pick one base, or two if you have a week, because the trip between them takes most of a day.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-la-union",
+    "label": "Things to Do in La Union",
+    "areaSlug": "la-union",
+    "displayAreaName": "La Union",
+    "keywords": [
+      "things to do in la union",
+      "la union tourist spots",
+      "elyu itinerary",
+      "san juan la union",
+      "tangadan falls"
+    ],
+    "description": "Things to do in La Union beyond the surf: El Union Coffee in San Juan, Tangadan Falls, Ma-Cho Temple and halo-halo in San Fernando.",
+    "intro": "Come for the San Juan surf, stay for the rest of La Union. Grab coffee at El Union, hike to Tangadan Falls, then cool down with halo-halo in San Fernando before the climb to Ma-Cho Temple.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-batangas",
+    "label": "Things to Do in Batangas",
+    "areaSlug": "batangas",
+    "displayAreaName": "Batangas",
+    "keywords": [
+      "things to do in batangas",
+      "batangas tourist spots",
+      "batangas beaches",
+      "anilao diving",
+      "hikes in batangas"
+    ],
+    "description": "Things to do in Batangas: Anilao diving, Masasa Beach, Fortune Island, Taal heritage houses and day hikes up Batulao and Pico de Loro.",
+    "intro": "Batangas is Manila's closest beach-and-mountain fix. Dive Anilao, island-hop to Fortune Island or Masasa, walk Taal's ancestral houses, and save a dry-season morning for Pico de Loro or Batulao.",
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "instagrammable-spots-in-metro-manila",
+    "label": "Instagrammable Spots in Metro Manila",
+    "areaSlug": "metro-manila",
+    "goodFor": "photo-spot",
+    "keywords": [
+      "instagrammable places in manila",
+      "photo spots in metro manila",
+      "aesthetic places in manila",
+      "instagrammable spots metro manila",
+      "pictorial spots manila"
+    ],
+    "description": "Instagrammable spots in Metro Manila: Intramuros walls, San Agustin Church, Binondo streets, Ayala Triangle and Art in Island, with budgets per head.",
+    "intro": "Manila's best backdrops are mostly old and mostly free. Shoot Intramuros and Fort Santiago in the soft light before 9 AM, then head to Binondo for the color and the food.",
     "addedAt": "2026-10-06"
   }
 ]

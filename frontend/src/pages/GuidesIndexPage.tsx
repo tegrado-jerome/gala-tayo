@@ -32,10 +32,21 @@ function GuidesIndexPage() {
       '@type': 'CollectionPage',
       name: `Gala guides | ${BRAND_NAME}`,
       url: `${origin}/guides`,
+      isPartOf: { '@id': `${origin}/#website` },
+      mainEntity: { '@id': `${origin}/guides#list` },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+        { '@type': 'ListItem', position: 2, name: 'Guides', item: `${origin}/guides` },
+      ],
     },
     {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
+      '@id': `${origin}/guides#list`,
       itemListElement: SEO_LANDING_TARGETS.map((guide, index) => ({
         '@type': 'ListItem',
         position: index + 1,
