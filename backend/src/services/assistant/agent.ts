@@ -128,7 +128,8 @@ async function runToolPlan(plan: ToolPlan, context: ToolContext, ledger: ToolLed
   return { results, slow: Promise.all(slow) };
 }
 
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms).unref?.());
+// Not unref'd: if the weather lookup never answers, this timer is what lets the request go on.
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 type ModelOutcome = { text: string; provider: AssistantProvider };
 type ModelCall = { system: string; turns: ModelTurn[]; tools: ToolDeclaration[]; forceTool: boolean; grounded: boolean; maxOutputTokens: number };
