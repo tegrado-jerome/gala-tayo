@@ -14,5 +14,5 @@ test('index.html preloads the photo the editor\'s pick really shows', () => {
   const leadPhoto = cardPhotos[slug].replace(/-card\.webp$/, '.webp')
   const preloadTemplate = read('../../index.html').match(/var hero = '([^']+)'/)?.[1]
   assert.ok(preloadTemplate, 'hero preload not found in index.html')
-  assert.equal(preloadTemplate.replace('%W', '1280'), resizedMediaUrl(leadPhoto, 'hero'))
+  assert.equal(preloadTemplate, resizedMediaUrl(leadPhoto, 'hero'))
 })

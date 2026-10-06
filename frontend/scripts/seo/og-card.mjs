@@ -6,8 +6,8 @@ import path from 'node:path'
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`)
 
-// Card photos come from the 640px card size; the preview needs the 1280px one.
-const largePhoto = (url) => url?.replace('/cdn-cgi/image/width=640,', '/cdn-cgi/image/width=1280,') ?? null
+// Card photos are the 800px files; the preview uses the 1600px original.
+const largePhoto = (url) => url?.replace(/-card\.webp$/, '.webp') ?? null
 
 // The card is drawn on about:blank, so fonts are inlined rather than fetched cross-origin.
 const fontCache = new Map()

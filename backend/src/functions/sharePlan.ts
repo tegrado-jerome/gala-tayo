@@ -19,9 +19,9 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 }
 
-/** A 1200x630 JPG crop of a stop photo for link previews (Cloudflare resizing on the media domain). */
+/** A stop photo for link previews, served as stored (no Cloudflare transformations: the free quota is small). */
 export function socialImageUrl(storageKey: string) {
-  return `${getR2PublicBaseUrl()}/cdn-cgi/image/width=1200,height=630,fit=cover,quality=80,format=jpeg,onerror=redirect/${storageKey.replace(/^\/+/, "")}`;
+  return `${getR2PublicBaseUrl()}/${storageKey.replace(/^\/+/, "").replace(/-card\.webp$/, ".webp")}`;
 }
 
 /** "[gala_date:2026-10-10]" at the start of a plan description -> "Sat, Oct 10". */
