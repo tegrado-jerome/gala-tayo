@@ -29,7 +29,7 @@ import {
   logAskAiMapsError,
   uniqueQueries,
 } from "./askAiMaps/askAiMapsHelpers";
-import { resolveAskAiActor } from "../utils/askAiActor";
+import { isAskAiIpAllowed, resolveAskAiActor } from "../utils/askAiActor";
 import {
   getAskAiRequestId,
   isAskAiRequestCancelledError,
@@ -109,6 +109,21 @@ export async function askAiMapsRequest(
 
   try {
     const actor = await resolveAskAiActor(request);
+
+    if (!(await isAskAiIpAllowed(request, actor))) {
+      return {
+        status: 429,
+        headers: buildResponseHeaders(requestId),
+        jsonBody: {
+          ok: false,
+          error: "rate_limited",
+          message: "Too many Ask AI requests. Try again in a few minutes.",
+          requestId,
+          places: [],
+          sources: [],
+        },
+      };
+    }
 
     if (!query) {
       return {

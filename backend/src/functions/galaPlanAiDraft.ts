@@ -69,7 +69,7 @@ function planCentre(places: Array<NormalizedPlace | undefined>) {
 
 const MEAL_TIMES: Record<string, string> = { breakfast: "08:00", lunch: "12:00", dinner: "19:00" };
 const formatPeso = (value: number) => `₱${value.toLocaleString("en-PH")}`;
-import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
+import { isAskAiIpAllowed, resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { hasCuratedPhoto, placePhotoKey } from "../utils/hdPhotos";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { buildDailyLimitMessage, shouldAcceptAskAiPrompt } from "./askAi";
@@ -332,6 +332,10 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
       actor = await resolveAskAiActor(request);
     } catch {
       return { status: 401, headers: JSON_HEADERS, jsonBody: { message: "Sign in or refresh the page to use Plan with AI." } };
+    }
+
+    if (!(await isAskAiIpAllowed(request, actor))) {
+      return { status: 429, headers: JSON_HEADERS, jsonBody: { code: "RATE_LIMITED", message: "Too many Plan with AI requests. Try again in a few minutes." } };
     }
 
     const { prompt, date: requestedDate } = await getBody(request);

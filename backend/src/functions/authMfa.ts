@@ -3,6 +3,7 @@ import { validateJwt } from "../utils/auth";
 import { getRedisClient } from "../services/redisCacheService";
 import { sendOtpEmail } from "../utils/brevoEmail";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { MFA_MAX_VERIFY_ATTEMPTS, isDeviceTrustedFor, parseTrustedDevice } from "../utils/mfaTrust";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 
 const MFA_OTP_TTL_SECONDS = 300;
@@ -89,9 +90,9 @@ export async function sendMfaEmailCode(
       ex: MFA_OTP_TTL_SECONDS,
     });
 
+    await redis.del(`mfa:otp-attempts:${authUser.id}:${sessionId}`);
+
     context.log(`Sending MFA OTP to ${maskEmail(userEmail)} (user ${authUser.id})`);
-    context.log(`📧 MFA OTP for ${authUser.email}: ${otpCode}`);
-    context.log(`Send OTP stored: key=${otpKey}, sessionId=${sessionId}`);
 
     const isDev = process.env.NODE_ENV === "development" || process.env.AZURE_FUNCTIONS_ENVIRONMENT === "Development";
 
@@ -159,10 +160,14 @@ export async function verifyMfaEmailCode(
       return { status: 500, jsonBody: { message: "Service temporarily unavailable." } };
     }
 
-    const otpKey = `mfa:otp:${authUser.id}:${sessionId}`;
-    const storedData = await redis.get<{ hash: string; email?: string }>(otpKey);
+    const rateLimit = await checkEndpointRateLimit(request, "mfa-verify-code", 10, 60);
+    if (!rateLimit.allowed && rateLimit.response) {
+      return rateLimit.response;
+    }
 
-    context.log(`Verify OTP lookup: key=${otpKey}, found=${!!storedData}, userId=${authUser.id}, sessionId=${sessionId}`);
+    const otpKey = `mfa:otp:${authUser.id}:${sessionId}`;
+    const attemptsKey = `mfa:otp-attempts:${authUser.id}:${sessionId}`;
+    const storedData = await redis.get<{ hash: string; email?: string }>(otpKey);
 
     if (!storedData) {
       return {
@@ -171,12 +176,21 @@ export async function verifyMfaEmailCode(
       };
     }
 
+    // Each code gets a few tries; after that it is burned and a new one must be requested.
+    const attempts = await redis.incr(attemptsKey);
+    if (attempts === 1) await redis.expire(attemptsKey, MFA_OTP_TTL_SECONDS);
+    if (attempts > MFA_MAX_VERIFY_ATTEMPTS) {
+      await redis.del(otpKey);
+      return { status: 429, jsonBody: { message: "Too many wrong codes. Please request a new code." } };
+    }
+
     const inputHash = hashOtp(code);
     if (inputHash !== storedData.hash) {
       return { status: 401, jsonBody: { message: "Invalid code. Please try again." } };
     }
 
     await redis.del(otpKey);
+    await redis.del(attemptsKey);
 
     const verifiedKey = `mfa:verified:${authUser.id}:${sessionId}`;
     await redis.set(verifiedKey, JSON.stringify({ verifiedAt: Date.now() }), {
@@ -243,7 +257,7 @@ export async function getMfaStatus(
     const deviceToken = request.headers.get("x-device-token");
     if (deviceToken && redis) {
       const trusted = await redis.get(`mfa:trusted:${deviceToken}`);
-      if (trusted) {
+      if (isDeviceTrustedFor(trusted, authUser.id)) {
         return { status: 200, jsonBody: { needsMfa: false } };
       }
     }
@@ -270,14 +284,9 @@ export async function getTrustedDevices(
     const devices: Array<{ deviceToken: string; userAgent: string; trustedAt: number }> = [];
 
     for (const tid of tokenIds) {
-      const raw = await redis.get<string>(`mfa:trusted:${tid}`);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw) as { userId: string; trustedAt: number; userAgent: string };
-          devices.push({ deviceToken: tid, userAgent: parsed.userAgent, trustedAt: parsed.trustedAt });
-        } catch {
-          continue;
-        }
+      const parsed = parseTrustedDevice(await redis.get(`mfa:trusted:${tid}`));
+      if (parsed?.userId === authUser.id) {
+        devices.push({ deviceToken: tid, userAgent: parsed.userAgent, trustedAt: parsed.trustedAt });
       }
     }
 
@@ -312,6 +321,10 @@ export async function revokeTrustedDevice(
       return { status: 500, jsonBody: { message: "Service temporarily unavailable." } };
     }
 
+    // Only devices this account trusted can be revoked by it.
+    if (!(await redis.sismember(`mfa:trusted:list:${authUser.id}`, deviceToken))) {
+      return { status: 404, jsonBody: { message: "Device not found." } };
+    }
     await redis.del(`mfa:trusted:${deviceToken}`);
     await redis.srem(`mfa:trusted:list:${authUser.id}`, deviceToken);
 

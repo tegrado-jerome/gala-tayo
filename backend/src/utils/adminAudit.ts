@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import type { HttpRequest } from "@azure/functions";
+import { getClientIp } from "./clientIp";
 
 type AdminAction = {
   adminId: string;
@@ -27,7 +28,7 @@ export async function logAdminAction(
       target_type: targetType,
       target_id: targetId,
       details,
-      ip_address: request.headers.get("x-forwarded-for")?.split(",")?.[0]?.trim() ?? null,
+      ip_address: getClientIp(request),
       user_agent: request.headers.get("user-agent") ?? null,
     });
   } catch {

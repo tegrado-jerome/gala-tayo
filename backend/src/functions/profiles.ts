@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkEndpointRateLimit, getClientIp } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
 import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage, detectImageFormatFromBytes } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
@@ -681,7 +681,7 @@ export async function onboardingComplete(
         privacy_version: PRIVACY_VERSION,
         accepted_at: now,
         accepted_via: "onboarding_checkbox",
-        ip_address: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+        ip_address: getClientIp(request),
         user_agent: request.headers.get("user-agent") || null,
       });
     } catch {
