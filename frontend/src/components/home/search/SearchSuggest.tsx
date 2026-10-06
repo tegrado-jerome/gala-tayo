@@ -8,6 +8,7 @@ import { getAreaLabelBySlug } from '../../../data/destinations'
 import { placeCategories } from '../../../data/placeCategories'
 import { displayCityName } from '../../../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../../../utils/compactPlaces'
+import { getPlaceCardPhoto } from '../../../utils/placeGalleryPhotos'
 import { navigateToPath } from '../../../utils/navigation'
 
 type Suggestion = { key: string; group: 'Destinations' | 'Places' | 'Categories'; label: string; sub: string; href: string; category?: string | null }
@@ -195,7 +196,11 @@ function SearchSuggest({
               }}
             >
               <span className="g-suggest-ic" aria-hidden="true">
-                <Icon weight="light" />
+                {suggestion.key.startsWith('p:') && getPlaceCardPhoto(suggestion.key.slice(2)) ? (
+                  <img src={getPlaceCardPhoto(suggestion.key.slice(2)) ?? ''} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <Icon weight="light" />
+                )}
               </span>
               <span className="min-w-0">
                 <b>{suggestion.label}</b>

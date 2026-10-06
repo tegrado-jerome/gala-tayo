@@ -676,3 +676,5 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-weekday-item b { display: -webkit-box; overflow: hidden; font-size: 14px; line-height: 1.3; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .g-weekday-item b + span { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 13px; color: var(--ink-2); }
 .g-weekday-item b + span svg { width: 14px; height: 14px; color: var(--warn); }
+.g-suggest-ic { overflow: hidden; }
+.g-suggest-ic img { width: 100%; height: 100%; object-fit: cover; }
