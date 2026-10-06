@@ -35,7 +35,7 @@ export const promptBuilderSections: PromptBuilderSection[] = [
   {
     id: 'plan',
     title: 'What are you planning?',
-    chips: ['Date', 'Barkada hangout', 'Family day', 'Solo gala', 'Food trip', 'Cafe hopping', 'Study session', 'Tourist day', 'Museum / culture trip', 'Night out', 'Celebration', 'Quick chill'],
+    chips: ['Date', 'Hangout with friends', 'Family day', 'Solo day out', 'Food trip', 'Cafe hopping', 'Study session', 'Tourist day', 'Museum / culture trip', 'Night out', 'Celebration', 'Quick chill'],
     customLabel: 'Other plan',
     helperText: 'Not in the choices? Type your own plan here.',
     placeholder: 'Type your plan here...',
@@ -53,7 +53,7 @@ export const promptBuilderSections: PromptBuilderSection[] = [
   {
     id: 'companion',
     title: 'Who are you going with?',
-    chips: ['Date', 'Friends / barkada', 'Family', 'Kids', 'Classmates', 'Workmates', 'Solo', 'Large group'],
+    chips: ['Date', 'Friends', 'Family', 'Kids', 'Classmates', 'Workmates', 'Solo', 'Large group'],
     customLabel: 'Custom companion',
     helperText: 'Add who you are going with if the choices do not match your plan.',
     placeholder: 'e.g. parents, cousins, partner, group of 10',
@@ -125,11 +125,11 @@ export function buildAiPrompt(state: PromptBuilderState): string {
   const detailText = details.map(([label, value]) => `${label}: ${value}`).join('. ')
 
   const prompt = [
-    getValue(state, 'location') ? 'Help me plan a practical gala in the Philippines.' : 'Help me plan a practical gala in Metro Manila.',
+    getValue(state, 'location') ? 'Help me plan a practical day out in the Philippines.' : 'Help me plan a practical day out in Metro Manila.',
     detailText,
     'Recommend the best area or place choices for this.',
     'Give 3 strong options with why each fits, rough budget, and best time to go.',
-    'Keep it realistic, commute-aware, and sulit.',
+    'Keep it realistic, commute-aware and good value.',
     'Use friendly natural Taglish and end with one best final pick.',
   ]
     .filter(Boolean)

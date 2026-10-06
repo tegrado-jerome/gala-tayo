@@ -80,7 +80,7 @@ function GuidesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: `Gala guides | ${BRAND_NAME}`,
+      name: `Travel guides | ${BRAND_NAME}`,
       url: `${origin}/guides`,
       isPartOf: { '@id': `${origin}/#website` },
       mainEntity: { '@id': `${origin}/guides#list` },
@@ -109,14 +109,14 @@ function GuidesIndexPage() {
   return (
     <Page>
       <SeoHead
-        title={`Gala Guides: Where to Go Around the Philippines | ${BRAND_NAME}`}
+        title={`Travel Guides: Where to Go Around the Philippines | ${BRAND_NAME}`}
         description={`${guides.length} ${BRAND_NAME} guides to date ideas, weekend getaways, food trips and things to do, each with budgets per head and real place details.`}
         canonicalPath="/guides"
         jsonLd={isLoading ? null : jsonLd}
       />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides' }]} />
       <header className="mt-5">
-        <h1 className="g-h1">Gala guides</h1>
+        <h1 className="g-h1">Travel guides</h1>
         <p className="g-mut mt-2 max-w-[52ch]">Short lists of where to go, ranked best first, with the budget per head on every pick.</p>
         <p className="g-sm mt-3">
           Planning ahead?{' '}

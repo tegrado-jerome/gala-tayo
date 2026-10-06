@@ -45,7 +45,7 @@ const PRIMARY_LINKS: MenuLink[] = [
   { path: '/passport', label: 'Passport', icon: Stamp },
   { path: '/favorites', label: 'Saved', icon: Heart },
   { path: '/history', label: 'History', icon: History },
-  { path: '/gala-plans', label: 'Gala plans', icon: CalendarDays },
+  { path: '/gala-plans', label: 'Plans', icon: CalendarDays },
   { path: '/find-friends', label: 'Find friends', icon: UserPlus },
   { path: '/submit-place', label: 'Submit a place', icon: MapPinPlus },
 ]
@@ -208,7 +208,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   ) : (
     <div className="px-2 py-3 text-center">
       <p className="g-h3">Hi, guest</p>
-      <p className="g-sm g-mut mx-auto mt-1 max-w-[260px]">Log in to save places, build plans, and keep your gala history.</p>
+      <p className="g-sm g-mut mx-auto mt-1 max-w-[260px]">Log in to save places, build plans and keep your trip history.</p>
       <div className="mt-5 grid gap-2">
         <Button variant="tara" block onClick={() => closeAndNavigate('/login')}>
           Log in

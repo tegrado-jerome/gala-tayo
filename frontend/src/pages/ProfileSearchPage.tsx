@@ -383,7 +383,7 @@ function ProfileSearchPage() {
     <Page>
       <header className="max-w-[640px]">
         <h1 className="g-h1">Find friends</h1>
-        <p className="g-mut mt-1">Search usernames and build your barkada on GalaTayo.</p>
+        <p className="g-mut mt-1">Search usernames and find your friends on GalaTayo.</p>
 
         <label className="g-search mt-5 !h-14 shadow-[var(--sh-2)] focus-within:border-[var(--ink)]">
           <Search className="g-ic" aria-hidden="true" />
@@ -416,7 +416,7 @@ function ProfileSearchPage() {
       ) : null}
 
       {!isSearching && isShowingSearchResults && !errorMessage && results.length === 0 ? (
-        <Empty className="mt-6" title="No members found." description={`Walang @${normalizedQuery}. Try another spelling.`} />
+        <Empty className="mt-6" title="No members found." description={`No @${normalizedQuery} found. Try another spelling.`} />
       ) : null}
 
       {results.length > 0 ? (
@@ -441,7 +441,7 @@ function ProfileSearchPage() {
                 </div>
               ) : null}
               {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length === 0 ? (
-                <Empty title="Wala ka pang fina-follow." description="Open a few suggested profiles below to start your circle." />
+                <Empty title="You're not following anyone yet." description="Open a few suggested profiles below to start your circle." />
               ) : null}
             </section>
           ) : null}

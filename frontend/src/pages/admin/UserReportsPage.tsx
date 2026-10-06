@@ -127,7 +127,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
       {isLoading && reports.length === 0 ? (
         <AdminContentSkeleton />
       ) : reports.length === 0 ? (
-        <Empty title="Wala pang reports dito." description="No user reports in this view. Try another status." />
+        <Empty title="No reports here yet." description="No user reports in this view. Try another status." />
       ) : (
         <div className="grid gap-4">
           {reports.map((report) => (

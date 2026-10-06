@@ -7,7 +7,7 @@ import '../design/misc.css'
 
 const PATH = '/gala-tayo-meaning'
 const TITLE = '"Gala Tayo" Meaning: What It Means in English | GalaTayo'
-const DESCRIPTION = '"Gala tayo" is Filipino for "let\'s go out!" or "let\'s hang out!". What each word means, how Filipinos use it in the GC, and how GalaTayo got its name.'
+const DESCRIPTION = '"Gala tayo" is Filipino for "let\'s go out!" or "let\'s hang out!". What each word means, how Filipinos use it in group chats, and how GalaTayo got its name.'
 
 const EXAMPLES: Array<{ tl: string; en: string }> = [
   { tl: 'Gala tayo mamaya!', en: "Let's go out later!" },
@@ -37,15 +37,15 @@ const FAQS: Array<{ question: string; answer: string }> = [
   },
   {
     question: 'Why is the app called GalaTayo?',
-    answer: 'Because that\'s the message that starts every barkada trip in the group chat. GalaTayo is the part that comes after: where to go, when everyone\'s free, and how to split the bill.',
+    answer: 'Because that\'s the message that starts every group trip in the group chat. GalaTayo is the part that comes after: where to go, when everyone\'s free, and how to split the bill.',
   },
 ]
 
 const GUIDES: Array<{ href: string; title: string; sub: string }> = [
   { href: '/guides/date-places-in-metro-manila', title: 'Date places in Metro Manila', sub: 'For when it\'s "gala tayo" for two' },
   { href: '/guides/weekend-getaways-from-manila', title: 'Weekend getaways from Manila', sub: 'Out of town, back by Sunday' },
-  { href: '/guides/things-to-do-in-baguio', title: 'Things to do in Baguio', sub: 'The classic barkada road trip' },
-  { href: '/guides/instagrammable-spots-in-metro-manila', title: 'Instagrammable spots in Metro Manila', sub: 'Para may pang-IG' },
+  { href: '/guides/things-to-do-in-baguio', title: 'Things to do in Baguio', sub: 'The classic road trip with friends' },
+  { href: '/guides/instagrammable-spots-in-metro-manila', title: 'Instagrammable spots in Metro Manila', sub: 'For the photos' },
 ]
 
 function GalaTayoMeaningPage() {
@@ -114,8 +114,8 @@ function GalaTayoMeaningPage() {
             picks a date, and the plan dies by Thursday.
           </p>
           <p>
-            GalaTayo is the part after the message. Only gala-worthy places with the budget per head, one link where the barkada votes on the spot and the date,
-            and a hatian so nobody has to chase anyone for payment. The name is the invite. The app makes sure it actually happens.
+            GalaTayo is the part after the message. Only the best places with the budget per head, one link where your group votes on the spot and the date,
+            and a bill splitter so nobody has to chase anyone for payment. The name is the invite. The app makes sure it actually happens.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ function GalaTayoMeaningPage() {
 
         <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--line-2)] pt-8">
           <Button variant="tara" size="lg" href="/saan-tayo">
-            Saan tayo? Pick 3 for me
+            Pick 3 for me
           </Button>
           <Button variant="line" size="lg" href="/guides">
             All guides

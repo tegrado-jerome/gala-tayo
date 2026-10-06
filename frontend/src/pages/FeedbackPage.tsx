@@ -102,7 +102,7 @@ function FeedbackPage() {
           <ChatCircleText weight="light" />
         </span>
         <p className="m-onb-step">Help and feedback</p>
-        <h1 className="g-h1 mt-1.5">Kumusta ang GalaTayo for you?</h1>
+        <h1 className="g-h1 mt-1.5">How is GalaTayo working for you?</h1>
         <p className="g-mut mt-2 text-[16px]">Tell us what works and what doesn&apos;t.</p>
       </header>
 

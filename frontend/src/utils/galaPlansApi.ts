@@ -81,7 +81,7 @@ const GALA_PLAN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0
 function normalizeGalaPlanId(planId: string) {
   const normalizedPlanId = planId.trim()
   if (!GALA_PLAN_ID_PATTERN.test(normalizedPlanId)) {
-    throw new Error('Invalid gala plan id.')
+    throw new Error('Invalid plan id.')
   }
   return normalizedPlanId
 }

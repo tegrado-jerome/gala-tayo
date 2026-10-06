@@ -54,7 +54,7 @@ function GalaWrapped({ passport, session, handle }: { passport: ReadyPassport; s
     const needed = placesToUnlock({ checkins, plans: [] }, thisMonth)
     return (
       <section className="mt-6 rounded-[12px] border border-[var(--line)] px-4 py-4" aria-labelledby="wrapped-title">
-        <p className="g-eyebrow">Gala Wrapped</p>
+        <p className="g-eyebrow">Trip Wrapped</p>
         <h2 id="wrapped-title" className="g-h3 mt-1">Your monthly recap is on the way</h2>
         <p className="g-sm g-mut mt-1">
           Check in at {plural(needed || MIN_WRAPPED_PLACES, 'more place')} in {monthLabel(thisMonth).split(' ')[0]} and we'll make you a story to share.
@@ -74,7 +74,7 @@ function GalaWrapped({ passport, session, handle }: { passport: ReadyPassport; s
 
   return (
     <section className="mt-6 overflow-hidden rounded-[12px] bg-[var(--fill)] px-4 py-5 motion-safe:animate-[g-fade_300ms_var(--ease-g)_both]" aria-labelledby="wrapped-title">
-      <p className="g-eyebrow">Gala Wrapped</p>
+      <p className="g-eyebrow">Trip Wrapped</p>
       <h2 id="wrapped-title" className="g-h2 mt-1">Your {wrapped.label.split(' ')[0]}</h2>
       <p className="g-sm g-mut mt-1">
         {stats.join(' · ')}
@@ -98,8 +98,8 @@ function GalaWrapped({ passport, session, handle }: { passport: ReadyPassport; s
           render={() => renderWrappedStory(story)}
           fileName={`galatayo-wrapped-${wrapped.key}.png`}
           title={`My ${wrapped.label} on GalaTayo`}
-          summary={`Gala Wrapped, ${wrapped.label}: ${stats.join(', ')}.${wrapped.cities.length ? ` Cities: ${wrapped.cities.join(', ')}.` : ''}${wrapped.topCategory ? ` Top vibe: ${wrapped.topCategory.name}.` : ''}`}
-          label={`Gala Wrapped for ${wrapped.label}`}
+          summary={`Trip Wrapped, ${wrapped.label}: ${stats.join(', ')}.${wrapped.cities.length ? ` Cities: ${wrapped.cities.join(', ')}.` : ''}${wrapped.topCategory ? ` Top vibe: ${wrapped.topCategory.name}.` : ''}`}
+          label={`Trip Wrapped for ${wrapped.label}`}
           onClose={close}
         />
       ) : null}

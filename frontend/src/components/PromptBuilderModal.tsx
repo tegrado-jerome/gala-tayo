@@ -218,7 +218,7 @@ export default function PromptBuilderModal({ isOpen, initialState, onClose }: Pr
               <h1 id="prompt-builder-title" className="g-h1 mt-2">
                 Prompt ready
               </h1>
-              <p className="g-mut mt-1">Your stronger gala prompt is ready to copy and use anywhere.</p>
+              <p className="g-mut mt-1">Your stronger trip prompt is ready to copy and use anywhere.</p>
 
               <div className="g-split mt-6">
                 <Panel as="section" className="min-w-0">
@@ -292,7 +292,7 @@ export default function PromptBuilderModal({ isOpen, initialState, onClose }: Pr
         <h1 id="prompt-builder-title" className="g-h1 mt-2">
           Prompt builder
         </h1>
-        <p className="g-mut mt-1">Build a stronger gala prompt without using GalaTayo AI credits.</p>
+        <p className="g-mut mt-1">Build a stronger trip prompt without using GalaTayo AI credits.</p>
 
         <div className="g-split mt-6">
           <div className="flex min-w-0 flex-col gap-3">

@@ -107,11 +107,11 @@ function hour(time: string, rain: number, mm: number): HourForecast {
 
 test('weather mood: rain now, rain later, or dry', () => {
   const dry = [hour('2026-10-07T13:00', 10, 0), hour('2026-10-07T14:00', 10, 0)]
-  assert.deepEqual(weatherMood({ code: 63, precipitation: 1.2 }, dry), { rainy: true, line: 'Umuulan ngayon, indoor muna.' })
+  assert.deepEqual(weatherMood({ code: 63, precipitation: 1.2 }, dry), { rainy: true, line: 'Raining now, so indoor picks first!' })
   const later = [hour('2026-10-07T13:00', 10, 0), hour('2026-10-07T15:00', 80, 2)]
-  assert.deepEqual(weatherMood({ code: 2, precipitation: 0 }, later), { rainy: true, line: 'Maulan mamaya (3 PM), indoor muna.' })
-  assert.deepEqual(weatherMood({ code: 1, precipitation: 0 }, dry), { rainy: false, line: 'Mukhang dry hanggang 3 PM. G sa outdoor!' })
-  assert.equal(weatherMood({ code: 95, precipitation: 0 }, dry).line, 'May thunderstorm, indoor muna.')
+  assert.deepEqual(weatherMood({ code: 2, precipitation: 0 }, later), { rainy: true, line: 'Rain later (3 PM), so indoor picks first!' })
+  assert.deepEqual(weatherMood({ code: 1, precipitation: 0 }, dry), { rainy: false, line: 'Dry until 3 PM. Great time to go outdoors!' })
+  assert.equal(weatherMood({ code: 95, precipitation: 0 }, dry).line, 'Thunderstorm now, so indoor picks first!')
 })
 
 test('vote links keep up to 3 unique valid slugs', () => {

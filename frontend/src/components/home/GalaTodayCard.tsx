@@ -24,7 +24,7 @@ export function GalaTodayCard({ post, headingLevel = 'h3' }: { post: GalaTodayPo
       <span className="t-card-text">
         <span className="t-kicker">
           <span className="t-live" aria-hidden="true" />
-          Gala Today · {formatPostDate(post.date)}
+          Today's Plan · {formatPostDate(post.date)}
         </span>
         <Heading className="t-card-title">{post.title}</Heading>
         <span className="t-card-hook">{post.hook}</span>
@@ -40,7 +40,7 @@ export function GalaTodayHome() {
   const latest = posts?.[0]
   if (!latest) return null
   return (
-    <section className="min-w-0 mt-2" aria-label="Gala Today">
+    <section className="min-w-0 mt-2" aria-label="Today's Plan">
       <GalaTodayCard post={latest} headingLevel="h2" />
     </section>
   )

@@ -41,7 +41,7 @@ const BRAND_NAME = 'GalaTayo'
 const BRAND_ALTERNATE_NAME = 'Gala Tayo'
 const PRODUCT_NAME = 'GalaTayo'
 const BRAND_DESCRIPTION =
-  'GalaTayo (Gala Tayo) is a place discovery and planning app for gala-worthy places around the Philippines. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
+  'GalaTayo (Gala Tayo) is a place discovery and planning app for the best places around the Philippines. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
 
 function buildBrandJsonLd() {
   const origin = getPublicSiteOrigin()
@@ -83,7 +83,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = seoGuides.filter((guide) => !gui
 
 const GOOD_FOR_LABELS: Record<string, string> = {
   date: 'date',
-  barkada: 'barkada',
+  barkada: 'group',
   family: 'family',
   study: 'study',
   chill: 'chill',
@@ -99,7 +99,7 @@ const MIN_INDEXABLE_GUIDE_PLACES = guideRules.minIndexablePlaces
 const INTENT_NOTES: Record<string, (area: string) => string> = {
   date: (area) => `Each pick shows the budget per head and the best time to go, so you can plan a date in ${area} without guessing the bill.`,
   family: (area) => `Picks lean toward places with space for kids and lolas, plus parking and commute notes for a family day in ${area}.`,
-  barkada: (area) => `These work for groups: room to stay long, sharing plates, and budgets the whole barkada can split in ${area}.`,
+  barkada: (area) => `These work for groups: room to stay long, sharing plates, and budgets the whole group can split in ${area}.`,
   study: (area) => `Look for the best time to visit on each pick to find quieter hours for studying around ${area}.`,
   chill: (area) => `Low-effort spots in ${area} for when you just want to sit, eat and talk without a big plan.`,
   'rainy-day': (area) => `All indoor or covered, so your plans in ${area} survive the rain.`,
@@ -111,7 +111,7 @@ const INTENT_NOTES: Record<string, (area: string) => string> = {
 const CATEGORY_NOTES: Record<string, (area: string) => string> = {
   cafe: (area) => `Compare cafes in ${area} by budget, vibe and who they suit, from quick coffee runs to long tambay sessions.`,
   food: (area) => `Restaurants and food spots in ${area} with a starting budget per head, so you know the damage before you go.`,
-  mall: (area) => `Malls in ${area} with notes on parking, commute and what else is nearby for a full gala.`,
+  mall: (area) => `Malls in ${area} with notes on parking, commute and what else is nearby for a full day out.`,
   museum: (area) => `Museums in ${area} with notes on fees, best time to visit and how long to stay.`,
   park: (area) => `Parks and open spaces in ${area}. Go early morning or late afternoon to skip the heat.`,
   heritage: (area) => `Heritage and historical sites in ${area}, best paired with a walking route and a merienda stop.`,
@@ -206,7 +206,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   const goodForLabel = target.goodFor ? GOOD_FOR_LABELS[target.goodFor] ?? target.goodFor : null
   const h1 = buildLandingHeading(target)
   const categoryPhrase = categoryLabel ? categoryLabel.toLowerCase() : 'places'
-  const audiencePhrase = goodForLabel ? `${goodForLabel} plans` : 'gala plans'
+  const audiencePhrase = goodForLabel ? `${goodForLabel} plans` : 'trip plans'
   const scopedAreaName = target.areaSlug ? areaName : 'the Philippines'
   const canonicalPath = getLandingPath(target.slug)
 
@@ -220,7 +220,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     intro = `Compare ${categoryLabel.toLowerCase()} spots in ${scopedAreaName} using practical details like budget, category fit, and location context.`
     summary = `${PRODUCT_NAME} organizes ${categoryLabel.toLowerCase()} places in ${scopedAreaName} for faster local discovery and planning.`
   } else if (goodForLabel && target.areaSlug) {
-    intro = `Find places around ${scopedAreaName} that work well for ${goodForLabel} plans, from chill hangouts to more structured gala ideas.`
+    intro = `Find places around ${scopedAreaName} that work well for ${goodForLabel} plans, from chill hangouts to full-day trip ideas.`
     summary = `${BRAND_NAME} surfaces ${goodForLabel}-friendly places in ${scopedAreaName} with budget, timing and location details for planning.`
   }
 
@@ -244,11 +244,11 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
       ...(target.faqs ?? []),
       {
         question: `How are the places in this guide picked?`,
-        answer: `Only gala-worthy places make the list. Each one is scored on real evidence, like editorial lists, Philippine travel apps, Reddit threads, review volume and Michelin, plus how well it fits a day out. Plain eateries, chains and ordinary malls are left out, and the rest are ranked best first.`,
+        answer: `Only the best places make the list. Each one is scored on real evidence, like editorial lists, Philippine travel apps, Reddit threads, review volume and Michelin, plus how well it fits a day out. Plain eateries, chains and ordinary malls are left out, and the rest are ranked best first.`,
       },
       {
         question: `Can I plan a whole day from this guide?`,
-        answer: `Yes. Save the places you like, then start a plan: pick a date, invite the barkada with one link, and split the budget in the app.`,
+        answer: `Yes. Save the places you like, then start a plan: pick a date, invite friends with one link and split the budget in the app.`,
       },
     ],
   }

@@ -293,9 +293,9 @@ function PrivacyCenterPage({ session }: { session: Session }) {
             <Skeleton className="h-[64px]" />
           </div>
         ) : loadError ? (
-          <Empty title="Hindi ma-load ang requests" description={loadError} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
+          <Empty title="Couldn't load requests" description={loadError} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
         ) : privacyRequests.length === 0 ? (
-          <Empty title="Wala pang request" description="Anything you send shows up here." />
+          <Empty title="No requests yet" description="Anything you send shows up here." />
         ) : (
           <div>
             {privacyRequests.slice(0, 8).map((request) => (

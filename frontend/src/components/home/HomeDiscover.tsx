@@ -109,7 +109,7 @@ function WhereTo() {
         <Search weight="bold" aria-hidden="true" />
         Where to?
       </InternalLink>
-      <InternalLink href="/plan-with-ai" className="g-where-ai" ariaLabel="Plan a gala with AI">
+      <InternalLink href="/plan-with-ai" className="g-where-ai" ariaLabel="Plan a trip with AI">
         <Sparkles weight="light" aria-hidden="true" />
       </InternalLink>
     </div>
@@ -223,7 +223,7 @@ function WeekdayCard({ places }: { places: PlaceDetail[] }) {
   if (weekday.length === 0) return null
   return (
     <section className="min-w-0">
-      <SectionHead title="Mas okay sa weekday" sub="Quieter on weekdays, per each place’s best time to visit" />
+      <SectionHead title="Better on a weekday" sub="Quieter on weekdays, per each place’s best time to visit" />
       <ul className="g-weekday">
         {weekday.map((place) => {
           const photo = photoFor(place.slug)
@@ -311,11 +311,11 @@ function Guides({ covers, title = 'Guides', limit = 4, showAll = false }: { cove
 
 function SaanTayoCard({ pool }: { pool: PhotoCardPlace[] }) {
   return (
-    <section className="g-saan" aria-label="Saan tayo?">
+    <section className="g-saan" aria-label="Pick for me">
       <InternalLink href="/saan-tayo" className="g-saan-main">
         <span className="min-w-0">
-          <b>Saan tayo?</b>
-          <span>Bahala na! We deal 3 picks for the GC</span>
+          <b>Pick for me</b>
+          <span>Can't decide? We deal 3 picks for your group chat!</span>
         </span>
         <span className="g-saan-go">Start</span>
       </InternalLink>
@@ -369,7 +369,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
       <div id="home-tab-panel" role="tabpanel" aria-labelledby={`home-tab-${tab}`} className="min-w-0">
         {tab === 'food' ? (
           <>
-            <ListingRail title="Food picks" subtitle="Kainan worth the trip, best first" href="/places/categories/food" category="food" onGuestFavorite={openGuestFavorite} />
+            <ListingRail title="Food picks" subtitle="Food worth the trip, best first" href="/places/categories/food" category="food" onGuestFavorite={openGuestFavorite} />
             <ListingRail title="Cafes" href="/places/categories/cafe" category="cafe" onGuestFavorite={openGuestFavorite} />
             <Guides covers={foodGuides} title="Food guides" limit={4} />
           </>
@@ -413,7 +413,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
               </section>
             )}
 
-            {isRaining ? <ListingRail title="Rainy day? Indoor picks" subtitle="Museums to wait out the ulan" href="/places/categories/museum" category="museum" onGuestFavorite={openGuestFavorite} /> : null}
+            {isRaining ? <ListingRail title="Rainy day? Indoor picks" subtitle="Museums to wait out the rain" href="/places/categories/museum" category="museum" onGuestFavorite={openGuestFavorite} /> : null}
             {pickDetails ? <WeekdayCard places={pickDetails} /> : null}
             <Guides covers={guideCovers} />
             <SaanTayoCard pool={picks} />

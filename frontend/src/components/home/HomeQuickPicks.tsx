@@ -25,13 +25,13 @@ function pickOther(pool: PhotoCardPlace[], current: PhotoCardPlace | null) {
   return next
 }
 
-/** "Bahala na!": one random gala-worthy pick with a quick re-spin, for when the barkada can't decide. */
+/** "Surprise me": one random top pick with a quick re-spin, for when the group can't decide. */
 function BahalaNaSheet({ pick, spin, onRespin, onClose }: { pick: PhotoCardPlace | null; spin: number; onRespin: () => void; onClose: () => void }) {
   const shown = pick
   if (!shown) return null
   const meta = [toTitleCase(shown.category), shown.localArea || shown.area || shown.city].filter(Boolean).join(' · ')
   return (
-    <Sheet open onClose={onClose} title="Bahala na! Ito ang gala mo" labelledBy="bahala-na-title">
+    <Sheet open onClose={onClose} title="Can't decide? Here's your trip!" labelledBy="bahala-na-title">
       <div key={spin} className="g-bahala-card">
         <div className="g-bahala-img">
           <PlaceImage candidates={getPlaceImageCandidates(shown)} category={shown.category} className="h-full w-full" priority />
@@ -45,17 +45,17 @@ function BahalaNaSheet({ pick, spin, onRespin, onClose }: { pick: PhotoCardPlace
       <div className="mt-4 flex gap-2">
         <Button variant="soft" size="lg" className="min-w-0 flex-1" onClick={onRespin}>
           <ArrowsClockwise aria-hidden="true" />
-          Spin ulit
+          Spin again
         </Button>
         <Button variant="tara" size="lg" className="min-w-0 flex-[1.4]" href={getPlaceHref(shown)}>
-          Tara, tingnan!
+          Let's see it!
         </Button>
       </div>
     </Sheet>
   )
 }
 
-/** One-tap picks in the Saan tayo card: random pick, sunset spots, and two budget shortcuts. */
+/** One-tap picks in the Pick for me card: random pick, sunset spots, and two budget shortcuts. */
 function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
   const [pick, setPick] = useState<PhotoCardPlace | null>(null)
   const [isSpinOpen, setIsSpinOpen] = useState(false)
@@ -78,7 +78,7 @@ function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
       <nav className="g-qpicks" aria-label="Quick picks">
         <button type="button" className="g-qpick" onClick={() => { spinAgain(); setIsSpinOpen(true) }} disabled={pool.length === 0}>
           <Shuffle weight="bold" aria-hidden="true" />
-          Bahala na!
+          Surprise me!
         </button>
         {sunsetLabel ? (
           <InternalLink href="/places/categories/park" className="g-qpick">
@@ -88,11 +88,11 @@ function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
         ) : null}
         <InternalLink href="/search?budget=under-500" className="g-qpick">
           <Wallet weight="light" aria-hidden="true" />
-          Petsa de peligro
+          Under ₱500
         </InternalLink>
         <InternalLink href="/search?budget=free" className="g-qpick">
           <Gift weight="light" aria-hidden="true" />
-          Libre lang
+          Free
         </InternalLink>
       </nav>
       {isSpinOpen ? <BahalaNaSheet pick={pick} spin={spin} onRespin={spinAgain} onClose={() => setIsSpinOpen(false)} /> : null}

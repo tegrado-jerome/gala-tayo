@@ -66,16 +66,16 @@ function MobileBottomNav({ currentPath }: { currentPath: string }) {
         {tabBarLeft.map((item) => (
           <Tab key={item.href} item={item} currentPath={currentPath} />
         ))}
-        <button type="button" className="g-tara" aria-label="New gala: plan or ask" aria-haspopup="dialog" aria-expanded={isSheetOpen} onClick={() => setIsSheetOpen(true)}>
+        <button type="button" className="g-tara" aria-label="New trip: plan or ask" aria-haspopup="dialog" aria-expanded={isSheetOpen} onClick={() => setIsSheetOpen(true)}>
           <Plus weight="bold" aria-hidden="true" />
         </button>
         {tabBarRight.map((item) => (
           <Tab key={item.href} item={item} currentPath={currentPath} />
         ))}
       </nav>
-      <Sheet open={isSheetOpen} onClose={closeSheet} title="Tara, what's the plan?" labelledBy="tara-sheet-title">
+      <Sheet open={isSheetOpen} onClose={closeSheet} title="What's the plan?" labelledBy="tara-sheet-title">
         <div className="g-group">
-          <Choice icon={Sparkle} title="Plan a gala" sub="Describe it, Tara builds the day" onClick={planGala} />
+          <Choice icon={Sparkle} title="Plan a trip" sub="Describe it, Tara builds the day" onClick={planGala} />
           <Choice icon={ChatCircleDots} title="Ask Tara" sub="Quick question about a place" onClick={askTara} />
         </div>
       </Sheet>

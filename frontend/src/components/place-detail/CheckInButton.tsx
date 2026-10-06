@@ -41,7 +41,7 @@ function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWee
         </div>
         <h2 id={titleId} className="g-h2 g-fade-in mt-6" style={{ animationDelay: '200ms' }}>New stamp: {city}</h2>
         <p className="g-sm g-fade-in mt-1.5" style={{ color: 'var(--sea)', animationDelay: '300ms' }}>
-          {streakWeeks > 0 ? `${streakWeeks}-week streak. Gala again next week to keep it going.` : 'Gala once a week to start a streak.'}
+          {streakWeeks > 0 ? `${streakWeeks}-week streak. Go out again next week to keep it going!` : 'Go out once a week to start a streak!'}
         </p>
         <div className="mt-6 grid w-full grid-cols-2 gap-2">
           <Button variant="tara" href="/passport">See passport</Button>

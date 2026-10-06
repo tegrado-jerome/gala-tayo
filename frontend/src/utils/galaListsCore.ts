@@ -50,7 +50,7 @@ export type SharedList = {
 export const EMPTY_LISTS_STATE: GalaListsState = { version: 1, lists: [], following: [] }
 export const LIST_NAME_MAX = 40
 export const LIST_PLACES_MAX = 60
-export const LIST_SUGGESTIONS = ['Date night', 'Rainy day', 'Barkada weekend', 'Food trip', 'Someday']
+export const LIST_SUGGESTIONS = ['Date night', 'Rainy day', 'Weekend with friends', 'Food trip', 'Someday']
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,119}$/
 

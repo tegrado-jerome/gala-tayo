@@ -42,6 +42,7 @@ import {
   weatherMood,
   type Vibe,
 } from '../utils/saanTayo'
+import { goodForText } from '../utils/goodForText'
 import { getSiteOrigin } from '../utils/seo'
 import { MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import { manilaHourKey, nextHours } from '../utils/weather'
@@ -56,21 +57,21 @@ const SWAP_MS = 220
 
 const FAQS = [
   {
-    question: 'Ano ang Saan tayo?',
+    question: 'What is Pick for me?',
     answer:
-      'A free GalaTayo picker for when nobody can decide. Tap Bahala na! and it deals 3 gala-worthy places near you or in the area you pick, then send them to your group chat so everyone can vote.',
+      'A free picker for when nobody can decide! Tap Pick for me and it deals 3 top places near you or in the area you choose. Send them to your group chat so everyone can vote.',
   },
   {
     question: 'Does it check the weather?',
     answer: 'Yes. It reads the live forecast for your area. If it is raining or rain is likely in the next few hours, it deals indoor picks first.',
   },
   {
-    question: 'Libre ba?',
-    answer: 'Yes, free and no sign up. Sign in only to save places or add them to a gala plan.',
+    question: 'Is it free?',
+    answer: 'Yes! Free, with no sign-up. Sign in only to save places or add them to a plan.',
   },
   {
     question: 'Where do the places come from?',
-    answer: 'Only places listed on GalaTayo as gala-worthy. Each pick opens its full place page with photos, budget and tips.',
+    answer: 'Only top places listed on GalaTayo. Each pick opens its full place page with photos, budget and tips.',
   },
 ]
 
@@ -134,8 +135,8 @@ function placeWhere(place: CompactPlace) {
 function whyLine(place: CompactPlace, extras: Record<string, PlaceExtras> | null) {
   const todo = extras?.[place.slug]?.whatToDo?.[0]
   if (todo) return todo
-  const tags = place.goodFor.slice(0, 2)
-  return tags.length ? `Swak for ${tags.join(' at ').toLowerCase()}` : null
+  const tags = place.goodFor.slice(0, 2).map(goodForText)
+  return tags.length ? `Great for ${tags.join(' and ').toLowerCase()}` : null
 }
 
 async function sendToChat(text: string, url: string) {
@@ -159,7 +160,7 @@ function useAreaOptions(places: CompactPlace[]) {
       const cities = region.destinations.filter((destination) => counts.get(destination.slug))
       const total = cities.reduce((sum, city) => sum + (counts.get(city.slug) ?? 0), 0)
       if (!total) return []
-      const regionRow = { slug: region.slug, label: region.name, sub: 'Buong region', count: total, search: `${region.name} ${region.officialName}`.toLowerCase() }
+      const regionRow = { slug: region.slug, label: region.name, sub: 'Whole region', count: total, search: `${region.name} ${region.officialName}`.toLowerCase() }
       const cityRows = cities.map((city) => ({
         slug: city.slug,
         label: city.label,
@@ -177,7 +178,7 @@ function AreaSheet({ open, options, current, onPick, onClose }: { open: boolean;
   const needle = query.trim().toLowerCase()
   const shown = needle ? options.filter((option) => option.search.includes(needle)) : options
   return (
-    <Sheet open={open} onClose={onClose} title="Saan ang gala?" labelledBy="st-area-title">
+    <Sheet open={open} onClose={onClose} title="Where to?" labelledBy="st-area-title">
       <label className="st-search">
         <MagnifyingGlass aria-hidden="true" />
         <span className="sr-only">Search a city or region</span>
@@ -195,7 +196,7 @@ function AreaSheet({ open, options, current, onPick, onClose }: { open: boolean;
             </button>
           </li>
         ))}
-        {shown.length === 0 ? <li className="g-sm g-mut px-1 py-4">Wala pa kaming places diyan. Try a nearby city.</li> : null}
+        {shown.length === 0 ? <li className="g-sm g-mut px-1 py-4">No places there yet. Try a nearby city!</li> : null}
       </ul>
     </Sheet>
   )
@@ -264,7 +265,7 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
       ref={cardRef}
       className={cx('st-card', faceUp && 'is-up', motion && `is-${motion}`, vote?.chosen && 'is-chosen')}
       style={{ '--i': index } as CSSProperties}
-      aria-label={place && faceUp ? `Pick ${index + 1}: ${place.name}` : `Pick ${index + 1}, nakataob pa`}
+      aria-label={place && faceUp ? `Pick ${index + 1}: ${place.name}` : `Pick ${index + 1}, face down`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
@@ -285,9 +286,9 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
                 <PlaceImage candidates={getPlaceImageCandidates(place)} category={place.category} className="st-img" priority />
               </InternalLink>
               {onSwap ? (
-                <button type="button" className="st-swap" onClick={() => onSwap('left')} aria-label={`Iba naman, palitan ang ${place.name}`}>
+                <button type="button" className="st-swap" onClick={() => onSwap('left')} aria-label={`Swap ${place.name} for another pick`}>
                   <ArrowsClockwise weight="bold" aria-hidden="true" />
-                  Iba naman
+                  Swap
                 </button>
               ) : null}
             </div>
@@ -311,7 +312,7 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
                   <Plus aria-hidden="true" />
                   Plan
                 </button>
-                <button type="button" onClick={() => onSend(place)} aria-label={`Send ${place.name} sa GC`}>
+                <button type="button" onClick={() => onSend(place)} aria-label={`Send ${place.name} to your group chat`}>
                   <PaperPlaneTilt aria-hidden="true" />
                   Send
                 </button>
@@ -319,7 +320,7 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
               {vote ? (
                 <Button variant={vote.chosen ? 'ink' : 'line'} block className="mt-3" aria-pressed={vote.chosen} onClick={vote.onChoose}>
                   {vote.chosen ? <Check weight="bold" aria-hidden="true" /> : null}
-                  {vote.chosen ? 'Ito pinili mo' : 'Ito ako!'}
+                  {vote.chosen ? 'Your pick' : 'I pick this!'}
                 </Button>
               ) : null}
             </div>
@@ -441,7 +442,7 @@ export default function SaanTayoPage() {
 
   const locate = () => {
     if (scope.kind === 'near') return chooseScope({ kind: 'area', slug: METRO_MANILA_REGION_SLUG })
-    if (!navigator.geolocation) return showSystemMessage({ title: 'Walang location sa browser na ito', description: 'Pili ka na lang ng area.', tone: 'info' })
+    if (!navigator.geolocation) return showSystemMessage({ title: 'Location is off in this browser', description: 'Pick an area instead.', tone: 'info' })
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -450,7 +451,7 @@ export default function SaanTayoPage() {
       },
       () => {
         setIsLocating(false)
-        showSystemMessage({ title: 'Di makuha ang location mo', description: 'Pili ka na lang ng area.', tone: 'info' })
+        showSystemMessage({ title: "Couldn't get your location", description: 'Pick an area instead.', tone: 'info' })
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 10 * 60 * 1000 },
     )
@@ -481,7 +482,7 @@ export default function SaanTayoPage() {
   const swap = async (index: number, direction: 'left' | 'right') => {
     if (busy) return
     const next = swapOne(pool.places, picks, seen.current)
-    if (!next) return showSystemMessage({ title: 'Ubos na ang picks dito', description: 'Try another area or vibe.', tone: 'info' })
+    if (!next) return showSystemMessage({ title: 'No more picks here', description: 'Try another area or vibe.', tone: 'info' })
     seen.current.add(next.slug)
     buzz(10)
     if (prefersReducedMotion()) return setPicks((current) => current.map((place, at) => (at === index ? next : place)))
@@ -501,7 +502,7 @@ export default function SaanTayoPage() {
 
   const sendPlace = async (place: CompactPlace) => {
     try {
-      announce(await sendToChat(gcMessage(place.name, placeWhere(place)), `${getSiteOrigin()}${place.canonicalPath}`), 'I-paste mo na sa GC.')
+      announce(await sendToChat(gcMessage(place.name, placeWhere(place)), `${getSiteOrigin()}${place.canonicalPath}`), 'Paste it in your group chat!')
     } catch {
       showSystemMessage({ title: "Couldn't share", description: 'Try again in a bit.', tone: 'error' })
     }
@@ -511,7 +512,7 @@ export default function SaanTayoPage() {
 
   const sendVote = async () => {
     try {
-      announce(await sendToChat(VOTE_MESSAGE, voteUrl(picks.map((place) => place.slug))), 'I-paste sa GC para makaboto sila.')
+      announce(await sendToChat(VOTE_MESSAGE, voteUrl(picks.map((place) => place.slug))), 'Paste it in your group chat so everyone can vote!')
     } catch {
       showSystemMessage({ title: "Couldn't share", description: 'Try again in a bit.', tone: 'error' })
     }
@@ -521,7 +522,7 @@ export default function SaanTayoPage() {
     const chosen = votePlaces.find((place) => place.slug === votedSlug)
     if (!chosen) return
     try {
-      announce(await sendToChat(voteReply(chosen.name), voteUrl(voteSlugs)), 'I-paste sa GC.')
+      announce(await sendToChat(voteReply(chosen.name), voteUrl(voteSlugs)), 'Paste it in your group chat!')
     } catch {
       showSystemMessage({ title: "Couldn't share", description: 'Try again in a bit.', tone: 'error' })
     }
@@ -546,12 +547,12 @@ export default function SaanTayoPage() {
 
   const noteText =
     pool.note === 'no-indoor'
-      ? 'Kulang ang indoor picks dito, kaya may kasamang outdoor.'
+      ? 'Few indoor picks here, so some are outdoors.'
       : pool.note === 'no-vibe' && vibe !== 'any'
-        ? `Kaunti ang ${VIBES.find((option) => option.value === vibe)?.label.toLowerCase()} picks dito, kaya halo-halo na.`
+        ? `Few ${VIBES.find((option) => option.value === vibe)?.label.toLowerCase()} picks here, so it's a mix.`
         : null
 
-  const areaLabel = scope.kind === 'near' ? (nearLabel ? `Around ${nearLabel}` : 'Malapit sa’yo') : areaName(scope.slug)
+  const areaLabel = scope.kind === 'near' ? (nearLabel ? `Around ${nearLabel}` : 'Near you') : areaName(scope.slug)
   const guideArea = scope.kind === 'area' ? scope.slug : (getDestinationBySlug(areaPlaces[0]?.areaSlug)?.regionSlug ?? METRO_MANILA_REGION_SLUG)
   // Only guides with enough gala-worthy places (same rule as /guides); never cinema or hotel lists.
   const strongGuides = SEO_LANDING_TARGETS.filter(
@@ -564,7 +565,7 @@ export default function SaanTayoPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Saan tayo? Gala picker',
+      name: 'Pick for me: GalaTayo place picker',
       url: canonical,
       applicationCategory: 'TravelApplication',
       operatingSystem: 'Web',
@@ -585,23 +586,23 @@ export default function SaanTayoPage() {
   return (
     <Page>
       <SeoHead
-        title="Saan Tayo? Bahala Na Gala Picker Near You | GalaTayo"
-        description="Hindi makapag-decide ang barkada? Tap Bahala na! for 3 gala-worthy picks near you, rain-smart from the live forecast. Send them to the GC and let everyone vote. Free, no sign up."
+        title="Pick for Me: Random Places to Go Near You | GalaTayo"
+        description="Your group can't decide? Tap Pick for me for 3 top places near you, rain-smart from the live forecast. Send them to your group chat and let everyone vote. Free, no sign-up."
         canonicalPath="/saan-tayo"
         jsonLd={jsonLd}
       />
 
       <div className={cx('st', dealt && 'is-dealt')}>
         <header className="st-head">
-          <h1 className="st-title">Saan tayo?</h1>
-          <p className="st-sub">{isVoting ? 'Botohan na! Tap mo ang gusto mo, tapos sabihin sa GC.' : 'Walang makapag-decide? Kami na bahala.'}</p>
+          <h1 className="st-title">Pick for me</h1>
+          <p className="st-sub">{isVoting ? 'Vote time! Tap your pick, then tell the group chat.' : "Can't decide? We'll pick for you!"}</p>
 
           {isVoting ? null : (
             <>
               <div className="st-where">
                 <button type="button" className="st-pill" aria-pressed={scope.kind === 'near'} onClick={locate} disabled={isLocating}>
                   <NavigationArrow weight={scope.kind === 'near' ? 'fill' : 'regular'} aria-hidden="true" />
-                  {isLocating ? 'Hinahanap…' : 'Near me'}
+                  {isLocating ? 'Finding you…' : 'Near me'}
                 </button>
                 <button type="button" className="st-pill st-pill-area" onClick={() => setIsAreaOpen(true)} aria-haspopup="dialog">
                   <span className="truncate">{areaLabel}</span>
@@ -625,11 +626,11 @@ export default function SaanTayoPage() {
           )}
         </header>
 
-        <section className="st-deck" aria-label={isVoting ? 'Pagpipilian' : 'Your picks'} aria-live="polite" aria-busy={busy || undefined}>
+        <section className="st-deck" aria-label={isVoting ? 'Choices' : 'Your picks'} aria-live="polite" aria-busy={busy || undefined}>
           {loadState === 'failed' ? (
-            <Empty title="May problema" description="Hindi ma-load ang places ngayon. Try again in a bit." className="st-empty" />
+            <Empty title="Something went wrong" description="Places didn't load. Try again in a bit." className="st-empty" />
           ) : !isVoting && loadState === 'ready' && pool.places.length === 0 ? (
-            <Empty title="Wala pa kaming picks dito" description="Try another area." className="st-empty" />
+            <Empty title="No picks here yet" description="Try another area." className="st-empty" />
           ) : (
             slots.map((place, index) => (
               <PickCard
@@ -653,33 +654,33 @@ export default function SaanTayoPage() {
           {isVoting ? (
             <div className="st-go-row">
               <Button variant="line" size="lg" onClick={leaveVote}>
-                Mag-deal ako
+                Deal my own
               </Button>
               <Button variant="tara" size="lg" className="flex-1" onClick={() => void sendMyVote()} disabled={!votedSlug}>
                 <PaperPlaneTilt weight="bold" aria-hidden="true" />
-                {votedSlug ? 'Sabihin sa GC' : 'Pili muna'}
+                {votedSlug ? 'Tell the group chat' : 'Pick one first'}
               </Button>
             </div>
           ) : phase === 'idle' ? (
             <Button variant="tara" size="lg" block onClick={() => void dealAll()} disabled={loadState !== 'ready' || pool.places.length === 0} loading={loadState === 'loading'}>
-              Bahala na!
+              Pick for me!
             </Button>
           ) : (
             <div className="st-go-row">
-              <Button variant="line" size="lg" onClick={() => void dealAll()} disabled={busy} aria-label="Deal ulit ng 3">
+              <Button variant="line" size="lg" onClick={() => void dealAll()} disabled={busy} aria-label="Deal 3 new picks">
                 <ArrowsClockwise weight="bold" aria-hidden="true" />
-                Deal ulit
+                Deal again
               </Button>
               <Button variant="tara" size="lg" className="flex-1" onClick={() => void sendVote()} disabled={busy}>
                 <PaperPlaneTilt weight="bold" aria-hidden="true" />
-                Botohan sa GC
+                Group vote
               </Button>
             </div>
           )}
-          {isVoting ? <p className="st-hint">Sa GC ang bilangan. Walang sign up needed.</p> : null}
+          {isVoting ? <p className="st-hint">Votes happen in your group chat. No sign-up needed.</p> : null}
           {!isVoting && loadState === 'ready' && pool.places.length > 0 ? (
             <p className="st-hint">
-              {noteText ?? (phase === 'idle' ? `${pool.places.length} gala-worthy places sa deck` : 'Swipe a card or tap Iba naman to swap it')}
+              {noteText ?? (phase === 'idle' ? `${pool.places.length} top places in the deck` : 'Swipe a card or tap Swap to change it')}
             </p>
           ) : null}
         </div>

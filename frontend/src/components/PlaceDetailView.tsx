@@ -44,6 +44,7 @@ import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
 import { getPlaceLeadPhoto, usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
+import { goodForText } from '../utils/goodForText'
 import { sourceLabel, usePlaceExtras } from '../utils/placeExtras'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -675,7 +676,7 @@ function PlaceDetailView({
     'Not available'
   const categoryLabel = cleanString(place.category) || 'Place'
   const locationLabel = formatPlaceLocation({ area: cleanString(place.localArea) || cleanString(place.area), city: cleanString(place.city) }) || 'the Philippines'
-  const goodFor = uniqueList(place.good_for ?? [])
+  const goodFor = uniqueList((place.good_for ?? []).map(goodForText))
   const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level, place.budget_notes, place.category, place.name)
   const directionsUrl = getDirectionsUrl(place)
   const normalizedNameSlug = normalizePlaceSlug(place.name)
@@ -703,7 +704,7 @@ function PlaceDetailView({
   const fallbackFaqItems = [
     {
       question: `What is ${place.name} best for?`,
-      answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual gala.`,
+      answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual day out.`,
     },
     {
       question: `What should I know before going to ${place.name}?`,
@@ -1185,7 +1186,7 @@ function PlaceDetailView({
     }
 
     if (reviewRating < 1 || reviewRating > 5) {
-      setReviewError('Choose 1 to 5 stars muna.')
+      setReviewError('Choose 1 to 5 stars first.')
       return
     }
 
@@ -1298,7 +1299,7 @@ function PlaceDetailView({
     const body = commentBody.trim()
 
     if (!body) {
-      setCommentError('Type a comment muna.')
+      setCommentError('Type a comment first.')
       return
     }
 
@@ -1453,7 +1454,7 @@ function PlaceDetailView({
     const body = replyBody.trim()
 
     if (!body) {
-      setCommentError('Type a reply muna.')
+      setCommentError('Type a reply first.')
       return
     }
 
@@ -1763,7 +1764,7 @@ function PlaceDetailView({
   const sulitLevel = budgetAmount != null ? getSulitLevel(budgetAmount) : null
   const sulitLabel = sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : ''
   // Only good-value spots earn the "Sulit" word; pricier ones just show their level.
-  const valueText = sulitLabel ? (sulitLevel && sulitLevel.index <= 2 ? `Sulit · ${sulitLabel}` : sulitLabel) : ''
+  const valueText = sulitLabel ? (sulitLevel && sulitLevel.index <= 2 ? `Value · ${sulitLabel}` : sulitLabel) : ''
   const budgetFromNote = priceBadgeLabel.startsWith('Starting from ₱') ? priceBadgeLabel.replace('Starting from ', '') : ''
   const feeValue =
     budgetAmount != null
@@ -1837,7 +1838,7 @@ function PlaceDetailView({
     { label: categoryLabel, href: categoryHref },
   ]
   const isTopPick = isGalaTayoPick(normalizePlaceSlug(placeSlug || place.name))
-  const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
+  const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a group trip, what should we try there, and when is the best time to go?`
   const commentActionClassName =
     'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'
   const commentMenuItemClassName =
@@ -2175,7 +2176,7 @@ function PlaceDetailView({
             {ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.
           </p>
         ) : (
-          <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
+          <p className="g-sm g-mut">No ratings yet. Be the first to help others decide!</p>
         )}
       </div>
 
@@ -2263,7 +2264,7 @@ function PlaceDetailView({
       {reviewError ? <p className="g-hint is-error mt-2">{reviewError}</p> : null}
 
       <h3 className="g-h3 mb-3 mt-8 flex items-center gap-2">
-        Tips from the barkada
+        Tips from visitors
         <span className="g-sm g-mut font-normal">
           {isCommentsLoading ? <span className="pd-spin" role="status" aria-label="Loading comments" /> : visibleCommentCount === 0 ? null : `· ${visibleCommentCount}`}
         </span>
@@ -2283,7 +2284,7 @@ function PlaceDetailView({
               onBlur={() => setIsCommentComposerFocused(false)}
               rows={2}
               disabled={isCommentSubmitting}
-              placeholder="Share a tip for the barkada…"
+              placeholder="Share a tip for other visitors…"
               className="g-input"
               style={{ minHeight: isCommentComposerFocused || commentBody.trim() ? 96 : 52 }}
             />
@@ -2492,7 +2493,7 @@ function PlaceDetailView({
           ) : highlights.length > 0 ? (
             <section className="pd-sec" aria-labelledby="place-why">
               <h2 id="place-why" className="pd-sec-title">
-                Why it&rsquo;s gala-worthy
+                Why go
               </h2>
               <ul className="pd-hl">
                 {highlights.map((item) => (
@@ -2650,7 +2651,7 @@ function PlaceDetailView({
                 {heartIcon}
               </Button>
             </div>
-            <p className="g-xs g-mut mt-3 text-center">Tara! Add it to a barkada plan, then do the hatian later.</p>
+            <p className="g-xs g-mut mt-3 text-center">Add it to a group plan, then split the costs later!</p>
           </div>
         </aside>
       </div>

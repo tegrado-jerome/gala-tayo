@@ -163,7 +163,7 @@ function PassportPage({ session }: { session: Session }) {
         <header className="me-pp-head">
           <ProfileAvatar profile={avatarProfile} size="lg" />
           <p className="g-eyebrow mt-3">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
-          <h1 className="g-h1 mt-1">Pasyal Passport</h1>
+          <h1 className="g-h1 mt-1">Travel Passport</h1>
           {passport ? <p className="g-sm g-mut mt-1">{collected} of {plural(total, 'city', 'cities')} stamped</p> : null}
         </header>
 
@@ -193,7 +193,7 @@ function PassportPage({ session }: { session: Session }) {
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[var(--r-3)] bg-[var(--fill)] px-4 py-3">
             <div className="min-w-0">
               <h2 className="g-h3">{plural(passport.streak_weeks, 'week')} streak</h2>
-              <p className="g-xs g-mut">Gala once a week to keep it going.</p>
+              <p className="g-xs g-mut">Go out once a week to keep it going!</p>
             </div>
             <ol className="flex items-center gap-2" aria-label="Visits in the last 8 weeks">
               {weeks.map((week) => (
@@ -225,7 +225,7 @@ function PassportPage({ session }: { session: Session }) {
       {state.status === 'error' ? (
         <Empty
           className="mt-6"
-          title="Hindi ma-load ang passport mo."
+          title="Couldn't load your passport."
           description={<span role="alert">{state.message}</span>}
           action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>}
         />
@@ -322,7 +322,7 @@ function PassportPage({ session }: { session: Session }) {
                 </div>
               ) : (
                 <Empty
-                  title="Wala pang stamps."
+                  title="No stamps yet."
                   description="Open a place when you're there and tap “I'm here”."
                   action={<Button variant="tara" href="/search">Get a stamp nearby</Button>}
                 />

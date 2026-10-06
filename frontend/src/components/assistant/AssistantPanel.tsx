@@ -15,16 +15,16 @@ type AssistantApi = ReturnType<typeof useAssistant>
 
 const STARTERS: Record<AssistantMode, Array<{ label: string; prompt: string }>> = {
   chat: [
-    { label: 'Date sa BGC, ₱1,500', prompt: 'Date sa BGC, ₱1500 for two' },
-    { label: 'Umuulan, saan pwede?', prompt: 'Indoor activities ngayon, umuulan' },
-    { label: 'Beach malapit sa Manila', prompt: 'Beach malapit sa Manila' },
+    { label: 'Date in BGC, ₱1,500', prompt: 'Date in BGC, ₱1500 for two' },
+    { label: 'Raining, where to go?', prompt: "Indoor activities, it's raining" },
+    { label: 'Beach near Manila', prompt: 'Beach near Manila' },
     { label: 'First time in Manila', prompt: 'First time in Manila, 2 days. What should I do?' },
   ],
   map: [
     { label: 'Cafés in QC', prompt: 'Quiet cafes in QC' },
     { label: 'Museums in Manila', prompt: 'Museums in Manila' },
-    { label: 'Kainan sa Tagaytay', prompt: 'Kainan sa Tagaytay na may view' },
-    { label: 'Cheap gala QC', prompt: 'Cheap gala QC' },
+    { label: 'Where to eat in Tagaytay', prompt: 'Restaurants in Tagaytay with a view' },
+    { label: 'Cheap day out in QC', prompt: 'Cheap day out in QC' },
   ],
 }
 
@@ -125,8 +125,8 @@ export function AssistantPanel({
         ) : turns.length === 0 ? (
           <div className="a-empty">
             <TaraAvatar large />
-            <h2 className="g-h1 mt-4">{mode === 'map' ? 'Ano hanap mo? Ilalagay ko sa mapa.' : "Hi, I'm Tara. Saan tayo?"}</h2>
-            <p className="g-sm g-mut mt-1.5">Only GalaTayo-verified spots, with live weather. English or Taglish, okay lang.</p>
+            <h2 className="g-h1 mt-4">{mode === 'map' ? "What are you looking for? I'll put it on the map!" : "Hi, I'm Tara! Where to?"}</h2>
+            <p className="g-sm g-mut mt-1.5">Only GalaTayo-verified spots, with live weather. Ask in English or Filipino!</p>
             <div className="a-starters">
               {STARTERS[mode].map((starter) => (
                 <button key={starter.label} type="button" className="a-chip" onClick={() => submit(starter.prompt)} disabled={busy || (limitReached && isRegistered)}>
@@ -158,7 +158,7 @@ export function AssistantPanel({
         )}
         {limitReached && !busy ? (
           <p className="a-limit" role="status">
-            {isRegistered ? "That's all your AI chats for today. Balik ka bukas!" : 'Free guest chats are used up for today.'}
+            {isRegistered ? "That's all your AI chats for today. See you tomorrow!" : 'Free guest chats are used up for today.'}
             {!isRegistered ? (
               <button type="button" onClick={onGuestUpgrade}>
                 Get more with a free account
@@ -194,7 +194,7 @@ export function AssistantPanel({
                 submit(draft)
               }
             }}
-            placeholder={mode === 'map' ? 'e.g. date spots sa Makati' : 'Saan tayo? Ask Tara anything…'}
+            placeholder={mode === 'map' ? 'e.g. date spots in Makati' : 'Where to? Ask Tara anything…'}
             disabled={limitReached && isRegistered}
           />
           <Button

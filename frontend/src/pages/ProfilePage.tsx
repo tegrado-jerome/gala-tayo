@@ -225,9 +225,9 @@ export function FollowListSheet({ title, users, emptyLabel, onClose }: { title: 
 }
 
 const GUEST_LOCKED_ROWS: Array<{ icon: PhosphorIcon; title: string; sub: string }> = [
-  { icon: Eye, title: 'Public profile', sub: 'Share your profile and gala plans' },
-  { icon: UserPlus, title: 'Followers and friends', sub: 'Follow your barkada and see their plans' },
-  { icon: ChatCenteredText, title: 'Reviews, tips and photos', sub: 'Rate places and help other gala-goers' },
+  { icon: Eye, title: 'Public profile', sub: 'Share your profile and plans' },
+  { icon: UserPlus, title: 'Followers and friends', sub: 'Follow friends and see their plans' },
+  { icon: ChatCenteredText, title: 'Reviews, tips and photos', sub: 'Rate places and help other travelers' },
   { icon: MapPinPlus, title: 'Submit a place', sub: 'Add a spot we’re missing' },
   { icon: Sparkle, title: 'More AI each day', sub: 'Higher daily limits for Ask AI and Plan with AI' },
 ]
@@ -287,11 +287,11 @@ function GuestProfile({ session }: { session: Session }) {
       </section>
 
       <nav aria-label="Your stuff" className="me-sec">
-        <h2>Your gala</h2>
+        <h2>Your trips</h2>
         <div className="me-rows">
           <MeRow icon={StampIcon} title="Passport" sub={stampCount ? plural(stampCount, 'city stamp') : 'Tap “I’m here” at a spot to earn a city stamp'} href="/passport" />
           <MeRow icon={Heart} title="Saved" sub={savedCount ? plural(savedCount, 'saved place') : 'Tap the heart on a place to keep it'} href="/favorites" />
-          <MeRow icon={CalendarBlank} title="Gala plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
+          <MeRow icon={CalendarBlank} title="Plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
           <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
         </div>
       </nav>
@@ -633,7 +633,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
               <b>{passportData ? passportData.places : '–'}</b>
               <span>Visited</span>
             </InternalLink>
-            <InternalLink href="/gala-plans" className="me-cnt-i" ariaLabel={`${planCount ?? 0} plans, open gala plans`}>
+            <InternalLink href="/gala-plans" className="me-cnt-i" ariaLabel={`${planCount ?? 0} plans, open plans`}>
               <b>{planCount ?? '–'}</b>
               <span>{planCount === 1 ? 'Plan' : 'Plans'}</span>
             </InternalLink>
@@ -679,10 +679,10 @@ function AccountProfilePage({ session }: ProfilePageProps) {
               ))}
             </div>
           ) : plans.status === 'error' ? (
-            <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
+            <Empty title="Couldn't load your plans." description={plans.message} />
           ) : plans.data.length === 0 ? (
             <div className="me-empty">
-              <p className="g-sm">Wala pang trips. Describe your gala in one line and Tara drafts it.</p>
+              <p className="g-sm">No trips yet. Describe your day in one line and Tara drafts it!</p>
               <Button variant="ink" size="sm" href="/plan-with-ai">
                 <Sparkle aria-hidden="true" />
                 Plan with AI
@@ -734,7 +734,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
               <h2>Follow requests</h2>
               <p className="me-sec-sub">{profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}</p>
               {followRequests.length === 0 ? (
-                <p className="g-sm g-mut">Walang pending requests.</p>
+                <p className="g-sm g-mut">No pending requests.</p>
               ) : (
                 <div>
                   {followRequests.map((request) => (
@@ -758,11 +758,11 @@ function AccountProfilePage({ session }: ProfilePageProps) {
           ) : null}
 
           <nav aria-label="Your stuff" className="me-sec">
-            <h2>Your gala</h2>
+            <h2>Your trips</h2>
             <div className="me-rows">
               <MeRow icon={StampIcon} title="Passport" sub={passportSub} href="/passport" />
               <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
-              <MeRow icon={UserPlus} title="Find friends" sub="Build your barkada" href="/find-friends" />
+              <MeRow icon={UserPlus} title="Find friends" sub="Find your friends" href="/find-friends" />
               <MeRow icon={Eye} title="View public profile" sub="See what others see" href={`/u/${encodeURIComponent(profile.username || '')}`} />
             </div>
           </nav>

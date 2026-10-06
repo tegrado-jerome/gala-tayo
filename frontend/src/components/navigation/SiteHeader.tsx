@@ -93,7 +93,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
               ) : session ? (
                 <>
                   <Button variant="ink" size="sm" href="/plan-with-ai" className="g-only-desk">
-                    Tara, plan
+                    Plan a trip
                   </Button>
                   <span className="g-only-desk">
                     <UserMenu user={currentUser} profile={currentProfile} compact />

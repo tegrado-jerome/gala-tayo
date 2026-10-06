@@ -35,7 +35,7 @@ function OnboardingInterestsStep({ values, onUpdate, onBack, onNext }: Onboardin
   return (
     <OnboardingLayout
       step={2}
-      title="Anong trip mo?"
+      title="What are you into?"
       description="Pick what you're into and we'll lead with those spots. Optional, change it anytime."
       onBack={onBack}
       primary={

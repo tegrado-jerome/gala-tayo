@@ -70,7 +70,7 @@ function OnboardingPublicProfileStep({
   return (
     <OnboardingLayout
       step={1}
-      title="Kumusta! How should the barkada find you?"
+      title="Hi! How should your friends find you?"
       description="Choose how your name shows up and pick a username your friends can search."
       onBack={onBack}
       primary={

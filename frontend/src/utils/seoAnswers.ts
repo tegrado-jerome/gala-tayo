@@ -22,8 +22,8 @@ export function faqJsonLd(faqs: Faq[]) {
 
 // Place tags in plain words, for "Best for" lines built from the places on a page.
 const GOOD_FOR_PHRASES: Record<string, string> = {
-  'Barkada Hangout': 'barkada trips',
-  'Group Dining': 'barkada trips',
+  'Barkada Hangout': 'group trips',
+  'Group Dining': 'group trips',
   'Family Trip': 'family days',
   'Casual Date': 'dates',
   'Date Night': 'dates',

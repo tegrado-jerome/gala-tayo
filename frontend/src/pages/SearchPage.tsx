@@ -207,7 +207,7 @@ function SearchPage({
   return (
     <Page>
       <SearchPageBreadcrumb />
-      <h1 className="g-h1 mt-4">Saan tayo gagala?</h1>
+      <h1 className="g-h1 mt-4">Where to next?</h1>
 
       <SearchSuggest className="mt-4" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
 

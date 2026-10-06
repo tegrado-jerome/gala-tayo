@@ -77,7 +77,7 @@ function PlanCard({ next }: { next: NextPlan }) {
   )
 }
 
-/** Home's "Your next gala": a light trip card with the plan's route on the colour map. Hidden when signed out or without a plan. */
+/** Home's "Your next trip": a light trip card with the plan's route on the colour map. Hidden when signed out or without a plan. */
 function NextGalaCard() {
   const { session, isSessionLoading } = useAppUser()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
@@ -111,7 +111,7 @@ function NextGalaCard() {
   return (
     <section className="min-w-0">
       <SectionHead
-        title="Your next gala"
+        title="Your next trip"
         className="!mt-7"
         action={
           <Button variant="text" href="/gala-plans">

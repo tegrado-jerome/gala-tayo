@@ -194,8 +194,8 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
         <div className="flex items-start gap-3">
           <span className="g-vote-ic" aria-hidden="true"><CalendarCheck weight="light" /></span>
           <div className="min-w-0 flex-1">
-            <h3 id="kailan-title" className="g-h3">Kailan?</h3>
-            <p className="g-sm g-mut">Propose {DATE_OPTIONS.min} to {DATE_OPTIONS.max} dates. The barkada taps the ones they can make.</p>
+            <h3 id="kailan-title" className="g-h3">When?</h3>
+            <p className="g-sm g-mut">Propose {DATE_OPTIONS.min} to {DATE_OPTIONS.max} dates. Everyone taps the ones they can make.</p>
           </div>
         </div>
         {isComposing ? (
@@ -233,7 +233,7 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
       <div className="flex items-start gap-3">
         <span className="g-vote-ic" aria-hidden="true"><CalendarCheck weight="light" /></span>
         <div className="min-w-0 flex-1">
-          <h3 id="kailan-title" className="g-h3">Kailan?</h3>
+          <h3 id="kailan-title" className="g-h3">When?</h3>
           <p className="g-sm g-mut">
             {locked ? `Locked: ${formatDateChoice(locked)}` : `Tap the dates you can make · ${voterCount} ${voterCount === 1 ? 'reply' : 'replies'}`}
           </p>
@@ -532,7 +532,7 @@ export function SpotDeck({ plan, spots, session, onChange, onPlanChange }: VoteP
         <div className="min-w-0 flex-1">
           <h3 id="spot-title" className="g-h3">Pick the spot</h3>
           <p className="g-sm g-mut">
-            {spots.length} places · {swipers === 0 ? 'no tara yet' : `${swipers} ${swipers === 1 ? 'person' : 'people'} said tara`}
+            {spots.length} places · {swipers === 0 ? 'no votes yet' : `${swipers} ${swipers === 1 ? 'person' : 'people'} voted`}
           </p>
         </div>
       </div>

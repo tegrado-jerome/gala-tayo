@@ -44,7 +44,7 @@ function NewListSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Sheet open onClose={onClose} title="New Gala list" labelledBy={titleId}>
+    <Sheet open onClose={onClose} title="New list" labelledBy={titleId}>
       <form onSubmit={create} className="flex flex-col gap-3">
         <label htmlFor={inputId} className="g-label">
           Name
@@ -75,7 +75,7 @@ function GalaListsSection({ className }: { className?: string }) {
   return (
     <section aria-labelledby="gala-lists-title" className={className}>
       <SectionHead
-        title={<span id="gala-lists-title">Gala lists</span>}
+        title={<span id="gala-lists-title">Lists</span>}
         sub={lists.length + following.length === 0 ? 'Group places your way: date night, rainy day, food trip.' : undefined}
         action={
           <Button variant="text" size="sm" onClick={() => setIsCreating(true)}>

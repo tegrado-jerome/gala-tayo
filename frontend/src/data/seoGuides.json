@@ -10,7 +10,7 @@
       "makati cafe guide"
     ],
     "description": "Coffee spots in Makati worth the trip, from quick espresso stops to long tambay tables, with the starting budget per head for each.",
-    "intro": "Makati has more cafes than any one barkada can try. These are the ones we would actually send you to, with what a cup and a snack will cost."
+    "intro": "Makati has more cafes than any group can try! These are the ones we would actually send you to, with what a cup and a snack will cost."
   },
   {
     "slug": "restaurants-in-quezon-city",
@@ -23,7 +23,7 @@
       "kainan sa qc"
     ],
     "description": "Where to eat in Quezon City: Maginhawa food trips, old-school Filipino kitchens and date-night spots, each with a starting budget per head.",
-    "intro": "QC eats well on any budget. Start with the classics, then work your way down Maginhawa when the barkada is hungry again."
+    "intro": "QC eats well on any budget. Start with the classics, then work your way down Maginhawa when the group is hungry again!"
   },
   {
     "slug": "museums-in-manila",
@@ -48,7 +48,7 @@
       "outdoor places in pasig",
       "pasig walking spots"
     ],
-    "description": "Parks and open spaces around Pasig for a morning walk, a picnic or a cheap barkada afternoon outside the mall.",
+    "description": "Parks and open spaces around Pasig for a morning walk, a picnic or a cheap afternoon outside the mall with friends.",
     "intro": "Green space is rare in the city, so these are worth knowing. Go early morning or late afternoon to skip the heat."
   },
   {
@@ -75,7 +75,7 @@
       "kids places in qc",
       "family gala in qc"
     ],
-    "description": "Family days out in Quezon City with room for kids and lolas: parks, interactive museums and kainan that welcome big groups.",
+    "description": "Family days out in Quezon City with room for kids and grandparents: parks, interactive museums and restaurants that welcome big groups.",
     "intro": "These spots have space to run around, food everyone eats and easy parking or commute, so the whole family can come along."
   },
   {
@@ -107,7 +107,7 @@
   },
   {
     "slug": "kainan-sa-bgc",
-    "label": "Kainan sa BGC",
+    "label": "Restaurants in BGC",
     "areaSlug": "taguig",
     "displayAreaName": "BGC",
     "category": "food",
@@ -116,12 +116,12 @@
       "restaurants in bgc",
       "food trip in bgc"
     ],
-    "description": "Kainan sa BGC: restaurants in Bonifacio Global City from casual to special-occasion, with the starting budget per head for each.",
+    "description": "Restaurants in Bonifacio Global City from casual to special-occasion, with the starting budget per head for each.",
     "intro": "BGC has a restaurant for every mood. These are the ones worth your money, with an idea of the bill before you sit down."
   },
   {
     "slug": "tambayan-sa-makati",
-    "label": "Tambayan sa Makati",
+    "label": "Hangout Spots in Makati",
     "areaSlug": "makati",
     "goodFor": "chill",
     "keywords": [
@@ -129,12 +129,12 @@
       "chill spots in makati",
       "makati hangout places"
     ],
-    "description": "Tambayan sa Makati: gardens, cafes and open spaces where the barkada can hang out for hours without spending much.",
+    "description": "Hangout spots in Makati: gardens, cafes and open spaces where friends can stay for hours without spending much.",
     "intro": "Makati is more than offices. These are the spots to sit, people-watch and talk until it is time for dinner."
   },
   {
     "slug": "saan-mag-date-sa-qc",
-    "label": "Saan Mag Date sa QC",
+    "label": "Date Spots in QC",
     "areaSlug": "quezon-city",
     "displayAreaName": "QC",
     "goodFor": "date",
@@ -143,7 +143,7 @@
       "date places in quezon city",
       "qc date spots"
     ],
-    "description": "Saan mag-date sa QC? Art spots, cozy restaurants and walkable streets for a date in Quezon City, with the budget per head for each.",
+    "description": "Where to go on a date in QC? Art spots, cozy restaurants and walkable streets in Quezon City, with the budget per head for each.",
     "intro": "QC dates are easy on the wallet and big on character. Mix an art stop with a good dinner and you are set."
   },
   {
@@ -238,7 +238,7 @@
   },
   {
     "slug": "barkada-hangouts-in-makati",
-    "label": "Barkada Hangouts in Makati",
+    "label": "Group Hangouts in Makati",
     "areaSlug": "makati",
     "goodFor": "barkada",
     "keywords": [
@@ -247,8 +247,8 @@
       "tropa gala makati",
       "makati group activities"
     ],
-    "description": "Barkada hangouts in Makati: sharing plates, bars and open spaces where a big group can stay long, with budgets everyone can split.",
-    "intro": "Big group, small budget, no plan yet? These Makati spots fit the whole barkada and keep the bill easy to split."
+    "description": "Group hangouts in Makati: sharing plates, bars and open spaces where a big group can stay long, with budgets everyone can split.",
+    "intro": "Big group, small budget, no plan yet? These Makati spots fit everyone and keep the bill easy to split!"
   },
   {
     "slug": "family-outing-in-manila",
@@ -295,7 +295,7 @@
     ],
     "addedAt": "2026-10-05",
     "description": "Things to do in Metro Manila: bike tours, aquariums, theme parks and creative hubs for a day out, with fees and how long to stay.",
-    "intro": "Beyond eating and malling, the metro has plenty to do. Use these picks to plan a day the barkada will still talk about."
+    "intro": "Beyond eating and malling, the metro has plenty to do. Use these picks to plan a day your friends will still talk about!"
   },
   {
     "slug": "cafes-in-metro-manila",
@@ -448,10 +448,10 @@
       "tagaytay food trip",
       "tagaytay day trip"
     ],
-    "description": "Pasyalan sa Tagaytay: Sky Ranch and the Sky Eye, Picnic Grove and People's Park in the Sky, an easy day trip from Manila with budgets per head.",
+    "description": "Things to do in Tagaytay: Sky Ranch and the Sky Eye, Picnic Grove and People's Park in the Sky, an easy day trip from Manila with budgets per head.",
     "intro": "Tagaytay is the classic day trip south of Manila. Come for the cool air and the Taal view, ride the Sky Eye at sunset, then stay for a long dinner on the ridge.",
     "addedAt": "2026-10-06",
-    "title": "Pasyalan sa Tagaytay: Things to Do and Taal Views",
+    "title": "Tagaytay: Things to Do and Taal Views",
     "quickAnswer": {
       "gettingThere": "Around 2 hours from Manila by car, more on weekends. Nasugbu-bound buses from PITX and Pasay pass through Tagaytay."
     },
@@ -562,7 +562,7 @@
     ],
     "addedAt": "2026-10-06",
     "description": "Indoor things to do in Metro Manila when it pours: The Mind Museum, Ayala Museum, Art in Island and Star City's rides, with budgets per head.",
-    "intro": "Rain doesn't have to cancel the gala. Every pick here is indoors, from The Mind Museum and Ayala Museum to Star City's rides, so you only need to get there dry.",
+    "intro": "Rain doesn't have to cancel the trip! Every pick here is indoors, from The Mind Museum and Ayala Museum to Star City's rides, so you only need to get there dry.",
     "title": "Indoor Activities in Metro Manila for Rainy Days"
   },
   {
@@ -683,10 +683,10 @@
       "anilao diving",
       "hikes in batangas"
     ],
-    "description": "Pasyalan sa Batangas: Anilao diving, Fortune Island, Laiya Beach, Taal heritage houses and a day hike up Mount Batulao, with budgets per head.",
+    "description": "Things to do in Batangas: Anilao diving, Fortune Island, Laiya Beach, Taal heritage houses and a day hike up Mount Batulao, with budgets per head.",
     "intro": "Batangas is Manila's closest beach-and-mountain fix. Dive Anilao, sail out to Fortune Island, swim at Laiya, walk Taal's ancestral houses and save a dry-season morning for Mount Batulao.",
     "addedAt": "2026-10-06",
-    "title": "Pasyalan sa Batangas: Beaches, Dives and Day Hikes",
+    "title": "Batangas: Beaches, Dives and Day Hikes",
     "quickAnswer": {
       "gettingThere": "Around 2 to 3 hours from Manila by car via SLEX and the STAR Tollway, depending on where you are headed."
     }
@@ -810,10 +810,10 @@
   },
   {
     "slug": "pasyalan-sa-rizal",
-    "label": "Pasyalan sa Rizal",
+    "label": "Day Trips in Rizal",
     "areaSlug": "rizal",
     "displayAreaName": "Rizal",
-    "title": "Pasyalan sa Rizal: Day Trips near Manila",
+    "title": "Rizal: Day Trips near Manila",
     "keywords": [
       "pasyalan sa rizal",
       "pasyalan sa tanay rizal",
@@ -821,7 +821,7 @@
       "daranak falls",
       "treasure mountain tanay"
     ],
-    "description": "Pasyalan sa Rizal: Masungi Georeserve, Pintô Art Museum, Treasure Mountain sunrises, Daranak Falls and the Angono petroglyphs.",
+    "description": "Day trips in Rizal: Masungi Georeserve, Pintô Art Museum, Treasure Mountain sunrises, Daranak Falls and the Angono petroglyphs.",
     "intro": "Rizal is the closest escape from the metro. Book a Masungi trail, catch the sunrise at Treasure Mountain in Tanay, swim at Daranak Falls, or spend a slow afternoon at Pintô Art Museum in Antipolo.",
     "quickAnswer": {
       "gettingThere": "Around 1 to 2 hours by car from Metro Manila via Marcos Highway or Ortigas Avenue Extension, depending on the stop."

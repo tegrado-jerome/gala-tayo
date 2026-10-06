@@ -145,7 +145,7 @@ function FavoritesPage() {
       .map((favorite) => favorite.place?.name?.trim())
       .filter(Boolean)
       .slice(0, AI_PROMPT_PLACE_LIMIT)
-    return names.length > 0 ? `/plan-with-ai?q=${encodeURIComponent(`Plan a gala from my saved places: ${names.join(', ')}`)}` : '/plan-with-ai'
+    return names.length > 0 ? `/plan-with-ai?q=${encodeURIComponent(`Plan a day out from my saved places: ${names.join(', ')}`)}` : '/plan-with-ai'
   }, [savedPlaces])
 
   const photosOf = (places: FavoritePlace[]) => places.map((place) => getPlacePhoto(place)).filter((url): url is string => Boolean(url))
@@ -198,14 +198,14 @@ function FavoritesPage() {
           <h1 className="g-h1">Saved</h1>
           <p className="g-mut mt-1">
             {isSignedIn && savedPlaces.length > 0
-              ? `${savedPlaces.length} saved place${savedPlaces.length === 1 ? '' : 's'}. Pick a few and turn them into a gala.`
-              : 'Your favorite gala spots, ready when you are.'}
+              ? `${savedPlaces.length} saved place${savedPlaces.length === 1 ? '' : 's'}. Pick a few and turn them into a plan!`
+              : 'Your favorite spots, ready when you are.'}
           </p>
         </div>
         {isSignedIn && savedPlaces.length > 0 ? (
           <Button variant="tara" href={aiPlanHref}>
             <Sparkles aria-hidden="true" />
-            Plan a gala from these
+            Plan a trip from these
           </Button>
         ) : null}
       </header>
@@ -313,12 +313,12 @@ function FavoritesPage() {
             {isFavoritesLoading && savedPlaces.length === 0 ? (
               <GridSkeleton />
             ) : favoritesError ? (
-              <Empty title="Hindi ma-load ang saved places." description={<span role="alert">{favoritesError}</span>} />
+              <Empty title="Couldn't load saved places." description={<span role="alert">{favoritesError}</span>} />
             ) : null}
 
             {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
               <Empty
-                title="Wala ka pang saved places."
+                title="No saved places yet."
                 description="Tap the heart on any place to keep it here."
                 action={<Button variant="tara" href="/search">Explore places</Button>}
               />

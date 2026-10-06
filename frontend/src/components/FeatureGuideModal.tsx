@@ -243,10 +243,10 @@ export const featureGuideContent = {
     id: 'chatbot',
     title: 'Ask AI guide',
     intro: 'Ask like you are chatting with a friend.',
-    body: 'Get ideas, picks, or a simple gala plan.',
+    body: 'Get ideas, picks or a simple day plan.',
     bestForTitle: 'Best for',
-    bestFor: ['Gala ideas', 'Date or barkada plans', 'Personal suggestions'],
-    sampleInputs: ['"Plan a chill Saturday"', '"Barkada night ideas"', '"Good spot near Tagaytay?"'],
+    bestFor: ['Trip ideas', 'Date or group plans', 'Personal suggestions'],
+    sampleInputs: ['"Plan a chill Saturday"', '"Night out with friends"', '"Good spot near Tagaytay?"'],
   },
   maps: {
     id: 'maps',

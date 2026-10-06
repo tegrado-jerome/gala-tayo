@@ -131,7 +131,7 @@ function MyList({ list }: { list: GalaList }) {
   return (
     <>
       <Header
-        kicker={`Gala list · ${plural(list.places.length, 'place')}`}
+        kicker={`List · ${plural(list.places.length, 'place')}`}
         title={list.name}
         sub={[list.copiedFrom ? `Copied from @${list.copiedFrom}` : 'Your list', `Updated ${updated}`].join(' · ')}
         photos={list.places.slice(0, 3).map((place) => place.photo)}
@@ -204,7 +204,7 @@ function MyList({ list }: { list: GalaList }) {
       {list.places.length === 0 ? (
         <Empty
           className="mt-8"
-          title="Wala pang laman."
+          title="Nothing here yet."
           description="Open a place, tap Share, then “Save to a list”."
           action={<Button variant="line" href="/search">Find places</Button>}
         />
@@ -259,7 +259,7 @@ function SharedListView({ shared }: { shared: SharedList }) {
   return (
     <>
       <Header
-        kicker={`Gala list · ${plural(state.status === 'ready' ? places.length : shared.slugs.length, 'place')}`}
+        kicker={`List · ${plural(state.status === 'ready' ? places.length : shared.slugs.length, 'place')}`}
         title={shared.name}
         sub={shared.by ? `By @${shared.by}` : 'Shared with you'}
         photos={places.slice(0, 3).map((place) => place.photo)}

@@ -181,7 +181,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             const joined = nextBarkada.members.filter((member) => member.rsvp === 'going' && !wasGoing.has(member.user_id) && member.user_id !== session?.user?.id)
             if (joined.length > 0) {
               const names = joined.map((member) => personName(member.profile).split(' ')[0])
-              setLiveNote(`${names.length > 2 ? `${names.slice(0, 2).join(', ')} and ${names.length - 2} more` : names.join(' and ')} said Tara!`)
+              setLiveNote(`${names.length > 2 ? `${names.slice(0, 2).join(', ')} and ${names.length - 2} more` : names.join(' and ')} said I'm in!`)
               setLiveBurst((count) => count + 1)
             }
           }
@@ -215,7 +215,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         if (!isCancelled) setPlan(data.plan)
       })
       .catch((loadError) => {
-        if (!isCancelled) setError(loadError instanceof Error ? loadError.message : 'Gala plan unavailable.')
+        if (!isCancelled) setError(loadError instanceof Error ? loadError.message : 'Plan unavailable.')
       })
     getGalaPlanBarkada(planId, session)
       .then((data) => {
@@ -259,7 +259,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     return (
       <Page narrow>
         <BackLink />
-        <Empty className="mt-6" title="Hindi ma-open ang plan" description={error} action={<Button variant="soft" href="/gala-plans">Back to plans</Button>} />
+        <Empty className="mt-6" title="Couldn't open the plan" description={error} action={<Button variant="soft" href="/gala-plans">Back to plans</Button>} />
       </Page>
     )
   }
@@ -348,7 +348,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     try {
       applyBarkada(await setGalaPlanRsvp(plan.id, 'going', activeSession))
     } catch (joinError) {
-      setNotice(joinError instanceof Error ? joinError.message : 'Hindi ma-RSVP. Try again.')
+      setNotice(joinError instanceof Error ? joinError.message : 'Couldn\'t save your RSVP. Try again.')
     }
   }
 
@@ -390,7 +390,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       return
     }
     trackShare({ channel: 'invite', contentType: 'plan', itemId: plan.id })
-    setNotice('Invite sent. Hintayin ang Tara nila!')
+    setNotice('Invite sent! Now wait for their replies.')
   }
 
   const remove = async () => {
@@ -418,8 +418,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     const names = plan.items.map((item) => item.place.name).join(', ')
     openFloatingChat(
       lastStop
-        ? `Suggest a good next stop after ${lastStop.place.name}${lastStop.place.city ? ` in ${lastStop.place.city}` : ''} for our gala "${plan.title}". Current stops: ${names}.`
-        : `Help me plan stops for our gala "${plan.title}".`,
+        ? `Suggest a good next stop after ${lastStop.place.name}${lastStop.place.city ? ` in ${lastStop.place.city}` : ''} for our trip "${plan.title}". Current stops: ${names}.`
+        : `Help me plan stops for our trip "${plan.title}".`,
     )
   }
 
@@ -435,7 +435,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         {plan.visibility === 'public' ? 'On your profile. Anyone can view and RSVP.' : 'Link only. Anyone with the link can view and RSVP.'}
       </p>
       <figure className="mt-3">
-        <figcaption className="g-xs g-mut mb-1.5">What your barkada sees</figcaption>
+        <figcaption className="g-xs g-mut mb-1.5">What your friends see</figcaption>
         <div className="g-invite-preview">
           {coverPhotos.length > 0 ? (
             <PlaceImage candidates={coverPhotos} category={plan.items[0]?.place.category} />
@@ -448,8 +448,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             <div className="g-h3 truncate">{plan.title}</div>
             <div className="g-xs g-mut">{dateText ?? 'Date TBD'}</div>
             <div className="g-invite-pills" aria-hidden="true">
-              <span>Tara!</span>
-              <span>Baka</span>
+              <span>I'm in!</span>
+              <span>Maybe</span>
               <span>Pass</span>
             </div>
           </div>
@@ -480,10 +480,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     ...(readyBarkada
       ? [
           { value: 'polls' as const, label: <>Polls{count(voteCount)}</> },
-          { value: 'barkada' as const, label: <>Barkada{count(readyBarkada.members.length)}</> },
+          { value: 'barkada' as const, label: <>Group{count(readyBarkada.members.length)}</> },
         ]
       : []),
-    { value: 'hatian', label: 'Hatian' },
+    { value: 'hatian', label: 'Split costs' },
   ]
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'itinerary'
 
@@ -529,7 +529,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const coverSub = [
     `${stops.length} ${stops.length === 1 ? 'stop' : 'stops'}`,
     totalKm > 0 ? (totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`) : null,
-    readyBarkada && readyBarkada.members.length > 1 ? `${readyBarkada.members.length} in the barkada` : null,
+    readyBarkada && readyBarkada.members.length > 1 ? `${readyBarkada.members.length} in the group` : null,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -546,10 +546,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         : going.length > 1
           ? 'Everyone who replied is in'
           : plan.viewer_is_owner
-            ? 'Send the link so the barkada can reply'
+            ? 'Send the link so everyone can reply'
             : viewerMember?.rsvp === 'going'
-              ? 'Kasama ka na. Hintayin ang iba!'
-              : 'Ikaw na lang ang kulang!'
+              ? 'You\'re in! Now wait for the others.'
+              : 'Everyone\'s waiting on you!'
 
   const splitCells = [
     { value: formatPeso(perHead), label: costLabel },
@@ -563,14 +563,14 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     <Page className="pt-0 md:pt-6 lg:pt-8">
       <DestructiveConfirmModal
         isOpen={confirm === 'delete'}
-        title="Delete this gala plan?"
-        description="The plan and its stops will be removed. Your barkada won't be able to open the link."
+        title="Delete this plan?"
+        description="The plan and its stops will be removed. Your friends won't be able to open the link."
         confirmLabel="Delete plan"
         isConfirming={isWorking}
         onCancel={() => setConfirm(null)}
         onConfirm={remove}
       />
-      <Sheet open={isInviteOpen} onClose={() => setIsInviteOpen(false)} title="Invite the barkada" labelledBy="invite-sheet-title">
+      <Sheet open={isInviteOpen} onClose={() => setIsInviteOpen(false)} title="Invite friends" labelledBy="invite-sheet-title">
         {invite}
       </Sheet>
 
@@ -578,7 +578,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         <div className="min-w-0">
           <PlanCover
             stops={coverStops}
-            kicker={`Barkada plan · ${dateText ?? 'Date TBD'}`}
+            kicker={`Group plan · ${dateText ?? 'Date TBD'}`}
             title={plan.title}
             sub={coverSub}
             bar={
@@ -625,7 +625,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 <AvatarStack people={[...going, ...maybe].map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={32} live />
               ) : null}
               {plan.viewer_is_owner ? (
-                <Button variant="line" size="sm" iconOnly aria-label="Invite the barkada" onClick={() => setIsInviteOpen(true)}>
+                <Button variant="line" size="sm" iconOnly aria-label="Invite friends" onClick={() => setIsInviteOpen(true)}>
                   <UserPlus />
                 </Button>
               ) : null}
@@ -638,7 +638,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             <button type="button" className="g-vote-strip mt-3" onClick={() => openTab('polls')}>
               {openDates.length > 0 ? (
                 <span>
-                  <b>Kailan?</b> {openDates.length} dates{leadingDate ? ` · best so far ${formatDateChoice(leadingDate)}` : ' · vote na'}
+                  <b>When?</b> {openDates.length} dates{leadingDate ? ` · best so far ${formatDateChoice(leadingDate)}` : ' · vote now'}
                 </span>
               ) : null}
               {spotsOpen && votes ? (
@@ -663,7 +663,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             {plan.viewer_is_owner || !readyBarkada ? (
               <Button variant="ink" onClick={() => setIsInviteOpen(true)}>
                 <UserPlus />
-                Invite barkada
+                Invite friends
               </Button>
             ) : null}
           </div>
@@ -674,7 +674,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             {activeTab === 'itinerary' ? (
               stops.length === 0 ? (
                 <Empty
-                  title="Wala pang stops"
+                  title="No stops yet"
                   description="Let Tara fill the day, or add places from any place page."
                   action={
                     <Button variant="soft" href={`/plan-with-ai?q=${encodeURIComponent(plan.title)}`}>
@@ -704,7 +704,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
                   <section aria-labelledby="plan-split-title" className="mt-8">
                     <h2 id="plan-split-title" className="g-h2 mb-3">Budget</h2>
-                    <button type="button" className="g-tstats" style={{ ['--n' as string]: splitCells.length }} onClick={() => openTab('hatian')} aria-label={`${splitCells.map((cell) => `${cell.value} ${cell.label}`).join(', ')}. Open hatian`}>
+                    <button type="button" className="g-tstats" style={{ ['--n' as string]: splitCells.length }} onClick={() => openTab('hatian')} aria-label={`${splitCells.map((cell) => `${cell.value} ${cell.label}`).join(', ')}. Open split costs`}>
                       {splitCells.map((cell) => (
                         <span key={cell.label} className="g-tstat">
                           <b>{cell.value}</b>
@@ -752,17 +752,17 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           {plan.viewer_is_owner ? (
             <Button variant="ink" className="min-w-0 flex-[1.5]" onClick={() => setIsInviteOpen(true)}>
               <UserPlus />
-              Invite barkada
+              Invite friends
             </Button>
           ) : readyBarkada?.viewer_rsvp === 'going' ? (
             <Button variant="soft" className="relative min-w-0 flex-[1.5]" disabled>
               <Check />
-              Sasama ka na
+              You're in
               <TaraBurst play={burst} />
             </Button>
           ) : (
             <Button variant="ink" className="min-w-0 flex-[1.5]" onClick={() => void joinPlan()}>
-              Tara, sasama ako!
+              I'm in!
             </Button>
           )}
         </div>

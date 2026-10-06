@@ -109,7 +109,7 @@ export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOp
         <div className="pd-pg-empty">
           <div>
             <Camera className="mx-auto h-9 w-9" weight="light" aria-hidden="true" />
-            <p className="g-h3 mt-3">Wala pang photos</p>
+            <p className="g-h3 mt-3">No photos yet</p>
             <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
             {showAddPhotoAction ? (
               <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">

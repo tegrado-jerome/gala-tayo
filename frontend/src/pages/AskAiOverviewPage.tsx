@@ -9,7 +9,7 @@ import { Page } from '../components/ui'
 
 const tools: Array<{ href: string; title: string; description: string; icon: PhosphorIcon; tint: 'tara' | 'sea' | 'warn' }> = [
   { href: '/plan-with-ai', title: 'Plan with AI', description: 'One sentence in, a full-day draft out.', icon: Sparkles, tint: 'tara' },
-  { href: '/ask-ai/chatbot', title: 'Chat with Tara', description: 'Ask gala questions and get ideas.', icon: ChatCircleDots, tint: 'sea' },
+  { href: '/ask-ai/chatbot', title: 'Chat with Tara', description: 'Ask trip questions and get ideas.', icon: ChatCircleDots, tint: 'sea' },
   { href: '/ask-ai/maps', title: 'Tara on the map', description: 'Same Tara, every pick pinned on a map.', icon: MapIcon, tint: 'warn' },
 ]
 
@@ -19,7 +19,7 @@ function AskAiOverviewPage() {
       <div className="m-art-head">
         <TaraAvatar large />
         <h1 className="g-h1 mt-4">Hi, I&apos;m Tara. How can I help?</h1>
-        <p className="g-mut mt-2">Pick a tool. Lahat libre, may daily limit lang.</p>
+        <p className="g-mut mt-2">Pick a tool. All free, with a daily limit.</p>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">

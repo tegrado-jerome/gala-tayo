@@ -184,9 +184,9 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
       ) : null}
 
       {notFound ? (
-        <Empty title="Profile not found." description="Baka mali ang username. Try searching for them." action={<Button variant="tara" href="/find-friends">Find friends</Button>} />
+        <Empty title="Profile not found." description="The username may be wrong. Try searching for them." action={<Button variant="tara" href="/find-friends">Find friends</Button>} />
       ) : errorMessage ? (
-        <Empty title="Hindi ma-load ang profile." description={<span role="alert">{errorMessage}</span>} />
+        <Empty title="Couldn't load the profile." description={<span role="alert">{errorMessage}</span>} />
       ) : loadedProfile ? (
         <div className="grid items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-16">
           <aside className="min-w-0 lg:sticky lg:top-24">
@@ -263,7 +263,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
               <Empty title="This profile is private." description={lockedMessage} />
             ) : plans.length === 0 ? (
               relationshipState === 'self' ? (
-                <Empty title="Wala pang public plans." description="Make a plan public so it shows up here." />
+                <Empty title="No public plans yet." description="Make a plan public so it shows up here." />
               ) : (
                 <Empty title={`${firstName} hasn't shared a plan yet.`} description="Follow them to catch the next one." />
               )

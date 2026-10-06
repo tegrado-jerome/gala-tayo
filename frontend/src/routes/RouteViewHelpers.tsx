@@ -26,8 +26,8 @@ export function NotFoundPage({
         <CompassRose weight="light" />
       </span>
       <p className="m-onb-step mt-8">Error 404</p>
-      <h1 className="g-h1 mt-1.5">Naligaw ka yata</h1>
-      <p className="g-mut mt-2 max-w-[40ch] text-[16px]">Wala dito &apos;yan. This page doesn&apos;t exist or was moved.</p>
+      <h1 className="g-h1 mt-1.5">Looks like you got lost!</h1>
+      <p className="g-mut mt-2 max-w-[40ch] text-[16px]">This page doesn&apos;t exist or was moved.</p>
       <div className="mt-7 flex flex-wrap justify-center gap-2">
         <Button variant="tara" size="lg" onClick={onGoHome}>
           Go home

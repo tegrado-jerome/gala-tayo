@@ -51,9 +51,9 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
         if (status === 404) {
           setNotFound(true)
         } else if (status === 403) {
-          setLockedMessage(error instanceof Error ? error.message : 'This gala plan is private.')
+          setLockedMessage(error instanceof Error ? error.message : 'This plan is private.')
         } else {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plan.')
+          setErrorMessage(error instanceof Error ? error.message : 'Couldn\'t load the plan.')
         }
         setPlan(null)
       }
@@ -86,7 +86,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
       setPlan((current) => current ? { ...current, viewer_has_hearted: data.viewer_has_hearted, hearts_count: data.hearts_count } : current)
     } catch (error) {
       setPlan(previousPlan)
-      setNotice(error instanceof Error ? error.message : 'Log in to heart this gala plan.')
+      setNotice(error instanceof Error ? error.message : 'Log in to heart this plan.')
     }
   }
 
@@ -97,8 +97,8 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
       <Page narrow>
         <Empty
           className="mt-6"
-          title={notFound ? 'Gala plan not found' : lockedMessage || 'Hindi ma-open ang plan'}
-          description={lockedMessage ? 'Follow to request access kung followers-only ito.' : errorMessage || 'The link may be old or the plan was removed.'}
+          title={notFound ? 'Plan not found' : lockedMessage || 'Couldn\'t open the plan'}
+          description={lockedMessage ? 'Follow to request access if it\'s followers-only.' : errorMessage || 'The link may be old or the plan was removed.'}
           action={<Button variant="soft" href={notFound || errorMessage ? '/explore' : profileHref}>{lockedMessage ? 'View profile' : 'Explore places'}</Button>}
         />
       </Page>
@@ -151,7 +151,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
         <div className="min-w-0">
           <PlanCover
             stops={items.map((item) => item.place)}
-            kicker={`Barkada plan · ${formatGalaPlanDate(plan.description)}`}
+            kicker={`Group plan · ${formatGalaPlanDate(plan.description)}`}
             title={plan.title}
             sub={[city, `${items.length} ${items.length === 1 ? 'stop' : 'stops'}`].filter(Boolean).join(' · ')}
             bar={
@@ -176,7 +176,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
           <InternalLink href={profileHref} className="mt-3 inline-flex min-h-11 items-center gap-2 no-underline">
             <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
             <span className="g-sm g-mut">
-              <b className="text-[var(--ink)]">{ownerName}</b> shared this gala
+              <b className="text-[var(--ink)]">{ownerName}</b> shared this plan
             </span>
           </InternalLink>
 
@@ -200,12 +200,12 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
           {description ? <p className="g-sm mt-4 max-w-[65ch] leading-relaxed">{description}</p> : null}
 
           <Panel className="mt-5">
-            <h2 className="g-h3">Sama ka?</h2>
-            <p className="g-sm g-mut mt-0.5">RSVP with the barkada, vote on stops and split the bill.</p>
+            <h2 className="g-h3">Are you in?</h2>
+            <p className="g-sm g-mut mt-0.5">RSVP with the group, vote on stops and split the bill.</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
               <Button variant="tara" onClick={joinPlan}>
                 <UsersThree />
-                {session ? 'Tara, RSVP' : 'RSVP'}
+                {session ? 'RSVP now' : 'RSVP'}
               </Button>
               <Button variant="soft" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
                 <Share />
@@ -217,7 +217,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
           <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'}` : undefined} />
           {stops.length === 0 ? (
-            <Empty title="Wala pang stops" description="This plan has no places yet." />
+            <Empty title="No stops yet" description="This plan has no places yet." />
           ) : (
             <>
               {isDesktop ? null : routeMap}
@@ -226,7 +226,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
           )}
 
           <div className="mt-8">
-            <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A gala like ${plan.title}`)}`}>
+            <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A day out like ${plan.title}`)}`}>
               <Sparkles />
               Plan your own with AI
             </Button>
