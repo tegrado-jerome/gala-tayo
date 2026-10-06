@@ -78,7 +78,9 @@ async function readSitemapPaths() {
 // Guides and tools live in the frontend, so their URLs are added here rather than by the API sitemap.
 async function readFrontendPaths() {
   const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
-  return ['/saan-tayo', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`)]
+  // Gala Today posts are committed daily into src/data/galaToday.json by the SEO daily workflow.
+  const todayPosts = JSON.parse(await readFile(path.join(root, 'src/data/galaToday.json'), 'utf8'))
+  return ['/saan-tayo', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
 }
 
 const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
@@ -239,6 +241,7 @@ function buildLlmsTxt(pages) {
     '',
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
     ...section('Guides', (routePath) => routePath.startsWith('/guides')),
+    ...section('Gala Today (daily trend picks)', (routePath) => routePath.startsWith('/today')),
     ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
     ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
     ...section('About', (routePath) => ['/about', '/privacy', '/terms'].includes(routePath)),

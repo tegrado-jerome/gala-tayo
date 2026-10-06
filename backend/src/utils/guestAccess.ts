@@ -16,6 +16,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "categories",
   "search",
   "seoPlaces",
+  "galaToday",
   "seoArea",
   "seoListings",
   "sitemapXml",
@@ -78,6 +79,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "galaPlanPollVote",
   // Timers never carry a user token
   "redisKeepAlive",
+  "galaTodayTimer",
 ]);
 
 /** Account-only: profile/social, community content, reports, submissions, privacy, MFA and admin. */
