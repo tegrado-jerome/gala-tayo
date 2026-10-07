@@ -7,6 +7,7 @@ import { isAccountOnlyPath, isAdminPath, isProtectedAccountPath } from '../utils
 import { isAnonymousSession } from '../utils/guestSession'
 import { isPath } from '../utils/routes'
 import { parseVibe, type VibeId } from '../utils/vibes'
+import { readPlanWithAiParams } from '../utils/planWithAiLink'
 import { LEGAL_PAGE_TYPES, type LegalPageType } from '../data/legalPages'
 import type { NavigationSource } from '../app/useAppLocationState'
 
@@ -93,7 +94,7 @@ export type RouteDescriptor =
   | { kind: 'history' }
   | { kind: 'feedback' }
   | { kind: 'gala-plans-list' }
-  | { kind: 'plan-with-ai'; initialPrompt: string }
+  | { kind: 'plan-with-ai'; initialPrompt: string; initialPlaces: string[] }
   | { kind: 'passport' }
   | { kind: 'gala-plans-new' }
   | { kind: 'gala-plans-favorites' }
@@ -238,7 +239,8 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
   }
 
   if (isPath(pathname, '/plan-with-ai')) {
-    return { kind: 'plan-with-ai', initialPrompt: new URLSearchParams(search).get('q') ?? '' }
+    const { prompt, placeSlugs } = readPlanWithAiParams(search)
+    return { kind: 'plan-with-ai', initialPrompt: prompt, initialPlaces: placeSlugs }
   }
 
   if (isPath(pathname, '/ask-ai/maps')) {

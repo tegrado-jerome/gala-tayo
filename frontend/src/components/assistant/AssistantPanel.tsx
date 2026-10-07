@@ -45,7 +45,7 @@ export function AssistantPanel({
 }) {
   const { turns, memory, busy, usage, usageError, limitReached, isRegistered, send, stop, reset, retryUsage } = assistant
   const [draft, setDraft] = useState('')
-  const [planFor, setPlanFor] = useState<{ id: string; name: string } | null>(null)
+  const [planFor, setPlanFor] = useState<{ id: string; name: string; slug: string } | null>(null)
   const scroller = useRef<HTMLDivElement | null>(null)
   const input = useRef<HTMLTextAreaElement | null>(null)
   const lastText = turns.at(-1)?.role === 'assistant' ? (turns.at(-1) as { text: string }).text : ''
@@ -76,7 +76,7 @@ export function AssistantPanel({
     if (chip.kind === 'map') return onShowMap?.()
     if (chip.kind === 'add_to_plan') {
       const card = response.places.find((place) => place.slug === chip.prompt) ?? response.places[0]
-      if (card) setPlanFor({ id: card.id, name: card.name })
+      if (card) setPlanFor({ id: card.id, name: card.name, slug: card.slug })
       return
     }
     submit(chip.prompt)
@@ -214,7 +214,7 @@ export function AssistantPanel({
           </InternalLink>
         </p>
       </div>
-      {planFor ? <AddToGalaPlanModal isOpen placeId={planFor.id} placeName={planFor.name} onClose={() => setPlanFor(null)} /> : null}
+      {planFor ? <AddToGalaPlanModal isOpen placeId={planFor.id} placeName={planFor.name} placeSlug={planFor.slug} onClose={() => setPlanFor(null)} /> : null}
     </div>
   )
 }

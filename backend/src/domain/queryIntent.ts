@@ -42,12 +42,20 @@ const hasAny = (values: string[], wanted: string[]) => lowerAll(values).some((va
 const nameHas = (place: NormalizedPlace, pattern: RegExp) => pattern.test(foldText(place.name));
 
 const INDOOR_CATEGORIES = new Set(["Cafe", "Cinema", "Food", "Hotel", "Mall", "Museum", "Nightlife"]);
+// A whole district, street, market or town (Poblacion's bars, Binondo, a night market) is walked outdoors,
+// whatever the venues in it are filed as.
+const OPEN_AIR = /\b(district|poblacion|chinatown|street|road|market|expo|bridge|plaza|boulevard|baywalk|town|village)\b/i;
+const OPEN_AIR_TAGS = ["bar hopping", "street food", "heritage-town", "festival-town", "walking-friendly", "outdoor"];
 
-/** Whether a place works in the rain: our own "Rainy Day" tag first, then the category. Null when unsure. */
+/**
+ * Whether a place works in the rain, from its own data: our "Rainy Day" or indoor tags first, then open-air
+ * districts and outdoor places (never rain-proof), then a single-venue category. Null when unsure.
+ */
 export function isIndoorPlace(place: NormalizedPlace): boolean | null {
-  if (place.good_for.some((tag) => /rainy day|indoor/i.test(tag)) || place.tags.some((tag) => /indoor|aircon/i.test(tag))) return true;
+  if (place.good_for.some((tag) => /rainy day|indoor/i.test(tag)) || place.tags.some((tag) => /indoor|aircon|weather-friendly/i.test(tag))) return true;
+  if (OPEN_AIR.test(place.name) || hasAny(place.tags, OPEN_AIR_TAGS)) return false;
+  if (place.category === "Park" || /beach|island|falls|lagoon|hike|trail|terraces|peak|mount|garden|viewpoint|lookout/i.test(`${place.name} ${place.tags.join(" ")}`)) return false;
   if (INDOOR_CATEGORIES.has(place.category)) return true;
-  if (place.category === "Park" || /beach|island|falls|lagoon|hike|trail|terraces|peak|mount/i.test(`${place.name} ${place.tags.join(" ")}`)) return false;
   return null;
 }
 
@@ -203,14 +211,28 @@ const STOP_WORDS = new Set(
     "masarap maganda magandang sulit swak gala galaan lakad pasyal pasyalan tara gusto want need looking find search recommend suggest " +
     "ideas idea things thing something somewhere today ngayon bukas tonight mamaya weekend saturday sunday sabado linggo this next " +
     "me my we us our kami tayo namin natin akin amin budget cheap mura affordable under below max php peso pesos each per head pax " +
-    "day trip trips tour activity activities experience visit go puntahan pupuntahan"
+    "day trip trips tour activity activities experience visit go puntahan pupuntahan " +
+    // Who is asking ("first time, visiting") says nothing about the place.
+    "visiting visitor visitors tourist tourists foreigner first time one two see"
   ).split(" ")
 );
+
+// Words that ask for any good outing, not one kind of place: "pasyalan", "family outing", "things to do".
+// Alone they mean "show the best"; next to a vibe or a place they just drop out.
+const BROWSE_PHRASES = [
+  "pasyalan", "pasyal", "pamasyal", "gala", "galaan", "gala spots", "lakad", "lakwatsa", "outing", "outings", "bonding",
+  "tourist spot", "tourist spots", "attraction", "attractions", "sightseeing", "sights", "things to do", "must see", "must visit",
+  "places to visit", "where to go", "puntahan",
+]
+  .map(foldText)
+  .sort((a, b) => b.length - a.length);
 
 export type QueryIntent = {
   /** The query, folded and with typos fixed. */
   text: string;
   vibes: VibeId[];
+  /** The query asks for any good outing ("pasyalan", "outing", "things to do"), so the best places all fit. */
+  browse: boolean;
   /** Words left after vibes and filler, each with the alternatives that also count. */
   terms: string[][];
   /** Typos that were fixed, for logs and tests. */
@@ -237,7 +259,7 @@ function typoBudget(length: number) {
 }
 
 const VIBE_PHRASES = VIBES.flatMap((vibe) => vibe.phrases.map((phrase) => ({ phrase: foldText(phrase), id: vibe.id }))).sort((a, b) => b.phrase.length - a.phrase.length);
-const KNOWN_QUERY_WORDS = new Set([...STOP_WORDS, ...VIBE_PHRASES.flatMap((entry) => entry.phrase.split(" ")), ...Object.keys(TERM_SYNONYMS)]);
+const KNOWN_QUERY_WORDS = new Set([...STOP_WORDS, ...BROWSE_PHRASES.flatMap((phrase) => phrase.split(" ")), ...VIBE_PHRASES.flatMap((entry) => entry.phrase.split(" ")), ...Object.keys(TERM_SYNONYMS)]);
 
 const vocabularyCache = new WeakMap<NormalizedPlace[], Set<string>>();
 
@@ -283,11 +305,18 @@ export function parseQueryIntent(query: string, places: NormalizedPlace[], { loc
     if (!vibes.includes(id)) vibes.push(id);
     rest = rest.split(pattern).join(" ");
   }
+  let browse = false;
+  for (const phrase of BROWSE_PHRASES) {
+    const pattern = ` ${phrase} `;
+    if (!rest.includes(pattern)) continue;
+    browse = true;
+    rest = rest.split(pattern).join(" ");
+  }
   const terms = rest
     .split(" ")
     .filter((word) => word.length >= 3 && !STOP_WORDS.has(word) && !/^\d+k?$/.test(word))
     .map((word) => [word, ...(TERM_SYNONYMS[word] ?? [])]);
-  return { text: fixed.join(" "), vibes, terms, corrections };
+  return { text: fixed.join(" "), vibes, browse, terms, corrections };
 }
 
 export function vibeMatches(place: NormalizedPlace, vibe: VibeId): boolean {

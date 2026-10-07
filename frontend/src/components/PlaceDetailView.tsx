@@ -2676,7 +2676,7 @@ function PlaceDetailView({
       />
 
       {guestAuth.promptElement}
-      <AddToGalaPlanModal isOpen={isAddToPlanOpen} placeId={place.id} placeName={place.name} onClose={() => setIsAddToPlanOpen(false)} />
+      <AddToGalaPlanModal isOpen={isAddToPlanOpen} placeId={place.id} placeName={place.name} placeSlug={place.slug} onClose={() => setIsAddToPlanOpen(false)} />
 
       <Sheet open={Boolean(reportingCommentId)} onClose={closeReportCommentModal} title="Report comment" labelledBy="report-comment-title">
         <p className="g-sm g-mut">Why are you reporting this comment?</p>

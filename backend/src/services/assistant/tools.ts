@@ -6,6 +6,7 @@ import { isGalaWorthySlug } from "../../utils/galaWorthy";
 import { isMetroManilaDestination, resolveDestination } from "../../utils/phDestinations";
 import { resolveAreaSlug } from "../../utils/seoPlaces";
 import {
+  areaLabel,
   buildFallbackDraft,
   detectLocationIntent,
   getPlanSunset,
@@ -38,10 +39,12 @@ export type ToolLedger = {
   plan: { date: string; stops: Array<{ time: string | null; slug: string; note: string }> } | null;
   verified: Map<string, { title: string | null; uri: string | null }>;
   calls: Array<{ name: string; args: Record<string, unknown> }>;
+  /** When a search named an area: the places found that are actually in it, so answers never call the rest "in" it. */
+  inArea: Set<string> | null;
 };
 
 export function newLedger(): ToolLedger {
-  return { places: new Map(), ranked: [], weather: null, plan: null, verified: new Map(), calls: [] };
+  return { places: new Map(), ranked: [], weather: null, plan: null, verified: new Map(), calls: [], inArea: null };
 }
 
 const CATEGORIES = ["Activity", "Cafe", "Cinema", "Food", "Heritage", "Hotel", "Mall", "Museum", "Nightlife", "Park"];
@@ -220,10 +223,14 @@ const GALA_SCORES: Record<string, number> = galaScores;
 const RANKING_VIBES = new Set<VibeId>(["view", "sunset"]);
 // Time-of-day and filler words in chat asks that say when, not what.
 const ASK_FILLER = new Set(
-  "night gabi evening tonight morning umaga hapon afternoon tanghali noon later open bukas sarado ngayon magkano entrance fee price presyo hours oras para kasi sana yata pala kaya muna nalang nlang huwag wala meron mayroon with without".split(" ")
+  // Where the asker comes from ("visiting from Japan") is about them, not the place.
+  "night gabi evening tonight morning umaga hapon afternoon tanghali noon later open bukas sarado ngayon magkano entrance fee price presyo hours oras para kasi sana yata pala kaya muna nalang nlang huwag wala meron mayroon with without japan korea china taiwan singapore usa america australia europe abroad balikbayan".split(" ")
 );
 const NIGHT_ASK = /\b(night|gabi|evening|tonight|mamayang gabi|after work|after office|dinner|hapunan)\b/i;
-const THIN_AREA = 4;
+// An area borrows from its neighbours only when it has fewer fits than this; two real local picks beat four mixed ones.
+const BORROW_BELOW = 2;
+// When nothing in or around the area is that kind of place (waterfalls in Cebu City), the nearest ones within a day trip.
+const NEAREST_KIND_KM = 200;
 
 /** Places that can't be visited at night: museums, heritage sites and parks without an evening draw, breakfast spots. */
 function closedAtNight(place: NormalizedPlace) {
@@ -235,7 +242,7 @@ function closedAtNight(place: NormalizedPlace) {
 function areaWords(text: string, places: NormalizedPlace[]) {
   const intent = detectLocationIntent(places, text);
   const { aliases } = detectAliasedCities(text);
-  return new Set([...intent.cities, ...aliases].flatMap((name) => name.toLowerCase().split(/[^a-z0-9ñ]+/)).filter(Boolean));
+  return new Set([...intent.cities, ...aliases, ...(intent.provinces ?? [])].flatMap((name) => name.toLowerCase().split(/[^a-z0-9ñ]+/)).filter(Boolean));
 }
 
 /** How a place fits the words of an ask: null when it misses a required word, else a score (name beats tags beats description). */
@@ -315,14 +322,23 @@ function searchPlaces(args: Record<string, unknown>, context: ToolContext, ledge
     results = byRank(outside).sort((a, b) => (rank(b) ?? 0) - (rank(a) ?? 0) || away(a) - away(b));
   } else {
     results = byRank(candidates.filter(inArea));
-    if (named && results.length < THIN_AREA) {
-      // A thin area borrows fitting places a short ride away, nearest first, after its own.
-      const reach = metro ? 12 : 30;
+    if (named && results.length < BORROW_BELOW) {
+      // An area with almost nothing that fits borrows places a short ride away, nearest first, after its own.
+      const reach = metro ? 8 : 30;
       results = [...results, ...byRank(candidates.filter((place) => !inArea(place) && away(place) <= reach)).sort((a, b) => away(a) - away(b))];
     }
     if (results.length === 0 && terms.length > 0) {
       // Nothing near has the dish or thing asked for: the closest places that do ("sisig" -> Angeles).
       results = byRank(candidates).sort((a, b) => away(a) - away(b));
+      nearest = results.length > 0;
+    }
+    if (results.length === 0 && required.length > 0 && centre) {
+      // The catalogue may still have that kind of place a drive away (Kawasan for "waterfalls near Cebu City").
+      results = byRank(candidates.filter((place) => away(place) <= NEAREST_KIND_KM)).sort((a, b) => away(a) - away(b));
+      // The same province first: a drive away, not a ferry to the next island.
+      const provinces = new Set(inAreaPlaces.map((place) => resolveDestination(place.city, place.area)?.provinceName).filter(Boolean));
+      const sameProvince = results.filter((place) => provinces.has(resolveDestination(place.city, place.area)?.provinceName));
+      if (sameProvince.length > 0) results = sameProvince;
       nearest = results.length > 0;
     }
     if (results.length === 0 && terms.length > 0) {
@@ -344,21 +360,23 @@ function searchPlaces(args: Record<string, unknown>, context: ToolContext, ledge
   }
   results = results.slice(0, 8);
   record(ledger, results);
+  if (named) ledger.inArea = new Set([...(ledger.inArea ?? []), ...results.filter(inArea).map((place) => place.slug)]);
 
   const inAreaCount = results.filter(inArea).length;
   const wanted = [...terms.map(([word]) => word), ...required].join(", ");
+  const areaName = area ?? areaLabel(intent) ?? "the area";
   const notes = [
-    !covered ? `GalaTayo has no places in ${area} yet. Say so; do not name venues there.` : null,
+    !covered ? `GalaTayo has no places in ${areaName} yet. Say so; do not name venues there.` : null,
     unlisted.length > 0 ? `No GalaTayo place mentions "${unlisted.join(" ")}". Say GalaTayo doesn't list one yet, then offer these as alternatives.` : null,
-    overBudget ? `Nothing like that fits PHP ${budget} a head${area ? ` in ${area}` : ""}. These are the cheapest; say they cost more than the budget.` : null,
-    covered && results.length === 0 ? `No GalaTayo place fits ${wanted || "all of that"}${named && area ? ` in or near ${area}` : ""}. Say so plainly and suggest loosening one filter.` : null,
-    nearest ? `No GalaTayo place in ${area ?? "the area"} has ${wanted}. These are the nearest that do; say where they are.` : null,
+    overBudget ? `Nothing like that fits PHP ${budget} a head${named ? ` in ${areaName}` : ""}. These are the cheapest; say they cost more than the budget.` : null,
+    covered && results.length === 0 ? `No GalaTayo place fits ${wanted || "all of that"}${named ? ` in or near ${areaName}` : ""}. Say so plainly and suggest loosening one filter.` : null,
+    nearest ? `No GalaTayo place in ${areaName} has ${wanted}. These are the nearest that do; say where they are.` : null,
     relaxedWords && results.length > 0 ? `No GalaTayo place mentions "${terms.map(([word]) => word).join(" ")}". Say GalaTayo doesn't list one yet, then offer these as alternatives.` : null,
     named && covered && !nearest && results.length > 0 && inAreaCount === 0
-      ? `No GalaTayo place in ${area} fits. Say so; these are a short ride away.`
+      ? `No GalaTayo place in ${areaName} fits. Say so; these are a short ride away.`
       : null,
-    named && covered && !nearest && inAreaCount > 0 && inAreaCount < THIN_AREA
-      ? `Only ${inAreaCount} GalaTayo place${inAreaCount === 1 ? "" : "s"} in ${area} fit${inAreaCount === 1 ? "s" : ""}. Say the area is thin on GalaTayo so far; places with in_area false are a short ride away.`
+    named && covered && !nearest && inAreaCount > 0 && inAreaCount < results.length
+      ? `Places with in_area false are outside ${areaName}, a short ride away: say where each one is, never that it is in ${areaName}.`
       : null,
     budget === 0 ? "Only free places are listed." : null,
     args.open_now === true ? "Opening hours are not in GalaTayo data: do not say a place is open now." : null,

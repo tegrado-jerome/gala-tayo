@@ -103,7 +103,7 @@ function CardActions({ card }: { card: AssistantPlaceCard }) {
         </button>
       </div>
       {note ? <p className="a-note" role="status">{note}</p> : null}
-      {planOpen ? <AddToGalaPlanModal isOpen placeId={card.id} placeName={card.name} onClose={() => setPlanOpen(false)} /> : null}
+      {planOpen ? <AddToGalaPlanModal isOpen placeId={card.id} placeName={card.name} placeSlug={card.slug} onClose={() => setPlanOpen(false)} /> : null}
     </>
   )
 }
@@ -291,7 +291,7 @@ export function AssistantReply({
             ))}
           </div>
         ) : null}
-        {response?.provider === 'fallback' && !response.refused ? <p className="a-fine">Quick picks from GalaTayo while the AI is busy.</p> : null}
+        {response?.provider === 'fallback' && !response.refused ? <p className="a-fine">Quick picks from GalaTayo.</p> : null}
         {response && isLatest ? <FollowUps chips={response.chips} disabled={busy} onChip={(chip) => onChip(chip, response)} /> : null}
       </div>
     </div>

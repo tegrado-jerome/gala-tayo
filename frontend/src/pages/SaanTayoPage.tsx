@@ -728,7 +728,7 @@ export default function SaanTayoPage() {
           chooseScope({ kind: 'area', slug })
         }}
       />
-      {planPlace ? <AddToGalaPlanModal isOpen placeId={planPlace.id} placeName={planPlace.name} onClose={() => setPlanPlace(null)} /> : null}
+      {planPlace ? <AddToGalaPlanModal isOpen placeId={planPlace.id} placeName={planPlace.name} placeSlug={planPlace.slug} onClose={() => setPlanPlace(null)} /> : null}
       {guestAuth.promptElement}
     </Page>
   )

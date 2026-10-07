@@ -16,6 +16,7 @@ import { Button, Empty, Masonry, Page, PlaceCardSkeleton, Sheet } from '../compo
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { listFavoriteGalaPlans } from '../utils/galaPlansApi'
 import { getPlacePhoto } from '../utils/placePhoto'
+import { planWithAiHref } from '../utils/planWithAiLink'
 import { getPublicSiteUrl } from '../utils/site'
 import '../design/me.css'
 import { resizedMediaUrl } from '../data/r2Config'
@@ -141,11 +142,16 @@ function FavoritesPage() {
   const hasMoreSavedPlaces = visibleSavedPlaces.length < filteredSavedPlaces.length
 
   const aiPlanHref = useMemo(() => {
-    const names = savedPlaces
-      .map((favorite) => favorite.place?.name?.trim())
-      .filter(Boolean)
+    const chosen = savedPlaces
+      .map((favorite) => favorite.place)
+      .filter((place): place is NonNullable<typeof place> => Boolean(place?.name?.trim()))
       .slice(0, AI_PROMPT_PLACE_LIMIT)
-    return names.length > 0 ? `/plan-with-ai?q=${encodeURIComponent(`Plan a day out from my saved places: ${names.join(', ')}`)}` : '/plan-with-ai'
+    if (chosen.length === 0) return '/plan-with-ai'
+    // The slugs make the planner keep every saved place; the names keep the prompt readable.
+    return planWithAiHref(
+      `Plan a day out from my saved places: ${chosen.map((place) => (place.name ?? '').trim()).join(', ')}`,
+      chosen.map((place) => place.slug).filter((slug): slug is string => Boolean(slug)),
+    )
   }, [savedPlaces])
 
   const photosOf = (places: FavoritePlace[]) => places.map((place) => getPlacePhoto(place)).filter((url): url is string => Boolean(url))

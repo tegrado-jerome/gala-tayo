@@ -330,11 +330,12 @@ export class GalaPlanAiError extends Error {
   }
 }
 
-export async function draftGalaPlanWithAi(prompt: string, session?: Session | null, date?: string | null) {
+/** `places`: slugs of places the user chose ("Plan a trip from these"); the plan keeps every one or says why not. */
+export async function draftGalaPlanWithAi(prompt: string, session?: Session | null, date?: string | null, places: string[] = []) {
   const response = await fetch(getApiUrl('/gala-plans/ai-draft'), {
     method: 'POST',
     headers: await getAskAiRequestHeaders(session?.access_token ?? null),
-    body: JSON.stringify(date ? { prompt, date } : { prompt }),
+    body: JSON.stringify({ prompt, ...(date ? { date } : {}), ...(places.length ? { places } : {}) }),
   }).catch(() => {
     throw new GalaPlanAiError("Couldn't reach Tara. Check your connection and try again.", 0, 'NETWORK')
   })

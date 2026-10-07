@@ -319,6 +319,15 @@ describe("parseBudgetPerHead", () => {
   it("ignores prompts without a budget and stray small numbers", () => {
     assert.equal(parseBudgetPerHead("Chill day sa Makati, 4 kami", 4), null);
     assert.equal(parseBudgetPerHead("simula 2pm hanggang 8pm", null), null);
+    assert.equal(parseBudgetPerHead("around 2pm in Makati for 4", 4), null);
+    assert.equal(parseBudgetPerHead("around 100 people party", null), null);
+  });
+
+  it("reads bare amounts that say whose they are or hedge (QA round 4)", () => {
+    assert.equal(parseBudgetPerHead("Saturday food trip in Binondo for 4 friends, around 800 each, lunch until early dinner", 4), 800);
+    assert.equal(parseBudgetPerHead("Rainy Saturday in Quezon City for 6 friends, 1000 each", 6), 1000);
+    assert.equal(parseBudgetPerHead("Date night in Cebu City for 2, 3000 total", 2), 1500);
+    assert.equal(parseBudgetPerHead("date for 2 around 1500", 2), 750);
   });
 });
 
@@ -356,6 +365,7 @@ describe("requiredMeal", () => {
       start: at(14),
       end: at(21),
       meal: "dinner",
+      indoor: false,
     });
   });
 });
@@ -601,6 +611,15 @@ describe("plan intent rules (QA round 2)", () => {
     const expo = place({ id: "expo", category: "Activity", city: "Quezon City", best_time_to_visit: "Late afternoon into the evening" });
     const qc = detectLocationIntent([], "Study date sa QC");
     const out = topUpStops([stop("qc-dinner")], [museum, expo, qcDinner], { start: at(17), sunsetMinutes: at(17, 45), location: qc });
-    assert.deepEqual(out.map((entry) => entry.place_id), ["expo", "qc-dinner"]);
+    // Added after the asked-for stop; the schedule puts each stop at its time of day later.
+    assert.deepEqual(out.map((entry) => entry.place_id), ["qc-dinner", "expo"]);
+  });
+
+  it("tops a day out up to the minimum it is asked for", () => {
+    const museum = place({ id: "museum", category: "Museum", city: "Quezon City" });
+    const expo = place({ id: "expo", category: "Activity", city: "Quezon City" });
+    const qc = detectLocationIntent([], "Day in QC");
+    const out = topUpStops([stop("qc-dinner")], [museum, expo, qcDinner], { start: at(10), sunsetMinutes: at(17, 45), location: qc, min: 3 });
+    assert.equal(out.length, 3);
   });
 });

@@ -1,0 +1,21 @@
+# Plan with AI eval: plan-before-2026-10-07
+
+**Mean 81%**, all checks pass in 0% of 15 runs (5 cases × 3 models). Places: fixture snapshot.
+
+| Case | Model | Score | planned | budget | area | full | meals | timing | indoor | required | Stops | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| binondo-food-800 | fallback | 83% | 100% | 0% | 100% | 100% | 100% | 100% | – | – | 11:30 Jones Bridge, 12:40 Binondo Chinatown, 14:00 Intramuros, 15:35 Manila Cathedral, 16:55 Rizal Park / Luneta Park, 19:00 Celera | ₱5200 a head, budget ₱800 |
+| binondo-food-800 | first | 83% | 100% | 0% | 100% | 100% | 100% | 100% | – | – | 11:30 Jones Bridge, 12:40 Metropolitan Theater, 13:55 Binondo Chinatown, 15:15 Intramuros, 16:30 Manila Ocean Park, 19:00 Celera | ₱5920 a head, budget ₱800 |
+| binondo-food-800 | priciest | 83% | 100% | 0% | 100% | 100% | 100% | 100% | – | – | 11:30 Manila Ocean Park, 12:40 Baluarte de San Diego, 13:55 Binondo Chinatown, 15:10 Casa Manila, 16:25 Fort Santiago, 19:00 Celera | ₱6145 a head, budget ₱800 |
+| cebu-date-3000 | fallback | 92% | 100% | 100% | 100% | 100% | 100% | 50% | – | – | 17:30 Tops Lookout, 18:55 Sirao Flower Garden | park after dark: 18:55 Sirao Flower Garden |
+| cebu-date-3000 | first | 92% | 100% | 100% | 100% | 100% | 100% | 50% | – | – | 17:30 Tops Lookout, 18:55 Sirao Flower Garden | park after dark: 18:55 Sirao Flower Garden |
+| cebu-date-3000 | priciest | 92% | 100% | 100% | 100% | 100% | 100% | 50% | – | – | 17:30 Tops Lookout, 18:55 Sirao Flower Garden | park after dark: 18:55 Sirao Flower Garden |
+| qc-rainy-1000 | fallback | 76% | 100% | 0% | 100% | 100% | 100% | 100% | 33% | – | 10:00 Art in Island, 11:35 Cubao Expo, 14:15 La Mesa Eco Park | ₱1070 a head, budget ₱1000; not marked indoor on a rainy day: Cubao Expo; not marked indoor on a rainy day: La Mesa Eco Park |
+| qc-rainy-1000 | first | 76% | 100% | 0% | 100% | 100% | 100% | 100% | 33% | – | 10:00 Art in Island, 11:05 Cubao Expo, 12:40 Binondo Chinatown, 14:00 Intramuros, 15:05 Casa Manila, 17:10 La Mesa Eco Park | ₱1145 a head, budget ₱1000; not marked indoor on a rainy day: Cubao Expo; not marked indoor on a rainy day: Binondo Chinatown; not marked indoor on a rainy day: Intramuros; not marked indoor on a rainy day: La Mesa Eco Park |
+| qc-rainy-1000 | priciest | 76% | 100% | 0% | 100% | 100% | 100% | 100% | 33% | – | 10:00 Art in Island, 11:05 Cubao Expo, 12:45 Casa Manila, 13:50 Baluarte de San Diego, 15:05 Manila Ocean Park, 16:20 Fort Santiago | ₱1995 a head, budget ₱1000; not marked indoor on a rainy day: Cubao Expo; not marked indoor on a rainy day: Baluarte de San Diego; not marked indoor on a rainy day: Manila Ocean Park; not marked indoor on a rainy day: Fort Santiago |
+| intramuros-500 | fallback | 83% | 100% | 0% | 100% | 100% | 100% | 100% | – | – | 14:00 Baluarte de San Diego, 15:10 Casa Manila, 16:50 Jones Bridge, 18:05 Rizal Park / Luneta Park, 19:20 Binondo Chinatown | ₱550 a head, budget ₱500 |
+| intramuros-500 | first | 58% | 100% | 0% | 100% | 50% | 0% | 100% | – | – | 14:00 National Museum of Fine Arts, 15:55 Helm by Josh Boutwood | ₱6000 a head, budget ₱500; 2 stops, want 3; no dinner and no note |
+| intramuros-500 | priciest | 58% | 100% | 0% | 100% | 50% | 0% | 100% | – | – | 14:00 National Museum of Fine Arts, 15:55 Helm by Josh Boutwood | ₱6000 a head, budget ₱500; 2 stops, want 3; no dinner and no note |
+| saved-ayala-binondo | fallback | 88% | 100% | – | – | 100% | – | 100% | – | 50% | 10:00 Casa Manila, 11:45 Binondo Chinatown, 13:00 National Museum of Fine Arts, 14:35 National Museum of Natural History | dropped saved place ayala-museum without saying why |
+| saved-ayala-binondo | first | 88% | 100% | – | – | 100% | – | 100% | – | 50% | 10:00 Jones Bridge, 11:15 Casa Manila, 12:25 Fort Santiago, 13:45 Binondo Chinatown, 15:00 National Museum of Fine Arts, 16:05 National Museum of Natural History | dropped saved place ayala-museum without saying why |
+| saved-ayala-binondo | priciest | 88% | 100% | – | – | 100% | – | 100% | – | 50% | 10:00 Manila Ocean Park, 11:10 Baluarte de San Diego, 12:20 Casa Manila, 13:35 Binondo Chinatown, 14:50 Fort Santiago, 16:05 National Museum of Fine Arts | dropped saved place ayala-museum without saying why |

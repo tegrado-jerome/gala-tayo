@@ -1,7 +1,7 @@
 import type { NormalizedPlace } from "../domain/places";
-import { isFoodStreet } from "../domain/queryIntent";
+import { isFoodStreet, isIndoorPlace, parseQueryIntent, vibeScore, type VibeId } from "../domain/queryIntent";
 import { extractJsonObject } from "../utils/jsonRepair";
-import { inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
+import { DESTINATIONS, inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 import { AREA_ALIASES, detectAliasedCities, isNearManila, locationText, mentionsPhrase } from "../utils/areaAliases";
 import { getSunsetMinutes } from "../utils/sunTimes";
 
@@ -65,7 +65,28 @@ export type LocationIntent = {
   areaWords?: Set<string>;
   /** "Beach near Manila": places outside Metro Manila are welcome. */
   nearManila?: boolean;
+  /** A province named on its own ("waterfalls in cebu"): every place in it counts, not only its capital. */
+  provinces?: Set<string>;
 };
+
+const PROVINCE_NAMES = [...new Set(DESTINATIONS.filter((destination) => !isMetroManilaDestination(destination)).map((destination) => destination.provinceName))];
+
+/**
+ * Provinces the text names without naming one of their cities: "cebu" is the province (Kawasan, Moalboal),
+ * "cebu city" is the city. "Quezon City" never reads as Quezon province.
+ */
+function provincesNamedAlone(text: string): Set<string> {
+  const lower = locationText(text);
+  const matches = inferProvincialDestinationsFromQuery(text);
+  return new Set(
+    PROVINCE_NAMES.filter((province) => {
+      const name = province.toLowerCase();
+      if (!mentionsPhrase(lower, name) || mentionsPhrase(lower, `${name} city`)) return false;
+      // A longer phrase naming one of its towns ("moalboal", "san juan batangas") is that town, not the whole province.
+      return !matches.some(({ destination, matchedPhrase }) => destination.provinceName === province && matchedPhrase !== name);
+    })
+  );
+}
 
 /** Cities and destinations named in free text; empty when the text names no place. */
 export function detectLocationIntent(places: NormalizedPlace[], text: string): LocationIntent {
@@ -75,18 +96,26 @@ export function detectLocationIntent(places: NormalizedPlace[], text: string): L
     const city = (place.city ?? "").toLowerCase();
     if (city && mentionsPhrase(lower, city)) cities.add(city);
   }
-  const destinationSlugs = new Set(inferProvincialDestinationsFromQuery(text).map(({ destination }) => destination.slug));
-  return { cities, destinationSlugs, areaWords: aliases, nearManila: isNearManila(text) };
+  const provinces = provincesNamedAlone(text);
+  const destinationSlugs = new Set(
+    inferProvincialDestinationsFromQuery(text)
+      .filter(({ destination }) => !provinces.has(destination.provinceName))
+      .map(({ destination }) => destination.slug)
+  );
+  return { cities, destinationSlugs, areaWords: aliases, nearManila: isNearManila(text), provinces };
 }
 
 export function hasLocation(intent: LocationIntent) {
-  return intent.cities.size > 0 || intent.destinationSlugs.size > 0;
+  return intent.cities.size > 0 || intent.destinationSlugs.size > 0 || (intent.provinces?.size ?? 0) > 0;
 }
 
 // With no place named in the prompt, plans stay in Metro Manila.
-export function matchesLocation(place: NormalizedPlace, { cities, destinationSlugs }: LocationIntent) {
+export function matchesLocation(place: NormalizedPlace, { cities, destinationSlugs, provinces }: LocationIntent) {
   const destination = resolveDestination(place.city, place.area);
-  return cities.has((place.city ?? "").toLowerCase()) || (destination !== null && destinationSlugs.has(destination.slug));
+  return (
+    cities.has((place.city ?? "").toLowerCase()) ||
+    (destination !== null && (destinationSlugs.has(destination.slug) || Boolean(provinces?.has(destination.provinceName))))
+  );
 }
 
 function scoreLocation(place: NormalizedPlace, location: LocationIntent) {
@@ -209,6 +238,11 @@ export function widenThinArea(places: NormalizedPlace[], location: LocationInten
   return { location: { ...location, cities }, added };
 }
 
+// Occasions that decide which places a plan leads with. Kinds of place (beach, museum) are read by the category words.
+const PLAN_VIBES = new Set<VibeId>(["date", "barkada", "family", "food", "coffee", "nightlife", "view", "sunset", "heritage"]);
+const MIN_INDOOR = 3;
+const PRICED_CATEGORIES = new Set(["Food", "Cafe", "Nightlife", "Activity", "Hotel", "Cinema"]);
+
 /** Venues that close before the plan starts (museums at 4 PM for a date night) can't be in it. */
 function isOpenDuring(place: NormalizedPlace, start: number | null) {
   const opening = CATEGORY_OPENING[place.category];
@@ -226,17 +260,30 @@ export function selectCandidates(
   prompt: string,
   limit = MAX_CANDIDATES,
   locationSource: string | LocationIntent = prompt,
-  constraints?: Pick<PlanConstraints, "budgetPerHead" | "start">,
+  constraints?: Pick<PlanConstraints, "budgetPerHead" | "start" | "indoor">,
 ) {
   const text = prompt.toLowerCase();
   const location = typeof locationSource === "string" ? detectLocationIntent(places, locationSource) : locationSource;
   const categories = detectCategories(text);
   const budget = constraints?.budgetPerHead ?? null;
+  // The occasion ranks: a date night leads with date spots, a food trip with eateries and food streets.
+  const vibes = parseQueryIntent(prompt, places).vibes.filter((vibe) => PLAN_VIBES.has(vibe));
 
-  return placesForArea(places, location)
-    .filter((place) => budget === null || place.budget_min === null || place.budget_min <= budget)
-    .filter((place) => isOpenDuring(place, constraints?.start ?? null))
-    .map((place) => ({ place, score: scorePlace(place, text, location, categories) }))
+  const fitting = placesForArea(places, location)
+    // With a budget, a place we can't price passes only if it is a free-to-walk sight; an unpriced restaurant may be anything.
+    .filter((place) => budget === null || (place.budget_min === null ? !PRICED_CATEGORIES.has(place.category) : place.budget_min <= budget))
+    .filter((place) => isOpenDuring(place, constraints?.start ?? null));
+  // Rain: places our data marks indoor; only an area with too few of those adds places of unknown cover.
+  const indoor = fitting.filter((place) => isIndoorPlace(place) === true);
+  const covered = !constraints?.indoor ? fitting : indoor.length >= MIN_INDOOR ? indoor : fitting.filter((place) => isIndoorPlace(place) !== false);
+  return covered
+    .map((place) => ({
+      place,
+      score:
+        scorePlace(place, text, location, categories) +
+        vibes.reduce((sum, vibe) => sum + vibeScore(place, vibe) * 2, 0) +
+        (constraints?.indoor && isIndoorPlace(place) ? 3 : 0),
+    }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((entry) => entry.place);
@@ -258,6 +305,8 @@ export function buildSystemPrompt(plan: { date: string; weekday: string; sunsetM
     constraints?.start != null ? `Start at ${formatClock(constraints.start)} or later.` : null,
     constraints?.end != null ? `Finish by ${formatClock(constraints.end)}.` : null,
     constraints?.meal ? `Include a ${constraints.meal} stop at a Food candidate.` : null,
+    constraints?.indoor ? "It is a rainy day: every stop must be indoors." : null,
+    constraints?.pinned ? `The user chose ${Array.from({ length: constraints.pinned }, (_, index) => `p${index + 1}`).join(", ")}: include every one of them.` : null,
   ].filter(Boolean);
   return `You plan one-day outings ("gala") in the Philippines for GalaTayo. When the request names no place, plan in Metro Manila.
 The gala is on ${plan.weekday}, ${plan.date}. Sunset is about ${formatClock12(plan.sunsetMinutes)}.
@@ -420,7 +469,18 @@ export type PlanConstraints = {
   start: number | null;
   end: number | null;
   meal: "lunch" | "dinner" | null;
+  /** A rainy day or an indoor ask: no stop whose own data says it is outdoors. */
+  indoor?: boolean;
+  /** How many of the first candidates are places the user chose (saved places), which every plan keeps. */
+  pinned?: number;
 };
+
+const INDOOR_ASK = /\b(rain|rainy|raining|umuulan|maulan|ulan|bagyo|storm|stormy|typhoon|indoors?|aircon|air-?conditioned)\b/i;
+
+/** "Rainy Saturday in QC", "indoor spots only": the plan stays under a roof. */
+export function wantsIndoor(prompt: string) {
+  return INDOOR_ASK.test(prompt);
+}
 
 const AMOUNT = String.raw`(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(k)?`;
 const PER_HEAD = /\b(each|per\s*(?:head|person|pax)|\/\s*(?:head|pax|person)|a\s+head|kada\s+isa|bawat\s+isa|isa['’]?t\s+isa|tig)\b/;
@@ -440,7 +500,10 @@ export function parseBudgetPerHead(prompt: string, groupSize: number | null): nu
   const match =
     text.match(new RegExp(String.raw`(?:₱|php\s*|\bp(?=\d))\s*${AMOUNT}`)) ??
     text.match(new RegExp(String.raw`\b${AMOUNT}\s*(?:pesos?|php|piso)\b`)) ??
-    text.match(new RegExp(String.raw`\b(?:budget|badyet|under|below|max|hanggang|tig-?)\s*(?:of|na|is|ay|ng)?\s*${AMOUNT}\b`));
+    text.match(new RegExp(String.raw`\b(?:budget|badyet|under|below|max|hanggang|tig-?)\s*(?:of|na|is|ay|ng)?\s*${AMOUNT}\b`)) ??
+    // A bare amount is a budget when it says whose ("800 each", "3000 total") or hedges it ("around 800").
+    text.match(new RegExp(String.raw`\b${AMOUNT}\s*(?=(?:each|per\s*(?:head|person|pax)|\/\s*(?:head|pax|person)|a\s+head|pp|total|all\s+in|kada\s+isa|bawat\s+isa)\b)`)) ??
+    text.match(new RegExp(String.raw`\b(?:around|about|approx(?:imately)?|roughly|mga|~)\s*${AMOUNT}\b(?!\s*(?:am|pm|a\.m\.|p\.m\.|:|km|min|mins|minutes|hours?|hrs?|people|pax|kami|tayo|friends|persons))`));
   if (!match) return null;
   const amount = toAmount(match[1], match[2]);
   if (!Number.isFinite(amount) || amount < 50 || amount > 200000) return null;
@@ -465,6 +528,7 @@ const END_PARTS: Array<[RegExp, number]> = [
   [/\b(tanghali|noon|lunch)\b/, 13 * 60],
   [/\b(hapon|afternoon)\b/, 17 * 60],
   [/\b(sunset|paglubog)\b/, 18 * 60],
+  [/\bearly\s+(dinner|evening)\b/, 18 * 60 + 30],
   [/\b(gabi|evening|night|dinner)\b/, 21 * 60],
   [/\b(late|madaling\s+araw|midnight|hatinggabi)\b/, 23 * 60],
 ];
@@ -537,7 +601,7 @@ export function requiredMeal(prompt: string, window: { start: number | null; end
 
 export function parsePlanConstraints(prompt: string, groupSize: number | null): PlanConstraints {
   const window = parseTimeWindow(prompt);
-  return { budgetPerHead: parseBudgetPerHead(prompt, groupSize), ...window, meal: requiredMeal(prompt, window) };
+  return { budgetPerHead: parseBudgetPerHead(prompt, groupSize), ...window, meal: requiredMeal(prompt, window), indoor: wantsIndoor(prompt) };
 }
 
 // ---------------------------------------------------------------------------
@@ -618,7 +682,8 @@ const STAY_MINUTES: Record<string, { min: number; max: number }> = {
 };
 
 export function clampStay(place: NormalizedPlace, minutes: number) {
-  const range = STAY_MINUTES[place.category] ?? { min: 30, max: 120 };
+  // A food street (Binondo) is a crawl through several stalls, not a quick look.
+  const range = isFoodStreet(place) ? { min: 90, max: 180 } : (STAY_MINUTES[place.category] ?? { min: 30, max: 120 });
   return Math.min(range.max, Math.max(range.min, minutes));
 }
 
@@ -649,7 +714,20 @@ type ScheduleOptions = {
   dinnerFrom?: number;
   /** Place ids picked as a meal that aren't filed as restaurants (a food street for dinner). */
   meals?: Map<string, "breakfast" | "lunch" | "dinner">;
+  /** The stop chosen to meet the sunset (see pickSunsetStop); others never take that slot. */
+  sunsetPlaceId?: string;
 };
+
+/**
+ * The stop that should meet the sunset on a date or sunset plan: a non-food stop whose own best time is the
+ * sunset, preferring one that stays good after dark (a lookout with city lights) so it closes the day.
+ */
+export function pickSunsetStop(stops: DraftStop[], placesById: Map<string, NormalizedPlace>): string | undefined {
+  const options = stops
+    .map((stop) => placesById.get(stop.place_id))
+    .filter((place): place is NormalizedPlace => Boolean(place && place.category !== "Food" && SUNSET_WORDS.test(`${place.best_time_to_visit ?? ""} ${place.tags.join(" ")}`)));
+  return (options.find(isNightFriendly) ?? options[0])?.id;
+}
 
 /** An opening time the place's own best-time text states: "Right at 9 PM opening", "opens at 5 PM". */
 export function statedOpening(place: NormalizedPlace): number | null {
@@ -660,6 +738,15 @@ export function statedOpening(place: NormalizedPlace): number | null {
 
 /** Times the stops, then leaves out parks that would land after dark and times the rest again. */
 export function scheduleStops(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, options: ScheduleOptions): DraftStop[] {
+  // The chosen sunset stop is the point of a date night: when the stops before it run past sunset, the last
+  // daytime stop before it gives way, not the sunset.
+  for (let guard = 0; options.sunsetPlaceId && guard < MAX_STOPS; guard++) {
+    if (timeStops(stops, placesById, options).some((stop) => stop.place_id === options.sunsetPlaceId)) break;
+    const index = stops.findIndex((stop) => stop.place_id === options.sunsetPlaceId);
+    const before = stops.slice(0, Math.max(0, index)).map((stop, at) => ({ stop, at })).filter(({ stop }) => !options.meals?.has(stop.place_id)).pop();
+    if (!before) break;
+    stops = stops.filter((_, at) => at !== before.at);
+  }
   const timed = timeStops(stops, placesById, options);
   const dark = new Set(
     timed.filter((stop) => isDarkOutdoor(placesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, options.sunsetMinutes)).map((stop) => stop.place_id)
@@ -683,6 +770,9 @@ function timeStops(stops: DraftStop[], placesById: Map<string, NormalizedPlace>,
   // Only one sunset stop makes sense; when sunset was asked for and no stop says so, the last outdoor stop takes it.
   const classify = () => {
     const kinds = items.map((item) => options.meals?.get(item.place.id) ?? stopKind(item.place, item.stop.note, item.clock, options.wantsSunset));
+    if (options.sunsetPlaceId && items.some((item) => item.place.id === options.sunsetPlaceId)) {
+      return kinds.map((kind, index) => (items[index].place.id === options.sunsetPlaceId ? "sunset" : kind === "sunset" ? "general" : kind));
+    }
     const result = kinds.map((kind, index) => (kind === "sunset" && kinds.indexOf("sunset") !== index ? "general" : kind));
     if (options.wantsSunset && !result.includes("sunset")) {
       const categories = items.map((item) => item.place.category);
@@ -999,7 +1089,7 @@ const TIME_RANK = { breakfast: 0, day: 1, dinner: 3, night: 4 } as const;
  * Puts stops in time-of-day order: breakfast first, dinner after the daytime stops, bars last.
  * Daytime stops keep the order asked for but go nearest-next, so the route doesn't zigzag.
  */
-export function orderByTimeOfDay(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, picks: Map<RequestedKind, string> = new Map()) {
+export function orderByTimeOfDay(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, picks: Map<RequestedKind, string> = new Map(), sunsetPlaceId?: string) {
   const rank = (stop: DraftStop) => {
     const place = placesById.get(stop.place_id);
     if (!place) return TIME_RANK.day;
@@ -1007,7 +1097,7 @@ export function orderByTimeOfDay(stops: DraftStop[], placesById: Map<string, Nor
     if (place.category === "Nightlife") return TIME_RANK.night;
     if (picks.get("dinner") === place.id) return TIME_RANK.dinner;
     // The sunset stop closes the daytime part of the plan.
-    if (place.category !== "Food" && SUNSET_WORDS.test(stop.note)) return TIME_RANK.dinner - 0.5;
+    if (place.id === sunsetPlaceId || (!sunsetPlaceId && place.category !== "Food" && SUNSET_WORDS.test(stop.note))) return TIME_RANK.dinner - 0.5;
     // After dinner, only places that work at night stay late.
     if (picks.has("dinner") && isNightFriendly(place) && stops.indexOf(stop) > stops.findIndex((other) => other.place_id === picks.get("dinner"))) return TIME_RANK.dinner + 0.5;
     return TIME_RANK.day;
@@ -1146,16 +1236,16 @@ export function tightenRoute(stops: DraftStop[], placesById: Map<string, Normali
   });
 }
 
-/** Tops a thin plan up to two stops with the best-ranked place that is open when the plan runs. */
+/** Tops a thin plan up (to two stops, or `min`) with the best-ranked place that is open when the plan runs. */
 export function topUpStops(
   stops: DraftStop[],
   candidates: NormalizedPlace[],
-  { start, sunsetMinutes, location }: { start: number; sunsetMinutes: number; location?: LocationIntent }
+  { start, sunsetMinutes, location, min = MIN_STOPS }: { start: number; sunsetMinutes: number; location?: LocationIntent; min?: number }
 ): DraftStop[] {
   const byId = new Map(candidates.map((place) => [place.id, place]));
   let result = [...stops];
   const hasFood = () => result.some((stop) => byId.get(stop.place_id)?.category === "Food");
-  while (result.length < MIN_STOPS) {
+  while (result.length < Math.min(min, MAX_STOPS)) {
     const used = new Set(result.map((stop) => stop.place_id));
     const open = candidates.filter(
       (place) =>
@@ -1169,9 +1259,49 @@ export function topUpStops(
     const near = (place: NormalizedPlace) => (centre ? (distanceKm(centre, place) ?? 99) : 0);
     const pick = open.find((place) => near(place) <= ROUTE_KM) ?? [...open].sort((a, b) => near(a) - near(b))[0];
     if (!pick) break;
-    result = [{ place_id: pick.id, time: "", minutes: DEFAULT_MINUTES[pick.category] ?? 60, note: describeStop(pick) }, ...result];
+    // Added after the asked-for stops, so the plan still opens where the request said.
+    result = [...result, { place_id: pick.id, time: "", minutes: DEFAULT_MINUTES[pick.category] ?? 60, note: describeStop(pick) }];
   }
   return result;
+}
+
+const fold = (value: string) => value.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Leaves out a whole-area stop when the plan already visits places inside it: Intramuros after Fort Santiago
+ * and Manila Cathedral (whose area is "Intramuros") is the same walk twice. Kept stops are never dropped.
+ */
+export function dropParentAreas(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, keep: Set<string> = new Set()): DraftStop[] {
+  const isParent = (stop: DraftStop) => {
+    const parent = placesById.get(stop.place_id);
+    if (!parent || keep.has(stop.place_id)) return false;
+    const name = ` ${fold(parent.name)} `;
+    return stops.some((other) => {
+      const child = placesById.get(other.place_id);
+      return child && child !== parent && name.trim().length >= 4 && ` ${fold(child.area ?? "")} `.includes(name);
+    });
+  };
+  const kept = stops.filter((stop) => !isParent(stop));
+  return kept.length >= MIN_STOPS ? kept : stops;
+}
+
+/**
+ * A food trip is about the food: sights nobody asked for stay a side dish (three at most, the closest to the
+ * meals), so a Binondo food crawl isn't four heritage walks in Intramuros.
+ */
+export function capSightsForFoodTrip(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, keep: Set<string>, maxSights = 3): DraftStop[] {
+  const isFood = (place: NormalizedPlace) => place.category === "Food" || place.category === "Cafe" || isFoodStreet(place);
+  const meals = stops.map((stop) => placesById.get(stop.place_id)).filter((place): place is NormalizedPlace => Boolean(place && isFood(place)));
+  const centre = centreOf(meals);
+  const sights = stops.filter((stop) => {
+    const place = placesById.get(stop.place_id);
+    return place && !isFood(place) && !keep.has(stop.place_id);
+  });
+  if (sights.length <= maxSights || !centre) return stops;
+  const closest = new Set(
+    [...sights].sort((a, b) => (distanceKm(centre, placesById.get(a.place_id)!) ?? 99) - (distanceKm(centre, placesById.get(b.place_id)!) ?? 99)).slice(0, maxSights)
+  );
+  return stops.filter((stop) => !sights.includes(stop) || closest.has(stop));
 }
 
 /** A short name for the asked area: "BGC" for the alias, else the city. */
@@ -1179,7 +1309,8 @@ export function areaLabel(location: LocationIntent) {
   const alias = [...(location.areaWords ?? [])][0];
   if (alias) return alias.length <= 4 ? alias.toUpperCase() : alias.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
   const city = [...location.cities][0];
-  return city ? city.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()) : null;
+  if (city) return city.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  return [...(location.provinces ?? [])][0] ?? null;
 }
 
 /**

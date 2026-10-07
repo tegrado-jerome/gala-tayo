@@ -111,9 +111,11 @@ function DraftSkeleton() {
   )
 }
 
-function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
+function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: string; initialPlaces?: string[] }) {
   const { session, isGuest } = useAppUser()
   const [prompt, setPrompt] = useState(initialPrompt)
+  // Places chosen on the Saved page: every plan built from them keeps them, until the user starts over.
+  const [chosenPlaces, setChosenPlaces] = useState(initialPlaces)
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<GalaPlanAiDraft | null>(null)
@@ -137,7 +139,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     [stops],
   )
 
-  const build = async (text: string) => {
+  const build = async (text: string, places: string[] = chosenPlaces) => {
     const trimmed = text.trim()
     if (!trimmed || status === 'building') return
 
@@ -147,7 +149,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     setIsDailyLimit(false)
     setIsEditing(false)
     try {
-      const result = await draftGalaPlanWithAi(trimmed, session)
+      const result = await draftGalaPlanWithAi(trimmed, session, null, places)
       setDraft(result.draft)
       setGroupSize(result.draft.group_size)
       setUsage(result.usage ? { remaining: result.usage.remaining, limit: result.usage.dailyLimit } : null)
@@ -191,6 +193,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const startOver = () => {
     setDraft(null)
     setPrompt('')
+    setChosenPlaces([])
     setError(null)
     setIsEditing(false)
     setStatus('idle')
@@ -374,7 +377,8 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                     type="button"
                     onClick={() => {
                       setPrompt(example.prompt)
-                      void build(example.prompt)
+                      setChosenPlaces([])
+                      void build(example.prompt, [])
                     }}
                   >
                     <ExampleIcon weight="light" aria-hidden="true" />

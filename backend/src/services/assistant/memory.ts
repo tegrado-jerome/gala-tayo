@@ -30,6 +30,9 @@ export function areaLabel(places: NormalizedPlace[], text: string): string | nul
   if (!hasLocation(intent)) return null;
   const alias = [...(intent.areaWords ?? [])][0];
   if (alias) return alias.length <= 3 ? alias.toUpperCase() : titleCase(alias);
+  // "Waterfalls in Cebu" is the whole province, not Cebu City.
+  const province = [...(intent.provinces ?? [])][0];
+  if (province && intent.cities.size === 0) return province;
   const provincial = inferProvincialDestinationsFromQuery(text)[0]?.destination.label;
   const city = [...intent.cities][0];
   return city ? titleCase(city) : provincial ?? null;
