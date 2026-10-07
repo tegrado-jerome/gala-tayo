@@ -1,9 +1,11 @@
 import { legalContactEmail } from '../../data/legalPages'
+import { getPublicSiteUrl } from '../../utils/site'
 
 /** A pre-filled removal email for one photo, so owners don't need an account to ask. */
 export function removalRequestHref(photoUrl: string, credit: string | null, sourceUrl?: string | null) {
   const subject = `Removal request: ${credit ?? 'photo'}`
-  const page = typeof window === 'undefined' ? '' : window.location.href
+  // The public address, not the prerender server's (localhost) baked into static pages.
+  const page = typeof window === 'undefined' ? '' : getPublicSiteUrl(window.location.pathname)
   const body = [
     'Please remove or re-credit this photo.',
     '',
