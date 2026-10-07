@@ -129,8 +129,8 @@ function getRegionSlugForArea(areaSlug: string | null | undefined) {
 }
 
 /** City or region page with every place for a guide's area; province guides link to their region. */
-function getGuideAreaHub(target: SeoLandingTarget) {
-  const hubSlug = getAreaLabelBySlug(target.areaSlug) ? target.areaSlug : getRegionSlugForArea(target.areaSlug)
+function getGuideAreaHub(target: SeoLandingTarget, areaHasPage = true) {
+  const hubSlug = areaHasPage && getAreaLabelBySlug(target.areaSlug) ? target.areaSlug : getRegionSlugForArea(target.areaSlug)
   const name = getAreaLabelBySlug(hubSlug)
   return hubSlug && name ? { href: `/places/${hubSlug}`, name } : null
 }

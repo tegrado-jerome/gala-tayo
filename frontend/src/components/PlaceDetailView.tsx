@@ -39,6 +39,7 @@ import ReportUserModal from './ReportUserModal'
 import { Button, Chip, Empty, Page, Sheet, Skeleton, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { getDestinationBySlug, getRegionBySlug } from '../data/destinations'
 import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
@@ -685,6 +686,7 @@ function PlaceDetailView({
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
+  const areaRegion = getRegionBySlug(getDestinationBySlug(areaBreadcrumb?.areaSlug)?.regionSlug)
   const breadcrumbItems: Array<{ label: string; href?: string }> = categoryBreadcrumb
     ? [
         { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname },
@@ -2565,6 +2567,7 @@ function PlaceDetailView({
               currentSlug={placeSlug}
               currentId={cleanString(place.id) || null}
               currentName={cleanString(place.name) || null}
+              region={areaRegion ? { slug: areaRegion.slug, name: areaRegion.name } : null}
               onGuestFavorite={(retry) => guestAuth.open('favorite', retry)}
             />
           ) : null}
@@ -2592,6 +2595,12 @@ function PlaceDetailView({
                 <MapPin weight="light" aria-hidden="true" />
                 More in {areaBreadcrumb.areaName}
               </InternalLink>
+              {areaRegion ? (
+                <InternalLink href={`/places/${areaRegion.slug}`} className="pd-link">
+                  <MapPin weight="light" aria-hidden="true" />
+                  More around {areaRegion.name}
+                </InternalLink>
+              ) : null}
               {categoryBreadcrumb ? (
                 <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
                   <Compass weight="light" aria-hidden="true" />

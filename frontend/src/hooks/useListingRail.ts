@@ -25,6 +25,7 @@ export function useListingRail({ areaSlug, category }: { areaSlug?: string; cate
   const [places, setPlaces] = useState<PhotoCardPlace[] | null>(null)
 
   useEffect(() => {
+    if (!areaSlug && !category) return
     const controller = new AbortController()
     getSeoListingPage({
       areaSlug: areaSlug ?? null,

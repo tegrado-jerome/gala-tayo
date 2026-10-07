@@ -6,6 +6,7 @@ type InternalLinkProps = {
   children: ReactNode
   className?: string
   ariaLabel?: string
+  rel?: string
   'aria-current'?: 'page'
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
@@ -15,7 +16,7 @@ function isModifiedEvent(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 const InternalLink = forwardRef<HTMLAnchorElement, InternalLinkProps>(function InternalLink(
-  { href, children, className, ariaLabel, 'aria-current': ariaCurrent, onClick },
+  { href, children, className, ariaLabel, rel, 'aria-current': ariaCurrent, onClick },
   ref,
 ) {
   return (
@@ -23,6 +24,7 @@ const InternalLink = forwardRef<HTMLAnchorElement, InternalLinkProps>(function I
       ref={ref}
       href={href}
       aria-label={ariaLabel}
+      rel={rel}
       aria-current={ariaCurrent}
       className={className}
       onClick={(event) => {

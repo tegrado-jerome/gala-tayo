@@ -146,6 +146,18 @@ const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[
 const duplicateLocs = locs.filter((loc, index) => locs.indexOf(loc) !== index)
 if (duplicateLocs.length) errors.push(`sitemap: duplicate URLs ${duplicateLocs.slice(0, 5).join(', ')}`)
 locs.filter((loc) => noindex.has(loc)).forEach((loc) => errors.push(`sitemap: lists noindex page ${loc}`))
+// Every sitemap URL must be a prerendered page (the SPA fallback answers 404) that robots.txt lets crawlers fetch.
+const pageLocs = new Set(pages.map((file) => {
+  const routePath = '/' + path.relative(dist, path.dirname(file)).split(path.sep).join('/')
+  return routePath === '/' ? `${siteOrigin}/` : `${siteOrigin}${routePath}`
+}))
+locs.filter((loc) => !pageLocs.has(loc)).forEach((loc) => errors.push(`sitemap: ${loc} has no prerendered page`))
+const disallowed = [...(await readFile(path.join(dist, 'robots.txt'), 'utf8')).matchAll(/^Disallow:\s*(\S+)/gm)].map((match) => match[1])
+const isBlocked = (pathname) => disallowed.some((rule) => (rule.endsWith('$') ? pathname === rule.slice(0, -1) : pathname.startsWith(rule)))
+locs.filter((loc) => isBlocked(new URL(loc).pathname)).forEach((loc) => errors.push(`sitemap: ${loc} is blocked by robots.txt`))
+// app-shell.html answers app screens and 404s, never an indexable page, so it must say noindex without JavaScript.
+const shell = await readFile(path.join(dist, 'app-shell.html'), 'utf8').catch(() => '')
+if (!/<meta name="robots" content="noindex/.test(shell)) errors.push('app-shell.html: raw HTML is not noindex')
 const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
 for (const guide of guides) {
   const loc = `${siteOrigin}/guides/${guide.slug}`

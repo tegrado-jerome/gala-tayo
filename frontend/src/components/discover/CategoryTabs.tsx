@@ -30,8 +30,8 @@ export const categoryIcons: Record<string, PhosphorIcon> = {
 }
 
 // Everyday picks first, niche ones last.
-// Hotel and Cinema have no listed places yet, so they stay out of the tabs.
-export const CATEGORY_TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'activity']
+// Hotel, Cinema and Mall have no listed places (malls are never gala-worthy), so they stay out of the tabs.
+export const CATEGORY_TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'nightlife', 'activity']
 
 type CategoryTabsProps = {
   active?: string
@@ -39,11 +39,13 @@ type CategoryTabsProps = {
   getHref?: (value: string) => string
   allLabel?: string
   showFilters?: boolean
+  /** Filter tabs that add a query string (?category=) get rel="nofollow" so crawlers stay on the clean page. */
+  nofollowFilters?: boolean
   className?: string
 }
 
 /** Icon tabs with an ink underline on the active one, shared by Home and the listing pages. */
-function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? '/places' : `/places/categories/${value}`), allLabel = 'All', showFilters = false, className }: CategoryTabsProps) {
+function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? '/places' : `/places/categories/${value}`), allLabel = 'All', showFilters = false, nofollowFilters = false, className }: CategoryTabsProps) {
   const tabs = [
     { value: 'all', label: allLabel, icon: Sparkles },
     ...CATEGORY_TAB_ORDER.map((value) => ({ value, label: getPlaceCategoryLabel(value), icon: categoryIcons[value] ?? Sparkles })),
@@ -63,7 +65,7 @@ function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? 
         const TabIcon = tab.icon
         const isActive = tab.value === active
         return (
-          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className="g-cat">
+          <InternalLink key={tab.value} href={getHref(tab.value)} rel={nofollowFilters && tab.value !== 'all' ? 'nofollow' : undefined} aria-current={isActive ? 'page' : undefined} className="g-cat">
             <TabIcon weight={isActive ? 'fill' : 'light'} aria-hidden="true" />
             {tab.label}
           </InternalLink>

@@ -9,6 +9,7 @@ import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { METRO_MANILA_REGION_SLUG, getAreaLabelBySlug, getDestinationBySlug, getRegionBySlug, normalizeAreaSlug } from '../data/destinations'
 import { displayCityName } from '../utils/cityName'
+import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -105,6 +106,14 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
   const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
+  const [compactPlaces, setCompactPlaces] = useState<CompactPlace[] | null>(null)
+  useEffect(() => {
+    let isActive = true
+    loadCompactPlaces().then((places) => isActive && setCompactPlaces(places)).catch(() => undefined)
+    return () => {
+      isActive = false
+    }
+  }, [])
   const hasQueryVariant = activeCategory !== 'all' || currentPage > 1
   // A city page with one or two places is thin; it stays reachable but noindex (and out of the sitemap).
   const shouldIndexAreaPage = !hasQueryVariant && !errorMessage && payload.total >= MIN_INDEXABLE_AREA_PLACES
@@ -337,6 +346,13 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     : null
 
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
+  // Every place in the area gets a plain link from this page, not only the first page of cards.
+  const shownSlugs = new Set(allPlaces.map((place) => place.slug))
+  const regionAreaSlugs = region ? new Set(region.destinations.map((item) => item.slug)) : null
+  const morePlaces = shouldIndexAreaPage && compactPlaces && payload.total > allPlaces.length
+    ? compactPlaces.filter((place) => (regionAreaSlugs ? regionAreaSlugs.has(place.areaSlug) : place.areaSlug === normalizedAreaSlug) && !shownSlugs.has(place.slug))
+    : []
+  const areaCounts = compactPlaces ? countPlacesByAreaSlug(compactPlaces) : null
   const spotCount = payload.total > 0 ? `: ${payload.total} Top ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
   const baseTitle = `Things to Do in ${areaName}${spotCount}`
   const areaSeo = AREA_SEO[normalizedAreaSlug]
@@ -394,7 +410,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
       {region ? (
         <nav aria-label={`Cities in ${region.name}`} className="g-chips mt-4">
-          {region.destinations.map((item) => (
+          {region.destinations.filter((item) => !areaCounts || areaCounts[item.slug]).map((item) => (
             <InternalLink key={item.slug} href={`/places/${item.slug}`} className="g-chip">
               {displayCityName(item.label)}
             </InternalLink>
@@ -403,7 +419,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ) : null}
 
       {/* A city with no places at all gets no category tabs: every tab would be empty too. */}
-      {shouldShowEmptyState && activeCategory === 'all' ? null : <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />}
+      {shouldShowEmptyState && activeCategory === 'all' ? null : <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} nofollowFilters />}
       <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Best first" />
 
       {errorMessage ? (
@@ -467,6 +483,19 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
               onPageChange={handlePageChange}
               isLoading={isPageTransitionLoading}
             />
+          ) : null}
+
+          {morePlaces.length > 0 ? (
+            <nav aria-label={`More places in ${areaName}`}>
+              <SectionHead title={`More places in ${areaName}`} as="h3" />
+              <div className="flex flex-wrap gap-2">
+                {morePlaces.map((place) => (
+                  <InternalLink key={place.slug} href={place.canonicalPath} className="g-chip">
+                    {place.name}
+                  </InternalLink>
+                ))}
+              </div>
+            </nav>
           ) : null}
 
           {relatedGuides.length > 0 ? (

@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { CATEGORIES } from "./filters";
 import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
-import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { getGalaScore, getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { REGIONS } from "../utils/phDestinations";
 import { getSiteUrl } from "../utils/siteUrl";
 
@@ -157,6 +157,7 @@ function buildSitemapEntries(args: {
   ]
 
   const areaEntries: SitemapEntry[] = areas
+    // Thin city pages stay here so the prerender writes their (noindex) HTML; it drops them from the published sitemap.
     .filter((area) => area.placeCount > 0)
     .map((area) => ({
       path: area.canonicalPath,
@@ -190,7 +191,8 @@ function buildSitemapEntries(args: {
       lastmod: categoryCounts.get(category.id)?.latestUpdatedAt ?? null,
     }))
 
-  const placeEntries: SitemapEntry[] = places.map((place) => ({
+  // Best places first, so a crawler that reads only part of the list gets the strongest pages.
+  const placeEntries: SitemapEntry[] = [...places].sort((left, right) => getGalaScore(right.slug) - getGalaScore(left.slug)).map((place) => ({
     path: place.canonicalPath,
     priority: "0.7",
     changefreq: "weekly",
@@ -346,39 +348,29 @@ export async function robotsTxt(request: HttpRequest, context: InvocationContext
   const body = [
     "User-agent: *",
     "Allow: /",
-    "Disallow: /home",
-    "Disallow: /search",
-    "Disallow: /search?",
-    "Disallow: /login",
-    "Disallow: /signup",
-    "Disallow: /onboarding",
+    // Same rules as frontend/public/robots.txt: block private screens only; public app screens are noindex.
+    "Disallow: /admin",
     "Disallow: /auth/",
+    "Disallow: /mfa/",
+    "Disallow: /onboarding",
     "Disallow: /account",
     "Disallow: /settings",
-    "Disallow: /find-friends",
-    "Disallow: /reports",
-    "Disallow: /ask-ai",
-    "Disallow: /ask-ai/chatbot",
-    "Disallow: /ask-ai/text",
-    "Disallow: /ask-ai/maps",
-    "Disallow: /ask-ai/prompt-builder",
-    "Disallow: /prompt-builder",
+    "Disallow: /privacy-center",
+    "Disallow: /reset-password",
+    "Disallow: /forgot-password",
+    "Disallow: /profile/",
+    "Disallow: /me$",
     "Disallow: /favorites",
     "Disallow: /history",
-    "Disallow: /gala-plan",
-    "Disallow: /gala-plans",
-    "Disallow: /profile",
-    "Disallow: /profile/edit",
-    "Disallow: /me",
-    "Disallow: /feedback",
+    "Disallow: /reports",
+    "Disallow: /find-friends",
+    "Disallow: /comment-notices",
     "Disallow: /submit-place",
-    "Disallow: /places/new",
-    "Disallow: /places/submit",
+    "Disallow: /places/new$",
+    "Disallow: /places/submit$",
     "Disallow: /my-submissions",
     "Disallow: /submissions",
-    "Disallow: /comment-notices",
-    "Disallow: /u/",
-    "Disallow: /admin",
+    "Disallow: /photos/upload",
     `Sitemap: ${siteUrl}/sitemap.xml`,
   ].join("\n")
 

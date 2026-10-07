@@ -86,7 +86,7 @@ const SEO_MEMORY_TTL_SECONDS = 60 * 10;
 const GALA_SCORES: Record<string, number> = galaScores;
 export { hasCuratedPhoto };
 
-function getGalaScore(slug: string | null | undefined): number {
+export function getGalaScore(slug: string | null | undefined): number {
   return (slug && GALA_SCORES[slug.trim().toLowerCase()]) || 0;
 }
 

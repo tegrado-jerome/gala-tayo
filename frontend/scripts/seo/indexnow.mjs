@@ -1,7 +1,9 @@
 // IndexNow on deploy: tells Bing, Yandex, Seznam and Naver which pages are new or changed, so
 // they recrawl within hours instead of weeks. Google ignores IndexNow and reads the sitemap.
 //   --prepare (before deploy): compares dist/ with the live site (sitemap URLs and lastmod, plus a
-//     hash of each prerendered page published as /page-hashes.json) and saves the changed URLs.
+//     hash of each prerendered page published as /page-hashes.json) and saves the changed URLs, plus
+//     URLs that left the sitemap (now noindex, redirected or gone) so engines recrawl and drop them.
+//     It also sets each sitemap <lastmod> to the day the page's visible content last changed.
 //   --submit (after deploy): sends the saved URLs to api.indexnow.org.
 // Never fails the build. Add --dry-run to print without sending.
 import { readFile, readdir, writeFile } from 'node:fs/promises'
@@ -46,6 +48,27 @@ function pageHash(html) {
   return createHash('sha1').update(`${title}\n${description}\n${root}`).digest('hex').slice(0, 16)
 }
 
+// Database timestamps move when a script touches a row, and frontend pages (guides, tools) have none,
+// so <lastmod> follows the visible page instead: unchanged since the live build keeps the live date,
+// new or changed content gets today's date.
+async function writeContentLastmod(sitemap, liveSitemap, hashes, liveHashes) {
+  const today = new Date().toISOString().slice(0, 10)
+  const lastmodFor = (loc) => {
+    if (!hashes[loc]) return sitemap.get(loc)
+    if (liveHashes[loc] === hashes[loc]) return liveSitemap?.get(loc) || sitemap.get(loc)
+    return today
+  }
+  const sitemapPath = path.join(dist, 'sitemap.xml')
+  const xml = (await readFile(sitemapPath, 'utf8')).replace(/<url>([\s\S]*?)<\/url>/g, (block, inner) => {
+    const loc = inner.match(/<loc>([^<]+)<\/loc>/)?.[1].trim()
+    const lastmod = loc && lastmodFor(loc)
+    if (!lastmod) return block
+    const tag = `<lastmod>${lastmod}</lastmod>`
+    return inner.includes('<lastmod>') ? block.replace(/<lastmod>[^<]*<\/lastmod>/, tag) : block.replace(/(<loc>[^<]+<\/loc>)/, `$1\n    ${tag}`)
+  })
+  await writeFile(sitemapPath, xml)
+}
+
 async function prepare() {
   const sitemap = readSitemap(await readFile(path.join(dist, 'sitemap.xml'), 'utf8'))
   const hashes = {}
@@ -70,17 +93,21 @@ async function prepare() {
     .filter(([loc, lastmod]) => {
       if (!liveSitemap) return true
       if (!liveSitemap.has(loc)) return (reasons.new += 1)
+      // The page hash is the better signal; the database lastmod is only used without one.
+      if (liveHashes?.[loc] && hashes[loc]) return liveHashes[loc] !== hashes[loc] && (reasons.content += 1)
       if (lastmod && lastmod !== liveSitemap.get(loc)) return (reasons.lastmod += 1)
-      if (liveHashes && hashes[loc] && liveHashes[loc] !== hashes[loc]) return (reasons.content += 1)
       return false
     })
     .map(([loc]) => loc)
-    .slice(0, MAX_URLS)
+  const dropped = liveSitemap ? [...liveSitemap.keys()].filter((loc) => !sitemap.has(loc)) : []
+  changed.push(...dropped)
+  changed.splice(MAX_URLS)
+  if (liveHashes) await writeContentLastmod(sitemap, liveSitemap, hashes, liveHashes)
 
   await writeFile(pendingPath, JSON.stringify(changed))
   console.log(
     liveSitemap
-      ? `IndexNow: ${changed.length} of ${sitemap.size} URLs changed (${reasons.new} new, ${reasons.lastmod} new lastmod, ${reasons.content} new content${liveHashes ? '' : '; no live page hashes yet'}).`
+      ? `IndexNow: ${changed.length} URLs to submit (${reasons.new} new, ${reasons.lastmod} new lastmod, ${reasons.content} new content, ${dropped.length} left the sitemap${liveHashes ? '' : '; no live page hashes yet'}).`
       : `IndexNow: live sitemap unavailable, will submit all ${changed.length} URLs.`,
   )
   changed.slice(0, 20).forEach((loc) => console.log(`  ${loc}`))
