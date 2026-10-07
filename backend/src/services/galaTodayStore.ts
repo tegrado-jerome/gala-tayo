@@ -105,8 +105,9 @@ export function createGalaTodayStore({ objects, readLegacyPosts, readBundledPost
   const lockToken = async () => parse<{ token?: string }>((await objects.get(LOCK_OBJECT))?.body ?? "")?.token ?? null;
 
   /**
-   * Create-only put; a lock older than LOCK_STALE_MS is replaced only if it's still that exact version (If-Match),
-   * so two runs can't both take over a dead lock. The read-back makes sure the store really honoured the condition.
+   * Create-only put. A lock older than LOCK_STALE_MS belongs to a run that died (e.g. a deploy restart): it is
+   * deleted and re-created with the same create-only put, so at most one of two racing runs gets it. (R2 refused
+   * the If-Match replace live, which left a dead lock blocking every run.) The read-back confirms we hold it.
    */
   async function acquire(): Promise<string | null> {
     const token = randomUUID();
@@ -117,7 +118,8 @@ export function createGalaTodayStore({ objects, readLegacyPosts, readBundledPost
       else {
         const at = Date.parse(parse<{ at?: string }>(current.body)?.at ?? "");
         if (Number.isFinite(at) && now() - at < LOCK_STALE_MS) return null;
-        taken = await objects.put(LOCK_OBJECT, lockBody(token), { ifMatch: current.etag });
+        await objects.delete(LOCK_OBJECT);
+        taken = await objects.put(LOCK_OBJECT, lockBody(token), { ifNoneMatch: "*" });
       }
     }
     return taken && (await lockToken()) === token ? token : null;
