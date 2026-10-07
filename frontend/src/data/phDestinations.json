@@ -1510,6 +1510,19 @@
                 122.2352
               ],
               "aliases": []
+            },
+            {
+              "slug": "san-joaquin-iloilo",
+              "name": "San Joaquin, Iloilo",
+              "type": "municipality",
+              "center": [
+                10.5868,
+                122.142
+              ],
+              "aliases": [
+                "San Joaquin Iloilo",
+                "San Joaquin (Iloilo)"
+              ]
             }
           ]
         },
@@ -1884,6 +1897,31 @@
               "aliases": [
                 "Barili, Cebu"
               ]
+            },
+            {
+              "slug": "carmen-cebu",
+              "name": "Carmen, Cebu",
+              "type": "municipality",
+              "center": [
+                10.5873,
+                124.0181
+              ],
+              "aliases": [
+                "Carmen Cebu",
+                "Carmen (Cebu)"
+              ]
+            },
+            {
+              "slug": "cordova",
+              "name": "Cordova",
+              "type": "municipality",
+              "center": [
+                10.2522,
+                123.9495
+              ],
+              "aliases": [
+                "Cordova, Cebu"
+              ]
             }
           ]
         },
@@ -2001,6 +2039,19 @@
                 123.9125
               ],
               "aliases": []
+            },
+            {
+              "slug": "alicia-bohol",
+              "name": "Alicia, Bohol",
+              "type": "municipality",
+              "center": [
+                9.8984,
+                124.4408
+              ],
+              "aliases": [
+                "Alicia Bohol",
+                "Alicia (Bohol)"
+              ]
             }
           ]
         }
@@ -2163,6 +2214,19 @@
                 "Padre Burgos Southern Leyte",
                 "Padre Burgos (Southern Leyte)"
               ]
+            },
+            {
+              "slug": "limasawa",
+              "name": "Limasawa",
+              "type": "municipality",
+              "center": [
+                9.9251,
+                125.0741
+              ],
+              "aliases": [
+                "Limasawa, Southern Leyte",
+                "Limasawa Island"
+              ]
             }
           ]
         }
@@ -2258,6 +2322,20 @@
                 124.854
               ],
               "aliases": []
+            },
+            {
+              "slug": "impasugong",
+              "name": "Impasugong",
+              "label": "Impasug-ong",
+              "type": "municipality",
+              "center": [
+                8.3039,
+                125.0009
+              ],
+              "aliases": [
+                "Impasug-ong",
+                "Impasugong, Bukidnon"
+              ]
             }
           ]
         },
