@@ -112,6 +112,10 @@ test('weather mood: rain now, rain later, or dry', () => {
   assert.deepEqual(weatherMood({ code: 2, precipitation: 0 }, later), { rainy: true, line: 'Rain later (3 PM), so indoor picks first!' })
   assert.deepEqual(weatherMood({ code: 1, precipitation: 0 }, dry), { rainy: false, line: 'Dry until 3 PM. Great time to go outdoors!' })
   assert.equal(weatherMood({ code: 95, precipitation: 0 }, dry).line, 'Thunderstorm now, so indoor picks first!')
+  const evening = [hour('2026-10-07T15:00', 10, 0), hour('2026-10-07T20:00', 10, 0)]
+  assert.equal(weatherMood({ code: 1, precipitation: 0 }, evening).line, 'Dry till tonight. Great time to go outdoors!')
+  const night = [hour('2026-10-07T19:00', 10, 0), hour('2026-10-08T00:00', 10, 0)]
+  assert.equal(weatherMood({ code: 1, precipitation: 0 }, night).line, 'No rain tonight. Perfect for night views and food trips!', 'no "go outdoors" at night')
 })
 
 test('vote links keep up to 3 unique valid slugs', () => {

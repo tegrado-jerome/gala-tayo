@@ -125,7 +125,12 @@ export function weatherMood(current: Pick<CurrentWeather, 'code' | 'precipitatio
   if (window) return { rainy: true, line: `Rain later (${formatHour(window.start)}), so indoor picks first!` }
   const last = nextHours.at(-1)
   if (!last) return { rainy: false, line: '' }
+  // Hours are Manila wall-clock keys ("2026-10-07T20:00"), so the hour digits are local time.
+  const startHour = Number(nextHours[0].time.slice(11, 13))
+  if (startHour >= 18 || startHour < 5) return { rainy: false, line: 'No rain tonight. Perfect for night views and food trips!' }
   const until = new Date(Date.parse(`${last.time}:00Z`) + 3_600_000).toISOString().slice(0, 16)
+  const untilHour = Number(until.slice(11, 13))
+  if (untilHour >= 18 || untilHour < startHour) return { rainy: false, line: 'Dry till tonight. Great time to go outdoors!' }
   return { rainy: false, line: `Dry until ${formatHour(until)}. Great time to go outdoors!` }
 }
 
