@@ -12,6 +12,7 @@ import {
 import {
   deleteJsonCacheValue,
   getJsonCacheValue,
+  getJsonCacheValues,
   setJsonCacheValue,
 } from "../services/redisCacheService";
 import { PUBLIC_PLACE_COLUMNS, normalizeFaqs } from "../domain/places";
@@ -446,7 +447,9 @@ function getLinkedTags(row: Record<string, unknown>): DetailTagMeta[] {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PLACE_DETAIL_COLUMNS = PUBLIC_PLACE_COLUMNS;
-const PLACE_DETAIL_CACHE_TTL_SECONDS = 60 * 15;
+// Review and photo changes clear these keys; instances also keep a copy in memory for 2 minutes.
+const PLACE_DETAIL_CACHE_TTL_SECONDS = 60 * 60;
+const PLACE_DETAIL_MEMORY_TTL_SECONDS = 2 * 60;
 
 function normalizePlaceLookupKey(value: string): string {
   return value.trim().toLowerCase();
@@ -506,8 +509,23 @@ function normalizePlaceDetailImages(detail: PlaceDetail): PlaceDetail {
 }
 
 async function readCachedPlaceDetail(lookupKey: string): Promise<PlaceDetail | null> {
-  const cachedDetail = await getJsonCacheValue<PlaceDetail>(buildPlaceDetailCacheKey(lookupKey));
+  const cachedDetail = await getJsonCacheValue<PlaceDetail>(buildPlaceDetailCacheKey(lookupKey), {
+    memoryTtlSeconds: PLACE_DETAIL_MEMORY_TTL_SECONDS,
+  });
   return cachedDetail ? normalizePlaceDetailImages(cachedDetail) : null;
+}
+
+/** One MGET for the whole batch instead of a GET per place. */
+async function readCachedPlaceDetails(lookupKeys: string[]): Promise<Map<string, PlaceDetail>> {
+  const cachedDetails = await getJsonCacheValues<PlaceDetail>(lookupKeys.map(buildPlaceDetailCacheKey), {
+    memoryTtlSeconds: PLACE_DETAIL_MEMORY_TTL_SECONDS,
+  });
+  const detailsByKey = new Map<string, PlaceDetail>();
+  lookupKeys.forEach((lookupKey, index) => {
+    const cachedDetail = cachedDetails[index];
+    if (cachedDetail) detailsByKey.set(lookupKey, normalizePlaceDetailImages(cachedDetail));
+  });
+  return detailsByKey;
 }
 
 async function writeCachedPlaceDetail(detail: PlaceDetail): Promise<void> {
@@ -515,9 +533,11 @@ async function writeCachedPlaceDetail(detail: PlaceDetail): Promise<void> {
   await Promise.all([
     setJsonCacheValue(buildPlaceDetailCacheKey(detail.id), cachePayload, {
       ttlSeconds: PLACE_DETAIL_CACHE_TTL_SECONDS,
+      memoryTtlSeconds: PLACE_DETAIL_MEMORY_TTL_SECONDS,
     }),
     setJsonCacheValue(buildPlaceDetailCacheKey(detail.slug), cachePayload, {
       ttlSeconds: PLACE_DETAIL_CACHE_TTL_SECONDS,
+      memoryTtlSeconds: PLACE_DETAIL_MEMORY_TTL_SECONDS,
     }),
   ]);
 }
@@ -532,7 +552,7 @@ export async function invalidatePlaceDetailCache(
     keys.push(buildPlaceDetailCacheKey(slug));
   }
 
-  await Promise.all(keys.map((key) => deleteJsonCacheValue(key)));
+  await deleteJsonCacheValue(...keys);
 }
 
 export async function findPlaceDetailsByIds(placeIds: string[], options?: { forceRefresh?: boolean }): Promise<Map<string, PlaceDetail>> {
@@ -544,21 +564,8 @@ export async function findPlaceDetailsByIds(placeIds: string[], options?: { forc
     return new Map<string, PlaceDetail>();
   }
 
-  const detailsById = new Map<string, PlaceDetail>();
-  const missingPlaceIds: string[] = [];
-
-  for (const placeId of uniquePlaceIds) {
-    if (!options?.forceRefresh) {
-      const cachedDetail = await readCachedPlaceDetail(placeId);
-
-      if (cachedDetail) {
-        detailsById.set(placeId, cachedDetail);
-        continue;
-      }
-    }
-
-    missingPlaceIds.push(placeId);
-  }
+  const detailsById = options?.forceRefresh ? new Map<string, PlaceDetail>() : await readCachedPlaceDetails(uniquePlaceIds);
+  const missingPlaceIds = uniquePlaceIds.filter((placeId) => !detailsById.has(placeId));
 
   try {
     if (missingPlaceIds.length === 0) {
@@ -623,21 +630,8 @@ export async function findPlaceDetailsBySlugs(slugs: string[], options?: { force
     return new Map<string, PlaceDetail>();
   }
 
-  const detailsBySlug = new Map<string, PlaceDetail>();
-  const missingSlugs: string[] = [];
-
-  for (const slug of uniqueSlugs) {
-    if (!options?.forceRefresh) {
-      const cachedDetail = await readCachedPlaceDetail(slug);
-
-      if (cachedDetail) {
-        detailsBySlug.set(slug, cachedDetail);
-        continue;
-      }
-    }
-
-    missingSlugs.push(slug);
-  }
+  const detailsBySlug = options?.forceRefresh ? new Map<string, PlaceDetail>() : await readCachedPlaceDetails(uniqueSlugs);
+  const missingSlugs = uniqueSlugs.filter((slug) => !detailsBySlug.has(slug));
 
   try {
     if (missingSlugs.length === 0) {

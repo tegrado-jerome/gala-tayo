@@ -19,7 +19,7 @@ type Verification = { found: boolean; title: string | null; uri: string | null }
  */
 export async function verifyPlaceOnGoogleMaps(place: NormalizedPlace): Promise<Verification | null> {
   const key = `assistant:maps-verify:v1:${place.slug}`;
-  const cached = await getJsonCacheValue<Verification>(key).catch(() => null);
+  const cached = await getJsonCacheValue<Verification>(key, { memoryTtlSeconds: 60 * 60 }).catch(() => null);
   if (cached) return cached;
   const apiKey = await optionalSecret("GEMINI_API_KEY", KEY_VAULT_SECRET_NAMES.GEMINI_API_KEY);
   if (!apiKey) return null;
@@ -35,7 +35,7 @@ export async function verifyPlaceOnGoogleMaps(place: NormalizedPlace): Promise<V
       title: chunk?.maps?.title ?? null,
       uri: chunk?.maps?.uri ?? null,
     };
-    await setJsonCacheValue(key, result, { ttlSeconds: 7 * 24 * 60 * 60 }).catch(() => undefined);
+    await setJsonCacheValue(key, result, { ttlSeconds: 7 * 24 * 60 * 60, memoryTtlSeconds: 60 * 60 }).catch(() => undefined);
     return result;
   } catch {
     return null;

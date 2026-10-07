@@ -6,7 +6,7 @@ import { hasCuratedPhoto } from "../utils/hdPhotos";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { getDestinationBySlug, inferProvincialDestinationsFromQuery, mentionsDestination, REGIONS } from "../utils/phDestinations";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import {
   budgetPlan,
   buildEditorPrompt,
@@ -106,9 +106,10 @@ async function holidayToday(date: string, context: InvocationContext): Promise<s
   }
 }
 
-export async function readGalaTodayPosts(): Promise<GalaTodayPost[]> {
+/** `memoryTtlSeconds` lets page reads reuse this instance's copy; the generator always reads Redis. */
+export async function readGalaTodayPosts({ memoryTtlSeconds }: { memoryTtlSeconds?: number } = {}): Promise<GalaTodayPost[]> {
   if (!GALA_TODAY_ENABLED) return [];
-  return (await getJsonCacheValue<GalaTodayPost[]>(POSTS_KEY)) ?? [];
+  return (await getJsonCacheValue<GalaTodayPost[]>(POSTS_KEY, { memoryTtlSeconds })) ?? [];
 }
 
 /** The region a trend names ("Baguio food crawl" → Cordillera), so the picks follow the trend. */
@@ -263,22 +264,23 @@ async function withGenerateLock<T>(run: () => Promise<T>): Promise<T | null> {
 }
 
 async function galaTodayList(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "gala-today", 120, 60);
+  const rateCheck = await checkPublicReadRateLimit(request, "gala-today", 120, 60);
   if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
   const limit = Math.min(Math.max(Number(request.query.get("limit")) || 30, 1), MAX_POSTS);
-  let posts = await readGalaTodayPosts();
   // Catch-up: if the morning timer missed (cold start, AI limit), the first request after 6 AM Manila writes today's post.
   const manilaNow = new Date(Date.now() + 8 * 3600_000);
   const today = manilaNow.toISOString().slice(0, 10);
   // Catch-up generation only on explicit request (the daily workflow sends ensure=1), never on a page view:
   // generation can take minutes, which stalled pages and the prerender build.
   const ensure = request.query.get("ensure") === "1";
+  // Posts change twice a day, so page reads may use this instance's copy; the catch-up check reads Redis.
+  let posts = await readGalaTodayPosts(ensure ? {} : { memoryTtlSeconds: 120 });
   if (GALA_TODAY_ENABLED && ensure && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
     const result = await generateAndRecord(context, "catch-up");
     if (result && typeof result !== "string") posts = [result, ...posts];
   }
   const hasToday = posts.some((post) => post.date === today);
-  const lastRun = hasToday ? undefined : await getJsonCacheValue<{ at: string; trigger: string; result: string }>(LAST_RUN_KEY);
+  const lastRun = hasToday ? undefined : await getJsonCacheValue<{ at: string; trigger: string; result: string }>(LAST_RUN_KEY, { memoryTtlSeconds: 120 });
   return {
     status: 200,
     headers: { "Cache-Control": hasToday ? "public, max-age=300" : "no-store" },

@@ -8,8 +8,8 @@ import {
 import { randomUUID } from "crypto";
 import { validateJwt } from "../utils/auth";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { MemoryCache } from "../utils/memoryCache";
+import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import { validateSearchQuery, type SearchValidationStatus } from "../utils/searchQueryValidation";
 import { findAreaById, findCategoryById, findGoodForById } from "./filters";
@@ -42,6 +42,10 @@ import { getExactLocationLabelForIntent, normalizeSearchText, rankPlaces, type P
 import { buildImageUrl } from "../utils/r2UrlResolver";
 
 export type { SearchPlaceResult } from "./searchHelpers";
+
+// Search answers come from the in-memory place list, so recomputing is cheap; each instance keeps recent answers
+// in memory instead of spending Redis commands on keys that are rarely repeated.
+const searchResponseCache = new MemoryCache(200);
 
 type ApprovedSearchImageRow = {
   place_id?: unknown;
@@ -235,7 +239,7 @@ export async function search(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "search", 30, 60);
+  const rateCheck = await checkPublicReadRateLimit(request, "search", 30, 60);
   if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
 
   context.log("Processing Supabase search request...");
@@ -286,7 +290,7 @@ export async function search(
     });
 
     if (canUseSharedCache) {
-      const cachedPayload = await getJsonCacheValue<SearchResponsePayload>(responseCacheKey);
+      const cachedPayload = searchResponseCache.get<SearchResponsePayload>(responseCacheKey);
       if (cachedPayload) {
         await storeSearchContext({ searchContext, userContext, cacheKey: responseCacheKey, context });
         return {
@@ -363,7 +367,7 @@ export async function search(
     });
 
     if (canUseSharedCache) {
-      await setJsonCacheValue(responseCacheKey, responsePayload, { ttlSeconds: SEARCH_CACHE_TTL_SECONDS });
+      searchResponseCache.set(responseCacheKey, responsePayload, SEARCH_CACHE_TTL_SECONDS);
     }
 
     return {

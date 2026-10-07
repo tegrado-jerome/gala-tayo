@@ -76,9 +76,11 @@ const SEO_LISTING_PLACE_SELECT = [
 const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
 const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v4";
-const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
-const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v5";
-const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
+// SEO data changes about daily (cache clear empties Redis); instances also keep a copy in memory for 10 minutes.
+const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 60;
+export const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v5";
+const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 60;
+const SEO_MEMORY_TTL_SECONDS = 60 * 10;
 
 // Gala-worthy scores (0-100) from the place scoring; unscored places rank after scored ones.
 const GALA_SCORES: Record<string, number> = galaScores;
@@ -301,7 +303,7 @@ function mapPlaceRowToSeoSummary(row: PlaceRow, imageUrl: string | null): SeoPla
 }
 
 export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {}): Promise<SeoPlaceSummary[]> {
-  const cachedPlaces = await getJsonCacheValue<SeoPlaceSummary[]>(SEO_PLACE_SUMMARIES_CACHE_KEY);
+  const cachedPlaces = await getJsonCacheValue<SeoPlaceSummary[]>(SEO_PLACE_SUMMARIES_CACHE_KEY, { memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
   if (cachedPlaces) {
     return cachedPlaces;
   }
@@ -346,7 +348,7 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
     );
 
   if (shouldCachePlaces) {
-    await setJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY, places, { ttlSeconds: SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS });
+    await setJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY, places, { ttlSeconds: SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS, memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
   }
 
   return places;
@@ -463,7 +465,7 @@ export async function getSeoListingPage({
     page: safeRequestedPage,
     pageSize: safePageSize,
   });
-  const cachedPage = await getJsonCacheValue<SeoListingPage>(cacheKey);
+  const cachedPage = await getJsonCacheValue<SeoListingPage>(cacheKey, { memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
   if (cachedPage) {
     return cachedPage;
   }
@@ -533,6 +535,6 @@ export async function getSeoListingPage({
     totalPages,
   };
 
-  await setJsonCacheValue(cacheKey, payload, { ttlSeconds: SEO_LISTING_PAGE_CACHE_TTL_SECONDS });
+  await setJsonCacheValue(cacheKey, payload, { ttlSeconds: SEO_LISTING_PAGE_CACHE_TTL_SECONDS, memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
   return payload;
 }

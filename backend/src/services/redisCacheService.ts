@@ -1,10 +1,36 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { Redis } from "@upstash/redis";
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
+import { MemoryCache } from "../utils/memoryCache";
 
 type JsonCacheOptions = {
   ttlSeconds?: number;
+  /**
+   * Keep the value in this instance's memory for this long, so repeat reads skip Redis. Only reads that pass it
+   * use the memory copy; other reads always go to Redis.
+   */
+  memoryTtlSeconds?: number;
 };
+
+type ReadCacheOptions = Pick<JsonCacheOptions, "memoryTtlSeconds">;
+
+const memoryCache = new MemoryCache(2000);
+
+/** Upstash bills every command, including each one inside a pipeline or transaction. */
+export function countRedisCommands(request: { path?: string[]; body?: unknown }): number {
+  const batched = request.path?.some((segment) => segment === "pipeline" || segment === "multi-exec");
+  return batched && Array.isArray(request.body) ? request.body.length : 1;
+}
+
+const commandCounter = new AsyncLocalStorage<{ commands: number }>();
+
+/** Runs `run` while counting the Redis commands it sends (for the REDIS_DEBUG invocation log). */
+export async function withRedisCommandCount<T>(run: () => Promise<T>): Promise<{ result: T; commands: number }> {
+  const counter = { commands: 0 };
+  const result = await commandCounter.run(counter, run);
+  return { result, commands: counter.commands };
+}
 
 let redisClientPromise: Promise<Redis | null> | null = null;
 
@@ -56,11 +82,17 @@ export async function getRedisClient(): Promise<Redis | null> {
 
         // The cache is optional, so fail fast instead of the SDK's default
         // five retries with exponential backoff (~4s per call when Redis is down).
-        return new Redis({
+        const client = new Redis({
           url: config.url,
           token: config.token,
           retry: { retries: 1, backoff: () => 100 },
         });
+        client.use((request, next) => {
+          const counter = commandCounter.getStore();
+          if (counter) counter.commands += countRedisCommands(request);
+          return next(request);
+        });
+        return client;
       })
       .catch(() => null);
   }
@@ -81,40 +113,25 @@ export async function getRedisCacheStatus(): Promise<{
   };
 }
 
-export async function probeRedisCache(key: string, value: string): Promise<{
-  ok: boolean;
-  wrote: boolean;
-  readBack: string | null;
-}> {
+/** One SET a day keeps a free Upstash database from being deleted for inactivity. */
+export async function touchRedisKeepAlive(): Promise<boolean> {
   const client = await getRedisClient();
 
   if (!client) {
-    return {
-      ok: false,
-      wrote: false,
-      readBack: null,
-    };
+    return false;
   }
 
   try {
-    await client.set(key, value, { ex: 600 });
-    const readBack = await client.get<string>(key);
-
-    return {
-      ok: readBack === value,
-      wrote: true,
-      readBack: readBack ?? null,
-    };
+    return (await client.set("keepalive", new Date().toISOString(), { ex: 7 * 24 * 60 * 60 })) === "OK";
   } catch {
-    return {
-      ok: false,
-      wrote: false,
-      readBack: null,
-    };
+    return false;
   }
 }
 
-export async function getJsonCacheValue<T>(key: string): Promise<T | null> {
+export async function getJsonCacheValue<T>(key: string, options: ReadCacheOptions = {}): Promise<T | null> {
+  const remembered = options.memoryTtlSeconds ? memoryCache.get<T>(key) : undefined;
+  if (remembered !== undefined) return remembered;
+
   const client = await getRedisClient();
 
   if (!client) {
@@ -122,11 +139,41 @@ export async function getJsonCacheValue<T>(key: string): Promise<T | null> {
   }
 
   try {
-    const value = await client.get<T>(key);
-    return value ?? null;
+    const value = (await client.get<T>(key)) ?? null;
+    if (options.memoryTtlSeconds) memoryCache.set(key, value, options.memoryTtlSeconds);
+    return value;
   } catch {
     return null;
   }
+}
+
+/** Reads several keys with one MGET (one command); values line up with `keys`, null where missing. */
+export async function getJsonCacheValues<T>(keys: string[], options: ReadCacheOptions = {}): Promise<Array<T | null>> {
+  const values: Array<T | null> = keys.map((key) => (options.memoryTtlSeconds ? memoryCache.get<T>(key) ?? null : null));
+  const missingIndexes = keys.flatMap((_, index) => (values[index] === null ? [index] : []));
+
+  if (missingIndexes.length === 0) {
+    return values;
+  }
+
+  const client = await getRedisClient();
+
+  if (!client) {
+    return values;
+  }
+
+  try {
+    const fetched = await client.mget<Array<T | null>>(...missingIndexes.map((index) => keys[index]));
+    missingIndexes.forEach((keyIndex, fetchedIndex) => {
+      const value = fetched[fetchedIndex] ?? null;
+      values[keyIndex] = value;
+      if (options.memoryTtlSeconds) memoryCache.set(keys[keyIndex], value, options.memoryTtlSeconds);
+    });
+  } catch {
+    // The cache is optional: callers load whatever is still null.
+  }
+
+  return values;
 }
 
 export async function setJsonCacheValue<T>(
@@ -134,6 +181,13 @@ export async function setJsonCacheValue<T>(
   value: T,
   options: JsonCacheOptions = {}
 ): Promise<boolean> {
+  if (options.memoryTtlSeconds) {
+    // A copy, like Redis stores: the caller may still change the object it just cached.
+    memoryCache.set(key, structuredClone(value), options.memoryTtlSeconds);
+  } else {
+    memoryCache.delete(key);
+  }
+
   const client = await getRedisClient();
 
   if (!client) {
@@ -153,7 +207,14 @@ export async function setJsonCacheValue<T>(
   }
 }
 
-export async function deleteJsonCacheValue(key: string): Promise<boolean> {
+/** Deletes the keys with one DEL. Other instances keep their memory copy until its short TTL ends. */
+export async function deleteJsonCacheValue(...keys: string[]): Promise<boolean> {
+  keys.forEach((key) => memoryCache.delete(key));
+
+  if (keys.length === 0) {
+    return true;
+  }
+
   const client = await getRedisClient();
 
   if (!client) {
@@ -161,7 +222,7 @@ export async function deleteJsonCacheValue(key: string): Promise<boolean> {
   }
 
   try {
-    await client.del(key);
+    await client.del(...keys);
     return true;
   } catch {
     return false;

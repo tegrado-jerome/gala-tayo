@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkEndpointRateLimit, checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import { getAuthenticatedUser, unauthorized, badRequest } from "../utils/auth";
 import {
   getCommentId,
@@ -27,7 +27,7 @@ export async function placeCommentsList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "place-comments", 30, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "place-comments", 30, 60);
     if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
 
     const { placeId, response } = await requireResolvedPlaceId(request);

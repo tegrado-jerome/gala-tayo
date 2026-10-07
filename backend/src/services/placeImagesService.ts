@@ -1,11 +1,8 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import {
-  buildApprovedPlaceImagesCacheKey,
-  buildApprovedPlaceImagesCountCacheKey,
-} from "../utils/cacheKey";
+import { buildApprovedPlaceImagesCacheKey } from "../utils/cacheKey";
 import {
   deleteJsonCacheValue,
-  getJsonCacheValue,
+  getJsonCacheValues,
   setJsonCacheValue,
 } from "./redisCacheService";
 import { buildImageUrl } from "../utils/r2UrlResolver";
@@ -22,7 +19,7 @@ export type ApprovedPlaceImage = {
 
 const APPROVED_IMAGE_COLUMNS = "id, place_id, storage_key, is_primary, sort_order, created_at";
 const APPROVED_IMAGE_CACHE_TTL_SECONDS = 60 * 60 * 6;
-const APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS = 60 * 60 * 6;
+const APPROVED_IMAGE_MEMORY_TTL_SECONDS = 5 * 60;
 
 function normalizePlaceId(placeId: string): string {
   return placeId.trim();
@@ -35,25 +32,28 @@ function deriveImageUrl(image: ApprovedPlaceImage): ApprovedPlaceImage {
   };
 }
 
-async function getCachedApprovedPlaceImages(placeId: string): Promise<ApprovedPlaceImage[] | null> {
-  const cacheKey = buildApprovedPlaceImagesCacheKey(placeId);
-  const cachedImages = await getJsonCacheValue<ApprovedPlaceImage[]>(cacheKey);
-
-  if (!cachedImages) {
-    return null;
-  }
-
-  return cachedImages.filter((image) => Boolean(image.storage_key)).map(deriveImageUrl);
+/** One MGET for all the places; a place maps to its cached list (possibly empty) or is left out on a miss. */
+async function getCachedApprovedPlaceImagesByPlaceIds(placeIds: string[]): Promise<Map<string, ApprovedPlaceImage[]>> {
+  const cachedLists = await getJsonCacheValues<ApprovedPlaceImage[]>(placeIds.map(buildApprovedPlaceImagesCacheKey), {
+    memoryTtlSeconds: APPROVED_IMAGE_MEMORY_TTL_SECONDS,
+  });
+  const imagesByPlaceId = new Map<string, ApprovedPlaceImage[]>();
+  placeIds.forEach((placeId, index) => {
+    const cachedImages = cachedLists[index];
+    if (cachedImages) {
+      imagesByPlaceId.set(placeId, cachedImages.filter((image) => Boolean(image.storage_key)).map(deriveImageUrl));
+    }
+  });
+  return imagesByPlaceId;
 }
 
 async function setCachedApprovedPlaceImages(
   placeId: string,
   images: ApprovedPlaceImage[]
 ): Promise<void> {
-  const cacheKey = buildApprovedPlaceImagesCacheKey(placeId);
-  await setJsonCacheValue(cacheKey, images, { ttlSeconds: APPROVED_IMAGE_CACHE_TTL_SECONDS });
-  await setJsonCacheValue(buildApprovedPlaceImagesCountCacheKey(placeId), images.length, {
-    ttlSeconds: APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS,
+  await setJsonCacheValue(buildApprovedPlaceImagesCacheKey(placeId), images, {
+    ttlSeconds: APPROVED_IMAGE_CACHE_TTL_SECONDS,
+    memoryTtlSeconds: APPROVED_IMAGE_MEMORY_TTL_SECONDS,
   });
 }
 
@@ -80,10 +80,7 @@ async function fetchApprovedPlaceImagesFromDatabase(placeId: string): Promise<Ap
 export async function invalidateApprovedPlaceImagesCache(placeId: string): Promise<void> {
   const normalizedPlaceId = normalizePlaceId(placeId);
 
-  await Promise.all([
-    deleteJsonCacheValue(buildApprovedPlaceImagesCacheKey(normalizedPlaceId)),
-    deleteJsonCacheValue(buildApprovedPlaceImagesCountCacheKey(normalizedPlaceId)),
-  ]);
+  await deleteJsonCacheValue(buildApprovedPlaceImagesCacheKey(normalizedPlaceId));
 }
 
 export async function getApprovedPlaceImages(placeId: string): Promise<ApprovedPlaceImage[]> {
@@ -93,7 +90,7 @@ export async function getApprovedPlaceImages(placeId: string): Promise<ApprovedP
     return [];
   }
 
-  const cachedImages = await getCachedApprovedPlaceImages(normalizedPlaceId);
+  const cachedImages = (await getCachedApprovedPlaceImagesByPlaceIds([normalizedPlaceId])).get(normalizedPlaceId);
 
   if (cachedImages) {
     return cachedImages.slice(0, 3);
@@ -126,19 +123,9 @@ export async function getApprovedPlaceImagesByPlaceIds(
     return new Map<string, ApprovedPlaceImage[]>();
   }
 
-  const imagesByPlaceId = new Map<string, ApprovedPlaceImage[]>();
-  const missedPlaceIds: string[] = [];
-
-  for (const placeId of uniquePlaceIds) {
-    const cachedImages = await getCachedApprovedPlaceImages(placeId);
-
-    if (cachedImages) {
-      imagesByPlaceId.set(placeId, cachedImages.slice(0, 3));
-      continue;
-    }
-
-    missedPlaceIds.push(placeId);
-  }
+  const imagesByPlaceId = await getCachedApprovedPlaceImagesByPlaceIds(uniquePlaceIds);
+  imagesByPlaceId.forEach((images, placeId) => imagesByPlaceId.set(placeId, images.slice(0, 3)));
+  const missedPlaceIds = uniquePlaceIds.filter((placeId) => !imagesByPlaceId.has(placeId));
 
   if (missedPlaceIds.length === 0) {
     return imagesByPlaceId;
@@ -182,49 +169,8 @@ export async function getApprovedPlaceImagesByPlaceIds(
   return imagesByPlaceId;
 }
 
+/** Approved images, capped at the 3 a place can hold, which is all the upload limit needs. */
 export async function countApprovedPlaceImages(placeId: string): Promise<number> {
   const normalizedPlaceId = normalizePlaceId(placeId);
-
-  if (!normalizedPlaceId) {
-    return 0;
-  }
-
-  const cachedCount = await getJsonCacheValue<number>(
-    buildApprovedPlaceImagesCountCacheKey(normalizedPlaceId)
-  );
-
-  if (typeof cachedCount === "number" && Number.isFinite(cachedCount)) {
-    return cachedCount;
-  }
-
-  const cachedImages = await getCachedApprovedPlaceImages(normalizedPlaceId);
-
-  if (cachedImages) {
-    const count = cachedImages.length;
-    await setJsonCacheValue(buildApprovedPlaceImagesCountCacheKey(normalizedPlaceId), count, {
-      ttlSeconds: APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS,
-    });
-    return count;
-  }
-
-  const supabase = await getSupabaseAdminClient();
-  const { count, error } = await (supabase.from("place_images") as any)
-    .select("id", { count: "exact", head: true })
-    .eq("place_id", normalizedPlaceId)
-    .eq("status", "approved");
-
-  if (error) {
-    throw error;
-  }
-
-  const resolvedCount = count ?? 0;
-  await setJsonCacheValue(
-    buildApprovedPlaceImagesCountCacheKey(normalizedPlaceId),
-    resolvedCount,
-    {
-      ttlSeconds: APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS,
-    }
-  );
-
-  return resolvedCount;
+  return normalizedPlaceId ? (await getApprovedPlaceImages(normalizedPlaceId)).length : 0;
 }

@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { findPlaceDetailByIdOrSlug, findPlaceDetailsByIds } from "../data/placeDetails";
 import { getAuthenticatedUser, unauthorized, type AuthenticatedUser, validateJwt } from "../utils/auth";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkEndpointRateLimit, checkPublicReadRateLimit } from "../utils/redisRateLimit";
 
 type Favorite = {
   id: string;
@@ -230,7 +230,7 @@ export async function favoritesList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "favorites-list", 30, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "favorites-list", 30, 60);
     if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
 
     const user = await getAuthenticatedUser(request);

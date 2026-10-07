@@ -97,7 +97,9 @@ export const PUBLIC_PLACE_COLUMNS = [
 ].join(",");
 
 const ACTIVE_PLACES_CACHE_KEY = "places:active:normalized:v3";
-const ACTIVE_PLACES_CACHE_TTL_SECONDS = 60 * 10;
+// Places change a few times a day and edits clear the cache; each instance also keeps a copy in memory for 5 minutes.
+const ACTIVE_PLACES_CACHE_TTL_SECONDS = 60 * 30;
+const ACTIVE_PLACES_MEMORY_TTL_SECONDS = 60 * 5;
 const ACTIVE_PLACES_DEPLOY_VERSION_KEY = "places:active:deploy-version";
 
 function getDeployVersion(): string {
@@ -108,8 +110,7 @@ let deployVersionChecked = false;
 
 export async function clearActivePlacesCache(): Promise<void> {
   deployVersionChecked = false;
-  await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY);
-  await deleteJsonCacheValue(ACTIVE_PLACES_DEPLOY_VERSION_KEY);
+  await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY, `${ACTIVE_PLACES_CACHE_KEY}:all`, ACTIVE_PLACES_DEPLOY_VERSION_KEY);
 }
 
 async function checkDeployVersion(): Promise<void> {
@@ -117,7 +118,7 @@ async function checkDeployVersion(): Promise<void> {
   const currentVersion = getDeployVersion();
   const cachedVersion = await getJsonCacheValue<string>(ACTIVE_PLACES_DEPLOY_VERSION_KEY);
   if (cachedVersion !== currentVersion) {
-    await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY);
+    await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY, `${ACTIVE_PLACES_CACHE_KEY}:all`);
     await setJsonCacheValue(ACTIVE_PLACES_DEPLOY_VERSION_KEY, currentVersion, { ttlSeconds: 86400 });
   }
   deployVersionChecked = true;
@@ -210,7 +211,7 @@ export function normalizePlaceRecord(row: Record<string, unknown>, warn?: (messa
 export async function getActiveNormalizedPlaces({ includeHidden = false }: { includeHidden?: boolean } = {}): Promise<NormalizedPlace[]> {
   await checkDeployVersion();
   const cacheKey = includeHidden ? `${ACTIVE_PLACES_CACHE_KEY}:all` : ACTIVE_PLACES_CACHE_KEY;
-  const cachedPlaces = await getJsonCacheValue<NormalizedPlace[]>(cacheKey);
+  const cachedPlaces = await getJsonCacheValue<NormalizedPlace[]>(cacheKey, { memoryTtlSeconds: ACTIVE_PLACES_MEMORY_TTL_SECONDS });
   if (cachedPlaces) return cachedPlaces;
 
   const supabase = await getSupabaseAdminClient();
@@ -226,6 +227,6 @@ export async function getActiveNormalizedPlaces({ includeHidden = false }: { inc
   const places = ((data ?? []) as Array<Record<string, unknown>>)
     .map((row) => normalizePlaceRecord(row))
     .filter((place) => includeHidden || isGalaWorthySlug(place.slug));
-  await setJsonCacheValue(cacheKey, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS });
+  await setJsonCacheValue(cacheKey, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS, memoryTtlSeconds: ACTIVE_PLACES_MEMORY_TTL_SECONDS });
   return places;
 }
