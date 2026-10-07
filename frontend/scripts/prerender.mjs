@@ -35,6 +35,13 @@ const mimeTypes = {
   '.webmanifest': 'application/manifest+json',
 }
 
+/** Empty answers for a place's reviews and comments (GET only), so the render does not hit the API for them. */
+function communityStubFor(pathname) {
+  if (/\/places\/[^/]+\/reviews$/.test(pathname)) return { average_rating: null, review_count: 0, current_member_review: null }
+  if (/\/places\/[^/]+\/comments$/.test(pathname)) return { comments: [] }
+  return null
+}
+
 async function isFile(filePath) {
   try {
     return (await stat(filePath)).isFile()
@@ -333,6 +340,9 @@ async function main() {
   const apiBaseUrl = process.env.VITE_API_BASE_URL
   if (apiBaseUrl) {
     await context.route(`${new URL(apiBaseUrl).origin}/**`, async (route) => {
+      // Reviews and comments load again in the visitor's browser, so skip them here to save Redis reads per build.
+      const communityStub = route.request().method() === 'GET' && communityStubFor(new URL(route.request().url()).pathname)
+      if (communityStub) return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': localOrigin }, body: JSON.stringify(communityStub) })
       const response = await route.fetch({ headers: { ...route.request().headers(), origin: siteOrigin } })
       await route.fulfill({ response, headers: { ...response.headers(), 'access-control-allow-origin': localOrigin } })
     })
