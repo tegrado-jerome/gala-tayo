@@ -14,7 +14,7 @@ import {
   signUpWithEmailPassword,
   upgradeGuestWithEmailPassword,
 } from '../services/authApi'
-import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
+import { buildAuthPath, buildOnboardingPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { getCurrentUser, isAdminRole } from '../utils/profileApi'
 import { AuthCard, AuthNotice, InlineLink, OrDivider } from '../components/auth/AuthCard'
@@ -158,7 +158,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
           if (isMounted) {
             await preloadAuthTargetPath('/onboarding')
-            replaceWithPath('/onboarding')
+            replaceWithPath(buildOnboardingPath(nextPath))
           }
           return
         }
@@ -188,7 +188,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     return () => {
       isMounted = false
     }
-  }, [isCreateMode, isGuest, session])
+  }, [isCreateMode, isGuest, nextPath, session])
 
   const resetFormState = () => {
     setPassword('')
@@ -261,7 +261,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
         if (signUpData.session) {
           await preloadAuthTargetPath('/onboarding')
-          replaceWithPath('/onboarding')
+          replaceWithPath(buildOnboardingPath(nextPath))
           return
         }
 

@@ -6,7 +6,7 @@ import { ensureGuestProfile } from "./profileHelpers";
 import { pollKind, validateTaggedPoll } from "../utils/barkadaPollKinds";
 
 type Rsvp = "going" | "maybe" | "no";
-type MemberRow = { user_id: string; rsvp: Rsvp; paid: boolean };
+type MemberRow = { user_id: string; rsvp: Rsvp; paid: boolean; updated_at: string | null };
 type PollRow = { id: string; question: string; created_at: string };
 type OptionRow = { id: string; poll_id: string; place_id: string | null; label: string; sort_order: number };
 type VoteRow = { poll_id: string; option_id: string; user_id: string };
@@ -58,7 +58,7 @@ async function loadViewablePlan(planId: string, viewerId: string | null): Promis
 async function buildBarkadaPayload(plan: PlanRow, viewerId: string | null) {
   const supabase = await getSupabaseAdminClient();
   const members = check(
-    await (supabase.from("gala_plan_members") as any).select("user_id, rsvp, paid").eq("plan_id", plan.id)
+    await (supabase.from("gala_plan_members") as any).select("user_id, rsvp, paid, updated_at").eq("plan_id", plan.id)
   ) as MemberRow[];
   const polls = check(
     await (supabase.from("gala_plan_polls") as any).select("id, question, created_at").eq("plan_id", plan.id).order("created_at")
@@ -78,7 +78,7 @@ async function buildBarkadaPayload(plan: PlanRow, viewerId: string | null) {
 
   const ownerAsMember = members.some((member) => member.user_id === plan.user_id)
     ? []
-    : [{ user_id: plan.user_id, rsvp: "going" as Rsvp, paid: false }];
+    : [{ user_id: plan.user_id, rsvp: "going" as Rsvp, paid: false, updated_at: plan.created_at ?? null }];
   const allMembers = [...ownerAsMember, ...members];
   const profiles = await getProfilesByUserIds(allMembers.map((member) => member.user_id).concat(votes.map((vote) => vote.user_id)));
 

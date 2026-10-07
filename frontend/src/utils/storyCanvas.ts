@@ -11,10 +11,28 @@ export const BODY_FONT = '"DM Sans", system-ui, sans-serif'
 
 export type StoryImage = ImageBitmap | null
 
+const MEDIA_HOST = 'media.galatayo.app'
+
 /**
- * Loads a photo for the canvas with CORS and without the HTTP cache: a copy the page already showed in an
- * <img> may be cached without CORS headers, which would taint the canvas. The service worker lets CORS
- * requests through to the network untouched.
+ * The URL a CORS (canvas) load of a media photo uses. media.galatayo.app only sends
+ * Access-Control-Allow-Origin when the request has an Origin and sends no `Vary: Origin`, so a copy
+ * cached from a plain <img> load would come back without it and taint the canvas. A separate URL
+ * gives CORS loads their own cache entry in the browser and at the CDN.
+ */
+export function corsImageUrl(url: string) {
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname !== MEDIA_HOST) return url
+    parsed.searchParams.set('cors', '1')
+    return parsed.toString()
+  } catch {
+    return url
+  }
+}
+
+/**
+ * Loads a photo for the canvas with CORS, from its own CORS cache key (see corsImageUrl). The service
+ * worker lets CORS requests through to the network untouched.
  */
 export async function loadStoryImage(urls: Array<string | null | undefined>): Promise<{ image: ImageBitmap; index: number } | null> {
   for (const [index, url] of urls.entries()) {
@@ -22,7 +40,7 @@ export async function loadStoryImage(urls: Array<string | null | undefined>): Pr
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 8000)
     try {
-      const response = await fetch(url, { mode: 'cors', cache: 'no-store', signal: controller.signal })
+      const response = await fetch(corsImageUrl(url), { mode: 'cors', signal: controller.signal })
       if (response.ok) return { image: await createImageBitmap(await response.blob()), index }
     } catch {
       // Try the next photo.

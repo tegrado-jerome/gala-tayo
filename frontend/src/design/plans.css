@@ -132,6 +132,9 @@ button.g-tstats:focus-visible { outline: 2px solid var(--ink); outline-offset: 2
 .g-sugg button:hover { background: var(--fill-2); }
 .g-sugg svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--ink); }
 .g-sticky-bar { position: fixed; inset-inline: 0; z-index: 5500; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line); }
+.g-sticky-bar.is-typing { visibility: hidden; }
+/* Keyboard focus and scrollIntoView keep fields and tabs above the fixed bar (bar 65px + breathing room). */
+html:has(body.has-action-bar) { scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 1024px) {
   .g-sticky-bar.is-inline { position: sticky; bottom: 16px; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px; box-shadow: var(--sh-2); }
 }

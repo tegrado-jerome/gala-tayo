@@ -427,3 +427,15 @@ export function resolvePostAuthPath(fallbackPath: string, search: string = windo
 
   return requestedNextPath ?? fallbackPath
 }
+
+/** Onboarding that remembers where the new user came from, e.g. the plan invite they opened. */
+export function buildOnboardingPath(nextPath?: string | null) {
+  const next = sanitizeNextPath(nextPath)
+  return next && !next.startsWith('/onboarding') ? `/onboarding?next=${encodeURIComponent(next)}` : '/onboarding'
+}
+
+/** Where finished onboarding goes: the remembered page, else Home. */
+export function resolvePostOnboardingPath(search: string = window.location.search) {
+  const next = getRequestedNextPath(search)
+  return next && !next.startsWith('/onboarding') ? next : '/home'
+}

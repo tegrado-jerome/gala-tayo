@@ -38,7 +38,6 @@ import {
 } from '../../utils/barkadaVotes'
 import { createGalaPlanPoll, deleteGalaPlanPoll, voteGalaPlanPoll, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import {
-  addPlaceToGalaPlan,
   composeGalaPlanDescription,
   getGalaPlan,
   parseGalaPlanDescription,
@@ -46,7 +45,7 @@ import {
   type GalaPlanDetail,
   type GalaPlanOwner,
 } from '../../utils/galaPlansApi'
-import { formatPeso } from '../../utils/galaPlanTrip'
+import { formatPeso, planItemsWithStop } from '../../utils/galaPlanTrip'
 import { fetchPlaceDetailsBatch } from '../../utils/placeDetailCache'
 import type { PlaceDetail } from '../../types/appTypes'
 
@@ -495,9 +494,18 @@ export function SpotDeck({ plan, spots, session, onChange, onPlanChange }: VoteP
   const addWinner = (spot: SpotChoice) =>
     action.run('add', async (activeSession) => {
       if (!spot.placeId) throw new Error('This place is no longer available.')
-      await addPlaceToGalaPlan(plan.id, { place_id: spot.placeId }, activeSession)
-      // Re-read the plan so the new stop arrives with its photo and route.
-      onPlanChange((await getGalaPlan(plan.id, activeSession)).plan)
+      // Slot the winner in at a time it is open (not tacked on after the 7 PM stop), then re-read the plan
+      // so the new stop arrives with its photo and route.
+      const detail = details.get(spot.slug)
+      const coordinate = (value: number | string | undefined) => (value === undefined || value === '' ? null : Number(value))
+      const latest = (await getGalaPlan(plan.id, activeSession)).plan
+      const items = planItemsWithStop(latest.items, {
+        placeId: spot.placeId,
+        category: detail?.category ?? null,
+        latitude: coordinate(detail?.latitude),
+        longitude: coordinate(detail?.longitude),
+      })
+      onPlanChange((await updateGalaPlan(plan.id, { items }, activeSession)).plan)
     })
 
   const clear = () =>

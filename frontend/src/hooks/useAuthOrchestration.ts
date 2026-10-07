@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { supabase } from '../supabase'
+import { consumeRecentRefreshFailure, reportSessionLost, supabase } from '../supabase'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { getCurrentUser, getOnboardingStatus, type CurrentUserResponse } from '../utils/profileApi'
 import { getAdminMfaStatus, type AdminMfaStatus } from '../utils/adminMfa'
@@ -39,6 +39,7 @@ async function getRecoverableInitialSession() {
   } = await supabase.auth.refreshSession()
 
   if (error) {
+    if (session && !isAnonymousSession(session) && consumeRecentRefreshFailure()) reportSessionLost()
     return null
   }
 
@@ -108,6 +109,11 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
       const previousUserId = sessionRef.current?.user?.id ?? null
       const nextUserId = nextSession?.user?.id ?? null
       const didUserIdentityChange = previousUserId !== nextUserId
+
+      // A refresh that failed for good signs the user out; say so instead of quietly showing a guest.
+      if (event === 'SIGNED_OUT' && sessionRef.current && !isAnonymousSession(sessionRef.current) && consumeRecentRefreshFailure()) {
+        reportSessionLost()
+      }
 
       sessionRef.current = nextSession
       clearEmptyHashFragment()

@@ -3,6 +3,14 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getAuthenticatedUser, isAdminUser, unauthorized, badRequest, validateJwt } from "../utils/auth";
 import { logAdminAction } from "../utils/adminAudit";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { deleteR2Object } from "../utils/r2ImageStorage";
+import {
+  DELETE_CONFIRM_WORD,
+  REAUTH_MAX_AGE_SECONDS,
+  deleteAccountData,
+  secondsSinceSignIn,
+  type DeletionDb,
+} from "../services/accountDeletion";
 
 const PRIVACY_REQUEST_TYPES = [
   "access",
@@ -117,12 +125,24 @@ export async function privacyRequestsMe(request: HttpRequest, context: Invocatio
 
       if (error) throw error;
 
-      return {
-        status: 200,
-        jsonBody: {
-          requests: ((data || []) as PrivacyRequestRow[]).map(normalizePrivacyRequest),
-        },
-      };
+      // Account deletion requests live in their own table but belong in the same "Your requests" list.
+      const { data: deletionData, error: deletionError } = await (supabase.from("account_deletion_requests") as any)
+        .select("id, user_id, reason, status, resolved_by, resolved_at, moderator_note, created_at, updated_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (deletionError) throw deletionError;
+
+      const requests = [
+        ...((data || []) as PrivacyRequestRow[]).map(normalizePrivacyRequest),
+        ...((deletionData || []) as AccountDeletionRequestRow[]).map((row) => ({
+          ...normalizeDeletionRequest(row),
+          requestType: "account_deletion" as const,
+          details: row.reason,
+        })),
+      ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+      return { status: 200, jsonBody: { requests } };
     }
 
     const rateCheck = await checkEndpointRateLimit(request, "privacy-requests-create", 5, 60);
@@ -219,6 +239,97 @@ export async function accountDeletionRequestMe(request: HttpRequest, context: In
     if (getErrorCode(error) === "23505") return { status: 409, jsonBody: { message: "You already have a pending account deletion request." } };
     context.error("Account deletion request failed:", error);
     return { status: 500, jsonBody: { message: "Failed to submit account deletion request." } };
+  }
+}
+
+function isMissingTable(error: unknown) {
+  const code = getErrorCode(error);
+  return code === "42P01" || code === "PGRST205";
+}
+
+const IN_CHUNK = 200;
+
+function chunks(values: string[]) {
+  const out: string[][] = [];
+  for (let index = 0; index < values.length; index += IN_CHUNK) out.push(values.slice(index, index + IN_CHUNK));
+  return out;
+}
+
+/** The deletion steps on the service-role client. Tables a deployment doesn't have are skipped. */
+export function supabaseDeletionDb(supabase: Awaited<ReturnType<typeof getSupabaseAdminClient>>): DeletionDb {
+  const run = async <T>(query: PromiseLike<{ data: T; error: unknown }>, fallback: T) => {
+    const { data, error } = await query;
+    if (error) {
+      if (isMissingTable(error)) return fallback;
+      throw error;
+    }
+    return data;
+  };
+  return {
+    async select(table, column, filterColumn, values, extra) {
+      const found: string[] = [];
+      for (const part of chunks(values)) {
+        let query = (supabase.from(table) as any).select(column).in(filterColumn, part);
+        if (extra) query = query.neq(extra.column, extra.notEqual);
+        const rows = (await run(query, [])) as Array<Record<string, unknown>>;
+        for (const row of rows || []) if (typeof row[column] === "string") found.push(row[column] as string);
+      }
+      return found;
+    },
+    async remove(table, filterColumn, values) {
+      for (const part of chunks(values)) await run((supabase.from(table) as any).delete().in(filterColumn, part), null);
+    },
+    async setNull(table, column, filterColumn, values) {
+      for (const part of chunks(values)) await run((supabase.from(table) as any).update({ [column]: null }).in(filterColumn, part), null);
+    },
+    async deleteAuthUser(userId) {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+    },
+  };
+}
+
+/**
+ * Self-serve account deletion. Only ever deletes the signed-in user (the id comes from the verified
+ * token, never the body), needs the typed confirmation and a sign-in from the last 15 minutes.
+ */
+export async function deleteMyAccount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  try {
+    const rateCheck = await checkEndpointRateLimit(request, "account-delete", 3, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
+    const user = await validateJwt(request);
+    if (user.isAnonymous) return { status: 403, jsonBody: { message: "Guest sessions have no account to delete." } };
+
+    const body = (await request.json().catch(() => null)) as { confirm?: unknown } | null;
+    if (body?.confirm !== DELETE_CONFIRM_WORD) return badRequest(`Type ${DELETE_CONFIRM_WORD} to confirm.`);
+
+    const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+    const age = secondsSinceSignIn(token);
+    if (age === null || age > REAUTH_MAX_AGE_SECONDS) {
+      return { status: 401, jsonBody: { code: "REAUTH_REQUIRED", message: "Log in again to confirm it's you, then delete." } };
+    }
+
+    if (await isAdminUser(user.id)) {
+      return { status: 403, jsonBody: { message: "Admin accounts can't be deleted here. Remove the admin role first." } };
+    }
+
+    const supabase = await getSupabaseAdminClient();
+    const { storageKeys } = await deleteAccountData(supabaseDeletionDb(supabase), user.id);
+
+    // Uploaded files go last: a missed file is logged, the account is already gone.
+    for (const key of storageKeys) {
+      for (const variant of [key, key.replace(/\.webp$/i, "_thumb.webp")]) {
+        await deleteR2Object(variant).catch((error) => context.warn(`Account deletion: could not remove ${variant}:`, error));
+      }
+    }
+
+    context.log(`Account deleted by its owner (${storageKeys.length} files).`);
+    return { status: 200, jsonBody: { deleted: true, message: "Your account and its data were deleted." } };
+  } catch (error) {
+    if (error instanceof Error && error.message.toLowerCase().includes("authorization")) return unauthorized("Missing or invalid Authorization header.");
+    context.error("Account deletion failed:", error);
+    return { status: 500, jsonBody: { message: "Could not delete your account. Try again, or email us and we'll do it within 7 days." } };
   }
 }
 
@@ -362,6 +473,13 @@ app.http("accountDeletionRequestMe", {
   authLevel: "anonymous",
   route: "me/account-deletion-request",
   handler: accountDeletionRequestMe,
+});
+
+app.http("deleteMyAccount", {
+  methods: ["POST"],
+  authLevel: "anonymous",
+  route: "me/account/delete",
+  handler: deleteMyAccount,
 });
 
 app.http("adminPrivacyRequestsList", {

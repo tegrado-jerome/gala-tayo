@@ -9,6 +9,7 @@ import { estimatePerHead, formatPeso, getPlanDate } from '../../utils/galaPlanTr
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { buildPrivateGalaPlanShareUrl } from '../../utils/share'
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/bodyScrollLock'
+import { loadStoryImage } from '../../utils/storyCanvas'
 
 const W = 1080
 const H = 1920
@@ -122,43 +123,23 @@ function token(name: string) {
 
 type StoryImage = ImageBitmap | null
 
-/**
- * Loads a photo for the canvas. Fetched with CORS and without the HTTP cache: a copy the page already
- * showed in an <img> may be cached without CORS headers, which would taint the canvas.
- */
 async function loadImage(urls: string[]): Promise<StoryImage> {
-  for (const url of urls) {
-    const controller = new AbortController()
-    const timer = window.setTimeout(() => controller.abort(), 8000)
-    try {
-      const response = await fetch(url, { mode: 'cors', cache: 'no-store', signal: controller.signal })
-      if (response.ok) return await createImageBitmap(await response.blob())
-    } catch {
-      // Try the next photo for this stop.
-    } finally {
-      window.clearTimeout(timer)
-    }
-  }
-  return null
+  return (await loadStoryImage(urls))?.image ?? null
 }
 
-function probeImage(url: string, crossOrigin: boolean) {
+function probeImage(url: string) {
   return new Promise<boolean>((resolve) => {
     const image = new Image()
-    if (crossOrigin) image.crossOrigin = 'anonymous'
     image.onload = () => resolve(true)
     image.onerror = () => resolve(false)
     image.src = url
   })
 }
 
-/**
- * The first photo of a stop that actually loads, for the on-screen preview. Tried with CORS first
- * (media.galatayo.app allows galatayo.app), then plainly, since showing a photo needs no CORS.
- */
+/** The first photo of a stop that actually loads, for the on-screen preview (a plain <img> needs no CORS). */
 async function firstLoadingPhoto(urls: string[]) {
   for (const url of urls) {
-    if ((await probeImage(url, true)) || (await probeImage(url, false))) return url
+    if (await probeImage(url)) return url
   }
   return null
 }

@@ -83,16 +83,54 @@ async function readFrontendPaths() {
   return ['/saan-tayo', '/gala-tayo-meaning', '/long-weekends-2027-philippines', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
 }
 
+// Hidden places and cities with no places yet open by link but stay out of the sitemap. They are
+// written too (they render noindex), so the host serves 200 + noindex rather than a 404.
+async function readNoindexExtraPaths() {
+  try {
+    const paths = JSON.parse(await readFile(path.join(dist, 'data', 'prerender-noindex-paths.json'), 'utf8'))
+    return Array.isArray(paths) ? paths.filter((value) => typeof value === 'string' && value.startsWith('/places/')) : []
+  } catch {
+    return []
+  }
+}
+
 const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
 
 // The sitemap should list only pages that rendered as indexable.
+// URLs the host 301s (staticwebapp.config.json) must never be listed: Search Console flags them
+// as "Page with redirect".
+async function readRedirectedPaths() {
+  const config = JSON.parse(await readFile(path.join(dist, 'staticwebapp.config.json'), 'utf8'))
+  return new Set((config.routes ?? []).filter((route) => route.redirect).map((route) => route.route))
+}
+
+/** A sitemap URL is listable only when it is the exact final URL: no host redirect, no trailing slash. */
+function isListable(loc, redirectedPaths) {
+  try {
+    const url = new URL(loc)
+    if (url.origin !== siteOrigin || url.search || url.hash) return false
+    if (url.pathname.length > 1 && url.pathname.endsWith('/')) return false
+    return !redirectedPaths.has(url.pathname)
+  } catch {
+    return false
+  }
+}
+
 async function writeSitemap(addedPaths, droppedPaths) {
   const sitemapPath = path.join(dist, 'sitemap.xml')
   let sitemap = await readFile(sitemapPath, 'utf8')
   const dropped = new Set(droppedPaths.map(locFor))
-  sitemap = sitemap.replace(/\s*<url>\s*<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g, (block, loc) => (dropped.has(loc.trim()) ? '' : block))
+  const redirectedPaths = await readRedirectedPaths()
+  const removed = []
+  sitemap = sitemap.replace(/\s*<url>\s*<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g, (block, loc) => {
+    if (dropped.has(loc.trim())) return ''
+    if (isListable(loc.trim(), redirectedPaths)) return block
+    removed.push(loc.trim())
+    return ''
+  })
+  removed.forEach((loc) => console.log(`  redirects, left out of sitemap: ${loc}`))
   const additions = addedPaths
-    .filter((routePath) => !dropped.has(locFor(routePath)))
+    .filter((routePath) => !dropped.has(locFor(routePath)) && isListable(locFor(routePath), redirectedPaths))
     .map((routePath) => `  <url>\n    <loc>${locFor(routePath)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
   sitemap = sitemap.replace('</urlset>', `${additions.join('')}</urlset>`)
   await writeFile(sitemapPath, sitemap)
@@ -103,6 +141,9 @@ async function snapshot(page, routePath) {
 
   const response = await page.goto(`${localOrigin}${routePath}`, { waitUntil: 'networkidle', timeout: 60000 })
   if (!response?.ok()) throw new Error(`HTTP ${response?.status()}`)
+  // A page that sends the app somewhere else (old slug, moved city) is a redirect, not a sitemap page.
+  const landedPath = new URL(page.url()).pathname.replace(/\/+$/, '') || '/'
+  if (landedPath !== routePath) throw Object.assign(new Error(`redirects to ${landedPath}`), { redirected: true })
 
   await page.waitForFunction(
     (canonical) => {
@@ -115,6 +156,8 @@ async function snapshot(page, routePath) {
     expectedCanonical,
     { timeout: 30000 },
   ).catch(async () => {
+    const lateLanding = new URL(page.url()).pathname.replace(/\/+$/, '') || '/'
+    if (lateLanding !== routePath) throw Object.assign(new Error(`redirects to ${lateLanding}`), { redirected: true })
     const state = await page.evaluate(() => ({
       canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href'),
       h1: document.querySelector('#root h1')?.textContent?.slice(0, 40),
@@ -275,6 +318,8 @@ async function main() {
   const sitemapPaths = await readSitemapPaths()
   const addedPaths = (await readFrontendPaths()).filter((routePath) => !sitemapPaths.includes(routePath))
   const routes = [...sitemapPaths, ...addedPaths].slice(0, pageLimit)
+  const extraPaths = (await readNoindexExtraPaths()).filter((routePath) => !routes.includes(routePath)).slice(0, Math.max(0, pageLimit - routes.length))
+  const extraSet = new Set(extraPaths)
   const server = await startServer(shellHtml)
   const browser = await chromium.launch({ channel: process.env.PRERENDER_CHROME_CHANNEL || 'chrome' })
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'light', serviceWorkers: 'block' })
@@ -289,9 +334,10 @@ async function main() {
     })
   }
   const failures = []
+  const redirectedRoutes = []
   const noindexPaths = []
   const pages = []
-  const queue = routes.map((routePath) => ({ routePath, attempt: 1 }))
+  const queue = [...routes, ...extraPaths].map((routePath) => ({ routePath, attempt: 1 }))
   let rendered = 0
   let nextStartAt = 0
 
@@ -323,7 +369,9 @@ async function main() {
         pages.push({ routePath: job.routePath, title: result.title, description: result.description })
         rendered += 1
       } catch (error) {
-        if (job.attempt < 2) {
+        if (error.redirected) {
+          redirectedRoutes.push(job.routePath)
+        } else if (job.attempt < 2) {
           queue.push({ ...job, attempt: job.attempt + 1 })
         } else {
           failures.push(`${job.routePath}: ${error.message.split('\n')[0]}`)
@@ -340,13 +388,14 @@ async function main() {
   server.close()
 
   await writeFile(path.join(dist, 'llms.txt'), buildLlmsTxt(pages))
-  await writeSitemap(addedPaths, noindexPaths)
-  console.log(`Prerendered ${rendered}/${routes.length} pages.`)
-  noindexPaths.forEach((routePath) => console.log(`  noindex, left out of sitemap: ${routePath}`))
+  await writeSitemap(addedPaths, [...noindexPaths, ...redirectedRoutes])
+  redirectedRoutes.forEach((routePath) => console.log(`  app redirect, left out of sitemap: ${routePath}`))
+  console.log(`Prerendered ${rendered}/${routes.length} pages, plus ${noindexPaths.filter((routePath) => extraSet.has(routePath)).length}/${extraPaths.length} noindex link-only pages.`)
+  noindexPaths.filter((routePath) => !extraSet.has(routePath)).forEach((routePath) => console.log(`  noindex, left out of sitemap: ${routePath}`))
   failures.forEach((failure) => console.warn(`  skipped ${failure}`))
 
-  // Skipped pages still work through the SPA fallback; only fail when most pages broke.
-  if (rendered < (routes.length - noindexPaths.length) * 0.8) {
+  // Skipped pages still work through the SPA fallback; only fail when most sitemap pages broke.
+  if (rendered < (routes.length - redirectedRoutes.length - noindexPaths.filter((routePath) => !extraSet.has(routePath)).length) * 0.8) {
     process.exitCode = 1
   }
 }

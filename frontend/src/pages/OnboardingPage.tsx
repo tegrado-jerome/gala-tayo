@@ -14,7 +14,7 @@ import {
   saveOnboardingDraft as saveRemoteOnboardingDraft,
   uploadProfileAvatar,
 } from '../services/onboardingApi'
-import { clearSignupOnboardingAccess } from '../services/authApi'
+import { clearSignupOnboardingAccess, resolvePostOnboardingPath } from '../services/authApi'
 import { getCurrentUser, getOnboardingStatus, validateUsername, type CurrentUserResponse } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
@@ -335,7 +335,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
           const account = await loadCompletedAccountForHome(session)
           clearOnboardingDraft(session.user.id)
           onComplete?.(account)
-          replaceWithPath('/home')
+          replaceWithPath(resolvePostOnboardingPath())
           clearSignupOnboardingAccessAfterHomeRedirect()
           setIsRedirectingHome(true)
           return
@@ -597,7 +597,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       saveInterests(values.interests)
       clearOnboardingDraft(session.user.id)
       onComplete?.(account)
-      replaceWithPath('/home')
+      replaceWithPath(resolvePostOnboardingPath())
       clearSignupOnboardingAccessAfterHomeRedirect()
       setIsRedirectingHome(true)
     } catch (error) {

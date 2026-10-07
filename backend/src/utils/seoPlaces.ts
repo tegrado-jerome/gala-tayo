@@ -352,6 +352,28 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
   return places;
 }
 
+/**
+ * Canonical paths of public places hidden from discovery (not gala-worthy). Their pages stay reachable
+ * by link and are noindex, so the build prerenders them instead of letting the host answer 404.
+ */
+export async function getHiddenPlacePaths(): Promise<string[]> {
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await (supabase.from("places") as any)
+    .select(SEO_PLACE_SELECT)
+    .eq("status", "active")
+    .order("name", { ascending: true, nullsFirst: false })
+    .limit(2000);
+
+  if (error) {
+    throw new Error("Failed to load hidden places.");
+  }
+
+  return ((data ?? []) as PlaceRow[])
+    .filter((row) => isPublicPlace(row) && !isGalaWorthySlug(cleanString(row.slug)))
+    .map((row) => mapPlaceRowToSeoSummary(row, null)?.canonicalPath)
+    .filter((value): value is string => Boolean(value));
+}
+
 export async function clearSeoPlaceSummariesCache(): Promise<void> {
   await deleteJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY);
 }

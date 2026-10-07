@@ -11,13 +11,16 @@ import SeoHead from '../components/SeoHead'
 import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import {
+  deleteMyAccount,
   getMyPrivacyRequests,
-  submitAccountDeletionRequest,
   submitPrivacyRequest,
+  type ListedPrivacyRequestType,
   type PrivacyRequest,
   type PrivacyRequestStatus,
   type PrivacyRequestType,
 } from '../utils/profileApi'
+import { signInWithEmailPassword, signInWithGoogle, signOut } from '../services/authApi'
+import { replaceWithPath } from '../utils/navigation'
 import { MeRow } from './ProfilePage'
 import '../design/me.css'
 
@@ -33,7 +36,13 @@ const privacyRequestOptions: Array<{ value: PrivacyRequestType; label: string; d
   { value: 'withdraw_consent', label: 'Withdraw consent', description: 'Withdraw consent for optional processing where consent applies.' },
 ]
 
-const privacyRequestLabels = Object.fromEntries(privacyRequestOptions.map((option) => [option.value, option.label])) as Record<PrivacyRequestType, string>
+const privacyRequestLabels = {
+  ...Object.fromEntries(privacyRequestOptions.map((option) => [option.value, option.label])),
+  account_deletion: 'Delete my account',
+} as Record<ListedPrivacyRequestType, string>
+
+const DELETE_WORD = 'DELETE'
+const DELETE_RETURN_PATH = '/privacy-center?delete=confirm'
 
 const requestStatusLabels: Record<PrivacyRequestStatus, string> = {
   pending: 'Pending',
@@ -78,10 +87,13 @@ function PrivacyCenterPage({ session }: { session: Session }) {
   const [privacyRequestDetails, setPrivacyRequestDetails] = useState('')
   const [privacyRequestError, setPrivacyRequestError] = useState('')
   const [isSubmittingPrivacyRequest, setIsSubmittingPrivacyRequest] = useState(false)
-  const [deletionReason, setDeletionReason] = useState('')
-  const [deletionRequestError, setDeletionRequestError] = useState('')
-  const [isSubmittingDeletionRequest, setIsSubmittingDeletionRequest] = useState(false)
-  const [isDeletionExpanded, setIsDeletionExpanded] = useState(false)
+  const [deleteWord, setDeleteWord] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deletionError, setDeletionError] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeletionExpanded, setIsDeletionExpanded] = useState(() => new URLSearchParams(window.location.search).get('delete') === 'confirm')
+  // Email accounts confirm with their password; Google-only accounts sign in with Google again.
+  const hasPassword = Boolean(session.user.app_metadata?.providers?.includes('email') ?? session.user.app_metadata?.provider === 'email')
   const [isRequestExpanded, setIsRequestExpanded] = useState(false)
 
   useEffect(() => {
@@ -148,29 +160,44 @@ function PrivacyCenterPage({ session }: { session: Session }) {
     }
   }
 
-  const handleSubmitDeletionRequest = async (event: FormEvent<HTMLFormElement>) => {
+  const handleDeleteAccount = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (deleteWord.trim() !== DELETE_WORD) {
+      setDeletionError(`Type ${DELETE_WORD} to confirm.`)
+      return
+    }
 
     try {
-      setIsSubmittingDeletionRequest(true)
-      setDeletionRequestError('')
-      const result = await submitAccountDeletionRequest(
-        {
-          reason: deletionReason.trim() || null,
-        },
-        session,
-      )
+      setIsDeleting(true)
+      setDeletionError('')
+      let activeSession = session
+      if (hasPassword) {
+        if (!deletePassword) {
+          setDeletionError('Enter your password to confirm it’s you.')
+          return
+        }
+        if (!session.user.email) throw new Error('Your account has no email to confirm with.')
+        activeSession = await signInWithEmailPassword(session.user.email, deletePassword)
+      }
 
-      setDeletionReason('')
-      setIsDeletionExpanded(false)
-      showSystemMessage({
-        title: 'Deletion Request Submitted',
-        description: result.message,
-      })
+      try {
+        await deleteMyAccount(activeSession)
+      } catch (error) {
+        if ((error as { code?: string }).code === 'REAUTH_REQUIRED' && !hasPassword) {
+          await signInWithGoogle(DELETE_RETURN_PATH)
+          return
+        }
+        throw error
+      }
+
+      await signOut({ scope: 'local', animate: false }).catch(() => undefined)
+      replaceWithPath('/')
+      showSystemMessage({ title: 'Account deleted', description: 'Your account and its data are gone. Salamat sa pag-gala with us.', tone: 'info' })
     } catch (error) {
-      setDeletionRequestError(error instanceof Error ? error.message : 'Could not submit account deletion request.')
+      const message = error instanceof Error ? error.message : ''
+      setDeletionError(/invalid login credentials/i.test(message) ? 'That password is not right.' : message || 'Could not delete your account.')
     } finally {
-      setIsSubmittingDeletionRequest(false)
+      setIsDeleting(false)
     }
   }
 
@@ -304,38 +331,52 @@ function PrivacyCenterPage({ session }: { session: Session }) {
 
       <section className="me-sec">
         <h2>Delete account</h2>
-        <p className="me-sec-sub">We review every request before account data is removed, detached, or anonymized.</p>
+        <p className="me-sec-sub">Deletes your profile, plans, lists, saves, reviews, comments and history right away. Approved place photos stay up without your name.</p>
         <div className="me-rows">
           <MeRow
             icon={Trash}
             tone="bad"
-            title="Request account deletion"
-            sub="This can't be undone once we process it"
+            title="Delete my account"
+            sub="This can't be undone"
             expanded={isDeletionExpanded}
             onClick={() => {
               setIsDeletionExpanded((open) => !open)
-              setDeletionRequestError('')
+              setDeletionError('')
             }}
           />
         </div>
         {isDeletionExpanded ? (
-          <form onSubmit={handleSubmitDeletionRequest} className="mt-2 grid gap-3">
+          <form onSubmit={handleDeleteAccount} className="mt-2 grid gap-3">
+            {hasPassword ? (
+              <div className="g-field">
+                <label htmlFor="privacy-delete-password">Your password</label>
+                <input
+                  id="privacy-delete-password"
+                  className="g-input"
+                  type="password"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                />
+              </div>
+            ) : (
+              <p className="g-hint">We may ask you to sign in with Google again to confirm it’s you.</p>
+            )}
             <div className="g-field">
-              <label htmlFor="privacy-deletion-reason">
-                Reason <span className="g-fnt font-normal">Optional</span>
-              </label>
-              <textarea
-                id="privacy-deletion-reason"
+              <label htmlFor="privacy-delete-word">Type {DELETE_WORD} to confirm</label>
+              <input
+                id="privacy-delete-word"
                 className="g-input"
-                value={deletionReason}
-                onChange={(event) => setDeletionReason(event.target.value)}
-                maxLength={1000}
-                placeholder="Add context for the deletion request."
+                value={deleteWord}
+                onChange={(event) => setDeleteWord(event.target.value)}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
               />
             </div>
-            {deletionRequestError ? (
+            {deletionError ? (
               <p className="g-hint is-error" role="alert">
-                {deletionRequestError}
+                {deletionError}
               </p>
             ) : null}
             <div className="grid gap-2 sm:flex sm:justify-end">
@@ -344,13 +385,13 @@ function PrivacyCenterPage({ session }: { session: Session }) {
                 className="order-2 sm:order-1"
                 onClick={() => {
                   setIsDeletionExpanded(false)
-                  setDeletionRequestError('')
+                  setDeletionError('')
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="danger" className="order-1 sm:order-2" disabled={isSubmittingDeletionRequest}>
-                {isSubmittingDeletionRequest ? 'Submitting…' : 'Request account deletion'}
+              <Button type="submit" variant="danger" className="order-1 sm:order-2" disabled={isDeleting || deleteWord.trim() !== DELETE_WORD}>
+                {isDeleting ? 'Deleting…' : 'Delete my account'}
               </Button>
             </div>
           </form>

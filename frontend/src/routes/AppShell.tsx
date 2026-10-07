@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import MobileBottomNav from '../components/navigation/MobileBottomNav'
@@ -9,7 +9,10 @@ import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
 import { AppUserProvider } from '../context/AppUserContext'
 import { SavedFavoritesProvider } from '../context/SavedFavoritesContext'
-import { SystemMessageProvider } from '../context/SystemMessageContext'
+import { SystemMessageProvider, useSystemMessage } from '../context/SystemMessageContext'
+import { SESSION_LOST_EVENT, takeSessionLost } from '../supabase'
+import { buildAuthPath } from '../services/authApi'
+import { navigateToPath } from '../utils/navigation'
 import { AskAiNotificationProvider } from '../context/AskAiNotificationContext'
 import { BottomNavProvider, useBottomNav } from '../context/BottomNavContext'
 import type { CurrentUserResponse } from '../utils/profileApi'
@@ -30,6 +33,29 @@ function FloatingChatGate({ pathname }: { pathname: string }) {
       <FloatingChat pathname={pathname} />
     </Suspense>
   )
+}
+
+/** After a failed token refresh signed someone out, offer to log back in to the same page. */
+function SessionLostNotice() {
+  const { showSystemMessage } = useSystemMessage()
+
+  useEffect(() => {
+    const show = () => {
+      if (!takeSessionLost()) return
+      showSystemMessage({
+        title: 'You were logged out',
+        description: 'Your session could not be renewed. Log in again to keep going.',
+        tone: 'error',
+        durationMs: 20_000,
+        action: { label: 'Log in', onClick: () => navigateToPath(buildAuthPath('/login', `${window.location.pathname}${window.location.search}`)) },
+      })
+    }
+    show()
+    window.addEventListener(SESSION_LOST_EVENT, show)
+    return () => window.removeEventListener(SESSION_LOST_EVENT, show)
+  }, [showSystemMessage])
+
+  return null
 }
 
 function BottomNavGate({ pathname }: { pathname: string }) {
@@ -69,6 +95,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
       adminMfa={adminMfa}
     >
       <SystemMessageProvider>
+        <SessionLostNotice />
         <SavedFavoritesProvider>
           <AskAiNotificationProvider>
             <BottomNavProvider>

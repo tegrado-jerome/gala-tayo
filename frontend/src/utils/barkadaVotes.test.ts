@@ -6,9 +6,11 @@ import {
   formatDateChoice,
   gcInviteText,
   inviteMessage,
+  joinNames,
   kailanQuestion,
   lockedDate,
   rankSpots,
+  replyNames,
   splitPolls,
   spotQuestion,
   spotWinner,
@@ -95,4 +97,19 @@ test('gcInviteText: invite, route and cost for the group chat', () => {
   )
   assert.equal(gcInviteText({ stops: ['Intramuros'], when: null, perHead: null }), 'Sama ka? Gala tayo sa Intramuros 👉\nG?')
   assert.equal(gcInviteText({ stops: ['Rizal Park'], when: null, perHead: 0 }), 'Sama ka? Gala tayo sa Rizal Park 👉\nLibre lang! G?')
+})
+
+test('reply names: latest first, "You" for the viewer, full names when first names clash', () => {
+  const member = (id: string, name: string, at: string) => ({ user_id: id, updated_at: at, profile: { ...person(id), display_name: name } })
+  const host = member('host', 'Bea Santos', '2026-10-06T10:00:00Z')
+  const friend = member('friend', 'Bea Friend', '2026-10-06T12:00:00Z')
+  const marco = member('marco', 'Marco Reyes', '2026-10-06T11:00:00Z')
+  const everyone = [host, friend, marco]
+
+  assert.deepEqual(replyNames([marco, friend], everyone, 'host'), ['Bea Friend', 'Marco'])
+  assert.deepEqual(replyNames([marco, friend], everyone, 'friend'), ['You', 'Marco'])
+  assert.deepEqual(replyNames([marco], [host, marco], 'host'), ['Marco'])
+  assert.deepEqual(replyNames([{ user_id: 'x', profile: null }], everyone, null), ['Someone'])
+  assert.equal(joinNames(['You', 'Marco']), 'You and Marco')
+  assert.equal(joinNames(['A', 'B', 'C', 'D']), 'A, B and 2 more')
 })

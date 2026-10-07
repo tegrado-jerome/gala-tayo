@@ -5,7 +5,7 @@ import { getCurrentEmailConflict, getPostAuthRedirect, markSignupOnboardingAcces
 import { getOnboardingStatus } from '../utils/profileApi'
 import { getUserMfaStatus } from '../utils/userMfa'
 import { isAnonymousSession } from '../utils/guestSession'
-import { buildAuthPath } from '../services/authApi'
+import { buildAuthPath, buildOnboardingPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
 import { AuthCard } from '../components/auth/AuthCard'
@@ -101,7 +101,7 @@ function AuthCallbackPage() {
           markSignupOnboardingAccess()
 
           if (isMounted) {
-            replaceWithPath('/onboarding')
+            replaceWithPath(buildOnboardingPath(getRequestedNextPath()))
           }
 
           void getOnboardingStatus(session)
@@ -134,7 +134,7 @@ function AuthCallbackPage() {
           }
 
           if (isMounted) {
-            replaceWithPath('/onboarding')
+            replaceWithPath(buildOnboardingPath(getRequestedNextPath()))
           }
           return
         }

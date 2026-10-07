@@ -120,6 +120,7 @@ export const ACCOUNT_ONLY_FUNCTIONS = new Set([
   "getMyPlaceSubmissions",
   "privacyRequestsMe",
   "accountDeletionRequestMe",
+  "deleteMyAccount",
   "authEmailConflict",
   "authResendEmail",
   "sendMfaEmailCode",

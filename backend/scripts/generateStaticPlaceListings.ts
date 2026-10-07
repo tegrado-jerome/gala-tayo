@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CATEGORIES } from "../src/functions/filters";
 import { DESTINATIONS, REGIONS, getDestinationBySlug, isMetroManilaDestination } from "../src/utils/phDestinations";
-import { getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage, type SeoPlaceSummary } from "../src/utils/seoPlaces";
+import { getHiddenPlacePaths, getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage, type SeoPlaceSummary } from "../src/utils/seoPlaces";
 
 const AREA_PAGE_SIZE = 10;
 const CATEGORY_PAGE_SIZE = 12;
@@ -144,6 +144,17 @@ async function main() {
   await writeFile(path.join(OUTPUT_DIR, "guides.json"), `${JSON.stringify(guideSummaries)}\n`, "utf8");
 
   await writeCompactPlaces(places);
+
+  // Pages that open by link but are not in the sitemap: hidden places and cities with no places yet.
+  // The prerender writes them (noindex) so the host serves 200 + noindex instead of a 404.
+  const regionSlugs = new Set(REGIONS.map((region) => region.slug));
+  const emptyAreaPaths = areas
+    .filter((areaSlug) => !regionSlugs.has(areaSlug) && !places.some((place) => place.areaSlug === areaSlug))
+    .map((areaSlug) => `/places/${areaSlug}`);
+  const noindexPaths = [...new Set([...(await getHiddenPlacePaths()), ...emptyAreaPaths])].sort();
+  await writeFile(path.join(DATA_DIR, "prerender-noindex-paths.json"), `${JSON.stringify(noindexPaths)}
+`, "utf8");
+  console.log(`Listed ${noindexPaths.length} noindex pages to prerender`);
 
   await writeFile(path.join(OUTPUT_DIR, "manifest.json"), `${JSON.stringify({
     generatedAt: new Date().toISOString(),

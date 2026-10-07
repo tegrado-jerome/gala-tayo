@@ -6,6 +6,7 @@ type ResolveAuthNavigationTargetArgs = {
   needsOnboarding: boolean
   isOnboardingAllowedPath: boolean
   pathname: string
+  search?: string
 }
 
 export function resolveAuthNavigationTarget({
@@ -16,6 +17,7 @@ export function resolveAuthNavigationTarget({
   needsOnboarding,
   isOnboardingAllowedPath,
   pathname,
+  search = '',
 }: ResolveAuthNavigationTargetArgs) {
   if (!hasResolvedInitialAuth || isPasswordResetPath) {
     return null
@@ -26,7 +28,9 @@ export function resolveAuthNavigationTarget({
   }
 
   if (session && hasResolvedProfile && needsOnboarding && !isOnboardingAllowedPath && pathname !== '/auth/callback') {
-    return '/onboarding'
+    // Keep the page they opened (a plan invite, a place) so onboarding can send them back to it.
+    const isStart = pathname === '/' || pathname === '/home' || pathname.startsWith('/onboarding')
+    return isStart ? '/onboarding' : `/onboarding?next=${encodeURIComponent(`${pathname}${search}`)}`
   }
 
   return null

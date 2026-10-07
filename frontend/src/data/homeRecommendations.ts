@@ -171,8 +171,9 @@ const homeCategoryRecommendations: HomeRecommendationTile[] = [
 const hiddenSlugs = new Set((galaWorthy as { hidden: string[] }).hidden)
 const isWorthy = (place: HomeRecommendationPlace) => !hiddenSlugs.has(normalizePlaceSlug(place.slug || place.name))
 const worthyPlaces = (places: HomeRecommendationPlace[]) => places.filter(isWorthy)
-// Cities with no gala-worthy places yet would open an empty page.
-const CITIES_WITHOUT_WORTHY_PLACES = new Set(['Caloocan', 'Malabon', 'Muntinlupa', 'Navotas', 'Pateros', 'Valenzuela'])
+// Cities with no gala-worthy places yet would open an empty page. This is the first-paint list;
+// ExploreCities re-filters by live place counts once the places load.
+const CITIES_WITHOUT_WORTHY_PLACES = new Set(['Caloocan', 'Malabon', 'Mandaluyong', 'Marikina', 'Muntinlupa', 'Navotas', 'Pasig', 'Pateros', 'San Juan', 'Valenzuela'])
 
 const visibleAllTopPickPlaces = worthyPlaces(homeAllTopPickPlaces)
 const visiblePopularTopPickPlaces = worthyPlaces(homePopularTopPickPlaces)

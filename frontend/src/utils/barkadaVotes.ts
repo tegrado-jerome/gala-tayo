@@ -141,3 +141,32 @@ export function gcInviteText({ stops, when, perHead }: { stops: string[]; when: 
   const cost = perHead ? `\nMga ₱${perHead.toLocaleString('en-PH')} each. G?` : perHead === 0 ? '\nLibre lang! G?' : '\nG?'
   return `${inviteMessage(stops[0] ?? 'labas', when)}${route}${cost}`
 }
+
+type ReplyMember = { user_id: string; profile: GalaPlanOwner | null; updated_at?: string | null }
+
+function fullName(profile: GalaPlanOwner | null) {
+  return profile?.display_name?.trim() || (profile?.username ? `@${profile.username}` : 'Someone')
+}
+
+/**
+ * Names for an RSVP line, latest reply first: "You" for the viewer, a first name when it is unique
+ * in the barkada, else the full name, so two Beas never read as the same person.
+ */
+export function replyNames(replied: ReplyMember[], everyone: ReplyMember[], viewerId: string | null | undefined) {
+  const firstName = (member: ReplyMember) => fullName(member.profile).split(' ')[0].toLowerCase()
+  const firstNameCount = new Map<string, number>()
+  for (const member of everyone) firstNameCount.set(firstName(member), (firstNameCount.get(firstName(member)) ?? 0) + 1)
+
+  return [...replied]
+    .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+    .map((member) => {
+      if (member.user_id === viewerId) return 'You'
+      const name = fullName(member.profile)
+      return (firstNameCount.get(firstName(member)) ?? 0) > 1 ? name : name.split(' ')[0]
+    })
+}
+
+export function joinNames(names: string[]) {
+  if (names.length <= 2) return names.join(' and ')
+  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`
+}
