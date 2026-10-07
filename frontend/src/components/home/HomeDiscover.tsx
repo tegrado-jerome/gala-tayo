@@ -7,6 +7,7 @@ import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import PhotoCard, { getPlaceHref, type PhotoCardPlace } from '../discover/PhotoCard'
 import Rail from '../discover/Rail'
+import VibeChips from '../discover/VibeChips'
 import ExploreCities from './ExploreCities'
 import HomeQuickPicks from './HomeQuickPicks'
 import { requestSearchFocus } from './search/SearchSuggest'
@@ -25,17 +26,10 @@ import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../../utils/placeGalleryPh
 import { getSeoListingPage } from '../../utils/seoApi'
 import { METRO_MANILA_REGION_SLUG, getDestinationBySlug } from '../../data/destinations'
 import { MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, getLandingTargetBySlug } from '../../utils/seoLandingPages'
+import { vibeHref, type VibeId } from '../../utils/vibes'
 
 // Editor's pick: the top-scored gala-worthy place. The headline is written from its own description.
 const EDITORS_PICK = { slug: 'fort-santiago', kicker: 'Editor’s pick · Intramuros', headline: 'Walls, river views and Rizal’s final prison' }
-
-// Each mood pill links to a real category, pictured by a top place in it.
-const MOODS = [
-  { label: 'Heritage', href: '/places/categories/heritage', photoSlug: 'intramuros' },
-  { label: 'Museums', href: '/places/categories/museum', photoSlug: 'national-museum-of-fine-arts' },
-  { label: 'Parks', href: '/places/categories/park', photoSlug: 'ayala-triangle-gardens' },
-  { label: 'Food', href: '/places/categories/food', photoSlug: 'toyo-eatery' },
-]
 
 // Guides shown on Home, nationwide ones included; each only appears once it has enough places and a photo.
 const HOME_GUIDES = [
@@ -140,7 +134,7 @@ function HeroCollage() {
 
 const TABS: Array<{ id: HomeTab; label: string; icon: typeof Compass }> = [
   { id: 'things', label: 'Things to do', icon: Compass },
-  { id: 'food', label: 'Food', icon: ForkKnife },
+  { id: 'food', label: 'Food trips', icon: ForkKnife },
   { id: 'guides', label: 'Guides', icon: BookOpen },
 ]
 
@@ -155,22 +149,6 @@ function TextTabs({ active, onChange }: { active: HomeTab; onChange: (tab: HomeT
         </button>
       ))}
     </div>
-  )
-}
-
-function MoodPills() {
-  return (
-    <nav className="g-moods" aria-label="Moods">
-      {MOODS.map((mood) => {
-        const photo = photoFor(mood.photoSlug)
-        return (
-          <InternalLink key={mood.label} href={mood.href} className="g-mood">
-            {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" width={32} height={32} loading="lazy" decoding="async" /> : null}
-            {mood.label}
-          </InternalLink>
-        )
-      })}
-    </nav>
   )
 }
 
@@ -321,11 +299,12 @@ function SaanTayoCard({ pool }: { pool: PhotoCardPlace[] }) {
   )
 }
 
-function ListingRail({ title, subtitle, href, category, onGuestFavorite }: { title: string; subtitle?: string; href: string; category: string; onGuestFavorite: (retry: () => void) => void }) {
-  const places = useListingRail({ category })
+/** A rail of places that fit a vibe; See all opens the vibe's full list. */
+function VibeRail({ title, subtitle, vibe, onGuestFavorite }: { title: string; subtitle?: string; vibe: VibeId; onGuestFavorite: (retry: () => void) => void }) {
+  const places = useListingRail({ vibe })
   if (places && places.length === 0) return null
   return places ? (
-    <Rail title={title} subtitle={subtitle} seeAllHref={href}>
+    <Rail title={title} subtitle={subtitle} seeAllHref={vibeHref('/places', vibe)} seeAllRel="nofollow">
       {places.map((place) => (
         <PhotoCard key={place.id} place={place} onGuestFavorite={onGuestFavorite} />
       ))}
@@ -366,8 +345,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
       <div id="home-tab-panel" role="tabpanel" aria-labelledby={`home-tab-${tab}`} className="min-w-0">
         {tab === 'food' ? (
           <>
-            <ListingRail title="Food picks" subtitle="Food worth the trip, best first" href="/places/categories/food" category="food" onGuestFavorite={openGuestFavorite} />
-            <ListingRail title="Cafes" href="/places/categories/cafe" category="cafe" onGuestFavorite={openGuestFavorite} />
+            <VibeRail title="Top food trips" subtitle="Famous eats worth the drive, best first" vibe="food-trip" onGuestFavorite={openGuestFavorite} />
             <Guides covers={foodGuides} title="Food guides" limit={4} />
           </>
         ) : tab === 'guides' ? (
@@ -390,7 +368,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
           </>
         ) : (
           <>
-            <MoodPills />
+            <VibeChips active={null} getHref={(id) => vibeHref('/places', id)} showAll={false} />
             {/* The editor's pick is the page's LCP photo, so it sits above Gala Today, which loads later and would push it down. */}
             <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
             <GalaTodayHome />
@@ -410,7 +388,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
               </section>
             )}
 
-            {isRaining ? <ListingRail title="Rainy day? Indoor picks" subtitle="Museums to wait out the rain" href="/places/categories/museum" category="museum" onGuestFavorite={openGuestFavorite} /> : null}
+            {isRaining ? <VibeRail title="Rainy day? Head indoors!" subtitle="Museums, cafes and indoor fun" vibe="rainy-day" onGuestFavorite={openGuestFavorite} /> : null}
             {pickDetails ? <WeekdayCard places={pickDetails} /> : null}
             <Guides covers={guideCovers} />
             <SaanTayoCard pool={picks} />

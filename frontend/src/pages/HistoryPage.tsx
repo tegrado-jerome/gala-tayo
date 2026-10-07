@@ -102,7 +102,7 @@ function getHistoryErrorMessage(error: unknown, fallbackMessage: string) {
 }
 
 function getPlaceMeta(place: HistoryPlace) {
-  const parts = [place.category?.trim(), place.area?.trim() || place.city?.trim()].filter(Boolean)
+  const parts = [place.area?.trim() || place.city?.trim()].filter(Boolean)
   return Array.from(new Set(parts)).join(' · ')
 }
 

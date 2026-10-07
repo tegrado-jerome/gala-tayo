@@ -157,7 +157,6 @@ function SearchHub({
     [rawQuery, searchTotalCount, selectedAreaName, selectedBudgetLabel, selectedCategoryName, selectedGoodForName]
   )
   const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
-  const categoryOptions = categories.map((category) => ({ value: category.id, label: category.name }))
   const cityOptions = toCityOptions(areas)
   const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
   const visiblePlaces = hasSearched ? searchResults : []
@@ -704,15 +703,12 @@ function SearchHub({
 
       <QuickFilterChips
         className="mt-4"
-        categoryOptions={categoryOptions}
         cityOptions={cityOptions}
         budgetOptions={budgetFilterOptions}
-        selectedCategory={selectedCategory}
         selectedCity={selectedArea}
         selectedBudget={selectedBudget}
         goodForLabel={selectedGoodForName}
         onOpenFilters={() => setIsFilterSheetOpen(true)}
-        onCategoryChange={(value) => submitResultFilterChange({ category: value, page: 1 })}
         onCityChange={(value) => submitResultFilterChange({ area: value, page: 1 })}
         onBudgetChange={(value) => submitResultFilterChange({ budget: value, page: 1 })}
         onClearGoodFor={() => clearFilterChip('good_for')}
@@ -765,13 +761,10 @@ function SearchHub({
       <Sheet open={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filters" labelledBy="search-hub-filters-title">
         <SearchFilterPanel
           selectedCity={selectedArea}
-          selectedCategory={selectedCategory}
           selectedBudget={selectedBudget}
           cityOptions={cityOptions}
-          categoryOptions={categoryOptions}
           budgetOptions={budgetFilterOptions}
           onCityChange={(value) => submitResultFilterChange({ area: value, page: 1 })}
-          onCategoryChange={(value) => submitResultFilterChange({ category: value, page: 1 })}
           onBudgetChange={(value) => submitResultFilterChange({ budget: value, page: 1 })}
           onClearAll={() => {
             setIsFilterSheetOpen(false)

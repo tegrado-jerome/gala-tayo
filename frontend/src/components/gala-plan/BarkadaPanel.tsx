@@ -225,7 +225,7 @@ function pollCards(plan: GalaPlanDetail, poll: GalaPlanPoll): SwipeCard[] {
       id: option.id,
       title: option.label,
       image: place ? getPlacePhotoCandidates(place.slug, place.image_url)[0] ?? null : null,
-      meta: place ? [place.category, place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') : null,
+      meta: place ? [place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') : null,
       votes: option.votes,
       voters: option.voters,
       isMine: poll.viewer_option_id === option.id,

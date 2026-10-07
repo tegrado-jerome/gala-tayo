@@ -341,7 +341,7 @@ export async function search(
         ? formatNoResultsMessage({
             query,
             areaId: effectiveAreaId,
-            fallbackMessage: "No places found. Try another category, location, or budget.",
+            fallbackMessage: "No places found. Try another place, city or budget.",
           })
         : null;
     const responsePayload = buildSearchResponsePayload({

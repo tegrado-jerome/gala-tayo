@@ -2,6 +2,51 @@
   "trailingSlash": "never",
   "routes": [
     {
+      "route": "/places/categories",
+      "redirect": "/places",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/activity",
+      "redirect": "/places?vibe=adventure",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/cafe",
+      "redirect": "/places?vibe=food-trip",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/food",
+      "redirect": "/places?vibe=food-trip",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/heritage",
+      "redirect": "/places?vibe=heritage",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/museum",
+      "redirect": "/places?vibe=rainy-day",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/nightlife",
+      "redirect": "/places?vibe=food-trip",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/park",
+      "redirect": "/places?vibe=nature",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/categories/*",
+      "redirect": "/places",
+      "statusCode": 301
+    },
+    {
       "route": "/places/angeles/mount-arayat-pampanga",
       "redirect": "/places/arayat/mount-arayat-pampanga",
       "statusCode": 301

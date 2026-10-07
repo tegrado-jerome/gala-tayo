@@ -21,6 +21,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconOnly?: boolean
   loading?: boolean
   href?: string
+  /** For links only: "nofollow" on links to filtered views. */
+  rel?: string
 }
 
 export function buttonClass({ variant = 'ink', size = 'md', block, iconOnly }: Pick<ButtonProps, 'variant' | 'size' | 'block' | 'iconOnly'>) {
@@ -28,11 +30,11 @@ export function buttonClass({ variant = 'ink', size = 'md', block, iconOnly }: P
 }
 
 /** One component for every action. Use `variant="tara"` only for the single main action on a screen. */
-export function Button({ variant, size, block, iconOnly, loading, href, className, children, type = 'button', ...rest }: ButtonProps) {
+export function Button({ variant, size, block, iconOnly, loading, href, rel, className, children, type = 'button', ...rest }: ButtonProps) {
   const classes = cx(buttonClass({ variant, size, block, iconOnly }), className)
   if (href) {
     return (
-      <InternalLink href={href} className={classes} ariaLabel={rest['aria-label']}>
+      <InternalLink href={href} rel={rel} className={classes} ariaLabel={rest['aria-label']}>
         {children}
       </InternalLink>
     )

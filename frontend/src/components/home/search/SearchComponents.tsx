@@ -16,7 +16,6 @@ import { SEARCH_RESULTS_PER_PAGE, type BackendSearchStatus, type MobileResultsVi
 import type { SearchBudgetValue } from '../../../utils/searchParams'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
-const QUICK_CATEGORY_IDS = ['cafe', 'food', 'nightlife', 'park']
 const QUICK_CITY_IDS = ['baguio', 'cebu-city', 'makati']
 const QUICK_BUDGET: SearchBudgetValue = 'under-500'
 
@@ -100,16 +99,12 @@ function FilterGroup<T extends string>({
 
 function SearchFilterPanel({
   cityLabel = 'City',
-  categoryLabel = 'Category',
   budgetLabel = 'Budget',
   selectedCity,
-  selectedCategory,
   selectedBudget,
   cityOptions,
-  categoryOptions,
   budgetOptions,
   onCityChange,
-  onCategoryChange,
   onBudgetChange,
   onClearAll,
   onApplyFilters,
@@ -117,27 +112,22 @@ function SearchFilterPanel({
   className,
 }: {
   cityLabel?: string
-  categoryLabel?: string
   budgetLabel?: string
   selectedCity: string | null
-  selectedCategory: string | null
   selectedBudget: SearchBudgetValue | null
   cityOptions: FilterOption[]
-  categoryOptions: FilterOption[]
   budgetOptions: Array<FilterOption<SearchBudgetValue>>
   onCityChange: (value: string | null) => void
-  onCategoryChange: (value: string | null) => void
   onBudgetChange: (value: SearchBudgetValue | null) => void
   onClearAll?: () => void
   onApplyFilters?: () => void
   canApply?: boolean
   className?: string
 }) {
-  const selectedCount = [selectedCity, selectedCategory, selectedBudget].filter(Boolean).length
+  const selectedCount = [selectedCity, selectedBudget].filter(Boolean).length
 
   return (
     <div className={cx('flex flex-col gap-5', className)}>
-      <FilterGroup label={categoryLabel} value={selectedCategory} options={categoryOptions} emptyLabel="Any category" onChange={onCategoryChange} />
       <FilterGroup label={cityLabel} value={selectedCity} options={cityOptions} emptyLabel="Any city" onChange={onCityChange} />
       <FilterGroup label={budgetLabel} value={selectedBudget} options={budgetOptions} emptyLabel="Any budget" onChange={onBudgetChange} />
       {onClearAll || onApplyFilters ? (
@@ -166,37 +156,31 @@ function quickPicks<T extends string>(selected: T | null, quickIds: T[], options
 }
 
 function QuickFilterChips({
-  categoryOptions,
   cityOptions,
   budgetOptions,
-  selectedCategory,
   selectedCity,
   selectedBudget,
   goodForLabel,
   onOpenFilters,
-  onCategoryChange,
   onCityChange,
   onBudgetChange,
   onClearGoodFor,
   rainSafe,
   className,
 }: {
-  categoryOptions: FilterOption[]
   cityOptions: FilterOption[]
   budgetOptions: Array<FilterOption<SearchBudgetValue>>
-  selectedCategory: string | null
   selectedCity: string | null
   selectedBudget: SearchBudgetValue | null
   goodForLabel?: string | null
   onOpenFilters: () => void
-  onCategoryChange: (value: string | null) => void
   onCityChange: (value: string | null) => void
   onBudgetChange: (value: SearchBudgetValue | null) => void
   onClearGoodFor?: () => void
   rainSafe?: { on: boolean; onToggle: () => void }
   className?: string
 }) {
-  const filterCount = [selectedCategory, selectedCity, selectedBudget, goodForLabel].filter(Boolean).length
+  const filterCount = [selectedCity, selectedBudget, goodForLabel].filter(Boolean).length
 
   return (
     <Chips className={className} role="group" aria-label="Filters">
@@ -210,11 +194,6 @@ function QuickFilterChips({
           <X aria-hidden="true" />
         </Chip>
       ) : null}
-      {quickPicks(selectedCategory, QUICK_CATEGORY_IDS, categoryOptions).map((option) => (
-        <Chip key={option.value} on={option.value === selectedCategory} onClick={() => onCategoryChange(option.value === selectedCategory ? null : option.value)}>
-          {option.label}
-        </Chip>
-      ))}
       {quickPicks(selectedCity, QUICK_CITY_IDS, cityOptions).map((option) => (
         <Chip key={option.value} on={option.value === selectedCity} onClick={() => onCityChange(option.value === selectedCity ? null : option.value)}>
           {option.label}
@@ -391,7 +370,7 @@ function SearchResults({
                 <div className="mt-3" onClickCapture={() => onOpenPlace(selectedPlace.id)}>
                   <Row href={getPlaceHref(selectedPlace)} imageUrl={getPreviewImage(selectedPlace)}>
                     <div className="g-h3">{selectedPlace.name}</div>
-                    <div className="g-sm g-mut">{[selectedPlace.category, selectedPlace.localArea || selectedPlace.city].filter(Boolean).join(' · ')}</div>
+                    <div className="g-sm g-mut">{selectedPlace.localArea || selectedPlace.city}</div>
                   </Row>
                 </div>
               ) : (
@@ -475,8 +454,8 @@ function SearchEmptyState({
     (status === 'unsupported_location'
       ? 'We do not cover that area yet. Try another city.'
       : status === 'empty_query'
-        ? 'Try a place, category, or city.'
-        : 'Try another category, city, or budget, or let AI find it for you.')
+        ? 'Try a place, city or vibe.'
+        : 'Try another city or budget, or let AI find it for you.')
   const actionLabel = status === 'no_results' || status === 'empty_query' ? 'Back to search' : 'Search again'
 
   return (

@@ -8,11 +8,13 @@ type RailProps = {
   subtitle?: ReactNode
   seeAllHref?: string
   seeAllLabel?: string
+  /** "nofollow" when See all opens a filtered view. */
+  seeAllRel?: string
   headerAside?: ReactNode
   children: ReactNode
 }
 
-function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', headerAside, children }: RailProps) {
+function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', seeAllRel, headerAside, children }: RailProps) {
   const scrollerRef = useRef<HTMLUListElement | null>(null)
 
   const scrollByPage = (direction: -1 | 1) => {
@@ -29,7 +31,7 @@ function Rail({ title, subtitle, seeAllHref, seeAllLabel = 'See all', headerAsid
         action={
           <div className="flex shrink-0 items-center gap-2">
             {seeAllHref ? (
-              <Button variant="text" href={seeAllHref}>
+              <Button variant="text" href={seeAllHref} rel={seeAllRel}>
                 {seeAllLabel}
               </Button>
             ) : null}

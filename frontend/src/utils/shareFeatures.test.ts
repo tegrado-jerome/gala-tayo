@@ -45,7 +45,7 @@ test('clip cuts long text at a word and adds an ellipsis', () => {
 
 test('story text has a kicker, short link and safe file name', () => {
   const text = buildPlaceStoryText({ name: 'Fort Santiago', slug: 'fort-santiago', city: 'Manila', category: 'Heritage', description: 'A citadel.' }, 'https://galatayo.app/')
-  assert.equal(text.kicker, 'HERITAGE · MANILA')
+  assert.equal(text.kicker, 'MANILA')
   assert.equal(text.link, 'galatayo.app/place/fort-santiago')
   assert.equal(text.fileName, 'galatayo-fort-santiago-story.png')
   assert.equal(shortPlaceLink('http://localhost:5173', 'x'), 'localhost:5173/place/x')
@@ -85,6 +85,15 @@ test('monthly wrapped counts only real activity in that month', () => {
   assert.deepEqual(october.newCities, ['Pasay'])
   assert.equal(october.plans, 2)
   assert.deepEqual(october.topCategory, { name: 'Heritage', places: 2 })
+})
+
+test('the top pick is told as a vibe, never a place type', () => {
+  const checkins = [
+    { place_id: 'x', city: 'Manila', category: 'Food', created_at: '2026-10-02T03:00:00Z' },
+    { place_id: 'y', city: 'Manila', category: 'Cafe', created_at: '2026-10-03T03:00:00Z' },
+    { place_id: 'z', city: 'Manila', category: 'Mall', created_at: '2026-10-04T03:00:00Z' },
+  ]
+  assert.deepEqual(buildMonthlyWrapped({ checkins, plans: [] }, '2026-10').topCategory, { name: 'Food trip', places: 2 })
 })
 
 test('top category needs two places', () => {

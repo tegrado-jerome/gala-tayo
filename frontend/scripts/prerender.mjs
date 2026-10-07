@@ -247,7 +247,7 @@ function buildHtml(shellHtml, { head, body }) {
 
 const defaultOgImage = `${siteOrigin}/images/og/galatayo-og.jpg`
 
-const cardKickers = { guides: 'GalaTayo guide', places: 'GalaTayo · Places', categories: 'GalaTayo · Category' }
+const cardKickers = { guides: 'GalaTayo guide', places: 'GalaTayo · Places' }
 
 /** Saves a page's preview card; if drawing fails, the page's tags point back to the default image. */
 async function writePreviewCard(cardPage, imagePath, result) {
@@ -275,12 +275,12 @@ function buildLlmsTxt(pages) {
     const matches = pages.filter((page) => test(page.routePath)).sort((a, b) => a.routePath.localeCompare(b.routePath))
     return matches.length ? [`## ${heading}`, '', ...matches.map(link), ''] : []
   }
-  const placeCount = pages.filter((page) => /^\/places\/[^/]+\/[^/]+$/.test(page.routePath) && !page.routePath.startsWith('/places/categories/')).length
+  const placeCount = pages.filter((page) => /^\/places\/[^/]+\/[^/]+$/.test(page.routePath)).length
 
   return [
     '# GalaTayo (Gala Tayo)',
     '',
-    `> ${home?.description || 'Discover the best places to visit around the Philippines by city, category, budget and vibe.'}`,
+    `> ${home?.description || 'Discover the best places to visit around the Philippines by city, vibe and budget.'}`,
     '',
     "GalaTayo, also written \"Gala Tayo\" (Filipino for \"let's go out\"), is a free place discovery and planning app for the best places around the Philippines, built in the Philippines and live since July 2026.",
     '',
@@ -305,8 +305,7 @@ function buildLlmsTxt(pages) {
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
     ...section('Guides', (routePath) => routePath.startsWith('/guides') || routePath.startsWith('/long-weekends')),
     ...section("Today's Plan (daily trend picks)", (routePath) => routePath.startsWith('/today')),
-    ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
-    ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
+    ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath)),
     ...section('About', (routePath) => ['/about', '/gala-tayo-meaning', '/privacy', '/terms', '/cookies', '/copyright', '/disclaimer'].includes(routePath)),
   ].join('\n')
 }

@@ -6,7 +6,7 @@ import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle'
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
-import PlaceCard, { getCategoryIcon, withLiveDetail } from '../components/PlaceCard'
+import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Page, Row, SectionHead } from '../components/ui'
@@ -16,7 +16,6 @@ import { FaqList, QuickAnswer } from '../components/QuickAnswer'
 import { describeBestFor, describeBudgetRange, faqJsonLd } from '../utils/seoAnswers'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getAreaLabelBySlug, getRegionBySlug } from '../data/destinations'
-import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getGuideAreaHub, getGuideOgImagePath, getGuideSubtitle, getLandingTargetBySlug, getRelatedLandingTargets, type SeoLandingTarget } from '../utils/seoLandingPages'
@@ -143,7 +142,6 @@ export default function SeoLandingPage({
   }
 
   const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'the Philippines'
-  const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
   const relatedTargets = getRelatedLandingTargets(target)
   // A destination with no places of its own ("cebu", "batanes") has no page, so links go to its region instead.
   const areaHasPage = Boolean(getRegionBySlug(target.areaSlug)) || items.some((item) => item.areaSlug === target.areaSlug)
@@ -151,15 +149,14 @@ export default function SeoLandingPage({
   const pageUrl = `${getSiteOrigin()}${metadata.canonicalPath}`
   const ogImageUrl = `${getSiteOrigin()}${getGuideOgImagePath(target.slug)}`
   // Province guides (Bohol, Palawan) have no area page of their own to send "See all" to.
-  const seeAllHref = target.goodFor || (target.areaSlug && (!getAreaLabelBySlug(target.areaSlug) || !areaHasPage))
+  // Lists are by vibe now, not place type, so a cafe or museum guide points to its city's full list.
+  const seeAll = target.goodFor || (target.areaSlug && (!getAreaLabelBySlug(target.areaSlug) || !areaHasPage))
     ? null
-    : target.category && target.areaSlug
-      ? `/places/${target.areaSlug}?category=${target.category}`
-      : target.category
-        ? `/places/categories/${target.category}`
-        : target.areaSlug
-          ? `/places/${target.areaSlug}`
-          : null
+    : target.category
+      ? { href: target.areaSlug ? `/places/${target.areaSlug}` : '/places', label: target.areaSlug ? `More things to do in ${areaName}` : 'Browse more places' }
+      : target.areaSlug
+        ? { href: `/places/${target.areaSlug}`, label: `See all ${total} places` }
+        : null
   const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
   // "Things to do in <city>" lists exactly the city page's places, so the city page is the one to index.
   const duplicatesAreaPage = !target.category && !target.goodFor && areaHasPage && !getRegionBySlug(target.areaSlug)
@@ -230,11 +227,9 @@ export default function SeoLandingPage({
     }
   }
 
-  const CategoryIcon = getCategoryIcon(target.category ?? null)
   const heroPlace = items.find((item) => item.imageUrl)
   const facts = [
     { icon: MapPin, label: areaName },
-    { icon: CategoryIcon, label: categoryLabel || 'Mixed discovery' },
     isLoading ? null : { icon: ListNumbers, label: `${total} ${total === 1 ? 'place' : 'places'}` },
     isLoading ? null : { icon: Wallet, label: budgetRange ?? 'Budget varies' },
     updatedLabel ? { icon: CalendarCheck, label: `Updated ${updatedLabel}` } : null,
@@ -340,9 +335,9 @@ export default function SeoLandingPage({
             ))}
           </ol>
         )}
-        {seeAllHref && total > items.length ? (
-          <Button variant="line" href={seeAllHref} className="mt-8">
-            See all {total} places
+        {seeAll && total > items.length ? (
+          <Button variant="line" href={seeAll.href} className="mt-8">
+            {seeAll.label}
           </Button>
         ) : null}
 

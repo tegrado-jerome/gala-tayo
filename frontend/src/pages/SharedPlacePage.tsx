@@ -3,7 +3,7 @@ import PlaceDetailView from '../components/PlaceDetailView'
 import SeoHead from '../components/SeoHead'
 import { Button, Empty, Page, Skeleton } from '../components/ui'
 import { replaceWithPath } from '../utils/navigation'
-import { getCanonicalPlacePath, getCategoryBreadcrumbMeta, getHistoryState, resolveAreaMeta } from '../utils/routes'
+import { getCanonicalPlacePath, getHistoryState, resolveAreaMeta } from '../utils/routes'
 import { getDestinationBySlug } from '../data/destinations'
 import { buildPlaceDescription, buildPlaceFaqSchema, buildPlaceTitle, getStructuredPlaceType } from '../utils/placeSeo'
 import { mapBackendPlaceToCardData } from '../utils/placeMapping'
@@ -117,8 +117,6 @@ export default function SharedPlacePage({
 
   const listingLink = urlListingLink || historyListingLink || sessionReturn?.returnTo || null
   const listingLabel = urlListingLabel || historyListingLabel || sessionReturn?.returnLabel || null
-
-  const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
   useLayoutEffect(() => {
     window.scrollTo({
@@ -276,16 +274,8 @@ export default function SharedPlacePage({
               itemListElement: [
                 { '@type': 'ListItem', position: 1, name: 'Home', item: `${getPublicSiteOrigin()}/` },
                 { '@type': 'ListItem', position: 2, name: 'Places', item: `${getPublicSiteOrigin()}/places` },
-                ...(categoryBreadcrumbMeta
-                  ? [
-                      { '@type': 'ListItem', position: 3, name: categoryBreadcrumbMeta.parentName, item: categoryBreadcrumbMeta.parentItem },
-                      { '@type': 'ListItem', position: 4, name: categoryBreadcrumbMeta.childName, item: categoryBreadcrumbMeta.childItem },
-                      { '@type': 'ListItem', position: 5, name: place.name, item: `${getPublicSiteOrigin()}${canonicalPath}` },
-                    ]
-                  : [
-                      { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${getPublicSiteOrigin()}/places/${encodeURIComponent(areaMeta.slug)}` },
-                      { '@type': 'ListItem', position: 4, name: place.name, item: `${getPublicSiteOrigin()}${canonicalPath}` },
-                    ]),
+                { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${getPublicSiteOrigin()}/places/${encodeURIComponent(areaMeta.slug)}` },
+                { '@type': 'ListItem', position: 4, name: place.name, item: `${getPublicSiteOrigin()}${canonicalPath}` },
               ],
             },
             {
@@ -332,7 +322,6 @@ export default function SharedPlacePage({
         }}
         returnLabel={listingLabel}
         returnHref={listingLink}
-        categoryBreadcrumb={categoryBreadcrumbMeta}
       />
     </>
   )

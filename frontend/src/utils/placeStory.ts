@@ -5,7 +5,6 @@ export type PlaceStoryInput = {
   slug: string
   city?: string | null
   area?: string | null
-  category?: string | null
   place_history?: string | null
   description?: string | null
 }
@@ -69,7 +68,8 @@ export function shortPlaceLink(origin: string, slug: string) {
 export function buildPlaceStoryText(place: PlaceStoryInput, origin: string): PlaceStoryText {
   const line = pickStoryLine(place)
   const where = clean(place.city) || clean(place.area)
-  const kicker = [clean(place.category), where].filter(Boolean).join(' · ').toUpperCase()
+  // Where it is, not what type it is: browsing is by vibe, so place types stay off the site.
+  const kicker = where.toUpperCase()
   const safeSlug = place.slug.replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'place'
   return {
     kicker,

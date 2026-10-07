@@ -1,5 +1,4 @@
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
-import { SquaresFour as LayoutGrid } from '@phosphor-icons/react/dist/csr/SquaresFour'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
@@ -9,7 +8,6 @@ const shortcuts = [
   { href: '/plan-with-ai', title: 'Plan with AI', sub: 'Turn one sentence into a full day', icon: Sparkles },
   { href: '/ask-ai/maps', title: 'AI map', sub: "Ask the map what's near you", icon: MapIcon },
   { href: '/places', title: 'Browse by city', sub: 'Metro Manila and beyond', icon: MapPin },
-  { href: '/places/categories', title: 'Browse by category', sub: 'Cafes, food, parks, museums and more', icon: LayoutGrid },
 ]
 
 function ExploreShortcuts() {

@@ -3,6 +3,7 @@ import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import {
   getCanonicalAskAiPath,
   getCanonicalAuthPath,
+  getCanonicalCategoryPath,
   getCanonicalForgotPasswordPath,
   getCanonicalHomePath,
   getCanonicalMemberPath,
@@ -21,6 +22,7 @@ const canonicalRedirects = [
   { getPath: getCanonicalAskAiPath, useReplace: true },
   { getPath: getCanonicalPromptBuilderPath, useReplace: true },
   { getPath: getCanonicalMemberPath, useReplace: true },
+  { getPath: getCanonicalCategoryPath, useReplace: true },
 ]
 
 export function useCanonicalRedirects(pathname: string) {

@@ -82,7 +82,7 @@ function buildTimeLabel(time: string, period: TimePeriod | '') {
 }
 
 function getPlaceMeta(place: SearchPlaceResult) {
-  return [place.city || place.area, place.category].filter(Boolean).join(' · ')
+  return place.city || place.area || ''
 }
 
 function orderDraftItems(items: DraftItem[]) {

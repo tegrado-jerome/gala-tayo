@@ -1,5 +1,4 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { CATEGORIES } from "./filters";
 import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import { getGalaScore, getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { REGIONS } from "../utils/phDestinations";
@@ -10,12 +9,6 @@ type SitemapEntry = {
   changefreq: string;
   priority: string;
   lastmod?: string | null;
-};
-
-type CategoryCount = {
-  id: string;
-  placeCount: number;
-  latestUpdatedAt: string | null;
 };
 
 type AreaCount = {
@@ -31,16 +24,6 @@ function xmlEscape(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-function normalizeKey(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
 }
 
 function isValidIsoDate(value: string | null | undefined): value is string {
@@ -73,17 +56,6 @@ function getPositiveQueryInteger(value: string | null, fallback: number, max: nu
   return Math.min(Math.floor(parsed), max);
 }
 
-function buildCategoryLookup() {
-  const lookup = new Map<string, string>()
-
-  for (const category of CATEGORIES) {
-    lookup.set(normalizeKey(category.id), category.id)
-    lookup.set(normalizeKey(category.name), category.id)
-  }
-
-  return lookup
-}
-
 function buildAreaCounts(places: Awaited<ReturnType<typeof getSeoPlaceSummaries>>): Map<string, AreaCount> {
   const areaCounts = new Map<string, AreaCount>()
 
@@ -106,48 +78,16 @@ function buildAreaCounts(places: Awaited<ReturnType<typeof getSeoPlaceSummaries>
   return areaCounts
 }
 
-function buildCategoryCounts(places: Awaited<ReturnType<typeof getSeoPlaceSummaries>>): Map<string, CategoryCount> {
-  const lookup = buildCategoryLookup()
-  const categoryCounts = new Map<string, CategoryCount>()
-
-  for (const place of places) {
-    const normalizedCategory = normalizeKey(place.category ?? "")
-    const categoryId = lookup.get(normalizedCategory)
-
-    if (!categoryId) {
-      continue
-    }
-
-    const existing = categoryCounts.get(categoryId)
-
-    if (!existing) {
-      categoryCounts.set(categoryId, {
-        id: categoryId,
-        placeCount: 1,
-        latestUpdatedAt: place.updatedAt ?? null,
-      })
-      continue
-    }
-
-    existing.placeCount += 1
-    existing.latestUpdatedAt = pickLatestTimestamp(existing.latestUpdatedAt, place.updatedAt ?? null)
-  }
-
-  return categoryCounts
-}
-
 function buildSitemapEntries(args: {
   areas: Awaited<ReturnType<typeof getSeoAreaSummaries>>
   places: Awaited<ReturnType<typeof getSeoPlaceSummaries>>
 }): SitemapEntry[] {
   const { areas, places } = args
   const areaCounts = buildAreaCounts(places)
-  const categoryCounts = buildCategoryCounts(places)
 
   const staticEntries: SitemapEntry[] = [
     { path: "/", priority: "1.0", changefreq: "daily" },
     { path: "/places", priority: "0.9", changefreq: "daily" },
-    { path: "/places/categories", priority: "0.8", changefreq: "weekly" },
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/privacy", priority: "0.4", changefreq: "yearly" },
     { path: "/terms", priority: "0.4", changefreq: "yearly" },
@@ -182,15 +122,6 @@ function buildSitemapEntries(args: {
       }))
     : []
 
-  const categoryEntries: SitemapEntry[] = CATEGORIES
-    .filter((category) => (categoryCounts.get(category.id)?.placeCount ?? 0) > 0)
-    .map((category) => ({
-      path: `/places/categories/${category.id}`,
-      priority: "0.7",
-      changefreq: "weekly",
-      lastmod: categoryCounts.get(category.id)?.latestUpdatedAt ?? null,
-    }))
-
   // Best places first, so a crawler that reads only part of the list gets the strongest pages.
   const placeEntries: SitemapEntry[] = [...places].sort((left, right) => getGalaScore(right.slug) - getGalaScore(left.slug)).map((place) => ({
     path: place.canonicalPath,
@@ -199,7 +130,8 @@ function buildSitemapEntries(args: {
     lastmod: place.updatedAt ?? null,
   }))
 
-  return [...staticEntries, ...categoryEntries, ...regionEntries, ...areaEntries, ...placeEntries]
+  // Category pages are gone (browsing is by vibe, and the old URLs 301), so none are listed.
+  return [...staticEntries, ...regionEntries, ...areaEntries, ...placeEntries]
 }
 
 export async function seoPlaces(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {

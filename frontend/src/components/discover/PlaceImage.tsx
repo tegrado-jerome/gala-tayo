@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
-import { categoryIcons } from './CategoryTabs'
+import { categoryIcons } from './placeIcons'
 import { resizedMediaUrl } from '../../data/r2Config'
 
 function categoryKey(category?: string | null) {
