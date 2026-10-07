@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getRedisClient } from "../services/redisCacheService";
 import { validateJwt } from "../utils/auth";
+import { MemoryCache } from "../utils/memoryCache";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { getConfiguredSiteUrl, getSiteUrl } from "../utils/siteUrl";
 
@@ -60,25 +61,42 @@ function getClientOrigin(value: unknown): string | null {
   }
 }
 
+// When Redis is down (its free quota can run out) each instance keeps its own cooldown, so resends still work.
+const localCooldowns = new MemoryCache(2000);
+
+export function claimLocalCooldown(key: string, now = Date.now(), cache = localCooldowns) {
+  const until = cache.get<number>(key);
+  if (until !== undefined && until > now) {
+    return { allowed: false, retryAfterMs: until - now };
+  }
+
+  cache.set(key, now + AUTH_RESEND_COOLDOWN_MS, AUTH_RESEND_COOLDOWN_MS / 1000);
+  return { allowed: true, retryAfterMs: 0 };
+}
+
 async function checkAuthResendCooldown(email: string, resendType: AuthResendType) {
+  const cooldownKey = `auth-resend:${resendType}:${email}`;
   const client = await getRedisClient();
 
   if (!client) {
-    return { allowed: false, retryAfterMs: AUTH_RESEND_COOLDOWN_MS };
+    return claimLocalCooldown(cooldownKey);
   }
 
-  const cooldownKey = `auth-resend:${resendType}:${email}`;
-  const setResult = await client.set(cooldownKey, Date.now(), {
-    ex: Math.ceil(AUTH_RESEND_COOLDOWN_MS / 1000),
-    nx: true,
-  });
+  try {
+    const setResult = await client.set(cooldownKey, Date.now(), {
+      ex: Math.ceil(AUTH_RESEND_COOLDOWN_MS / 1000),
+      nx: true,
+    });
 
-  if (setResult === null) {
-    const ttl = await client.ttl(cooldownKey);
-    return { allowed: false, retryAfterMs: Math.max(ttl * 1000, 0) };
+    if (setResult === null) {
+      const ttl = await client.ttl(cooldownKey);
+      return { allowed: false, retryAfterMs: Math.max(ttl * 1000, 0) };
+    }
+
+    return { allowed: true, retryAfterMs: 0 };
+  } catch {
+    return claimLocalCooldown(cooldownKey);
   }
-
-  return { allowed: true, retryAfterMs: 0 };
 }
 
 async function getUserIdsByEmail(email: string) {
