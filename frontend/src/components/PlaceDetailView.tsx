@@ -916,9 +916,11 @@ function PlaceDetailView({
         }
 
         setComments(pruneDeletedComments(result?.comments ?? []))
+        // Read the review summary from the cache (not state) so a reviews load does not re-run this fetch.
+        const cachedSummary = readPlaceDetailCommunityCache(placeId)
         writePlaceDetailCommunityCache(placeId, {
-          averageRating,
-          reviewCount,
+          averageRating: cachedSummary?.averageRating ?? null,
+          reviewCount: cachedSummary?.reviewCount ?? 0,
           comments: result?.comments ?? [],
           cachedAt: Date.now(),
         })
@@ -932,7 +934,7 @@ function PlaceDetailView({
         }
       }
     },
-    [averageRating, isCommunityPlaceReady, placeId, reviewCount],
+    [isCommunityPlaceReady, placeId],
   )
 
   const fetchMySubmittedUserReports = useCallback(
