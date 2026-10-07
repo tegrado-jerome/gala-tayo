@@ -1,3 +1,5 @@
+import { getVibe, vibeForCategory } from './vibes.ts'
+
 /** Monthly "Gala Wrapped" recap, computed only from the user's real check-ins and plans. */
 
 export type WrappedCheckin = {
@@ -66,7 +68,12 @@ export function buildMonthlyWrapped(input: WrappedInput, key: string): MonthlyWr
   }
 
   const cities = rankByCount(inMonth.map((checkin) => checkin.city?.trim() ?? '').filter(Boolean)).map(([city]) => city)
-  const categories = rankByCount(uniquePlaces.map((checkin) => checkin.category?.trim() ?? '').filter(Boolean))
+  // Place types stay off the site, so the month's top pick is told as a vibe ("Heritage", "Food trip").
+  const vibeLabel = (category: string | null | undefined) => {
+    const vibe = vibeForCategory(category)
+    return vibe ? getVibe(vibe).label : ''
+  }
+  const categories = rankByCount(uniquePlaces.map((checkin) => vibeLabel(checkin.category)).filter(Boolean))
   const [topName, topCount] = categories[0] ?? []
 
   return {

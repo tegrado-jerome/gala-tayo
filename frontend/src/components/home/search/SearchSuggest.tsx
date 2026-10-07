@@ -5,13 +5,14 @@ import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { getCategoryIcon } from '../../PlaceCard'
 import { Button, cx } from '../../ui'
 import { getAreaLabelBySlug } from '../../../data/destinations'
-import { placeCategories } from '../../../data/placeCategories'
 import { displayCityName } from '../../../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../../../utils/compactPlaces'
 import { getPlaceCardPhoto } from '../../../utils/placeGalleryPhotos'
 import { navigateToPath } from '../../../utils/navigation'
+import { filterByVibe, vibeHref, vibes, type VibeId } from '../../../utils/vibes'
+import { vibeIcons } from '../../discover/VibeChips'
 
-type Suggestion = { key: string; group: 'Destinations' | 'Places' | 'Categories'; label: string; sub: string; href: string; category?: string | null }
+type Suggestion = { key: string; group: 'Destinations' | 'Places' | 'Vibes'; label: string; sub: string; href: string; category?: string | null; vibe?: VibeId }
 
 // Set by the home "Where to?" pill so the search page opens with the keyboard up.
 let focusOnNextVisit = false
@@ -41,15 +42,12 @@ function buildSuggestions(places: CompactPlace[], rawQuery: string): Suggestion[
     .slice(0, 3)
     .map((area): Suggestion => ({ key: `d:${area.slug}`, group: 'Destinations', label: area.label, sub: `${area.count} ${area.count === 1 ? 'place' : 'places'}`, href: `/places/${area.slug}` }))
 
-  const categoryCounts = new Map<string, number>()
-  for (const place of places) categoryCounts.set(fold(place.category ?? ''), (categoryCounts.get(fold(place.category ?? '')) ?? 0) + 1)
-  const categories = placeCategories
-    .filter((category) => (categoryCounts.get(fold(category.label)) ?? 0) > 0 && matchRank(category.label, query) >= 0)
+  const vibeMatches = vibes
+    .filter((vibe) => matchRank(vibe.label, query) >= 0 || matchRank(vibe.title, query) >= 0)
+    .map((vibe) => ({ vibe, count: filterByVibe(places, vibe.id).length }))
+    .filter(({ count }) => count > 0)
     .slice(0, 2)
-    .map((category): Suggestion => {
-      const count = categoryCounts.get(fold(category.label)) ?? 0
-      return { key: `c:${category.value}`, group: 'Categories', label: category.label, sub: `${count} ${count === 1 ? 'place' : 'places'}`, href: `/places/categories/${category.value}`, category: category.value }
-    })
+    .map(({ vibe, count }): Suggestion => ({ key: `v:${vibe.id}`, group: 'Vibes', label: vibe.title, sub: `${count} ${count === 1 ? 'place' : 'places'}`, href: vibeHref('/places', vibe.id), vibe: vibe.id }))
 
   const matchingPlaces = places
     .map((place) => ({ place, rank: matchRank(place.name, query) }))
@@ -60,16 +58,16 @@ function buildSuggestions(places: CompactPlace[], rawQuery: string): Suggestion[
       key: `p:${place.slug}`,
       group: 'Places',
       label: place.name,
-      sub: [place.category, displayCityName(getAreaLabelBySlug(place.areaSlug) ?? place.city ?? '')].filter(Boolean).join(' · '),
+      sub: displayCityName(getAreaLabelBySlug(place.areaSlug) ?? place.city ?? ''),
       href: place.canonicalPath,
       category: place.category?.toLowerCase(),
     }))
 
-  return [...destinations, ...matchingPlaces, ...categories]
+  return [...destinations, ...matchingPlaces, ...vibeMatches]
 }
 
 /**
- * Search box with live suggestions for destinations, places and categories (Tripadvisor / Airbnb style),
+ * Search box with live suggestions for destinations, places and vibes (Tripadvisor / Airbnb style),
  * from the same compact place list the rest of the app uses. Enter without a highlighted suggestion runs a full search.
  */
 function SearchSuggest({
@@ -147,7 +145,7 @@ function SearchSuggest({
       <form role="search" onSubmit={handleSubmit} className="g-where">
         <Search className="g-ic" aria-hidden="true" />
         <label htmlFor={inputId} className="sr-only">
-          Search places, cities, or categories
+          Search places, cities, or vibes
         </label>
         <input
           ref={inputRef}
@@ -180,7 +178,7 @@ function SearchSuggest({
       </form>
       <ul id={listId} role="listbox" aria-label="Suggestions" className="g-suggest-list" hidden={!showList}>
         {suggestions.map((suggestion, index) => {
-          const Icon = suggestion.group === 'Destinations' ? MapPin : getCategoryIcon(suggestion.category ?? null)
+          const Icon = suggestion.group === 'Destinations' ? MapPin : suggestion.vibe ? vibeIcons[suggestion.vibe] : getCategoryIcon(suggestion.category ?? null)
           const startsGroup = index === 0 || suggestions[index - 1].group !== suggestion.group
           return (
             <li

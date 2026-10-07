@@ -41,7 +41,6 @@ import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { getDestinationBySlug, getRegionBySlug } from '../data/destinations'
 import { isGalaTayoPick } from '../data/galaTayoPicks'
-import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
 import { getPlaceLeadPhoto, usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
@@ -565,7 +564,6 @@ function PlaceDetailView({
   areaBreadcrumb = null,
   returnLabel = null,
   returnHref = null,
-  categoryBreadcrumb = null,
 }: PlaceDetailViewProps) {
   const place = inputPlace ?? EMPTY_PLACE_DETAIL
   const { currentProfile, session: appSession } = useAppUser()
@@ -687,12 +685,7 @@ function PlaceDetailView({
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
   const areaRegion = getRegionBySlug(getDestinationBySlug(areaBreadcrumb?.areaSlug)?.regionSlug)
-  const breadcrumbItems: Array<{ label: string; href?: string }> = categoryBreadcrumb
-    ? [
-        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname },
-        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname },
-      ]
-    : returnHref && returnLabel
+  const breadcrumbItems: Array<{ label: string; href?: string }> = returnHref && returnLabel
       ? [{ label: returnLabel, href: returnHref }]
       : [{ label: 'Places', href: '/places' }, ...(areaBreadcrumb && areaLink ? [{ label: areaBreadcrumb.areaName, href: areaLink }] : [])]
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
@@ -1828,18 +1821,11 @@ function PlaceDetailView({
     { key: 'access', icon: Wheelchair, text: cleanString(place.accessibility_notes) },
     { key: 'not-ideal', icon: Prohibit, text: notIdealFor.length > 0 ? `Not ideal for ${notIdealFor.join(', ')}.` : '' },
   ].filter((item) => item.text)
-  const normalizedCategory = categoryLabel.toLowerCase()
-  const categoryHref = categoryBreadcrumb
-    ? new URL(categoryBreadcrumb.childItem).pathname
-    : placeCategories.some((category) => category.value === normalizedCategory)
-      ? `/places/categories/${normalizedCategory}`
-      : null
   const cityName = cleanString(place.city) || areaBreadcrumb?.areaName || ''
   const localAreaName = cleanString(place.localArea) || cleanString(place.area)
   const crumbs: Array<{ label: string; href?: string | null }> = [
     ...(cityName ? [{ label: cityName, href: areaLink }] : []),
     ...(localAreaName && localAreaName.toLowerCase() !== cityName.toLowerCase() ? [{ label: localAreaName }] : []),
-    { label: categoryLabel, href: categoryHref },
   ]
   const isTopPick = isGalaTayoPick(normalizePlaceSlug(placeSlug || place.name))
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a group trip, what should we try there, and when is the best time to go?`
@@ -2603,12 +2589,6 @@ function PlaceDetailView({
                   More around {areaRegion.name}
                 </InternalLink>
               ) : null}
-              {categoryBreadcrumb ? (
-                <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
-                  <Compass weight="light" aria-hidden="true" />
-                  More {categoryBreadcrumb.childName}
-                </InternalLink>
-              ) : null}
               <InternalLink href="/places" className="pd-link">
                 <Compass weight="light" aria-hidden="true" />
                 Browse all places
@@ -2689,7 +2669,6 @@ function PlaceDetailView({
           slug: placeSlug,
           city: cityName || null,
           area: localAreaName || null,
-          category: cleanString(place.category) || null,
           place_history: place.place_history,
           description: place.description,
         }}

@@ -49,8 +49,7 @@ const PlanWithAiPage = lazy(() => import('../pages/PlanWithAiPage'))
 const PassportPage = lazy(() => import('../pages/PassportPage'))
 const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
 const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
-const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
-const CategoryPlacesPage = lazy(() => import('../pages/CategoryPlacesPage'))
+const VibePlacesPage = lazy(() => import('../pages/VibePlacesPage'))
 const SeoLandingPage = lazy(() => import('../pages/SeoLandingPage'))
 const GuidesIndexPage = lazy(() => import('../pages/GuidesIndexPage'))
 const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
@@ -290,14 +289,12 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       )
     case 'places-index':
       return <PlacesIndexPage />
-    case 'place-categories-index':
-      return <PlaceCategoriesIndexPage />
+    case 'vibe-places':
+      return <VibePlacesPage key={descriptor.vibe} vibe={descriptor.vibe} search={search} navigationSource={navigationSource} />
     case 'guides-index':
       return <GuidesIndexPage />
     case 'seo-landing':
       return <SeoLandingPage slug={descriptor.slug} navigationSource={navigationSource} />
-    case 'category-places':
-      return <CategoryPlacesPage key={descriptor.categorySlug} categorySlug={descriptor.categorySlug} search={search} navigationSource={navigationSource} />
     case 'shared-place':
       if (descriptor.expectedAreaSlug) {
         return (

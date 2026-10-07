@@ -11,12 +11,6 @@ export type PlaceDetailViewProps = {
   } | null
   returnLabel?: string | null
   returnHref?: string | null
-  categoryBreadcrumb?: {
-    parentName: string
-    parentItem: string
-    childName: string
-    childItem: string
-  } | null
 }
 
 export type PlaceReview = {

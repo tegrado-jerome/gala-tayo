@@ -1,7 +1,6 @@
 import { isKnownAreaSlug as isKnownDestinationSlug, normalizeAreaSlug, resolveDestination } from '../data/destinations'
-import { getPlaceCategoryLabel } from '../data/placeCategories'
+import { vibeForCategory, vibeHref } from './vibes'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
-import { getPublicSiteOrigin } from './site'
 import { getLandingTargetBySlug } from './seoLandingPages'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
@@ -39,7 +38,6 @@ const exactLabels: Record<string, string> = {
   '/home': 'Home',
   '/search': 'Search',
   '/places': 'Places',
-  '/places/categories': 'Categories',
   '/login': 'Log in',
   '/signup': 'Sign up',
   '/forgot-password': 'Forgot password',
@@ -88,7 +86,6 @@ const exactLabels: Record<string, string> = {
 const routePatterns: RoutePattern[] = [
   { pattern: /^\/places\/([^/]+)\/([^/]+)$/, getLabel: ([, , slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/places\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
-  { pattern: /^\/places\/categories\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/guides\/([^/]+)$/, getLabel: ([, slug]) => getLandingTargetBySlug(decodeURIComponent(slug))?.label ?? formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/gala-plans\/([^/]+)$/, getLabel: ([, id]) => id === 'new' || id === 'create' ? '' : 'Plan' },
   { pattern: /^\/gala-plans\/([^/]+)\/edit$/, getLabel: () => 'Edit Plan' },
@@ -316,24 +313,14 @@ export function getCanonicalHomePath(_pathname: string): '/' | null {
   return null
 }
 
-export function getCategoryBreadcrumbMeta(listingLink: string | null, listingLabel: string | null) {
-  if (!listingLink) {
-    return null
+/** Browsing is by vibe now: old category pages land on /places with the closest vibe (the host 301s them too). */
+export function getCanonicalCategoryPath(pathname: string): string | null {
+  if (isPath(pathname, '/places/categories')) {
+    return '/places'
   }
 
-  const categoryMatch = listingLink.match(/^\/places\/categories\/([^/?#]+)/i)
-
-  if (!categoryMatch) {
-    return null
-  }
-
-  const categorySlug = decodeURIComponent(categoryMatch[1]).toLowerCase()
-  return {
-    parentName: 'Categories',
-    parentItem: `${getPublicSiteOrigin()}/places/categories`,
-    childName: listingLabel ? formatLabelFromSlug(listingLabel) : getPlaceCategoryLabel(categorySlug),
-    childItem: `${getPublicSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
-  }
+  const categorySlug = parseCategoryPagePath(pathname)
+  return categorySlug ? vibeHref('/places', vibeForCategory(categorySlug)) : null
 }
 
 export function getCanonicalMemberPath(pathname: string): '/find-friends' | null {

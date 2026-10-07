@@ -1,11 +1,9 @@
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
-import { CATEGORIES } from "../src/functions/filters";
 import { DESTINATIONS, REGIONS, getDestinationBySlug, isMetroManilaDestination } from "../src/utils/phDestinations";
 import { getHiddenPlacePaths, getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage, type SeoPlaceSummary } from "../src/utils/seoPlaces";
 
 const AREA_PAGE_SIZE = 10;
-const CATEGORY_PAGE_SIZE = 12;
 const DATA_DIR = path.resolve(__dirname, "../../frontend/public/data");
 const OUTPUT_DIR = path.join(DATA_DIR, "place-listings");
 const GUIDES_FILE = path.resolve(__dirname, "../../frontend/src/data/seoGuides.json");
@@ -106,13 +104,8 @@ async function main() {
   const guides = JSON.parse(await readFile(GUIDES_FILE, "utf8")) as GuideTarget[];
   const places = await getSeoPlaceSummaries();
   const areas = getListingAreaSlugs(places);
-  const categories = CATEGORIES.map((category) => category.id);
   const targets: ListingTarget[] = [
     ...areas.map((areaSlug) => ({ areaSlug, category: null, goodFor: null, pageSize: AREA_PAGE_SIZE })),
-    ...categories.map((category) => ({ areaSlug: null, category, goodFor: null, pageSize: CATEGORY_PAGE_SIZE })),
-    ...areas.flatMap((areaSlug) =>
-      categories.map((category) => ({ areaSlug, category, goodFor: null, pageSize: AREA_PAGE_SIZE })),
-    ),
     ...guides.map((target) => ({
       areaSlug: target.areaSlug ?? null,
       category: target.category ?? null,

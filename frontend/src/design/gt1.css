@@ -243,6 +243,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-block: 4px; margin-block: -4px; margin-inline: -16px; padding-inline: 16px; }
 .g-chips::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
+/* Vibe chips above a list: one swipeable row on phones, wrapped on wider screens. */
+.g-chips.g-vibes { margin-top: 16px; }
 .g-tag {
   display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--r-1);
   background: var(--fill); color: var(--ink-2); font: 500 12px/1 var(--font-body); white-space: nowrap;
@@ -372,16 +374,6 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-saan-main > span > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: #cfcfcf; }
 .g-saan-go { display: inline-flex; align-items: center; flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: var(--r-pill); background: #34e0a1; color: #111111; font: 700 14px/1 var(--font-body); }
 .g-saan-main:focus-visible { outline: 2px solid #34e0a1; outline-offset: 4px; border-radius: var(--r-2); }
-
-/* ---------- Icon category tabs (underline) ---------- */
-.g-cats { display: flex; gap: 18px; margin: 16px -16px 0; padding: 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
-.g-cats::-webkit-scrollbar { display: none; }
-@media (min-width: 768px) { .g-cats { margin-inline: 0; padding: 0; gap: 28px; } }
-.g-cat { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-width: 44px; min-height: 58px; padding: 0 2px 10px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-2); font: 500 12px/1.1 var(--font-body); text-decoration: none; white-space: nowrap; cursor: pointer; }
-.g-cat svg { width: 26px; height: 26px; }
-.g-cat:hover { color: var(--ink); }
-.g-cat[aria-current='page'] { color: var(--ink); font-weight: 700; border-bottom-color: var(--ink); }
-.g-cat:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 
 /* ---------- List toolbar: count, sort, List/Map ---------- */
 .g-ltool { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; margin-top: 4px; font-size: 13px; color: var(--ink-2); }

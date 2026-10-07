@@ -60,7 +60,7 @@ function Cover({ photos }: { photos: Array<string | null> }) {
 
 function PlaceTile({ place, onRemove }: { place: ListPlace; onRemove?: () => void }) {
   const href = getPlaceHref({ id: place.slug, slug: place.slug, name: place.name, city: place.city, area: place.area })
-  const kicker = [place.category, place.area || place.city].filter(Boolean).join(' · ')
+  const kicker = place.area || place.city || ''
   return (
     <li className="relative min-w-0 motion-safe:animate-[g-fade_300ms_var(--ease-g)_both]">
       <InternalLink href={href} className="block min-w-0 text-inherit no-underline">

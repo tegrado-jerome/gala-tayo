@@ -122,7 +122,7 @@ export function PlaceCards({ places, active, onFocus }: { places: AssistantPlace
             <span className="a-card-body">
               <span className="a-card-title">{card.name}</span>
               <span className="a-card-meta">
-                {[card.category, card.area || card.city].filter(Boolean).join(' · ')}
+                {card.area || card.city}
                 {card.budgetLabel ? <b> · {card.budgetLabel}</b> : null}
               </span>
               {card.why ? <span className="a-card-why">{card.why}</span> : null}

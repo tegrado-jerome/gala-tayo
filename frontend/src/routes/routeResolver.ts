@@ -6,6 +6,7 @@ import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminP
 import { isAccountOnlyPath, isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
 import { isAnonymousSession } from '../utils/guestSession'
 import { isPath } from '../utils/routes'
+import { parseVibe, type VibeId } from '../utils/vibes'
 import { LEGAL_PAGE_TYPES, type LegalPageType } from '../data/legalPages'
 import type { NavigationSource } from '../app/useAppLocationState'
 
@@ -66,10 +67,9 @@ export type RouteDescriptor =
   | { kind: 'ask-ai-maps' }
   | { kind: 'prompt-builder' }
   | { kind: 'places-index' }
-  | { kind: 'place-categories-index' }
+  | { kind: 'vibe-places'; vibe: VibeId }
   | { kind: 'guides-index' }
   | { kind: 'seo-landing'; slug: string }
-  | { kind: 'category-places'; categorySlug: string }
   | { kind: 'shared-place'; slug: string; expectedAreaSlug?: string; redirectToCanonical?: boolean }
   | { kind: 'login' }
   | { kind: 'signup' }
@@ -250,15 +250,13 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
   }
 
   if (isPath(pathname, '/places')) {
+    const vibe = parseVibe(new URLSearchParams(search).get('vibe'))
+    return vibe ? { kind: 'vibe-places', vibe } : { kind: 'places-index' }
+  }
+
+  // Old category pages: useCanonicalRedirects swaps the URL for /places with the closest vibe.
+  if (isPath(pathname, '/places/categories') || categoryPageSlug) {
     return { kind: 'places-index' }
-  }
-
-  if (isPath(pathname, '/places/categories')) {
-    return { kind: 'place-categories-index' }
-  }
-
-  if (categoryPageSlug) {
-    return { kind: 'category-places', categorySlug: categoryPageSlug }
   }
 
   if (isPath(pathname, '/guides')) {

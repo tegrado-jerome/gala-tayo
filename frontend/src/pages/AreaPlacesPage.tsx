@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
-import CategoryTabs from '../components/discover/CategoryTabs'
+import VibeChips from '../components/discover/VibeChips'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListToolbar, ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
@@ -10,12 +10,14 @@ import SeoHead from '../components/SeoHead'
 import { METRO_MANILA_REGION_SLUG, getAreaLabelBySlug, getDestinationBySlug, getRegionBySlug, normalizeAreaSlug } from '../data/destinations'
 import { displayCityName } from '../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
-import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
+import { navigateToPath, replaceWithPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { getVibeListingPage, placesInArea } from '../utils/vibeListings'
+import { getVibe, parseVibe, vibeForCategory, vibeHref, vibesWithPlaces } from '../utils/vibes'
 import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS, withBrand } from '../utils/seoLandingPages'
 import { AREA_SEO } from '../data/listingSeo'
 import { FaqList, QuickAnswer } from '../components/QuickAnswer'
@@ -48,10 +50,6 @@ const EMPTY_AREA_PLACES_RESPONSE: AreaPlacesResponse = {
   page: 1,
   pageSize: PAGE_SIZE,
   totalPages: 1,
-}
-
-function normalizeValue(value: string | null | undefined) {
-  return (value || '').trim().toLowerCase()
 }
 
 function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: AreaPlacesPageProps) {
@@ -103,7 +101,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     ? 'across Metro Manila'
     : `around ${destination.provinceName}`
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
-  const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
+  const activeVibe = parseVibe(searchParams.get('vibe'))
+  const legacyCategory = searchParams.get('category')
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
   const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
   const [compactPlaces, setCompactPlaces] = useState<CompactPlace[] | null>(null)
@@ -114,20 +113,21 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       isActive = false
     }
   }, [])
-  const hasQueryVariant = activeCategory !== 'all' || currentPage > 1
+  const areaVibes = compactPlaces ? vibesWithPlaces(placesInArea(compactPlaces, normalizedAreaSlug)) : []
+  const vibeInfo = activeVibe ? getVibe(activeVibe) : null
+  // Old ?category= links (place types) open the closest vibe instead.
+  useLayoutEffect(() => {
+    if (legacyCategory && !activeVibe) replaceWithPath(vibeHref(`/places/${normalizedAreaSlug}`, vibeForCategory(legacyCategory)))
+  }, [activeVibe, legacyCategory, normalizedAreaSlug])
+  const hasQueryVariant = activeVibe !== null || currentPage > 1
   // A city page with one or two places is thin; it stays reachable but noindex (and out of the sitemap).
   const shouldIndexAreaPage = !hasQueryVariant && !errorMessage && payload.total >= MIN_INDEXABLE_AREA_PLACES
-  const getPagePath = (page: number, category = activeCategory) => {
-    const params = new URLSearchParams()
-    if (category !== 'all') {
-      params.set('category', category)
-    }
-    if (page > 1) {
-      params.set('page', String(page))
-    }
-
-    return params.toString() ? `/places/${normalizedAreaSlug}?${params.toString()}` : `/places/${normalizedAreaSlug}`
-  }
+  const getPagePath = (page: number, vibe = activeVibe) => vibeHref(`/places/${normalizedAreaSlug}`, vibe, page)
+  // A vibe list is filtered from the compact place list; the plain list comes from the listing API.
+  const loadListingPage = (page: number, signal?: AbortSignal) =>
+    activeVibe
+      ? getVibeListingPage({ areaSlug: normalizedAreaSlug, vibe: activeVibe, page, pageSize: PAGE_SIZE })
+      : getSeoListingPage({ areaSlug: normalizedAreaSlug, page, pageSize: PAGE_SIZE, signal })
 
   useLayoutEffect(() => {
     if (navigationSource === 'pop') {
@@ -135,7 +135,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     }
 
     scrollViewportToTopInstant()
-  }, [navigationSource, areaSlug, activeCategory, currentPage])
+  }, [navigationSource, areaSlug, activeVibe, currentPage])
 
   useEffect(() => {
     if (skipInitialFetchRef.current) {
@@ -157,13 +157,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         setIsLoading(shouldShowLoadingUi)
         setIsRefreshing(shouldShowLoadingUi ? false : navigationSource !== 'pop' && hasVisibleCachedResults)
         setErrorMessage(null)
-        const data = await getSeoListingPage({
-          areaSlug: normalizedAreaSlug,
-          category: activeCategory,
-          page: currentPage,
-          pageSize: PAGE_SIZE,
-          signal: controller.signal,
-        })
+        const data = await loadListingPage(currentPage, controller.signal)
 
         if (controller.signal.aborted) {
           return
@@ -189,7 +183,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     void loadPage()
 
     return () => controller.abort()
-  }, [activeCategory, currentPage, normalizedAreaSlug])
+  }, [activeVibe, currentPage, normalizedAreaSlug])
 
   useEffect(() => {
     const slugs = Array.from(new Set(payload.items.map((item) => item.slug).filter(Boolean)))
@@ -259,15 +253,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
   const homeRegion = destination ? getRegionBySlug(destination.regionSlug) : null
-  const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
-    return getSeoListingPage({
-      areaSlug: normalizedAreaSlug,
-      category,
-      page,
-      pageSize: PAGE_SIZE,
-      signal,
-    })
-  }
   const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)
 
@@ -279,7 +264,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     setErrorMessage(null)
 
     try {
-      const data = await fetchPlacesForPage(nextPage)
+      const data = await loadListingPage(nextPage)
       const targetPath = getPagePath(nextPage)
 
       setPayload({
@@ -356,7 +341,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const spotCount = payload.total > 0 ? `: ${payload.total} Top ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
   const baseTitle = `Things to Do in ${areaName}${spotCount}`
   const areaSeo = AREA_SEO[normalizedAreaSlug]
-  const pageTitle = withBrand(areaSeo?.title ?? baseTitle)
+  const pageTitle = withBrand(vibeInfo ? `${vibeInfo.title} in ${areaName}` : areaSeo?.title ?? baseTitle)
   const topNames = allPlaces.slice(0, 3).map((place) => place.name)
   // Answer-first block and FAQs only on the main city page, built from the places it lists.
   const showAnswers = shouldIndexAreaPage && !isPageTransitionLoading && topNames.length === 3
@@ -394,8 +379,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       />
 
       <header className="mt-5 max-w-[36rem]">
-        <h1 className="g-h1">Things to do in {areaName}</h1>
-        <p className="g-mut mt-2">{areaSeo?.subtitle ?? `Tourist spots, food stops and day-out ideas in ${placeName}, ranked best first.`}</p>
+        <h1 className="g-h1">{vibeInfo ? `${vibeInfo.title} in ${areaName}` : `Things to do in ${areaName}`}</h1>
+        <p className="g-mut mt-2">{vibeInfo?.blurb ?? areaSeo?.subtitle ?? `Tourist spots, food stops and day-out ideas in ${placeName}, ranked best first.`}</p>
       </header>
 
       {showAnswers ? (
@@ -418,8 +403,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         </nav>
       ) : null}
 
-      {/* A city with no places at all gets no category tabs: every tab would be empty too. */}
-      {shouldShowEmptyState && activeCategory === 'all' ? null : <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} nofollowFilters />}
+      {/* Only vibes with places here; a city with fewer than two has nothing to filter. */}
+      {areaVibes.length >= 2 || activeVibe ? <VibeChips active={activeVibe} getHref={(id) => getPagePath(1, id)} available={areaVibes} /> : null}
       <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Best first" />
 
       {errorMessage ? (
@@ -432,10 +417,12 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ) : shouldShowEmptyState ? (
         <Empty
           className="mt-8"
-          title={`No places in ${areaName} yet`}
-          description={activeCategory === 'all' ? 'New spots are on the way!' : 'New spots are on the way! Try another category in this city.'}
+          title={vibeInfo ? `No ${vibeInfo.title.toLowerCase()} in ${areaName} yet` : `No places in ${areaName} yet`}
+          description={activeVibe ? 'New spots are on the way! Try another vibe in this city.' : 'New spots are on the way!'}
           action={
-            homeRegion && homeRegion.slug !== normalizedAreaSlug ? (
+            activeVibe ? (
+              <Button variant="line" href={getPagePath(1, null)}>See everything in {areaName}</Button>
+            ) : homeRegion && homeRegion.slug !== normalizedAreaSlug ? (
               <Button variant="line" href={`/places/${homeRegion.slug}`}>See places in {homeRegion.name}</Button>
             ) : (
               <Button variant="line" href="/places">Browse other cities</Button>

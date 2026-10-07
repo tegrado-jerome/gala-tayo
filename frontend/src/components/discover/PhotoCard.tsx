@@ -1,5 +1,5 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { formatPricePerHead, formatVisitDuration, getCategoryIcon, toTitleCase } from '../PlaceCard'
+import { formatPricePerHead, formatVisitDuration, getCategoryIcon } from '../PlaceCard'
 import { PlaceCard, Tag } from '../ui'
 import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
@@ -109,7 +109,6 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         title={place.name}
         media={<PlaceImage candidates={candidates} category={place.category} priority={priority} className="g-pc-media" />}
         icon={getCategoryIcon(place.category)}
-        category={toTitleCase(place.category)}
         area={(place.localArea || place.area)?.replace(/\s*\([^)]*\)/g, '') || null}
         city={place.city}
         rating={place.rating}

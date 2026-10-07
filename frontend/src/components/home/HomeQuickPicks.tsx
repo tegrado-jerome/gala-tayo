@@ -7,9 +7,9 @@ import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { getPlaceHref, getPlaceImageCandidates, type PhotoCardPlace } from '../discover/PhotoCard'
 import PlaceImage from '../discover/PlaceImage'
 import InternalLink from '../InternalLink'
-import { toTitleCase } from '../PlaceCard'
 import { Button, Sheet } from '../ui'
 import { formatManilaTime, getManilaSunset } from '../../utils/sunTimes'
+import { vibeHref } from '../../utils/vibes'
 import '../../design/quickpicks.css'
 
 function formatPrice(budgetMin: number | null | undefined) {
@@ -29,7 +29,7 @@ function pickOther(pool: PhotoCardPlace[], current: PhotoCardPlace | null) {
 function BahalaNaSheet({ pick, spin, onRespin, onClose }: { pick: PhotoCardPlace | null; spin: number; onRespin: () => void; onClose: () => void }) {
   const shown = pick
   if (!shown) return null
-  const meta = [toTitleCase(shown.category), shown.localArea || shown.area || shown.city].filter(Boolean).join(' · ')
+  const meta = shown.localArea || shown.area || shown.city || ''
   return (
     <Sheet open onClose={onClose} title="Can't decide? Here's your trip!" labelledBy="bahala-na-title">
       <div key={spin} className="g-bahala-card">
@@ -81,7 +81,7 @@ function HomeQuickPicks({ pool }: { pool: PhotoCardPlace[] }) {
           Surprise me!
         </button>
         {sunsetLabel ? (
-          <InternalLink href="/places/categories/park" className="g-qpick">
+          <InternalLink href={vibeHref('/places', 'views')} rel="nofollow" className="g-qpick">
             <SunHorizon weight="light" aria-hidden="true" />
             {sunsetLabel}
           </InternalLink>

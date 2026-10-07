@@ -3,24 +3,23 @@ import SearchHub from './SearchHub'
 import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import ExploreShortcuts from '../components/home/search/ExploreShortcuts'
+import VibeChips from '../components/discover/VibeChips'
 import { QuickFilterChips, SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
 import SearchSuggest from '../components/home/search/SearchSuggest'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import { Button, Masonry, Page, SectionHead, Sheet } from '../components/ui'
 import { useBottomNav } from '../context/BottomNavContext'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
-import { budgetOptions, fallbackAreas, fallbackCategories, toCityOptions } from '../components/home/homeHelpers'
+import { budgetOptions, fallbackAreas, toCityOptions } from '../components/home/homeHelpers'
 import { homeAllTopPickPlaces } from '../data/homeRecommendations'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
-import { CATEGORY_TAB_ORDER } from '../components/discover/CategoryTabs'
 import { countPlacesByAreaSlug, loadCompactPlaces } from '../utils/compactPlaces'
 import type { SearchBudgetValue } from '../utils/searchParams'
+import { vibeForCategory, vibeHref, vibes } from '../utils/vibes'
 
 const allCityOptions = toCityOptions(fallbackAreas)
-// Only categories with listed places (no Hotel or Cinema yet).
-const categoryOptions = fallbackCategories.filter((category) => CATEGORY_TAB_ORDER.includes(category.id)).map((category) => ({ value: category.id, label: category.name }))
 const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
 const trendingSlugs = homeAllTopPickPlaces.map((place) => place.slug)
 
@@ -81,14 +80,16 @@ function SearchPage({
   const routeSearchState = readSearchUrlState(window.location.search)
   const initialQuery = routeSearchState.q
   const initialPage = routeSearchState.page
-  const initialCategory = routeSearchState.category
   const initialCity = routeSearchState.city
   const initialGoodFor = routeSearchState.goodFor
   const initialBudget = routeSearchState.budget
-  const shouldShowResults = hasActiveSearchCriteria(routeSearchState)
+  // Search no longer filters by place type: an old ?category= link opens the closest vibe instead.
+  const legacyCategoryPath = routeSearchState.category && !routeSearchState.q
+    ? vibeHref(routeSearchState.city ? `/places/${routeSearchState.city}` : '/places', vibeForCategory(routeSearchState.category))
+    : null
+  const shouldShowResults = !legacyCategoryPath && hasActiveSearchCriteria({ ...routeSearchState, category: null })
 
   const [draftQuery, setDraftQuery] = useState(initialQuery)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [selectedBudget, setSelectedBudget] = useState<SearchBudgetValue | null>(null)
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
@@ -96,7 +97,7 @@ function SearchPage({
   const activeTypedQuery = normalizeTypedSearchText(rawQuery)
   const { setHidden } = useBottomNav()
 
-  const hasActiveFilters = Boolean(selectedCity || selectedCategory || selectedBudget)
+  const hasActiveFilters = Boolean(selectedCity || selectedBudget)
   const [areaCounts, setAreaCounts] = useState<Record<string, number> | null>(null)
   // Cities without places are dead ends, so the filters only offer cities that have some.
   const cityOptions = useMemo(() => (areaCounts ? allCityOptions.filter((option) => areaCounts[option.value]) : allCityOptions), [areaCounts])
@@ -110,7 +111,11 @@ function SearchPage({
       active = false
     }
   }, [])
-  const canSearch = Boolean(activeTypedQuery.length > 0 || selectedCategory || selectedCity || selectedBudget)
+  const canSearch = Boolean(activeTypedQuery.length > 0 || selectedCity || selectedBudget)
+
+  useLayoutEffect(() => {
+    if (legacyCategoryPath) replaceWithPath(legacyCategoryPath)
+  }, [legacyCategoryPath])
 
   useEffect(() => {
     if (!isFilterPanelOpen) {
@@ -134,7 +139,6 @@ function SearchPage({
 
     setDraftQuery('')
     setSelectedCity(null)
-    setSelectedCategory(null)
     setSelectedBudget(null)
     setIsFilterPanelOpen(false)
   }, [shouldShowResults])
@@ -144,12 +148,11 @@ function SearchPage({
       return
     }
 
-    const isFilterSearch = Boolean(selectedCategory || selectedCity || selectedBudget)
+    const isFilterSearch = Boolean(selectedCity || selectedBudget)
 
     navigateToPath(
       buildSearchPath({
         q: isFilterSearch ? '' : activeTypedQuery,
-        category: isFilterSearch ? selectedCategory : null,
         city: isFilterSearch ? selectedCity : null,
         goodFor: isFilterSearch ? null : null,
         budget: isFilterSearch ? selectedBudget : null,
@@ -161,7 +164,6 @@ function SearchPage({
   const handleClearAll = () => {
     setDraftQuery('')
     setSelectedCity(null)
-    setSelectedCategory(null)
     setSelectedBudget(null)
     navigateToPath('/search')
   }
@@ -170,16 +172,11 @@ function SearchPage({
     setDraftQuery(value)
     if (value.trim()) {
       setSelectedCity(null)
-      setSelectedCategory(null)
       setSelectedBudget(null)
     }
   }
   const handleCityChange = (value: string | null) => {
     setSelectedCity(value)
-    if (value) setDraftQuery('')
-  }
-  const handleCategoryChange = (value: string | null) => {
-    setSelectedCategory(value)
     if (value) setDraftQuery('')
   }
   const handleBudgetChange = (value: SearchBudgetValue | null) => {
@@ -192,7 +189,7 @@ function SearchPage({
       <SearchHub
         initialSearchState={{
           rawQuery: initialQuery,
-          categoryId: initialCategory,
+          categoryId: null,
           areaId: initialCity,
           goodFor: initialGoodFor,
           budget: initialBudget,
@@ -211,16 +208,15 @@ function SearchPage({
 
       <SearchSuggest className="mt-4" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
 
+      <VibeChips className="mt-4" active={null} getHref={(id) => vibeHref('/places', id)} showAll={false} />
+
       <QuickFilterChips
-        className="mt-4"
-        categoryOptions={categoryOptions}
+        className="mt-3"
         cityOptions={cityOptions}
         budgetOptions={budgetFilterOptions}
-        selectedCategory={selectedCategory}
         selectedCity={selectedCity}
         selectedBudget={selectedBudget}
         onOpenFilters={() => setIsFilterPanelOpen(true)}
-        onCategoryChange={handleCategoryChange}
         onCityChange={handleCityChange}
         onBudgetChange={handleBudgetChange}
       />
@@ -247,16 +243,16 @@ function SearchPage({
           onSampleClick={(sample) => {
             const namePrefix = 'By place name — '
             const locationPrefix = 'By location — '
-            const categoryPrefix = 'By category — '
+            const vibePrefix = 'By vibe — '
             if (sample.startsWith(namePrefix)) {
               const q = sample.slice(namePrefix.length)
               navigateToPath(buildSearchPath({ q, page: 1 }))
             } else if (sample.startsWith(locationPrefix)) {
               const loc = sample.slice(locationPrefix.length).toLowerCase()
               navigateToPath(buildSearchPath({ city: loc, page: 1 }))
-            } else if (sample.startsWith(categoryPrefix)) {
-              const cat = sample.slice(categoryPrefix.length).toLowerCase()
-              navigateToPath(buildSearchPath({ category: cat, page: 1 }))
+            } else if (sample.startsWith(vibePrefix)) {
+              const vibe = vibes.find((option) => option.label === sample.slice(vibePrefix.length))
+              if (vibe) navigateToPath(vibeHref('/places', vibe.id))
             }
           }}
         />
@@ -268,13 +264,10 @@ function SearchPage({
       <Sheet open={isFilterPanelOpen} onClose={() => setIsFilterPanelOpen(false)} title="Filters" labelledBy="search-filters-title">
         <SearchFilterPanel
           selectedCity={selectedCity}
-          selectedCategory={selectedCategory}
           selectedBudget={selectedBudget}
           cityOptions={cityOptions}
-          categoryOptions={categoryOptions}
           budgetOptions={budgetFilterOptions}
           onCityChange={handleCityChange}
-          onCategoryChange={handleCategoryChange}
           onBudgetChange={handleBudgetChange}
           onClearAll={() => {
             handleClearAll()

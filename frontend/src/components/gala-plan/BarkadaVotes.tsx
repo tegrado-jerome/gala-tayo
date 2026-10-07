@@ -304,7 +304,7 @@ async function searchPlaces(query: string): Promise<SearchPlace[]> {
 
 function placeMeta(place: { category?: string | null; area?: string | null; city?: string | null; budget_min?: number | null } | undefined) {
   if (!place) return null
-  return [place.category, place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') || null
+  return [place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') || null
 }
 
 function SpotComposer({ plan, session, onChange, onCancel }: Omit<VoteProps, 'onPlanChange'> & { onCancel: () => void }) {

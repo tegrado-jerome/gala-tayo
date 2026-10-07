@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SquaresFour } from '@phosphor-icons/react/dist/csr/SquaresFour'
 import PlaceImage from '../components/discover/PlaceImage'
+import VibeChips from '../components/discover/VibeChips'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
@@ -14,6 +14,7 @@ import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import { vibeHref } from '../utils/vibes'
 import '../design/misc.css'
 
 function formatPlaceCount(count: number) {
@@ -135,16 +136,12 @@ function PlacesIndexPage() {
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Places' }]} />
 
-      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
-        <div className="max-w-[42rem]">
-          <h1 className="g-h1">Places to visit around the Philippines</h1>
-          <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots. Metro Manila first, then the rest of the country.</p>
-        </div>
-        <InternalLink href="/places/categories" className="g-btn g-btn-line g-btn-sm">
-          <SquaresFour aria-hidden="true" />
-          Browse by category
-        </InternalLink>
+      <header className="mt-5 max-w-[42rem]">
+        <h1 className="g-h1">Places to visit around the Philippines</h1>
+        <p className="g-mut mt-2">Pick a vibe, or start with a city. Metro Manila first, then the rest of the country!</p>
       </header>
+
+      <VibeChips active={null} getHref={(id) => vibeHref('/places', id)} />
 
       <SectionHead
         title="Metro Manila"

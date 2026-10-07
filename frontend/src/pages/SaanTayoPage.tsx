@@ -15,7 +15,7 @@ import { getPlaceImageCandidates } from '../components/discover/PhotoCard'
 import PlaceImage from '../components/discover/PlaceImage'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
-import { formatPricePerHead, toTitleCase } from '../components/PlaceCard'
+import { formatPricePerHead } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { Button, Chip, Chips, Empty, Page, Row, Sheet, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
@@ -257,7 +257,7 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
     if (Math.abs(state.dx) > 90) onSwap?.(state.dx < 0 ? 'left' : 'right')
   }
 
-  const kicker = place ? [toTitleCase(place.category), placeWhere(place)].filter(Boolean).join(' · ') : ''
+  const kicker = place ? placeWhere(place) : ''
   const price = place ? formatPricePerHead(place.budgetMin) : null
 
   return (

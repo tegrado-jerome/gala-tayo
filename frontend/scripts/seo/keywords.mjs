@@ -518,8 +518,8 @@ async function run() {
         cluster.target = fallback ? { type: 'area', path: `/places/${entity.slug}`, status: 'existing (no topic filter for this guide yet)' } : { type: 'none', status: 'no places yet' }
       }
     } else if (topicEntry?.guide?.category) {
-      const count = countPlaces(null, { category: topicEntry.guide.category }).length
-      cluster.target = { type: 'category', path: `/places/categories/${topicEntry.guide.category}`, status: count ? 'existing' : 'existing but empty (no visible places, noindex)' }
+      // Category pages now 301 to noindex vibe views, so a nationwide place-type topic has no page to target.
+      cluster.target = { type: 'none', status: 'nationwide place-type topic (browse is by vibe)' }
     } else if (topicEntry?.guide?.goodFor) {
       const guide = guides.find((candidate) => candidate.goodFor === topicEntry.guide.goodFor && candidate.areaSlug === 'metro-manila')
       cluster.target = guide ? guideTarget(guide, ' (Metro Manila)') : { type: 'none', status: 'nationwide topic' }

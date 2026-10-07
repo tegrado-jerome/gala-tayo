@@ -2,7 +2,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { PlaceCard as KitPlaceCard, Tag, cx } from './ui'
-import { categoryIcons } from './discover/CategoryTabs'
+import { categoryIcons } from './discover/placeIcons'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
@@ -153,10 +153,6 @@ function getImageCandidates(place: PlaceCardData) {
   }, [])
 }
 
-export function toTitleCase(value: string | null | undefined) {
-  return (value ?? '').trim().replace(/(^|[\s/-])(\p{Ll})/gu,(_, lead: string, letter: string) => lead + letter.toUpperCase())
-}
-
 const categoryIconAliases: Array<[RegExp, PhosphorIcon]> = [
   [/caf|coffee/i, categoryIcons.cafe],
   [/food|restaurant|eat|dining|bar(?!k)/i, categoryIcons.food],
@@ -242,7 +238,6 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         title={place.name}
         imageUrl={imageUrl}
         icon={getCategoryIcon(place.category)}
-        category={toTitleCase(place.category)}
         area={place.localArea || place.area}
         city={place.city}
         rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}

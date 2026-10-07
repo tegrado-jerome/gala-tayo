@@ -54,7 +54,7 @@ function PlanTimeline({ stops, onMove, onRemove, animate = false }: PlanTimeline
       {stops.map((stop, index) => {
         const leg = index < stops.length - 1 ? estimateLeg(stop.place, stops[index + 1].place) : null
         const placeHref = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
-        const meta = [stop.place.category, stop.place.area || stop.place.city, stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null].filter(Boolean)
+        const meta = [stop.place.area || stop.place.city, stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null].filter(Boolean)
         const images = getPlacePhotoCandidates(stop.place.slug, stop.place.image_url)
 
         return (
