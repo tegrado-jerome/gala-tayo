@@ -4327,14 +4327,6 @@
    "license": "Public domain",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laiya_Beach.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/laiya-beach-san-juan-batangas/hd/laiya-beach-san-juan-batangas-4-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/laiya-beach-san-juan-batangas/hd/laiya-beach-san-juan-batangas-4-v2-card.webp",
-   "author": "Naebrimo",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laiya_White_Cove_Beach_Resort_(Benches).jpg"
   }
  ],
  "lakawon-island-cadiz": [
@@ -4353,14 +4345,6 @@
    "license": "CC BY-SA 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lakawon_Island.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/lakawon-island-cadiz/hd/lakawon-island-cadiz-3-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/lakawon-island-cadiz/hd/lakawon-island-cadiz-3-v4-card.webp",
-   "author": "kate",
-   "license": "© kate, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/kate_suysuy/5343517860/"
   },
   {
    "url": "https://media.galatayo.app/places/lakawon-island-cadiz/hd/lakawon-island-cadiz-4-v4.webp",
@@ -4415,22 +4399,6 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Boats_in_Lake_Sebu.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-2-card.webp",
-   "author": "Herbertkikoy",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lake_Sebu_Lotuses.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-3-card.webp",
-   "author": "Peter V. Sanchez",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lake_Sebu.JPG"
-  },
-  {
    "url": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-4.webp",
    "cardUrl": "https://media.galatayo.app/places/lake-sebu-lake-tour/hd/lake-sebu-lake-tour-4-card.webp",
    "author": "Southlens62",
@@ -4457,14 +4425,6 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Las_Cabanas_Beach_-_panoramio_(1).jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-2-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-2-v4-card.webp",
-   "author": "Clarence MICHEL",
-   "license": "© Clarence MICHEL, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/clainlondon/40134913163/"
-  },
-  {
    "url": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-3-v4.webp",
    "cardUrl": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-3-v4-card.webp",
    "author": "Twilight Tea",
@@ -4473,12 +4433,12 @@
    "sourceUrl": "https://www.flickr.com/photos/azhitsky/26927583080/"
   },
   {
-   "url": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-4-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-4-v4-card.webp",
-   "author": "Janne Huttunen",
-   "license": "© Janne Huttunen, used with credit",
+   "url": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-2-v4-card.webp",
+   "author": "Clarence MICHEL",
+   "license": "© Clarence MICHEL, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/jmhuttun/14981494710/"
+   "sourceUrl": "https://www.flickr.com/photos/clainlondon/40134913163/"
   },
   {
    "url": "https://media.galatayo.app/places/las-cabanas-beach-el-nido/hd/las-cabanas-beach-el-nido-5-v4.webp",
@@ -4507,28 +4467,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Umagol_River_in_Las_Casas_Filipinas_de_Acuzar.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-3-card.webp",
-   "author": "AntonTeope001",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Las_Casas_Church.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-4-card.webp",
-   "author": "SamTan",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Casa_Mexico,_Las_Casas_Filipinas_de_Acuzar,_Bataan.JPG"
-  },
-  {
    "url": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-5.webp",
    "cardUrl": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-5-card.webp",
    "author": "Elmer Domingo",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Las_Casa_Filipinas_2.JPG"
+  },
+  {
+   "url": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/las-casas-filipinas-de-acuzar-bagac/hd/las-casas-filipinas-de-acuzar-bagac-3-card.webp",
+   "author": "AntonTeope001",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Las_Casas_Church.jpg"
   }
  ],
  "las-pinas-paranaque-wetland-park": [
@@ -4747,14 +4699,6 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pahiyas_Festival,_Lucban,_Quezon,_Jul_2024.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/lucban-pahiyas-town/hd/lucban-pahiyas-town-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/lucban-pahiyas-town/hd/lucban-pahiyas-town-2-card.webp",
-   "author": "Patrickroque01",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pahiyas_Festival_2023_parade_Plaridel_(Lucban,_Quezon;_05-14-2023).jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/lucban-pahiyas-town/hd/lucban-pahiyas-town-3.webp",
    "cardUrl": "https://media.galatayo.app/places/lucban-pahiyas-town/hd/lucban-pahiyas-town-3-card.webp",
    "author": "Magicsdcar",
@@ -4891,28 +4835,20 @@
    "sourceUrl": "https://www.flickr.com/photos/18626999@N00/5663443823"
   },
   {
-   "url": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-2-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-2-v3-card.webp",
-   "author": "Nesnad",
-   "license": "CC BY 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pandanon_Island_2025_March_various_5.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-3-v3-card.webp",
-   "author": "StrangerNbystander",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pandanon_Island,_Bohol.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-4-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-4-v3-card.webp",
    "author": "Unbuttered Parsnip",
    "license": "CC BY-SA 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sunset_over_Hilotangan.JPG"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-2-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mactan-island-hopping-cebu/hd/mactan-island-hopping-cebu-2-v3-card.webp",
+   "author": "Nesnad",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pandanon_Island_2025_March_various_5.jpg"
   }
  ],
  "magpupungko-rock-pools-pilar": [
@@ -4947,14 +4883,6 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Magpupungko_Beach.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/magpupungko-rock-pools-pilar/hd/magpupungko-rock-pools-pilar-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/magpupungko-rock-pools-pilar/hd/magpupungko-rock-pools-pilar-5-v3-card.webp",
-   "author": "Wolfgang Hägele",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Magpupungko_Beach_high_tide.jpg"
   }
  ],
  "mahogany-market-tagaytay": [
@@ -5087,14 +5015,6 @@
  ],
  "malcapuya-island-coron": [
   {
-   "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-1-v3-card.webp",
-   "author": "Sailko",
-   "license": "CC BY 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_malcapuya,_02.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-2-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-2-v3-card.webp",
    "author": "Ray in Manila",
@@ -5103,12 +5023,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Malcapuya_Island,_Palawan,_Philippines.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-3-v3-card.webp",
+   "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-5-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-5-v3-card.webp",
+   "author": "barrasa8",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/8109464@N03/3542084766"
+  },
+  {
+   "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-1-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-1-v3-card.webp",
    "author": "Sailko",
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_malcapuya,_04.jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_malcapuya,_02.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-4-v3.webp",
@@ -5117,14 +5045,6 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_malcapuya,_01.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/malcapuya-island-coron/hd/malcapuya-island-coron-5-v3-card.webp",
-   "author": "barrasa8",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/8109464@N03/3542084766"
   }
  ],
  "malumpati-cold-spring-pandan-antique": [
@@ -5173,14 +5093,6 @@
  ],
  "manila-cathedral": [
   {
-   "url": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-1-card.webp",
-   "author": "Ricardo C. Eusebio",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:MG_8236_(Cathedral-Basilica_of_the_Immaculate_Conception_and_informally_as_Manila_Cathedral).jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-2.webp",
    "cardUrl": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-2-card.webp",
    "author": "Romeo J. Pajarillo",
@@ -5189,20 +5101,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_and_Plaza_Roma.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-3-card.webp",
-   "author": "LMP 2001",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_facade_widescreen_photo_2023-05-28.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-4.webp",
    "cardUrl": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-4-card.webp",
    "author": "Sean Ronquillo (Ubediplomacy)",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sanctuary_of_the_Manila_Cathedral_in_February_2026_1.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/manila-cathedral/hd/manila-cathedral-3-card.webp",
+   "author": "LMP 2001",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_facade_widescreen_photo_2023-05-28.jpg"
   }
  ],
  "manila-clock-tower-museum": [
@@ -5293,6 +5205,14 @@
  ],
  "mantayupan-falls-barili-cebu": [
   {
+   "url": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-3-card.webp",
+   "author": "WanderMheL",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:IMG-20200306-WA0012.jpg"
+  },
+  {
    "url": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-1.webp",
    "cardUrl": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-1-card.webp",
    "author": "Lemuel Leogene Reyes",
@@ -5307,25 +5227,9 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mantayupan_Falls_of_Barili,_Cebu.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mantayupan-falls-barili-cebu/hd/mantayupan-falls-barili-cebu-3-card.webp",
-   "author": "WanderMheL",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:IMG-20200306-WA0012.jpg"
   }
  ],
  "mantigue-island-camiguin": [
-  {
-   "url": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-1-v3-card.webp",
-   "author": "Jose Nicdao",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/89745292@N00/26492981482"
-  },
   {
    "url": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-2-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-2-v3-card.webp",
@@ -5335,12 +5239,12 @@
    "sourceUrl": "https://www.flickr.com/photos/89745292@N00/26559473046"
   },
   {
-   "url": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-3-v3-card.webp",
-   "author": "yeryabs",
+   "url": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-1-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-1-v3-card.webp",
+   "author": "Jose Nicdao",
    "license": "CC BY 2.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/8088237@N04/6660995869"
+   "sourceUrl": "https://www.flickr.com/photos/89745292@N00/26492981482"
   },
   {
    "url": "https://media.galatayo.app/places/mantigue-island-camiguin/hd/mantigue-island-camiguin-4-v3.webp",
@@ -5353,12 +5257,12 @@
  ],
  "maquinit-hot-spring-coron": [
   {
-   "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-1-v3-card.webp",
-   "author": "Paul Christian B. Yang-ed",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maquinit_Hotspring_-_Mainit_na_Bukal_ng_Maquinit_-_Hotspring_in_Coron,_Palawan,_Philippines.jpg"
+   "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-3-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-3-v3-card.webp",
+   "author": "mattk1979",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/24879135@N04/32863077771"
   },
   {
    "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-2-v3.webp",
@@ -5369,30 +5273,22 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pier_of_Maquinit_Hot_Springs,_Coron,_Philipppines_-_panoramio.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-3-v3-card.webp",
-   "author": "mattk1979",
-   "license": "CC BY-SA 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/24879135@N04/32863077771"
-  },
-  {
-   "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-4-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-4-v3-card.webp",
-   "author": "mattk1979",
-   "license": "CC BY-SA 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/24879135@N04/32863078761"
+   "url": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-1-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/maquinit-hot-spring-coron/hd/maquinit-hot-spring-coron-1-v3-card.webp",
+   "author": "Paul Christian B. Yang-ed",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maquinit_Hotspring_-_Mainit_na_Bukal_ng_Maquinit_-_Hotspring_in_Coron,_Palawan,_Philippines.jpg"
   }
  ],
  "mararison-island-culasi-antique": [
   {
-   "url": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-1-card.webp",
-   "author": "Lui Tan",
-   "license": "© Lui Tan, used with credit",
+   "url": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-3-card.webp",
+   "author": "Gen Buenafe",
+   "license": "© Gen Buenafe, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/142944323@N05/34192421356/"
+   "sourceUrl": "https://www.flickr.com/photos/143531626@N05/27253190672/"
   },
   {
    "url": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-2.webp",
@@ -5403,12 +5299,12 @@
    "sourceUrl": "https://www.flickr.com/photos/142944323@N05/33391494854/"
   },
   {
-   "url": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-3-card.webp",
-   "author": "Gen Buenafe",
-   "license": "© Gen Buenafe, used with credit",
+   "url": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/mararison-island-culasi-antique/hd/mararison-island-culasi-antique-1-card.webp",
+   "author": "Lui Tan",
+   "license": "© Lui Tan, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/143531626@N05/27253190672/"
+   "sourceUrl": "https://www.flickr.com/photos/142944323@N05/34192421356/"
   }
  ],
  "marikina-river-park": [
@@ -5489,14 +5385,6 @@
  ],
  "marlboro-country-racuh-a-payaman-batanes": [
   {
-   "url": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-1-card.webp",
-   "author": "CharMel Creations",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Marlboro_Hills,_Batanes.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-2.webp",
    "cardUrl": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-2-card.webp",
    "author": "CharMel Creations",
@@ -5505,12 +5393,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Racuh_a_Payaman.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-3-card.webp",
-   "author": "johrabino",
+   "url": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-1-card.webp",
+   "author": "CharMel Creations",
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Batanes_Malboro_Country_1.jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Marlboro_Hills,_Batanes.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/marlboro-country-racuh-a-payaman-batanes/hd/marlboro-country-racuh-a-payaman-batanes-4.webp",
@@ -5589,24 +5477,16 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Manila_Metropolitan_Theater_(Metro_Manila_Districts;_2023-08-20)_E911a_28.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/metropolitan-theater/hd/metropolitan-theater-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/metropolitan-theater/hd/metropolitan-theater-4-card.webp",
-   "author": "Patrickroque01",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Manila_Metropolitan_Theater_(Padre_Burgos,_Manila;_01-01-2025).jpg"
   }
  ],
  "miagao-church": [
   {
-   "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-1-card.webp",
-   "author": "Ralff Nestor Nacor",
+   "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-5.webp",
+   "cardUrl": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-5-card.webp",
+   "author": "Alvin Casitas",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Miagao_Church,_Iloilo,_Aug_2024_(3).jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Santo_Tomas_de_Villanueva_Parish_-_Miag-ao_Church.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-2.webp",
@@ -5615,6 +5495,14 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Miagao_Church_(Santo_Tom%C3%A1s_de_Villanueva_Parish_Church).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-1-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Miagao_Church,_Iloilo,_Aug_2024_(3).jpg"
   },
   {
    "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-3.webp",
@@ -5631,14 +5519,6 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Miagao_Church_Interior,_Iloilo,_Aug_2024.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-5.webp",
-   "cardUrl": "https://media.galatayo.app/places/miagao-church/hd/miagao-church-5-card.webp",
-   "author": "Alvin Casitas",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Santo_Tomas_de_Villanueva_Parish_-_Miag-ao_Church.jpg"
   }
  ],
  "mines-view-park-baguio": [
@@ -5803,14 +5683,6 @@
  ],
  "mount-apo": [
   {
-   "url": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-1-card.webp",
-   "author": "Bro. Jeffrey Pioquinto, SJ",
-   "license": "CC BY 2.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Ring_of_Mt._Apo.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-2.webp",
    "cardUrl": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-2-card.webp",
    "author": "JBYBIOSA",
@@ -5827,12 +5699,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_apo.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-4-card.webp",
-   "author": "Shemlongakit",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-1-card.webp",
+   "author": "Bro. Jeffrey Pioquinto, SJ",
+   "license": "CC BY 2.0",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:MAJESTIC_MT_APO.jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Ring_of_Mt._Apo.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/mount-apo/hd/mount-apo-5.webp",
@@ -5909,14 +5781,6 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt._Batulao,_Nasugbu,_Batangas,_Philippines.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/mount-batulao-nasugbu/hd/mount-batulao-nasugbu-5.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-batulao-nasugbu/hd/mount-batulao-nasugbu-5-card.webp",
-   "author": "E C",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Over_The_Hills_And_Far_Away_(40781212).jpeg"
   }
  ],
  "mount-makiling-los-banos": [
@@ -6031,12 +5895,12 @@
  ],
  "mount-pulag-kabayan": [
   {
-   "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-1-card.webp",
-   "author": "Firth m",
+   "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-3-card.webp",
+   "author": "Jeremias Telva",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Clouds_near_Mt._Pulag.jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:On_Top_of_Mt._Pulag.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-2.webp",
@@ -6047,20 +5911,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_Pulag,_Kabayan,_Philippines_(Unsplash).jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-3-card.webp",
-   "author": "Jeremias Telva",
+   "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-1-card.webp",
+   "author": "Firth m",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:On_Top_of_Mt._Pulag.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-4-card.webp",
-   "author": "baluca1194",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tower_Site_Mount_Pulag_Benguet,_Philippines.jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Clouds_near_Mt._Pulag.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/mount-pulag-kabayan/hd/mount-pulag-kabayan-5.webp",
@@ -6089,12 +5945,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_Tapyas_-_Tapyas1700.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-3-v3-card.webp",
-   "author": "Paulo O from Halifax, Canada",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_from_Mt_Tapyas_(6635801125).jpg"
+   "url": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-5-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-5-v3-card.webp",
+   "author": "H.abanil",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Coron_-_Mt_Tapyas_with_partial_rainbow.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-4-v3.webp",
@@ -6103,25 +5959,9 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Coron_Cross.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mt-tapyas-coron/hd/mt-tapyas-coron-5-v3-card.webp",
-   "author": "H.abanil",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Coron_-_Mt_Tapyas_with_partial_rainbow.jpg"
   }
  ],
  "museo-de-baler-and-baler-church": [
-  {
-   "url": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-1-v3-card.webp",
-   "author": "Elmer B. Domingo",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baler_Church,_Aurora.jpg"
-  },
   {
    "url": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-2-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-2-v3-card.webp",
@@ -6131,20 +5971,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_de_Baler,_Baler,_Aurora,_April_2023.jpg"
   },
   {
+   "url": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-1-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-1-v3-card.webp",
+   "author": "Elmer B. Domingo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baler_Church,_Aurora.jpg"
+  },
+  {
    "url": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-3-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-3-v3-card.webp",
    "author": "Ramon FVelasquez",
    "license": "CC BY-SA 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Churchbaleraljf.JPG"
-  },
-  {
-   "url": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-4-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/museo-de-baler-and-baler-church/hd/museo-de-baler-and-baler-church-4-v3-card.webp",
-   "author": "Devinceoy",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_De_Baler.JPG"
   }
  ],
  "museo-orlina-tagaytay": [
@@ -6199,20 +6039,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nacpan_Beach_in_El_Nido.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-3-card.webp",
-   "author": "glwx",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nacpan_Beach.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-4.webp",
    "cardUrl": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-4-card.webp",
    "author": "Tuderna",
    "license": "CC BY 3.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Long_Nacpan_beach_-_panoramio.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-3-card.webp",
+   "author": "glwx",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nacpan_Beach.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/nacpan-beach-el-nido/hd/nacpan-beach-el-nido-5.webp",
@@ -6224,6 +6064,14 @@
   }
  ],
  "nagsasa-cove-zambales": [
+  {
+   "url": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-3-card.webp",
+   "author": "Ronronpalma",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nagsasa_Cove_Morning.jpg"
+  },
   {
    "url": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-1.webp",
    "cardUrl": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-1-card.webp",
@@ -6239,41 +6087,9 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nagsasa_cove.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-3-card.webp",
-   "author": "Ronronpalma",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nagsasa_Cove_Morning.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-4-card.webp",
-   "author": "Franz C. Trinidad",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nagsasa_Cove_Mountain_2.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-5.webp",
-   "cardUrl": "https://media.galatayo.app/places/nagsasa-cove-zambales/hd/nagsasa-cove-zambales-5-card.webp",
-   "author": "Mariajerty",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Going_to_Nagsasa_Cove.jpg"
   }
  ],
  "national-museum-of-fine-arts": [
-  {
-   "url": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-1-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-1-v2-card.webp",
-   "author": "PhiliptheNumber1",
-   "license": "CC BY 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:National_Museum_of_Fine_Arts_fa%C3%A7ade_golden_hour_(Manila,_2024).jpg"
-  },
   {
    "url": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-2-v2.webp",
    "cardUrl": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-2-v2-card.webp",
@@ -6281,6 +6097,14 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:National_Museum_of_Fine_Arts_in_the_Philippines_22.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-1-v2.webp",
+   "cardUrl": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-1-v2-card.webp",
+   "author": "PhiliptheNumber1",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:National_Museum_of_Fine_Arts_fa%C3%A7ade_golden_hour_(Manila,_2024).jpg"
   },
   {
    "url": "https://media.galatayo.app/places/national-museum-of-fine-arts/hd/national-museum-of-fine-arts-3-v2.webp",
@@ -6507,14 +6331,6 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pagsanjan_Falls_-_Pagsanjan,_Laguna_1.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/pagsanjan-falls-laguna/hd/pagsanjan-falls-laguna-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/pagsanjan-falls-laguna/hd/pagsanjan-falls-laguna-3-v3-card.webp",
-   "author": "Kathleen Mae Tugano",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pagsanjan_Falls_-_Pagsanjan,_Laguna_2.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/pagsanjan-falls-laguna/hd/pagsanjan-falls-laguna-4-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/pagsanjan-falls-laguna/hd/pagsanjan-falls-laguna-4-v3-card.webp",
    "author": "U.S. Navy photo by Petty Officer 2nd Class Bruce Morgan",
@@ -6533,20 +6349,20 @@
  ],
  "palaui-island-cape-engano-santa-ana": [
   {
+   "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-4.webp",
+   "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-4-card.webp",
+   "author": "LemuelSalibio",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Batanes_view_like_of_Palaui_Island,_Cagayan.jpg"
+  },
+  {
    "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-1.webp",
    "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-1-card.webp",
    "author": "Joyfulwandering",
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palaui_Island_Sta._Ana,_Cagayan.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-2-card.webp",
-   "author": "Yvette Tan",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palaui_Island_Cape_Engano_Lighthouse_(Yvette_Tan)_-_Flickr.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-3.webp",
@@ -6557,20 +6373,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cape_Engano_Lighthouse_(Yvette_Tan)_-_Flickr.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-4-card.webp",
-   "author": "LemuelSalibio",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Batanes_view_like_of_Palaui_Island,_Cagayan.jpg"
-  },
-  {
    "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-5.webp",
    "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-5-card.webp",
    "author": "Michrosram",
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cape_Engano_of_Palaui_Island.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/palaui-island-cape-engano-santa-ana/hd/palaui-island-cape-engano-santa-ana-2-card.webp",
+   "author": "Yvette Tan",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palaui_Island_Cape_Engano_Lighthouse_(Yvette_Tan)_-_Flickr.jpg"
   }
  ],
  "paliton-beach-san-juan": [
@@ -6591,14 +6407,6 @@
    "sourceUrl": "https://www.flickr.com/photos/156428693@N06/41715187782/"
   },
   {
-   "url": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-3-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-3-v4-card.webp",
-   "author": "Checawey",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paliton_Beach,_Siquijor,_Philippines.JPG"
-  },
-  {
    "url": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-4-v4.webp",
    "cardUrl": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-4-v4-card.webp",
    "author": "Laura Jacobsen",
@@ -6607,12 +6415,12 @@
    "sourceUrl": "https://www.flickr.com/photos/laurajacobsen/26185511395/"
   },
   {
-   "url": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-5-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-5-v4-card.webp",
-   "author": "Adam Smith",
-   "license": "© Adam Smith, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/adman_as/4651772331/"
+   "url": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-3-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/paliton-beach-san-juan/hd/paliton-beach-san-juan-3-v4-card.webp",
+   "author": "Checawey",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paliton_Beach,_Siquijor,_Philippines.JPG"
   }
  ],
  "pamintuan-mansion-angeles": [
@@ -6673,14 +6481,6 @@
    "license": "CC BY-SA 3.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paoay_Church_of_Ilocos_Norte,_Philippines.JPG"
-  },
-  {
-   "url": "https://media.galatayo.app/places/paoay-church-ilocos-norte/hd/paoay-church-ilocos-norte-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/paoay-church-ilocos-norte/hd/paoay-church-ilocos-norte-4-card.webp",
-   "author": "Jimvikipedia",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Saint_Augustine_Church_(Paoay_Church)_-_Paoay,_Ilocos_Norte,_Philippines.jpg"
   },
   {
    "url": "https://media.galatayo.app/places/paoay-church-ilocos-norte/hd/paoay-church-ilocos-norte-5.webp",
