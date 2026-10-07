@@ -66,7 +66,8 @@ async function loadR2Config() {
   return cachedR2ConfigPromise;
 }
 
-function getSignedR2Request(method: "PUT" | "DELETE", key: string, body?: Buffer) {
+/** `signedHeaders` (lowercase names) are added to the signature, e.g. the conditional-write headers. */
+function getSignedR2Request(method: "GET" | "PUT" | "DELETE", key: string, body?: Buffer, signedHeaders: Record<string, string> = {}) {
   return loadR2Config().then(({ accessKeyId, secretAccessKey, endpoint, bucketName, publicBaseUrl }) => {
     const encodedKey = key.split("/").map(encodeURIComponent).join("/");
     const path = `/${bucketName}/${encodedKey}`;
@@ -77,20 +78,28 @@ function getSignedR2Request(method: "PUT" | "DELETE", key: string, body?: Buffer
     const region = "auto";
     const service = "s3";
     const payloadHash = sha256Hex(body ?? "");
-    const canonicalHeaders = `host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
-    const signedHeaders = "host;x-amz-content-sha256;x-amz-date";
-    const canonicalRequest = [method, path, "", canonicalHeaders, signedHeaders, payloadHash].join("\n");
+    const headersToSign: Record<string, string> = {
+      ...signedHeaders,
+      host: endpoint.host,
+      "x-amz-content-sha256": payloadHash,
+      "x-amz-date": amzDate,
+    };
+    const names = Object.keys(headersToSign).sort();
+    const canonicalHeaders = names.map((name) => `${name}:${headersToSign[name].trim()}\n`).join("");
+    const signedHeaderNames = names.join(";");
+    const canonicalRequest = [method, path, "", canonicalHeaders, signedHeaderNames, payloadHash].join("\n");
     const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
     const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, sha256Hex(canonicalRequest)].join("\n");
     const signature = createHmac("sha256", getSignatureKey(secretAccessKey, dateStamp, region, service))
       .update(stringToSign)
       .digest("hex");
-    const authorization = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    const authorization = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaderNames}, Signature=${signature}`;
 
     return {
       url,
       publicUrl: `${publicBaseUrl}/${key}`,
       headers: {
+        ...signedHeaders,
         Authorization: authorization,
         "x-amz-content-sha256": payloadHash,
         "x-amz-date": amzDate,
@@ -120,6 +129,41 @@ export async function uploadWebpToR2(
   }
 
   return signedRequest.publicUrl;
+}
+
+/** Reads a small text object (JSON state). Null when it doesn't exist; throws when R2 can't be reached. */
+export async function getR2Text(key: string): Promise<{ body: string; etag: string } | null> {
+  const signedRequest = await getSignedR2Request("GET", key);
+  const response = await fetch(signedRequest.url, { headers: signedRequest.headers, signal: AbortSignal.timeout(10_000) });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`R2 read failed with status ${response.status}.`);
+  return { body: await response.text(), etag: response.headers.get("etag") ?? "" };
+}
+
+/**
+ * Writes a small JSON text object. `ifNoneMatch: "*"` only creates it; `ifMatch` only replaces that exact version
+ * (R2 supports both on PutObject). Returns false when the condition failed (412); throws on other errors.
+ */
+export async function putR2Text(key: string, body: string, options: { ifNoneMatch?: "*"; ifMatch?: string } = {}): Promise<boolean> {
+  const conditions: Record<string, string> = {};
+  if (options.ifNoneMatch) conditions["if-none-match"] = options.ifNoneMatch;
+  if (options.ifMatch) conditions["if-match"] = options.ifMatch;
+  const payload = Buffer.from(body, "utf8");
+  const signedRequest = await getSignedR2Request("PUT", key, payload, conditions);
+  const response = await fetch(signedRequest.url, {
+    method: "PUT",
+    headers: {
+      ...signedRequest.headers,
+      "Content-Type": "application/json",
+      // State that changes a few times a day: never let the public domain's cache keep an old copy.
+      "Cache-Control": "no-store",
+    },
+    body: payload,
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (response.status === 412) return false;
+  if (!response.ok) throw new Error(`R2 write failed with status ${response.status}.`);
+  return true;
 }
 
 export function getImageUrl(baseUrl: string, size: "full" | "thumb" = "full"): string {

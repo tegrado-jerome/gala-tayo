@@ -1,7 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, Timer } from "@azure/functions";
 import galaScores from "../data/galaScores.json";
 import { writeGalaTodayDraft } from "../services/galaTodayWriter";
-import { getJsonCacheValue, getRedisClient, setJsonCacheValue } from "../services/redisCacheService";
+import { createGalaTodayStore, r2JsonObjects } from "../services/galaTodayStore";
+import { getJsonCacheValue } from "../services/redisCacheService";
 import { hasCuratedPhoto } from "../utils/hdPhotos";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { getSeoPlaceSummaries } from "../utils/seoPlaces";
@@ -36,10 +37,13 @@ import {
   type TrendSignal,
 } from "../utils/galaTodaySignals";
 
-// Posts live in Redis (newest first). The daily workflow also commits them into the frontend
-// repo, so the site keeps its history even if the cache is cleared.
+// Posts live in R2 (newest first; see galaTodayStore). The daily workflow also commits them into the frontend
+// repo, so the site keeps its history even if the object is lost.
 // v4: creator formats, meme captions, trend-first topics and the editor pass (new post shape).
-const POSTS_KEY = "gala-today:posts:v4";
+// Before R2 the posts were in Redis under this key; it's read once to migrate them.
+const LEGACY_POSTS_KEY = "gala-today:posts:v4";
+// The frontend's committed copy, from the public repo (no login), for a first run with neither R2 nor Redis.
+const BUNDLED_POSTS_URL = "https://raw.githubusercontent.com/tegrado-jerome/gala-tayo/main/frontend/src/data/galaToday.json";
 const GALA_TODAY_ENABLED = true;
 const MAX_POSTS = 90;
 const MAX_POSTS_PER_DAY = 2;
@@ -106,10 +110,19 @@ async function holidayToday(date: string, context: InvocationContext): Promise<s
   }
 }
 
-/** `memoryTtlSeconds` lets page reads reuse this instance's copy; the generator always reads Redis. */
+const store = createGalaTodayStore({
+  objects: r2JsonObjects,
+  readLegacyPosts: () => getJsonCacheValue<GalaTodayPost[]>(LEGACY_POSTS_KEY),
+  readBundledPosts: async () => {
+    const response = await fetch(BUNDLED_POSTS_URL, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(10_000) });
+    return response.ok ? ((await response.json()) as GalaTodayPost[]) : null;
+  },
+});
+
+/** `memoryTtlSeconds` lets page reads reuse this instance's copy; the generator always reads R2 (and throws if it's down). */
 export async function readGalaTodayPosts({ memoryTtlSeconds }: { memoryTtlSeconds?: number } = {}): Promise<GalaTodayPost[]> {
   if (!GALA_TODAY_ENABLED) return [];
-  return (await getJsonCacheValue<GalaTodayPost[]>(POSTS_KEY, { memoryTtlSeconds })) ?? [];
+  return store.readPosts({ memoryTtlSeconds });
 }
 
 /** The region a trend names ("Baguio food crawl" → Cordillera), so the picks follow the trend. */
@@ -227,7 +240,7 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
       continue;
     }
     const post: GalaTodayPost = { ...result.post, review: review.scores, model };
-    await setJsonCacheValue(POSTS_KEY, [post, ...posts].slice(0, MAX_POSTS));
+    await store.savePosts([post, ...posts].slice(0, MAX_POSTS));
     return post;
   }
   const failures = modelErrors.size ? ` {models: ${[...modelErrors].join(" | ")}}` : "";
@@ -235,16 +248,16 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
 }
 
 // The last run's outcome, so a skipped day can be diagnosed without server logs (no secrets, just reasons).
-const LAST_RUN_KEY = "gala-today:last-run";
 async function generateAndRecord(context: InvocationContext, trigger: string): Promise<GalaTodayPost | string | null> {
   let outcome: GalaTodayPost | string | null;
   try {
-    outcome = await withGenerateLock(() => generateGalaTodayPost(context));
+    // Only one generator runs at a time (timer and the catch-up request below). Drafts plus editor passes can take minutes.
+    outcome = await store.withLock(() => generateGalaTodayPost(context));
   } catch (error) {
     outcome = `error: ${error instanceof Error ? error.message.slice(0, 200) : "unknown"}`;
   }
   const summary = outcome === null ? "another run holds the lock" : typeof outcome === "string" ? outcome : `posted ${outcome.slug}`;
-  if (outcome !== null) await setJsonCacheValue(LAST_RUN_KEY, { at: new Date().toISOString(), trigger, result: summary.slice(0, 900) });
+  if (outcome !== null) await store.saveLastRun({ at: new Date().toISOString(), trigger, result: summary.slice(0, 900) });
   return outcome;
 }
 
@@ -254,19 +267,6 @@ async function galaTodayTimer(_timer: Timer, context: InvocationContext): Promis
     context.log(typeof result === "string" ? `Gala Today: ${result}` : `Gala Today posted: ${result.slug}`);
   } catch (error) {
     context.error("Gala Today failed", error);
-  }
-}
-
-/** Only one generator runs at a time (timer and the catch-up request below). Drafts plus editor passes can take minutes. */
-async function withGenerateLock<T>(run: () => Promise<T>): Promise<T | null> {
-  const client = await getRedisClient();
-  if (!client) return null;
-  const locked = await client.set("gala-today:lock", "1", { nx: true, ex: 420 }).catch(() => null);
-  if (!locked) return null;
-  try {
-    return await run();
-  } finally {
-    await client.del("gala-today:lock").catch(() => undefined);
   }
 }
 
@@ -280,14 +280,20 @@ async function galaTodayList(request: HttpRequest, context: InvocationContext): 
   // Catch-up generation only on explicit request (the daily workflow sends ensure=1), never on a page view:
   // generation can take minutes, which stalled pages and the prerender build.
   const ensure = request.query.get("ensure") === "1";
-  // Posts change twice a day, so page reads may use this instance's copy; the catch-up check reads Redis.
-  let posts = await readGalaTodayPosts(ensure ? {} : { memoryTtlSeconds: 120 });
+  // Posts change twice a day, so page reads may use this instance's copy; the catch-up check reads R2.
+  let posts: GalaTodayPost[];
+  try {
+    posts = await readGalaTodayPosts(ensure ? {} : { memoryTtlSeconds: 120 });
+  } catch (error) {
+    context.warn(`Gala Today posts unavailable: ${error instanceof Error ? error.message : "unknown"}`);
+    posts = [];
+  }
   if (GALA_TODAY_ENABLED && ensure && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
     const result = await generateAndRecord(context, "catch-up");
     if (result && typeof result !== "string") posts = [result, ...posts];
   }
   const hasToday = posts.some((post) => post.date === today);
-  const lastRun = hasToday ? undefined : await getJsonCacheValue<{ at: string; trigger: string; result: string }>(LAST_RUN_KEY, { memoryTtlSeconds: 120 });
+  const lastRun = hasToday ? undefined : await store.readLastRun({ memoryTtlSeconds: 120 });
   return {
     status: 200,
     headers: { "Cache-Control": hasToday ? "public, max-age=300" : "no-store" },
