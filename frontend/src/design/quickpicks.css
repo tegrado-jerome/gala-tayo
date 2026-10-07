@@ -1,6 +1,7 @@
 /* Quick picks (Bahala na!, golden hour, budget shortcuts) inside the dark "Saan tayo?" card. Unlayered on purpose: see index.html layer order. */
 .g-qpicks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
-.g-qpick { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; height: 44px; padding: 0 14px; border: 1px solid rgba(255, 255, 255, 0.36); border-radius: var(--r-pill); background: transparent; color: #ffffff; font: 600 13px/1 var(--font-body); white-space: nowrap; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.g-qpick { position: relative; display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; height: var(--chip-h); padding: 0 var(--chip-px); border: 1px solid rgba(255, 255, 255, 0.36); border-radius: var(--r-pill); background: transparent; color: #ffffff; font: 600 var(--chip-fs)/1 var(--font-body); white-space: nowrap; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.g-qpick::after { content: ''; position: absolute; inset: -4px 0; }
 .g-qpick svg { width: 18px; height: 18px; color: #34e0a1; }
 .g-qpick:hover { border-color: #ffffff; }
 .g-qpick:focus-visible { outline: 2px solid #34e0a1; outline-offset: 2px; }
