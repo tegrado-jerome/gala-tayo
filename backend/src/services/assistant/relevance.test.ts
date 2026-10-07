@@ -26,9 +26,9 @@ async function ask(message: string) {
 
 describe("Tara relevance", () => {
   it("a dish ask only shows places whose own data has the dish, nearest first, and says none are in the area", async () => {
-    const { search } = await ask("saan masarap na sisig sa Makati?");
-    assert.deepEqual(search!.places.map((place) => place.slug), ["aling-lucing-sisig-angeles"]);
-    assert.match(search!.note ?? "", /No GalaTayo place in Makati has sisig/);
+    const { search } = await ask("saan masarap na halo-halo sa Makati?");
+    assert.deepEqual(search!.places.map((place) => place.slug), ["halo-halo-de-iloko-san-fernando-la-union"]);
+    assert.match(search!.note ?? "", /No GalaTayo place in Makati has halo/);
     assert.ok(!search!.places.some((place) => place.slug === "blackbird-at-the-nielson-tower"));
   });
 

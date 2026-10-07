@@ -71,7 +71,7 @@ describe("meals and cost", () => {
 
   it("counts a free food street as a meal, and a meal no food stop covers", () => {
     const street = bySlug.get("binondo-chinatown")!; // filed as Heritage, free entry, but people go to eat
-    const eatery = bySlug.get("aling-lucing-sisig-angeles")!;
+    const eatery = bySlug.get("toyo-eatery")!;
     const sight = bySlug.get("fort-santiago")!;
     assert.equal(mealEstimatePerHead([street, sight], 0, 250), 250, "a food crawl is never free");
     assert.equal(mealEstimatePerHead([eatery, sight], 2, 250), 250, "lunch is priced, dinner is not");

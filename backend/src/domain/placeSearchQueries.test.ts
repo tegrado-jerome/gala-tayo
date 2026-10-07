@@ -14,7 +14,8 @@ const place = (slug: string) => visibleFixturePlaces.find((entry) => entry.slug 
 
 const CASES: Case[] = [
   // Dishes and things: only places whose own data has them, never a beach that mentions halo-halo.
-  { query: "sisig", top: ["aling-lucing-sisig-angeles"], exclude: ["mount-arayat-pampanga", "zubuchon-cebu"] },
+  // No visible place lists sisig (Aling Lucing is hidden until it has great photos), so nothing is the honest answer.
+  { query: "sisig", none: true },
   { query: "halo-halo", top: ["halo-halo-de-iloko-san-fernando-la-union"], exclude: ["nacpan-beach-el-nido"] },
   { query: "night market", top: ["baguio-night-market"], exclude: ["batad-rice-terraces-banaue", "apo-island-dauin"] },
   { query: "fort santiago", top: ["fort-santiago"], exclude: ["miagao-church", "fortune-island-nasugbu"] },
@@ -34,8 +35,8 @@ const CASES: Case[] = [
   { query: "talon", every: (slug) => /falls/i.test(place(slug).name) || place(slug).tags.includes("waterfall"), exclude: ["osmena-peak-dalaguete", "salagdoong-beach-maria"] },
   { query: "bundok", include: ["mount-pulag-kabayan", "mount-apo"], within: 5, exclude: ["blue-lagoon-pagudpud"] },
   { query: "dagat", include: ["white-beach-boracay"], within: 3, exclude: ["manila-ocean-park", "kapurpurawan-rock-formation-burgos", "maquinit-hot-spring-coron"] },
-  { query: "kape", include: ["cafe-by-the-ruins-baguio", "calea-pastries-bacolod"], within: 3, exclude: ["fort-santiago"] },
-  { query: "kapehan", include: ["cafe-by-the-ruins-baguio"], within: 3 },
+  { query: "kape", include: ["sagada-lemon-pie-house"], within: 3, exclude: ["fort-santiago"] },
+  { query: "kapehan", include: ["sagada-lemon-pie-house"], within: 3 },
   { query: "simbahan", include: ["san-agustin-church", "manila-cathedral"], within: 3 },
   { query: "kweba", include: ["sumaguing-cave-sagada", "hinagdanan-cave-dauis"], within: 5 },
   // Vibes.
@@ -51,13 +52,13 @@ const CASES: Case[] = [
   { query: "free museum manila", top: ["national-museum-of-fine-arts", "national-museum-of-natural-history"] },
   { query: "rainy day", every: (slug) => isIndoorPlace(place(slug)) === true },
   { query: "museum", every: (slug) => place(slug).category === "Museum" },
-  { query: "food trip", include: ["aling-lucing-sisig-angeles", "binondo-chinatown"], within: 30, exclude: ["siargao-island-hopping", "ayala-museum"] },
+  { query: "food trip", include: ["halo-halo-de-iloko-san-fernando-la-union", "binondo-chinatown"], within: 30, exclude: ["siargao-island-hopping", "ayala-museum"] },
   { query: "mountain", include: ["mount-pulag-kabayan"], within: 3, exclude: ["national-museum-of-natural-history"] },
   { query: "beach", include: ["white-beach-boracay"], within: 3, every: (slug) => place(slug).category !== "Food" },
   // Vibe plus place.
   { query: "date makati", include: ["toyo-eatery", "blackbird-at-the-nielson-tower"], within: 4, every: (slug) => place(slug).city === "Makati" },
   { query: "barkada qc", include: ["la-mesa-eco-park", "cubao-expo"], within: 3, every: (slug) => place(slug).city === "Quezon City" },
-  { query: "coffee baguio", top: ["cafe-by-the-ruins-baguio"], every: (slug) => place(slug).city === "Baguio" },
+  { query: "coffee baguio", top: ["baguio-public-market"], every: (slug) => place(slug).city === "Baguio" },
   { query: "waterfalls cebu", include: ["kawasan-falls-badian", "aguinid-falls-samboan"], within: 3 },
   { query: "beach batangas", top: ["laiya-beach-san-juan-batangas"] },
   { query: "island hopping coron", every: (slug) => ["Coron", "Busuanga"].includes(place(slug).city ?? "") },
