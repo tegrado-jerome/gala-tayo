@@ -1,3 +1,5 @@
+import galaWorthy from './galaWorthy.json'
+
 // Places that scored 80+ in the gala-worthy scoring, best first: Metro Manila from gala-tayo-benchmarks/gala-worthy/scores.json,
 // the rest of the country from gala-tayo-benchmarks/nationwide/*.json (gala_score). Only these get the "GalaTayo Pick" badge.
 // The city is the hub each place is listed under, used to spread the home rail across the country.
@@ -166,9 +168,12 @@ const galaTayoPickScores: Array<[slug: string, score: number, city: string]> = [
   ['yap-san-diego-ancestral-house', 80, 'Cebu City'],
 ]
 
-const pickSlugs = new Set(galaTayoPickScores.map(([slug]) => slug))
+// A pick that was later hidden has no public page (404), so it must not be linked or badged.
+const hiddenSlugs = new Set((galaWorthy as { hidden: string[] }).hidden)
 
-export const galaTayoPickSlugs = galaTayoPickScores.map(([slug]) => slug)
+export const galaTayoPickSlugs = galaTayoPickScores.map(([slug]) => slug).filter((slug) => !hiddenSlugs.has(slug))
+
+const pickSlugs = new Set(galaTayoPickSlugs)
 
 export function isGalaTayoPick(slug: string | null | undefined) {
   return Boolean(slug && pickSlugs.has(slug.trim().toLowerCase()))

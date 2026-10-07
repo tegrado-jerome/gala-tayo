@@ -15,32 +15,30 @@ User-agent: Google-Extended
 User-agent: Applebot
 User-agent: Applebot-Extended
 Allow: /
-Disallow: /home
-Disallow: /search
-Disallow: /login
-Disallow: /signup
-Disallow: /onboarding
+# Only private and admin screens are blocked. Public app screens (/home, /search, /login, /signup,
+# /ask-ai, /gala-plans, /passport, /feedback, /profile, /u/...) stay crawlable so search engines can
+# read their noindex tag and drop them; a robots block would hide that tag and keep linked URLs indexed.
+Disallow: /admin
 Disallow: /auth/
+Disallow: /mfa/
+Disallow: /onboarding
 Disallow: /account
 Disallow: /settings
-Disallow: /find-friends
-Disallow: /reports
-Disallow: /ask-ai
-Disallow: /prompt-builder
+Disallow: /privacy-center
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /profile/
+Disallow: /me$
 Disallow: /favorites
 Disallow: /history
-Disallow: /gala-plan
-Disallow: /gala-plans
-Disallow: /profile
-Disallow: /me
-Disallow: /feedback
+Disallow: /reports
+Disallow: /find-friends
+Disallow: /comment-notices
 Disallow: /submit-place
-Disallow: /places/new
-Disallow: /places/submit
+Disallow: /places/new$
+Disallow: /places/submit$
 Disallow: /my-submissions
 Disallow: /submissions
-Disallow: /comment-notices
-Disallow: /u/
-Disallow: /admin
+Disallow: /photos/upload
 
 Sitemap: https://galatayo.app/sitemap.xml

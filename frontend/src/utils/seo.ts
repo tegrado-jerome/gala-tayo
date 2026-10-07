@@ -1,6 +1,7 @@
 import { getAreaLabelBySlug } from '../data/destinations'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
 import { serializeJsonLd } from './jsonLd'
+import { getNoindexForPath } from './routeGuards'
 import { getPublicSiteOrigin } from './site'
 
 type OpenGraphImage = {
@@ -69,6 +70,12 @@ function getAbsoluteUrl(pathOrUrl: string) {
   return `${getSiteOrigin()}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`
 }
 
+/** One URL per page: no query string (?ref=, ?q=, utm_, ?page=), no hash, no trailing slash. */
+function getCanonicalUrl(path: string) {
+  const { pathname } = new URL(path, getSiteOrigin())
+  return getAbsoluteUrl(pathname.replace(/\/+$/, '') || '/')
+}
+
 function getAreaNameBySlug(areaSlug: string) {
   return getAreaLabelBySlug(areaSlug) ?? formatLabelFromSlug(areaSlug)
 }
@@ -133,10 +140,10 @@ function getConfiguredVerificationTags() {
 function applySeo(config: SeoConfig) {
   const title = config.title?.trim() || DEFAULT_TITLE
   const description = fitDescription(config.description?.trim() || DEFAULT_DESCRIPTION)
-  const canonicalUrl = config.canonicalPath
-    ? getAbsoluteUrl(config.canonicalPath)
-    : getAbsoluteUrl(window.location.pathname + window.location.search)
-  const robots = config.robots?.trim() || 'index,follow'
+  // App-only routes (/home, /search, /login...) stay noindex with a self canonical, whichever SeoHead applies last.
+  const isAppOnlyRoute = getNoindexForPath(window.location.pathname)
+  const canonicalUrl = getCanonicalUrl((!isAppOnlyRoute && config.canonicalPath) || window.location.pathname)
+  const robots = isAppOnlyRoute ? 'noindex,follow' : config.robots?.trim() || 'index,follow'
   const openGraphType = config.openGraphType || 'website'
   const imageUrl = getAbsoluteUrl(config.image?.url || DEFAULT_OG_IMAGE)
   const imageAlt = config.image?.alt?.trim() || title

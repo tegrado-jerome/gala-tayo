@@ -314,6 +314,10 @@ async function main() {
   if (!shellHtml.includes('<div id="root"></div>')) {
     throw new Error('dist/index.html has no empty <div id="root"></div> to fill')
   }
+  // The live site serves app-shell.html with 200 only for app screens (/home, /search, /login...),
+  // and with 404 for everything else, so its raw HTML can say noindex without JavaScript.
+  // Prerendered pages drop this tag in buildHtml and carry their own.
+  await writeFile(shellPath, shellHtml.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex,follow" />'))
 
   const sitemapPaths = await readSitemapPaths()
   const addedPaths = (await readFrontendPaths()).filter((routePath) => !sitemapPaths.includes(routePath))

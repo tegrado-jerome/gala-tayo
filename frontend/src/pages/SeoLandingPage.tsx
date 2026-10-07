@@ -15,7 +15,7 @@ import SeoHead from '../components/SeoHead'
 import { FaqList, QuickAnswer } from '../components/QuickAnswer'
 import { describeBestFor, describeBudgetRange, faqJsonLd } from '../utils/seoAnswers'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
-import { getAreaLabelBySlug } from '../data/destinations'
+import { getAreaLabelBySlug, getRegionBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
@@ -145,11 +145,13 @@ export default function SeoLandingPage({
   const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'the Philippines'
   const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
   const relatedTargets = getRelatedLandingTargets(target)
-  const areaHub = getGuideAreaHub(target)
+  // A destination with no places of its own ("cebu", "batanes") has no page, so links go to its region instead.
+  const areaHasPage = Boolean(getRegionBySlug(target.areaSlug)) || items.some((item) => item.areaSlug === target.areaSlug)
+  const areaHub = getGuideAreaHub(target, areaHasPage)
   const pageUrl = `${getSiteOrigin()}${metadata.canonicalPath}`
   const ogImageUrl = `${getSiteOrigin()}${getGuideOgImagePath(target.slug)}`
   // Province guides (Bohol, Palawan) have no area page of their own to send "See all" to.
-  const seeAllHref = target.goodFor || (target.areaSlug && !getAreaLabelBySlug(target.areaSlug))
+  const seeAllHref = target.goodFor || (target.areaSlug && (!getAreaLabelBySlug(target.areaSlug) || !areaHasPage))
     ? null
     : target.category && target.areaSlug
       ? `/places/${target.areaSlug}?category=${target.category}`
@@ -159,6 +161,8 @@ export default function SeoLandingPage({
           ? `/places/${target.areaSlug}`
           : null
   const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
+  // "Things to do in <city>" lists exactly the city page's places, so the city page is the one to index.
+  const duplicatesAreaPage = !target.category && !target.goodFor && areaHasPage && !getRegionBySlug(target.areaSlug)
   const budgetRange = describeBudgetRange(items.map((item) => item.budgetMin))
   const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
   const listHeading = items.length ? `Top ${items.length} ${metadata.h1.replace(/^best\s+/i, '')}` : 'Top picks'
@@ -242,7 +246,7 @@ export default function SeoLandingPage({
         title={metadata.title}
         description={metadata.description}
         canonicalPath={metadata.canonicalPath}
-        robots={isThin ? 'noindex,follow' : undefined}
+        robots={isThin || duplicatesAreaPage ? 'noindex,follow' : undefined}
         openGraphType="article"
         image={{ url: getGuideOgImagePath(target.slug), alt: `${metadata.h1}, a ${BRAND_NAME} guide`, width: 1200, height: 630 }}
         jsonLd={jsonLd}
