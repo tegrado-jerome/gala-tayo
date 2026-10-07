@@ -41,6 +41,32 @@
    "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451952576"
   }
  ],
+ "alicia-panoramic-park": [
+  {
+   "url": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-1-card.webp",
+   "author": "Nairbest10",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Alicia_Park_Bohol.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-2-card.webp",
+   "author": "Nairbest10",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Alicia_hills_Bohol.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/alicia-panoramic-park/hd/alicia-panoramic-park-3-card.webp",
+   "author": "Nairbest10",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Alicia_Park_sunset.jpg"
+  }
+ ],
  "aling-lucing-sisig-angeles": [
   {
    "url": "https://media.galatayo.app/places/aling-lucing-sisig-angeles/hd/aling-lucing-sisig-angeles-1-v4.webp",
@@ -2367,6 +2393,24 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Caramoan_Islands_Tugawe_Cove.jpg"
   }
  ],
+ "carnaza-island-daanbantayan": [
+  {
+   "url": "https://media.galatayo.app/places/carnaza-island-daanbantayan/hd/carnaza-island-daanbantayan-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/carnaza-island-daanbantayan/hd/carnaza-island-daanbantayan-1-card.webp",
+   "author": "@henraeandrobin",
+   "license": "© @henraeandrobin, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@henraeandrobin/video/7367940633387863302"
+  },
+  {
+   "url": "https://media.galatayo.app/places/carnaza-island-daanbantayan/hd/carnaza-island-daanbantayan-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/carnaza-island-daanbantayan/hd/carnaza-island-daanbantayan-2-card.webp",
+   "author": "@henraeandrobin",
+   "license": "© @henraeandrobin, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@henraeandrobin/video/7367940633387863302"
+  }
+ ],
  "casa-gorordo-museum": [
   {
    "url": "https://media.galatayo.app/places/casa-gorordo-museum/hd/casa-gorordo-museum-1.webp",
@@ -2467,6 +2511,32 @@
    "license": "CC BY 2.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
    "sourceUrl": "https://www.flickr.com/photos/7137303@N04/406687830"
+  }
+ ],
+ "cebu-safari-carmen": [
+  {
+   "url": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-1-card.webp",
+   "author": "TheNuggeteer",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sky_view_of_Cebu_Safari_and_Adventure_Park.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-2-card.webp",
+   "author": "Carl Kho",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parrots_in_Cebu_Safari_a.k.a_Somebody%27s_Favorite.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/cebu-safari-carmen/hd/cebu-safari-carmen-3-card.webp",
+   "author": "Carl Kho",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Crocodiles_fighting_for_life.jpg"
   }
  ],
  "cebu-taoist-temple": [
@@ -2635,6 +2705,24 @@
    "license": "CC BY 2.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
    "sourceUrl": "https://www.flickr.com/photos/lee_marq/30328195192/"
+  }
+ ],
+ "communal-ranch-impasugong": [
+  {
+   "url": "https://media.galatayo.app/places/communal-ranch-impasugong/hd/communal-ranch-impasugong-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/communal-ranch-impasugong/hd/communal-ranch-impasugong-1-card.webp",
+   "author": "escapemanila",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Communal_Ranch,_Impasugong.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/communal-ranch-impasugong/hd/communal-ranch-impasugong-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/communal-ranch-impasugong/hd/communal-ranch-impasugong-2-card.webp",
+   "author": "Hams nocete",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_mountains_in_Bukidnon.jpg"
   }
  ],
  "cresta-de-gallo-san-fernando-romblon": [
@@ -3147,6 +3235,16 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Donsol_-_panoramio_(21).jpg"
   }
  ],
+ "dumaluan-beach-panglao": [
+  {
+   "url": "https://media.galatayo.app/places/dumaluan-beach-panglao/hd/dumaluan-beach-panglao-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/dumaluan-beach-panglao/hd/dumaluan-beach-panglao-1-card.webp",
+   "author": "John Racho",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dumaluan_beach.jpg"
+  }
+ ],
  "eastwood-city": [
   {
    "author": "Patrickroque01",
@@ -3305,6 +3403,24 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:El_Nido_Palawan_4.jpg"
+  }
+ ],
+ "forest-camp-valencia": [
+  {
+   "url": "https://media.galatayo.app/places/forest-camp-valencia/hd/forest-camp-valencia-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/forest-camp-valencia/hd/forest-camp-valencia-1-card.webp",
+   "author": "Francis Martin Hain",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Forest_Camp_2.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/forest-camp-valencia/hd/forest-camp-valencia-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/forest-camp-valencia/hd/forest-camp-valencia-2-card.webp",
+   "author": "whologwhy",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/hulagway/5662905920/"
   }
  ],
  "fort-pilar-zamboanga": [
@@ -3499,6 +3615,16 @@
    "license": "© Gallery by Chele, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://gallerybychele.com/"
+  }
+ ],
+ "garin-farm-san-joaquin": [
+  {
+   "url": "https://media.galatayo.app/places/garin-farm-san-joaquin/hd/garin-farm-san-joaquin-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/garin-farm-san-joaquin/hd/garin-farm-san-joaquin-1-card.webp",
+   "author": "@chelseaatravels",
+   "license": "© @chelseaatravels, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@chelseaatravels/video/7469275715104558343"
   }
  ],
  "glorietta": [
@@ -4935,6 +5061,16 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt.mayon_view.jpg"
   }
  ],
+ "limasawa-island": [
+  {
+   "url": "https://media.galatayo.app/places/limasawa-island/hd/limasawa-island-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/limasawa-island/hd/limasawa-island-1-card.webp",
+   "author": "Gonchang",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Limasawa_island_-_panoramio.jpg"
+  }
+ ],
  "loboc-river-cruise": [
   {
    "url": "https://media.galatayo.app/places/loboc-river-cruise/hd/loboc-river-cruise-1.webp",
@@ -5263,6 +5399,24 @@
    "license": "CC0 1.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Study_Room,_Malaca%C3%B1ang_of_the_North,_Paoay,_Ilocos_Norte.jpg"
+  }
+ ],
+ "malagos-garden-resort": [
+  {
+   "url": "https://media.galatayo.app/places/malagos-garden-resort/hd/malagos-garden-resort-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/malagos-garden-resort/hd/malagos-garden-resort-1-card.webp",
+   "author": "Gary Todd",
+   "license": "Public Domain Mark",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://www.flickr.com/photos/101561334@N08/49482872623/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/malagos-garden-resort/hd/malagos-garden-resort-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/malagos-garden-resort/hd/malagos-garden-resort-2-card.webp",
+   "author": "Gary Todd",
+   "license": "Public Domain Mark",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://www.flickr.com/photos/101561334@N08/49483541662/"
   }
  ],
  "malapascua-thresher-shark-dive": [
@@ -5963,6 +6117,48 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sea_Turtle_in_Moalboal_3.jpg"
+  }
+ ],
+ "molo-mansion-iloilo": [
+  {
+   "url": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-1-card.webp",
+   "author": "Herbertkikoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Iloilo_Molo_Mansion.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-2-card.webp",
+   "author": "Gelo Yap",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Iloilo_Molo_Mansion_Illuminated.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-3-card.webp",
+   "author": "Allan Jay Quesada",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Allan_Jay_Quesada_-_Molo_Mansion.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-4.webp",
+   "cardUrl": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-4-card.webp",
+   "author": "A.C.T. Alejandre",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Molo_Mansion_(Yusay-Consing_Ancestral_House)_second_floor.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-5.webp",
+   "cardUrl": "https://media.galatayo.app/places/molo-mansion-iloilo/hd/molo-mansion-iloilo-5-card.webp",
+   "author": "FroyR",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Molo_Mansion_Entrance.jpg"
   }
  ],
  "mount-apo": [
@@ -7867,6 +8063,24 @@
    "sourceUrl": "https://www.flickr.com/photos/davanita/4184353047/"
   }
  ],
+ "santo-nino-shrine-tacloban": [
+  {
+   "url": "https://media.galatayo.app/places/santo-nino-shrine-tacloban/hd/santo-nino-shrine-tacloban-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/santo-nino-shrine-tacloban/hd/santo-nino-shrine-tacloban-1-card.webp",
+   "author": "Ryme26",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Phils_Tacloban_City_Sto_Nino_Shrine.JPG"
+  },
+  {
+   "url": "https://media.galatayo.app/places/santo-nino-shrine-tacloban/hd/santo-nino-shrine-tacloban-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/santo-nino-shrine-tacloban/hd/santo-nino-shrine-tacloban-2-card.webp",
+   "author": "John Martin PERRY",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tacloban_inside_Sto_Nino_museum_(i).JPG"
+  }
+ ],
  "sarao-jeepney-factory-sarao-motors": [
   {
    "url": "https://media.galatayo.app/places/sarao-jeepney-factory-sarao-motors/hd/sarao-jeepney-factory-sarao-motors-1.webp",
@@ -8943,6 +9157,32 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Temple_of_Leah_2025-08-24_043.jpg"
   }
  ],
+ "ten-thousand-roses-cordova": [
+  {
+   "url": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-1-card.webp",
+   "author": "@discover.cebu",
+   "license": "© @discover.cebu, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@discover.cebu/video/7522093443527560456"
+  },
+  {
+   "url": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-2-card.webp",
+   "author": "@discover.cebu",
+   "license": "© @discover.cebu, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@discover.cebu/video/7522093443527560456"
+  },
+  {
+   "url": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/ten-thousand-roses-cordova/hd/ten-thousand-roses-cordova-3-card.webp",
+   "author": "@discover.cebu",
+   "license": "© @discover.cebu, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@discover.cebu/video/7522093443527560456"
+  }
+ ],
  "the-fountain-at-okada-manila": [
   {
    "url": "https://media.galatayo.app/places/the-fountain-at-okada-manila/hd/the-fountain-at-okada-manila-1-v3.webp",
@@ -9323,6 +9563,32 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Famous_Valugan_Boulder_Beach_-_Batanes.jpg"
+  }
+ ],
+ "vanishing-island-samal": [
+  {
+   "url": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-1.webp",
+   "cardUrl": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-1-card.webp",
+   "author": "@mark_villarin",
+   "license": "© @mark_villarin, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@mark_villarin/video/7500184826595642631"
+  },
+  {
+   "url": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-2.webp",
+   "cardUrl": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-2-card.webp",
+   "author": "@mark_villarin",
+   "license": "© @mark_villarin, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@mark_villarin/video/7500184826595642631"
+  },
+  {
+   "url": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-3.webp",
+   "cardUrl": "https://media.galatayo.app/places/vanishing-island-samal/hd/vanishing-island-samal-3-card.webp",
+   "author": "@mark_villarin",
+   "license": "© @mark_villarin, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@mark_villarin/video/7500184826595642631"
   }
  ],
  "vayang-rolling-hills-basco": [
