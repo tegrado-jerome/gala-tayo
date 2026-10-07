@@ -151,7 +151,7 @@ const privacy: LegalDoc = {
       title: 'How long we keep it',
       bullets: [
         'Account and profile data: while your account is open.',
-        'After you delete your account: we delete or anonymise your data within 30 days of confirming the request. Public comments or reviews may stay with your name removed, unless you ask us to delete them too.',
+        'After you delete your account: deleting it in the Privacy center removes your profile, plans, lists, saves, reviews, comments and history right away. Approved place photos you uploaded stay up without your name. Copies in backups are gone within 30 days.',
         'Records we need to keep: proof of policy agreement, privacy request records and moderation or abuse records are kept only as long as needed for safety, legal claims or to show we followed the law.',
         'Caches and rate limits: these expire on their own within hours or days.',
         'Backups: deleted data drops out of our providers\' rolling backups on their schedule.',
