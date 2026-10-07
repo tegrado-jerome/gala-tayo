@@ -65,9 +65,15 @@ test('best date is the most kaya, ties go to the earlier date, none until someon
   ])
   assert.equal(bestDate(dates)?.pollId, 'b')
   assert.equal(bestDate(splitPolls([poll('z', '[kailan] 2026-10-12', [0, 2])]).dates), null)
-  assert.equal(lockedDate(dates, '2026-10-12')?.pollId, 'b')
-  assert.equal(lockedDate(dates, '2026-11-01'), null)
-  assert.equal(lockedDate(dates, null), null)
+})
+
+test('a date is locked only when the host locked it, never just because it matches the plan date', () => {
+  const { dates } = splitPolls([poll('a', '[kailan] 2026-10-10 14:00', [0, 0]), poll('b', '[kailan] 2026-10-11', [0, 0])])
+  assert.equal(lockedDate(dates, null, '2026-10-10'), null, 'fresh poll, 0 votes: not locked')
+  assert.equal(lockedDate(dates, 'b', '2026-10-11')?.pollId, 'b')
+  assert.equal(lockedDate(dates, 'b', '2026-10-12'), null, 'the plan date moved off the locked option')
+  assert.equal(lockedDate(dates, 'gone', '2026-10-11'), null, 'the locked option was cleared')
+  assert.equal(lockedDate(dates, 'b', null), null)
 })
 
 test('spots rank by tara, then fewer pass, then the order added', () => {

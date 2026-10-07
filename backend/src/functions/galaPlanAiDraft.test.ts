@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { isIndoorPlace } from "../domain/queryIntent";
-import { detectLocationIntent, fitsKind, typicalMealCost, widenThinArea } from "../services/galaPlanDraftPlanner";
+import { detectLocationIntent, fitsKind, mealEstimatePerHead, typicalMealCost, widenThinArea } from "../services/galaPlanDraftPlanner";
 import { visibleFixturePlaces } from "../services/assistant/fixtures/testPlaces";
 import { buildPlanDraft } from "./galaPlanAiDraft";
 
 // QA round 3 (R3-05, R3-06): thin areas widen and say so; lunch-to-dinner and food crawls have real meals,
 // and the per-head estimate never leaves the meals out. Runs the whole pipeline without the model.
 type Stop = { time: string; place: { slug: string; category: string; city: string | null; budget_min: number | null } };
-type Body = { stops: Stop[]; notes: string[]; meal_estimate_per_head: number };
+type Body = { stops: Stop[]; notes: string[]; meal_estimate_per_head: number; meals_needed: number; meal_cost: number };
 
 async function plan(prompt: string) {
   const outcome = await buildPlanDraft({ prompt, places: visibleFixturePlaces, requestedDate: "2099-10-10", requestId: "test", model: async () => null, loadImages: async () => new Map() });
@@ -61,6 +61,22 @@ describe("meals and cost", () => {
     const entry = body.stops.reduce((sum, stop) => sum + (stop.place.budget_min ?? 0), 0);
     assert.ok(body.meal_estimate_per_head >= typicalMealCost(visibleFixturePlaces), "the dinner is counted");
     assert.ok(entry + body.meal_estimate_per_head > 200);
+  });
+
+  it("sends the meals and meal price the app prices every screen from", async () => {
+    const body = await plan("Sabado sa Intramuros, 3 kami, ₱800 each, hapon hanggang gabi");
+    assert.equal(body.meal_cost, typicalMealCost(visibleFixturePlaces));
+    assert.ok(body.meals_needed >= 1, "the dinner is a needed meal");
+  });
+
+  it("counts a free food street as a meal, and a meal no food stop covers", () => {
+    const street = bySlug.get("binondo-chinatown")!; // filed as Heritage, free entry, but people go to eat
+    const eatery = bySlug.get("aling-lucing-sisig-angeles")!;
+    const sight = bySlug.get("fort-santiago")!;
+    assert.equal(mealEstimatePerHead([street, sight], 0, 250), 250, "a food crawl is never free");
+    assert.equal(mealEstimatePerHead([eatery, sight], 2, 250), 250, "lunch is priced, dinner is not");
+    assert.equal(mealEstimatePerHead([eatery, street], 1, 250), 250, "the street still costs a meal");
+    assert.equal(mealEstimatePerHead([sight], 0, 250), 0);
   });
 
   it("estimates a meal from GalaTayo's everyday eateries", () => {

@@ -3,6 +3,9 @@ import { getSupabaseAccessToken } from '../supabase'
 import { getApiUrl } from './apiClient'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
 import { getAskAiRequestHeaders } from './askAiIdentity'
+import { parseGalaPlanDescription } from './planDescription'
+
+export { composeGalaPlanDescription, parseGalaPlanDescription, type GalaPlanDateMode, type GalaPlanSettings } from './planDescription'
 
 export type GalaPlanVisibility = 'private' | 'public'
 export type GalaPlanStatus = 'active' | 'deleted' | string
@@ -69,6 +72,8 @@ export type GalaPlanDetail = GalaPlanSummary & {
       area?: string | null
       address: string | null
       budget_min?: number | null
+      /** A stop people pay to eat at (a restaurant or a food street), priced at a meal estimate when free. */
+      meal_stop?: boolean
       latitude: number | null
       longitude: number | null
       image_url?: string | null
@@ -235,46 +240,6 @@ export async function reorderGalaPlanItems(
   return updateGalaPlan(planId, { items: nextItems }, session)
 }
 
-export type GalaPlanDateMode = 'anytime' | 'na' | 'date'
-
-// Plan settings ride at the start of the description: "[gala_date:2026-10-10][gala_group:3]\nNotes".
-const MARKERS_PATTERN = /^((?:\[gala_[a-z]+:[^\]\n]*\])+)\n?/i
-const DATE_VALUE_PATTERN = /\[gala_date:(anytime|na|\d{4}-\d{2}-\d{2})\]/i
-const GROUP_VALUE_PATTERN = /\[gala_group:(\d{1,2})\]/i
-
-export function parseGalaPlanDescription(description: string | null | undefined) {
-  const rawDescription = description ?? ''
-  const markers = rawDescription.match(MARKERS_PATTERN)?.[1] ?? ''
-  const markerValue = markers.match(DATE_VALUE_PATTERN)?.[1] ?? 'anytime'
-  const groupSize = Number(markers.match(GROUP_VALUE_PATTERN)?.[1] ?? 0)
-  const cleanDescription = markers ? rawDescription.replace(MARKERS_PATTERN, '').trimStart() : rawDescription
-
-  return {
-    dateMode: markerValue === 'anytime' || markerValue === 'na' ? markerValue as GalaPlanDateMode : 'date' as GalaPlanDateMode,
-    date: markerValue === 'anytime' || markerValue === 'na' ? '' : markerValue,
-    /** How many people the plan is for, as set when it was made; null when never set. */
-    groupSize: groupSize >= 1 ? Math.min(30, groupSize) : null,
-    description: cleanDescription,
-  }
-}
-
-export function composeGalaPlanDescription({
-  description,
-  dateMode,
-  date,
-  groupSize = null,
-}: {
-  description: string
-  dateMode: GalaPlanDateMode
-  date: string
-  groupSize?: number | null
-}) {
-  const markerValue = dateMode === 'date' && date ? date : dateMode
-  const cleanDescription = description.trim()
-  const group = groupSize && groupSize > 1 ? `[gala_group:${Math.min(30, Math.round(groupSize))}]` : ''
-  return `[gala_date:${markerValue}]${group}${cleanDescription ? `\n${cleanDescription}` : ''}`
-}
-
 export function formatGalaPlanDate(description: string | null | undefined) {
   const parsed = parseGalaPlanDescription(description)
 
@@ -308,6 +273,9 @@ export type GalaPlanAiDraft = {
   budget_per_head?: number | null
   /** Per-head cost of meals the stops don't price (a food street, a meal no listed place covers). */
   meal_estimate_per_head?: number
+  /** Meals the request asked for (breakfast, lunch, dinner) and the typical meal price per head. */
+  meals_needed?: number
+  meal_cost?: number
   /** Tara's notes on what changed from the request: a stop outside the asked area, a kind of stop GalaTayo can't fill. */
   notes?: string[]
   stops: Array<{

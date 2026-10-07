@@ -6,8 +6,8 @@ const isSharedPlanPath = (pathname: string) => /^\/u\/[^/]+\/(?:plans|gala)\/[^/
 const sharedRouteMatchers = [isPublicProfilePath, isSharedPlanPath]
 
 export function isProtectedAccountPath(pathname: string) {
+  // /favorites is open to guests: it shows their device lists with a sign-up nudge, not a wall.
   const isExactProtectedPath = [
-    '/favorites',
     '/passport',
     '/feedback',
     '/gala-plan',

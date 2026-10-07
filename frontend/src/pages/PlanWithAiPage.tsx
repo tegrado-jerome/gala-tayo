@@ -26,7 +26,8 @@ import {
   GalaPlanAiError,
   type GalaPlanAiDraft,
 } from '../utils/galaPlansApi'
-import { estimatePerHead, formatPeso, formatTime24, getPlanLegs, type TravelLeg } from '../utils/galaPlanTrip'
+import { formatPeso, formatTime24, getPlanLegs, planCost, type TravelLeg } from '../utils/galaPlanTrip'
+import { draftMeals } from '../utils/planCost'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackShare } from '../utils/analytics'
 import { gcInviteText } from '../utils/barkadaVotes'
@@ -133,7 +134,10 @@ function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: 
   const stops = useMemo(() => draft?.stops ?? [], [draft])
   const legs = useMemo(() => getPlanLegs(stops), [stops])
   // Meals the stops can't price still cost money, so a lunch-to-dinner plan never reads as ₱100 a head.
-  const perHead = useMemo(() => estimatePerHead(stops, groupSize) + (draft?.meal_estimate_per_head ?? 0), [stops, groupSize, draft])
+  // The saved plan keeps the same meals, so it shows this same number.
+  const meals = useMemo(() => (draft ? draftMeals(draft, draft.stops) : null), [draft])
+  const cost = useMemo(() => planCost(stops, groupSize, meals), [stops, groupSize, meals])
+  const perHead = cost.perHead
   const timelineStops = useMemo<TimelineStop[]>(
     () => stops.map((stop) => ({ key: stop.place_id, time: stop.time ? formatTime24(stop.time) : null, minutes: stop.minutes, note: stop.note || null, place: stop.place })),
     [stops],
@@ -226,6 +230,7 @@ function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: 
             dateMode: draft.date ? 'date' : 'anytime',
             date: draft.date ?? '',
             groupSize,
+            meals,
           }),
           visibility: 'private',
           items: draft.stops.map((stop, index) => ({
@@ -443,6 +448,7 @@ function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: 
             <div className="mt-5">
               <PlanTimeline
                 stops={timelineStops}
+                mealCost={cost.mealCost}
                 animate
                 onMove={isEditing ? moveStop : undefined}
                 onRemove={isEditing && stops.length > 2 ? removeStop : undefined}
@@ -468,7 +474,7 @@ function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: 
                       </span>
                     ),
                   },
-                  { label: 'Cost', value: [`${formatPeso(perHead)}/head · rides split by ${groupSize}`, budgetNote].filter(Boolean).join(' · ') },
+                  { label: 'Cost', value: [`${formatPeso(perHead)}/head · rides split by ${groupSize}`, cost.mealEstimate > 0 ? `includes ~${formatPeso(cost.mealEstimate)} for meals` : null, budgetNote].filter(Boolean).join(' · ') },
                 ]}
               />
             </div>

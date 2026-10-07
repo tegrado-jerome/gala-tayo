@@ -29,7 +29,8 @@ import {
   type GalaListPlace,
   type SharedList,
 } from '../utils/galaListsCore'
-import { newListId, updateGalaLists, useGalaLists } from '../utils/galaListsStore'
+import { newListId, updateGalaLists, useGalaLists, useGalaListsSyncStatus } from '../utils/galaListsStore'
+import { hasAccountSession } from '../utils/guestSession'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { navigateToPath } from '../utils/navigation'
@@ -111,7 +112,8 @@ function useShareList() {
 }
 
 function MyList({ list }: { list: GalaList }) {
-  const { currentProfile } = useAppUser()
+  const { currentProfile, session } = useAppUser()
+  const syncStatus = useGalaListsSyncStatus()
   const shareList = useShareList()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
@@ -215,7 +217,11 @@ function MyList({ list }: { list: GalaList }) {
           ))}
         </ul>
       )}
-      <p className="g-xs g-mut mt-10">Lists are saved on this device for now.</p>
+      <p className="g-xs g-mut mt-10">
+        {hasAccountSession(session) && syncStatus !== 'device'
+          ? syncStatus === 'error' ? "Couldn't sync just now. Your changes are safe here and sync when you're back online." : 'Synced to your account, on every device.'
+          : 'Saved on this device. Sign up free to keep your lists on every device!'}
+      </p>
     </>
   )
 }
@@ -304,22 +310,38 @@ function SharedListView({ shared }: { shared: SharedList }) {
 
 function GalaListPage({ listId, search }: { listId: string | null; search: string }) {
   const { lists } = useGalaLists()
+  const syncStatus = useGalaListsSyncStatus()
+  const { session, isSessionLoading } = useAppUser()
+  const isAccount = hasAccountSession(session)
   const shared = useMemo(() => (listId ? null : decodeSharedList(search)), [listId, search])
   const list = listId ? lists.find((entry) => entry.id === listId) ?? null : null
+  // A list from another device arrives with the account's lists; wait for them before saying it's missing.
+  const isWaiting = Boolean(listId && !list && (isSessionLoading || (isAccount && syncStatus === 'loading')))
 
   return (
     <Page narrow className="pb-16">
       <MinimalBackNav to="/favorites" label="Saved" />
       <div className="mt-2 lg:mt-6">
-        {list ? (
+        {isWaiting ? (
+          <div aria-label="Loading list" className="grid gap-3">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-[240px]" />
+          </div>
+        ) : list ? (
           <MyList key={list.id} list={list} />
         ) : shared ? (
           <SharedListView shared={shared} />
         ) : (
           <Empty
             className="mt-10"
-            title={listId ? 'This list is not on this device.' : 'This list link looks broken.'}
-            description={listId ? 'Lists are saved on the device that made them for now.' : 'Ask your friend to share it again.'}
+            title={listId ? "We can't find this list." : 'This list link looks broken.'}
+            description={
+              listId
+                ? isAccount
+                  ? 'It may have been deleted, or it belongs to another account.'
+                  : "Lists made as a guest stay on the device that made them. Log in to see your account's lists."
+                : 'Ask your friend to share it again.'
+            }
             action={<Button variant="line" href="/favorites">Go to Saved</Button>}
           />
         )}

@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { isMealStopRow } from "../domain/queryIntent";
 import { checkEndpointRateLimit, checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import {
   canSeeFollowers,
@@ -66,6 +67,8 @@ type PlanItemRow = {
     budget_min?: number | string | null;
     latitude?: number | string | null;
     longitude?: number | string | null;
+    tags?: string[] | null;
+    good_for?: string[] | null;
   } | null;
 };
 
@@ -189,6 +192,7 @@ function mapPlanDetail(plan: SocialGalaPlan, items: PlanItemRow[], viewerHasHear
           city: place?.city ?? null,
           address: place?.address ?? null,
           budget_min: toNullableNumber(place?.budget_min),
+          meal_stop: isMealStopRow(place),
           latitude: toNullableNumber(place?.latitude),
           longitude: toNullableNumber(place?.longitude),
         },
@@ -214,7 +218,7 @@ async function getPlanItems(planIds: string[]) {
 
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plan_items") as any)
-    .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_min, latitude, longitude)")
+    .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_min, latitude, longitude, tags, good_for)")
     .in("plan_id", planIds)
     .order("day_number", { ascending: true })
     .order("sort_order", { ascending: true });

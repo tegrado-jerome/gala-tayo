@@ -7,8 +7,8 @@ import { useAppUser } from '../../context/AppUserContext'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { getPlacePhoto } from '../../utils/placePhoto'
 import { getGalaPlanBarkada, type GalaPlanMember } from '../../utils/galaPlanBarkadaApi'
-import { getGalaPlan, listMyGalaPlans, type GalaPlanDetail, type GalaPlanSummary } from '../../utils/galaPlansApi'
-import { daysUntil, formatDaysUntil, getPlanDate, pickNextPlan } from '../../utils/galaPlanTrip'
+import { getGalaPlan, listMyGalaPlans, parseGalaPlanDescription, type GalaPlanDetail, type GalaPlanSummary } from '../../utils/galaPlansApi'
+import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, pickNextPlan, splitHeadcount } from '../../utils/galaPlanTrip'
 
 const GtMap = lazy(() => import('../ui/GtMap'))
 
@@ -33,18 +33,19 @@ function getRoutePoints(detail: GalaPlanDetail | null): MapPoint[] {
     .map((item, index) => ({ id: item.id, lat: Number(item.place.latitude), lng: Number(item.place.longitude), kind: 'number', label: String(index + 1), imageUrl: getPlacePhoto({ slug: item.place.slug, photo_url: item.place.image_url }) }))
 }
 
-function formatBudget(detail: GalaPlanDetail | null) {
-  const prices = detail?.items.map((item) => item.place.budget_min).filter((value): value is number => value != null && Number.isFinite(Number(value))) ?? []
-  if (prices.length === 0) return null
-  const total = prices.reduce((sum, value) => sum + Number(value), 0)
-  return total <= 0 ? 'Free' : `₱${Math.round(total).toLocaleString('en-PH')}`
+/** The same per-head estimate the plan page shows: same group size, meals and rides. */
+function formatBudget(detail: GalaPlanDetail | null, goingCount: number) {
+  if (!detail || detail.items.length === 0) return null
+  const settings = parseGalaPlanDescription(detail.description)
+  const perHead = estimatePerHead(detail.items, splitHeadcount(settings.groupSize, goingCount), settings.meals)
+  return perHead <= 0 ? 'Free' : `${formatPeso(perHead)} each`
 }
 
 function PlanCard({ next }: { next: NextPlan }) {
   const { plan, detail, going } = next
   const points = getRoutePoints(detail)
   const covers = (plan.preview_places ?? []).flatMap((stop) => getPlacePhotoCandidates(stop.slug, stop.image_url))
-  const budget = formatBudget(detail)
+  const budget = formatBudget(detail, going.length)
   const stops = `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`
   const facts = [going.length > 0 ? `${going.length} going` : null, stops, budget].filter(Boolean).join(' · ')
 

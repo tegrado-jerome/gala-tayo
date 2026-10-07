@@ -16,7 +16,7 @@ import { UsersThree as Users } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { useAppUser } from '../context/AppUserContext'
 import { buildAuthPath } from '../services/authApi'
-import { ensureGuestSession, isAnonymousSession, isGuestModeAvailable } from '../utils/guestSession'
+import { ensureGuestSession, isAnonymousSession, isGuestModeAvailable, setGuestName } from '../utils/guestSession'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { Button, Page, Panel, Sheet, cx } from './ui'
@@ -62,6 +62,8 @@ type VariantConfig = {
   benefits: string[]
   /** Set for actions a guest session can do; the prompt then leads with "Continue as guest". */
   guestTitle?: string
+  /** Ask a guest for a name first, so the host sees who replied (the Partiful way). */
+  asksGuestName?: boolean
 }
 
 const ACCOUNT_PERKS = ['Sync on every device', 'Public profile and followers', 'More AI asks each day', 'Reviews, tips and photos']
@@ -165,6 +167,7 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
   },
   'plan-rsvp': {
     guestTitle: 'Say you\'re in',
+    asksGuestName: true,
     icon: CalendarPlus,
     label: 'Invite',
     title: 'Log in to RSVP to this plan',
@@ -209,6 +212,9 @@ function GuestAuthPromptBody({
   const canOfferGuest = Boolean(config.guestTitle) && !session
   const [isGuestAvailable, setIsGuestAvailable] = useState(false)
   const [isStartingGuest, setIsStartingGuest] = useState(false)
+  const [guestName, setGuestNameValue] = useState('')
+  const [nameError, setNameError] = useState('')
+  const nameId = useId()
   const showGuest = canOfferGuest && isGuestAvailable
   const showAccountPerks = showGuest || isGuest
 
@@ -224,8 +230,15 @@ function GuestAuthPromptBody({
   }, [canOfferGuest])
 
   const continueAsGuest = async () => {
+    const name = guestName.replace(/\s+/g, ' ').trim()
+    if (config.asksGuestName && !name) {
+      setNameError('Add your name so the host knows who\'s in.')
+      document.getElementById(nameId)?.focus()
+      return
+    }
     setIsStartingGuest(true)
     const guestSession = await ensureGuestSession()
+    if (guestSession && name) await setGuestName(name)
     setIsStartingGuest(false)
     if (!guestSession) {
       // Guest mode is off: quietly fall back to the log in / sign up choices.
@@ -265,9 +278,37 @@ function GuestAuthPromptBody({
       </div>
 
       {showGuest ? (
-        <Button variant="tara" size="lg" block className="mt-5" onClick={() => void continueAsGuest()} disabled={isStartingGuest} aria-busy={isStartingGuest}>
-          {isStartingGuest ? 'Starting…' : 'Continue as guest'}
-        </Button>
+        <form
+          className="mt-5 grid gap-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void continueAsGuest()
+          }}
+        >
+          {config.asksGuestName ? (
+            <>
+              <label htmlFor={nameId} className="g-label">Your name</label>
+              <input
+                id={nameId}
+                className="g-input"
+                value={guestName}
+                maxLength={40}
+                placeholder="So the host knows it's you"
+                autoComplete="given-name"
+                aria-invalid={nameError ? true : undefined}
+                aria-describedby={nameError ? `${nameId}-error` : undefined}
+                onChange={(event) => {
+                  setGuestNameValue(event.target.value)
+                  if (nameError) setNameError('')
+                }}
+              />
+              {nameError ? <p id={`${nameId}-error`} role="alert" className="g-hint is-error">{nameError}</p> : null}
+            </>
+          ) : null}
+          <Button type="submit" variant="tara" size="lg" block className={config.asksGuestName ? 'mt-1' : undefined} disabled={isStartingGuest} aria-busy={isStartingGuest}>
+            {isStartingGuest ? 'Starting…' : 'Continue as guest'}
+          </Button>
+        </form>
       ) : null}
 
       {perks.length > 0 ? (

@@ -39,7 +39,7 @@ export function foldText(value: string): string {
 const words = (value: string) => foldText(value).split(" ").filter(Boolean);
 const lowerAll = (values: string[]) => values.map((value) => value.toLowerCase());
 const hasAny = (values: string[], wanted: string[]) => lowerAll(values).some((value) => wanted.includes(value));
-const nameHas = (place: NormalizedPlace, pattern: RegExp) => pattern.test(foldText(place.name));
+const nameHas = (place: Pick<NormalizedPlace, "name">, pattern: RegExp) => pattern.test(foldText(place.name));
 
 const INDOOR_CATEGORIES = new Set(["Cafe", "Cinema", "Food", "Hotel", "Mall", "Museum", "Nightlife"]);
 // A whole district, street, market or town (Poblacion's bars, Binondo, a night market) is walked outdoors,
@@ -60,10 +60,26 @@ export function isIndoorPlace(place: NormalizedPlace): boolean | null {
 }
 
 /** A street, market or town people go to for the food, though it isn't filed as a restaurant (Binondo, Cubao Expo). */
-export function isFoodStreet(place: NormalizedPlace): boolean {
+export function isFoodStreet(place: Pick<NormalizedPlace, "category" | "tags" | "good_for" | "name">): boolean {
   if (place.category === "Food" || place.category === "Cafe" || place.category === "Park" || place.category === "Museum") return false;
   if (hasAny(place.tags, ["food-trip", "food trip", "street food"])) return true;
   return place.good_for.includes("Food Trip") && nameHas(place, /\b(chinatown|market|expo|poblacion|road|street|town)\b/i);
+}
+
+/**
+ * A stop where people pay for a meal: a restaurant, or a food street with free entry (Binondo). Plans
+ * price these at the meal estimate when the place lists no price, so a food crawl never reads as free.
+ */
+export function isMealStop(place: Pick<NormalizedPlace, "category" | "tags" | "good_for" | "name">): boolean {
+  return place.category === "Food" || isFoodStreet(place);
+}
+
+const textArray = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []);
+
+/** isMealStop for a raw places row (a plan item's joined place), where tags and good_for may be null. */
+export function isMealStopRow(row: { name?: string | null; category?: string | null; tags?: unknown; good_for?: unknown } | null | undefined): boolean {
+  if (!row) return false;
+  return isMealStop({ name: row.name ?? "", category: row.category ?? "", tags: textArray(row.tags), good_for: textArray(row.good_for) });
 }
 
 /** `best` marks the clearest fits (a place named "... Falls" for "talon"), which rank first. */

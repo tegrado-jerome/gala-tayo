@@ -7,25 +7,30 @@ import { Avatar, Button, Empty, KeyValue, Panel, SectionHead, Tag, cx } from '..
 import { personAvatar, personName } from './BarkadaPanel'
 import { setGalaPlanMemberPaid, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
-import { estimatePerHead, formatPeso, getPlanLegs } from '../../utils/galaPlanTrip'
+import { formatPeso, planCost } from '../../utils/galaPlanTrip'
+import type { PlanMeals } from '../../utils/planCost'
 import '../../design/plans.css'
 
 type BudgetPanelProps = {
   plan: GalaPlanDetail
   barkada: GalaPlanBarkada | null
   session: Session | null | undefined
-  /** The plan's group size (planned size until more RSVP), the same number the itinerary budget uses. */
+  /** Who the split counts (everyone going once friends reply), the same number the itinerary budget uses. */
   groupSize: number
+  /** The size the host planned for, to show who hasn't said yes yet. */
+  plannedSize: number | null
+  meals: PlanMeals | null
   onGroupSizeChange: (size: number) => void
   onBarkadaChange: (barkada: GalaPlanBarkada) => void
 }
 
-function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onBarkadaChange }: BudgetPanelProps) {
+function BudgetPanel({ plan, barkada, session, groupSize, plannedSize, meals, onGroupSizeChange, onBarkadaChange }: BudgetPanelProps) {
   const goingMembers = barkada?.available ? barkada.members.filter((member) => member.rsvp === 'going') : []
   const minSize = Math.max(1, goingMembers.length)
-  const perHead = estimatePerHead(plan.items, groupSize)
-  const legs = getPlanLegs(plan.items)
-  const rides = legs.reduce((sum, leg) => sum + (leg?.fare ?? 0), 0)
+  const cost = planCost(plan.items, groupSize, meals)
+  const perHead = cost.perHead
+  // "+1 not in yet": the host planned for more people than have said yes.
+  const notInYet = goingMembers.length >= 2 && plannedSize ? Math.max(0, plannedSize - goingMembers.length) : 0
   const host = barkada?.available ? barkada.members.find((member) => member.is_owner) : undefined
   const hostName = host ? personName(host.profile).split(' ')[0] : 'the host'
   // The host books and pays up front; everyone else settles their share with the host.
@@ -48,7 +53,7 @@ function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onB
       <div className="g-tstats">
         {[
           { value: formatPeso(perHead), label: 'per head' },
-          { value: formatPeso(perHead * groupSize), label: 'group total' },
+          { value: formatPeso(cost.total), label: 'group total' },
           guests.length > 0 && perHead > 0 ? { value: `${guests.length - unpaid}/${guests.length}`, label: `settled with ${hostName}` } : { value: groupSize, label: groupSize === 1 ? 'person' : 'people' },
         ].map((cell) => (
           <div key={cell.label} className="g-tstat">
@@ -70,6 +75,11 @@ function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onB
           </Button>
         </div>
       </div>
+      <p className="g-hint mt-1">
+        {goingMembers.length >= 2
+          ? `${goingMembers.length} going${notInYet > 0 ? ` · +${notInYet} not in yet` : ''}. Split counts who's going.`
+          : `Counting ${groupSize} ${groupSize === 1 ? 'person' : 'people'} until friends say they're in.`}
+      </p>
 
       {perHead === 0 ? (
         <Empty className="mt-4" title="All free!" description="Every stop is free, so there's nothing to split. Rides are paid as you go." />
@@ -116,12 +126,18 @@ function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onB
       <Panel>
         <KeyValue
           items={[
-            ...plan.items.map((item) => ({ label: item.place.name, value: item.place.budget_min == null ? '—' : formatPeso(item.place.budget_min) })),
-            { label: `Rides, split ${groupSize} ways`, value: formatPeso(Math.round(rides / Math.max(1, groupSize))) },
+            ...plan.items.map((item, index) => {
+              const stop = cost.stops[index]
+              return { label: item.place.name, value: stop.amount === null ? '—' : stop.isEstimate ? `~${formatPeso(stop.amount)} meal, est.` : formatPeso(stop.amount) }
+            }),
+            ...(cost.extraMeals > 0 ? [{ label: cost.extraMeals === 1 ? 'A meal on the way, est.' : `${cost.extraMeals} meals on the way, est.`, value: `~${formatPeso(cost.extraMeals * cost.mealCost)}` }] : []),
+            { label: `Rides, split ${groupSize} ways`, value: formatPeso(cost.ridesEach) },
           ]}
         />
       </Panel>
-      <p className="g-hint mt-2">Estimated from each place's starting price plus Grab fares.</p>
+      <p className="g-hint mt-2">
+        Estimated from each place's starting price plus Grab fares{cost.mealEstimate > 0 ? `. Meals with no listed price count about ${formatPeso(cost.mealCost)} each` : ''}.
+      </p>
     </div>
   )
 }

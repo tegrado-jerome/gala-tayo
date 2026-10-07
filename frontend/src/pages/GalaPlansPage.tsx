@@ -19,6 +19,7 @@ import {
   updateGalaPlan,
   type GalaPlanDateMode,
   type GalaPlanItemPayload,
+  type GalaPlanSettings,
   type GalaPlanVisibility,
 } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
@@ -490,6 +491,8 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const [date, setDate] = useState('')
   // Kept from Plan with AI so editing the plan doesn't drop the group size.
   const [groupSize, setGroupSize] = useState<number | null>(null)
+  // Settings the form doesn't edit (the meal estimate, a locked date) ride along unchanged.
+  const keptSettings = useRef<Pick<GalaPlanSettings, 'meals' | 'lockedPollId'>>({})
   const [visibility, setVisibility] = useState<GalaPlanVisibility>('private')
   const [items, setItems] = useState<DraftItem[]>(() => (planId ? [] : readStartingStop()))
   const [isLoading, setIsLoading] = useState(isEdit)
@@ -515,6 +518,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
         setDateMode(parsed.dateMode)
         setDate(parsed.date)
         setGroupSize(parsed.groupSize)
+        keptSettings.current = { meals: parsed.meals, lockedPollId: parsed.lockedPollId }
         setVisibility(data.plan.visibility)
         setItems(data.plan.items.map((item) => ({ draft_id: item.id, place_id: item.place_id, day_number: item.day_number, sort_order: item.sort_order, time_label: item.time_label, notes: item.notes, estimated_minutes: item.estimated_minutes, place: item.place })))
       } catch (error) {
@@ -540,7 +544,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
       setErrorMessage('')
       const payload = {
         title,
-        description: composeGalaPlanDescription({ description, dateMode, date, groupSize }),
+        description: composeGalaPlanDescription({ ...keptSettings.current, description, dateMode, date, groupSize }),
         visibility,
         items: toPayload(items),
       }

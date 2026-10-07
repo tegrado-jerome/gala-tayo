@@ -4,7 +4,7 @@ import { FilmStrip as Film } from '@phosphor-icons/react/dist/csr/FilmStrip'
 import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { Button, buttonClass, cx } from '../ui'
-import type { GalaPlanDetail } from '../../utils/galaPlansApi'
+import { parseGalaPlanDescription, type GalaPlanDetail } from '../../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, getPlanDate } from '../../utils/galaPlanTrip'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { buildPrivateGalaPlanShareUrl } from '../../utils/share'
@@ -92,7 +92,7 @@ function placePins(items: GalaPlanDetail['items']) {
 
 function buildStory(plan: GalaPlanDetail, friends: number): Story {
   const stopCount = plan.items.length
-  const perHead = estimatePerHead(plan.items, Math.max(1, friends))
+  const perHead = estimatePerHead(plan.items, Math.max(1, friends), parseGalaPlanDescription(plan.description).meals)
   const city = mostCommon(plan.items.map((item) => item.place.city))
   const date = getPlanDate(plan)
   const day = date ? date.toLocaleDateString('en', { weekday: 'short' }) : null

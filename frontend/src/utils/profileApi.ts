@@ -97,6 +97,7 @@ export type PublicGalaPlan = {
       city: string | null
       address: string | null
       budget_min?: number | null
+      meal_stop?: boolean
       latitude: number | null
       longitude: number | null
       image_url?: string | null

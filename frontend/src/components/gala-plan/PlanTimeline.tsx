@@ -8,7 +8,7 @@ import PlaceImage from '../discover/PlaceImage'
 import { Button } from '../ui'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import type { GalaPlanPlace } from '../../utils/galaPlansApi'
-import { estimateLeg, formatPeso, type TravelLeg } from '../../utils/galaPlanTrip'
+import { estimateLeg, formatPeso, stopCost, type TravelLeg } from '../../utils/galaPlanTrip'
 import { getCanonicalPlacePath } from '../../utils/routes'
 import { resolveAreaMeta } from '../../utils/seo'
 import '../../design/plans.css'
@@ -27,6 +27,15 @@ type PlanTimelineProps = {
   onRemove?: (index: number) => void
   /** Stagger the stops in, for a freshly built AI draft. */
   animate?: boolean
+  /** Meal price per head for food stops with no listed price (the plan's saved meal estimate). */
+  mealCost?: number
+}
+
+/** "₱120", "Free", or "~₱250 meal, est." for a food stop with no listed price. */
+function stopPrice(place: GalaPlanPlace, mealCost?: number) {
+  const cost = stopCost(place, mealCost)
+  if (cost.amount === null) return null
+  return cost.isEstimate ? `~${formatPeso(cost.amount)} meal, est.` : formatPeso(cost.amount)
 }
 
 function formatKm(km: number) {
@@ -48,13 +57,13 @@ function LegLine({ leg }: { leg: TravelLeg }) {
 }
 
 /** Day cards: serif time, stop photo, name and note, then the travel leg to the next stop. */
-function PlanTimeline({ stops, onMove, onRemove, animate = false }: PlanTimelineProps) {
+function PlanTimeline({ stops, onMove, onRemove, animate = false, mealCost }: PlanTimelineProps) {
   return (
     <ol className="pl-days">
       {stops.map((stop, index) => {
         const leg = index < stops.length - 1 ? estimateLeg(stop.place, stops[index + 1].place) : null
         const placeHref = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
-        const meta = [stop.place.area || stop.place.city, stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null].filter(Boolean)
+        const meta = [stop.place.area || stop.place.city, stopPrice(stop.place, mealCost)].filter(Boolean)
         const images = getPlacePhotoCandidates(stop.place.slug, stop.place.image_url)
 
         return (

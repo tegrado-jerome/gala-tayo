@@ -105,9 +105,14 @@ export function bestDate(dates: DateChoice[]) {
   return ranked[0] && ranked[0].yes.length > 0 ? ranked[0] : null
 }
 
-/** The option the plan date was locked to: the matching date with the most kaya. */
-export function lockedDate(dates: DateChoice[], planDate: string | null) {
-  return planDate ? bestDate(dates.filter((choice) => choice.date === planDate)) ?? dates.find((choice) => choice.date === planDate) ?? null : null
+/**
+ * The option the host locked. Only the host's Lock tap sets it (saved as the plan's lockedPollId), and it
+ * stops counting if the plan's date is changed to another day. A plan date that merely matches an option
+ * is not a lock, so a fresh poll never reads "Locked" with 0 votes.
+ */
+export function lockedDate(dates: DateChoice[], lockedPollId: string | null, planDate: string | null) {
+  if (!lockedPollId || !planDate) return null
+  return dates.find((choice) => choice.pollId === lockedPollId && choice.date === planDate) ?? null
 }
 
 /** Most tara first, then fewest pass, then the order the host added them. */
