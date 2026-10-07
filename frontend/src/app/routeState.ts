@@ -1,3 +1,4 @@
+import { legalPages } from '../data/legalPages'
 import {
   isPath,
   parseAreaPagePath,
@@ -17,8 +18,7 @@ export function getRouteState(pathname: string) {
     isOnboardingAllowedPath:
       isPath(pathname, '/onboarding') ||
       isPath(pathname, '/auth/callback') ||
-      isPath(pathname, '/terms') ||
-      isPath(pathname, '/privacy'),
+      legalPages.some((page) => isPath(pathname, page.href)),
     canonicalPlacePath: parseCanonicalPlacePath(pathname),
     categoryPageSlug: parseCategoryPagePath(pathname),
     landingPageSlug: parseLandingPagePath(pathname),

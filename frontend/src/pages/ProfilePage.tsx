@@ -36,6 +36,7 @@ import { useTheme } from '../context/ThemeContext'
 import { buildAuthPath, signOut } from '../services/authApi'
 import { isAnonymousSession } from '../utils/guestSession'
 import { replaceWithPath } from '../utils/navigation'
+import LegalFooter from '../components/navigation/LegalFooter'
 import { useAppUser } from '../context/AppUserContext'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
@@ -312,6 +313,7 @@ function GuestProfile({ session }: { session: Session }) {
           <MeRow icon={SignOut} title={isLeaving ? 'Leaving...' : 'Leave guest mode'} sub="Clears your guest stuff from this device" onClick={() => void leaveGuestMode()} disabled={isLeaving} />
         </div>
       </nav>
+      <LegalFooter />
     </Page>
   )
 }
@@ -794,6 +796,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
           <div className="me-rows mt-6 border-t border-[var(--line)] pt-2">
             <MeRow icon={SignOut} title={isSigningOut ? 'Logging out...' : 'Log out'} onClick={() => void handleSignOut()} disabled={isSigningOut} />
           </div>
+          <LegalFooter />
         </div>
       ) : !isLoading ? (
         <Empty className="mt-5" title="Profile unavailable." description={<span role="alert">{errorMessage || 'Try again in a bit.'}</span>} />

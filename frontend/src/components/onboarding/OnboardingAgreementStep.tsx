@@ -58,7 +58,7 @@ function OnboardingAgreementStep({ values, errors, disableNext, onUpdate, onBack
 
         {errors.form ? <AuthNotice tone="bad">{errors.form}</AuthNotice> : null}
 
-        <p className="g-xs g-mut">By creating an account, you confirm that you are at least 13 years old.</p>
+        <p className="g-xs g-mut">By creating an account, you confirm that you are at least 13 years old. If you are under 18, ask a parent or guardian first.</p>
       </div>
     </OnboardingLayout>
   )

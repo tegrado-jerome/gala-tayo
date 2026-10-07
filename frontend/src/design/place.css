@@ -13,7 +13,9 @@
 .pd-pg-top { position: absolute; inset: 0 0 auto 0; display: flex; align-items: center; gap: 4px; padding: 10px 10px; pointer-events: none; }
 .pd-pg-top > * { pointer-events: auto; }
 .pd-pg-tools { position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; }
-.pd-pg-note { padding: 6px 10px; border-radius: var(--r-pill); background: #fff; color: #111; font-size: 12px; box-shadow: var(--sh-2); }
+.pd-pg-credit { max-width: min(60vw, 320px); padding-inline: 2px; border-radius: var(--r-pill); text-decoration: none; }
+.pd-pg-credit > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; height: 26px; padding: 0 9px; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.58); color: #fff; font: 600 11px/1 var(--font-body); }
+.pd-pg-credit svg { width: 12px; height: 12px; flex: 0 0 auto; }
 .pd-pg-all { position: absolute; right: 8px; bottom: 4px; display: grid; place-items: center; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
 .pd-pg-all span { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-pill); background: #fff; color: #111; font: 700 12px/1 var(--font-body); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16); }
 .pd-pg-all svg { width: 16px; height: 16px; }

@@ -5,6 +5,7 @@ import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
 import { metroManilaAreas } from '../data/destinations'
+import { legalPages } from '../data/legalPages'
 import { displayCityName } from '../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces } from '../utils/compactPlaces'
 import type { NavigationSource } from '../utils/navigationLoading'
@@ -14,8 +15,7 @@ const footerLinks = [
   { href: '/about', label: 'About' },
   { href: '/gala-tayo-meaning', label: 'What "gala tayo" means' },
   { href: '/long-weekends-2027-philippines', label: 'Long weekends 2027' },
-  { href: '/privacy', label: 'Privacy' },
-  { href: '/terms', label: 'Terms' },
+  ...legalPages,
 ]
 
 

@@ -6,6 +6,7 @@ import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminP
 import { isAccountOnlyPath, isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
 import { isAnonymousSession } from '../utils/guestSession'
 import { isPath } from '../utils/routes'
+import { LEGAL_PAGE_TYPES, type LegalPageType } from '../data/legalPages'
 import type { NavigationSource } from '../app/useAppLocationState'
 
 export type RouteInputs = {
@@ -44,7 +45,7 @@ export type RouteInputs = {
 export type RouteDescriptor =
   | { kind: 'initial-auth-loader' }
   | { kind: 'onboarding' }
-  | { kind: 'legal'; page: 'terms' | 'privacy' }
+  | { kind: 'legal'; page: LegalPageType }
   | { kind: 'place-submission' }
   | { kind: 'admin-auth' }
   | { kind: 'admin-setup' }
@@ -143,12 +144,9 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     return { kind: 'onboarding' }
   }
 
-  if (isPath(pathname, '/terms')) {
-    return { kind: 'legal', page: 'terms' }
-  }
-
-  if (isPath(pathname, '/privacy')) {
-    return { kind: 'legal', page: 'privacy' }
+  const legalPage = LEGAL_PAGE_TYPES.find((page) => isPath(pathname, `/${page}`))
+  if (legalPage) {
+    return { kind: 'legal', page: legalPage }
   }
 
   if (

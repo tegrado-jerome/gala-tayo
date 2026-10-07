@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Cookie } from '@phosphor-icons/react/dist/csr/Cookie'
+import InternalLink from './InternalLink'
 import { Button } from './ui'
 import { useCookieConsent } from '../context/CookieConsentContext'
 import '../design/misc.css'
@@ -23,7 +24,14 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
             {showDetails ? 'Less' : 'Learn more'}
           </button>
         </p>
-        {showDetails ? <p className="g-xs g-mut mt-1">It only shows us how the site is used. No personal data is shared.</p> : null}
+        {showDetails ? (
+          <p className="g-xs g-mut mt-1">
+            Google Analytics cookies, only if you say yes. They show us which pages and features get used. We never send your name or email.{' '}
+            <InternalLink href="/cookies" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+              Cookie Policy
+            </InternalLink>
+          </p>
+        ) : null}
       </div>
       <div className="flex shrink-0 gap-1.5 max-sm:w-full max-sm:[&>*]:flex-1">
         <Button variant="soft" onClick={rejectCookies}>

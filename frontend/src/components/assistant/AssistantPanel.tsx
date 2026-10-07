@@ -5,6 +5,7 @@ import { Square } from '@phosphor-icons/react/dist/csr/Square'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import AskAiUsagePill from '../AskAiUsagePill'
 import AddToGalaPlanModal from '../AddToGalaPlanModal'
+import InternalLink from '../InternalLink'
 import { Button } from '../ui'
 import { memorySummary, type AssistantChip, type AssistantMode, type AssistantResponse } from '../../utils/assistantCore'
 import type { useAssistant } from '../../hooks/useAssistant'
@@ -206,6 +207,12 @@ export function AssistantPanel({
             {busy ? <Square aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}
           </Button>
         </div>
+        <p className="a-fine mt-1.5 text-center">
+          Tara is AI and can make mistakes. Check prices, hours and safety before you go.{' '}
+          <InternalLink href="/disclaimer#ai" className="underline underline-offset-2">
+            More
+          </InternalLink>
+        </p>
       </div>
       {planFor ? <AddToGalaPlanModal isOpen placeId={planFor.id} placeName={planFor.name} onClose={() => setPlanFor(null)} /> : null}
     </div>

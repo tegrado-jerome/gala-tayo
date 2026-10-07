@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { reinitializeAnalytics, trackPageView } from '../utils/analytics'
+import { disableAnalytics, reinitializeAnalytics, trackPageView } from '../utils/analytics'
 
 const STORAGE_KEY = 'galatayo-cookie-consent'
 
@@ -26,6 +26,17 @@ function readStoredConsent(): ConsentState {
     // Ignore - localStorage may not be available
   }
   return 'undecided'
+}
+
+/** Drops Google Analytics' _ga cookies when someone switches analytics off after accepting. */
+function clearAnalyticsCookies() {
+  if (typeof document === 'undefined') return
+  const domains = ['', `; domain=${window.location.hostname}`, `; domain=.${window.location.hostname.replace(/^www\./, '')}`]
+  for (const entry of document.cookie.split(';')) {
+    const name = entry.split('=')[0]?.trim()
+    if (!name?.startsWith('_ga')) continue
+    for (const domain of domains) document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${domain}`
+  }
 }
 
 function CookieConsentProvider({ children }: { children: ReactNode }) {
@@ -61,6 +72,8 @@ function CookieConsentProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore - localStorage may not be available
     }
+    disableAnalytics()
+    clearAnalyticsCookies()
   }, [])
 
   const value = useMemo<CookieConsentContextValue>(() => ({
