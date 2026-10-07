@@ -194,7 +194,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
 
       await signOut({ scope: 'local', animate: false }).catch(() => undefined)
       replaceWithPath('/')
-      showSystemMessage({ title: 'Account deleted', description: 'Your account and its data are gone. Salamat sa pag-gala with us.', tone: 'info' })
+      showSystemMessage({ title: 'Account deleted', description: 'Your account and its data are gone. Thanks for exploring with us!', tone: 'info' })
     } catch (error) {
       const message = error instanceof Error ? error.message : ''
       setDeletionError(/invalid login credentials/i.test(message) ? 'That password is not right.' : message || 'Could not delete your account.')
