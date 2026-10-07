@@ -192,11 +192,17 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   let editorNotes: string | null = null;
   let lastReason = "no draft";
   const attempts: string[] = [];
+  // Model failures (quota, unknown model) only reach server logs otherwise; keep them for the last-run note.
+  const modelErrors = new Set<string>();
+  const warn = (message: string) => {
+    context.warn(message);
+    modelErrors.add(message.replace(/^Gala Today: /, "").slice(0, 140));
+  };
   for (let attempt = 0; attempt < MAX_DRAFTS; attempt += 1) {
     // Money only enters the prompt for budget challenges; other formats must not mention peso amounts the rules can't verify.
     const promptBudget = format === "budget-challenge" ? budget : null;
     const { system, user } = buildPrompt({ date, topic, format, places, areaName, weather: weather?.line ?? null, day: dayContext(manilaNow, holiday), budget: promptBudget, editorNotes });
-    const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, (message) => context.warn(message));
+    const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, warn);
     const parsed = extractJsonObject(raw);
     if (!parsed) {
       lastReason = "unparseable";
@@ -212,7 +218,7 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
       continue;
     }
     const editor = buildEditorPrompt(result.post, places);
-    const review = parseEditorReview(extractJsonObject((await writeGalaTodayDraft(editor.system, editor.user, `gala-today-${date}-${attempt}-edit`, (message) => context.warn(message), 0.2)).text));
+    const review = parseEditorReview(extractJsonObject((await writeGalaTodayDraft(editor.system, editor.user, `gala-today-${date}-${attempt}-edit`, warn, 0.2)).text));
     context.log(`Gala Today draft ${attempt + 1} (${model}) editor: ${JSON.stringify(review.scores)} ${review.fix}`);
     if (!review.pass || !review.scores) {
       lastReason = `editor: ${JSON.stringify(review.scores)}`;
@@ -224,7 +230,8 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
     await setJsonCacheValue(POSTS_KEY, [post, ...posts].slice(0, MAX_POSTS));
     return post;
   }
-  return `skipped: ${lastReason}${attempts.length ? ` [${attempts.join(" | ")}]` : ""}`;
+  const failures = modelErrors.size ? ` {models: ${[...modelErrors].join(" | ")}}` : "";
+  return `skipped: ${lastReason}${failures}${attempts.length ? ` [${attempts.join(" | ")}]` : ""}`;
 }
 
 // The last run's outcome, so a skipped day can be diagnosed without server logs (no secrets, just reasons).
