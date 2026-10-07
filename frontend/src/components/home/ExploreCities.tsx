@@ -95,7 +95,7 @@ function ExploreCities() {
           }
         />
         {regionOptions.length > 1 ? (
-          <Chips role="group" aria-label="Region" className="mb-3 flex-nowrap overflow-x-auto">
+          <Chips role="group" aria-label="Region" className="mb-3 flex-nowrap overflow-x-auto lg:flex-wrap lg:overflow-visible">
             {regionOptions.map((region) => (
               <Chip key={region.slug} aria-pressed={regionSlug === region.slug} onClick={() => setRegionSlug(region.slug)} className="shrink-0">
                 {region.name}
