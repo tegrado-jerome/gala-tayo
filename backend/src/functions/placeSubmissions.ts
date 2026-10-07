@@ -8,6 +8,7 @@ import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailT
 import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage, detectImageFormatFromBytes } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { logAdminAction } from "../utils/adminAudit";
+import { formatProofNote, isMissingColumnError, normalizeProofLinks, splitProofNote } from "../utils/proofLinks";
 
 type UserRow = {
   id: string;
@@ -60,6 +61,8 @@ type PlaceSubmissionRow = {
   nearby_context: string | null;
   website_url: string | null;
   google_maps_url: string | null;
+  // Absent until supabase/migrations/20261007120000_place_submission_proof_links.sql runs.
+  proof_links?: unknown;
   status: "pending" | "approved" | "rejected" | string;
   rejection_reason: string | null;
   admin_note: string | null;
@@ -94,6 +97,7 @@ const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "im
 const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const PLACE_SUBMISSION_COLUMNS =
   "id, submitted_by, approved_place_id, name, category, address, city, area, latitude, longitude, description, best_time_to_visit, visit_duration, budget_min, good_for, not_ideal_for, crowd_level, indoor_outdoor, weather_fit, parking_info, commute_access, nearby_context, website_url, google_maps_url, status, rejection_reason, admin_note, reviewed_by, reviewed_at, created_at, updated_at";
+const PROOF_LINKS_COLUMN = "proof_links";
 const PLACE_SUBMISSION_IMAGE_COLUMNS =
   "id, submission_id, submitted_by, storage_key, sort_order, created_at, updated_at";
 
@@ -248,7 +252,25 @@ function mapSubmissionImage(row: PlaceSubmissionImageRow) {
   };
 }
 
+// Prefer the proof_links column; before the migration the links live as "Proof link:" lines in admin_note.
+function getSubmissionProof(row: PlaceSubmissionRow) {
+  const note = splitProofNote(row.admin_note);
+  const columnLinks = Array.isArray(row.proof_links)
+    ? row.proof_links.filter((link): link is string => typeof link === "string")
+    : [];
+
+  return { proofLinks: columnLinks.length > 0 ? columnLinks : note.links, adminNote: note.rest };
+}
+
+// Keeps fallback proof lines in admin_note when an admin writes their own note on review.
+function withStoredProof(row: PlaceSubmissionRow, adminNote: string | null) {
+  const { links } = splitProofNote(row.admin_note);
+  return links.length > 0 ? [adminNote, formatProofNote(links)].filter(Boolean).join("\n") : adminNote;
+}
+
 function mapSubmission(row: PlaceSubmissionRow, images: PlaceSubmissionImageRow[]) {
+  const proof = getSubmissionProof(row);
+
   return {
     id: row.id,
     submittedBy: row.submitted_by,
@@ -274,15 +296,33 @@ function mapSubmission(row: PlaceSubmissionRow, images: PlaceSubmissionImageRow[
     nearbyContext: row.nearby_context,
     websiteUrl: row.website_url,
     googleMapsUrl: row.google_maps_url,
+    proofLinks: proof.proofLinks,
     status: row.status,
     rejectionReason: row.rejection_reason,
-    adminNote: row.admin_note,
+    adminNote: proof.adminNote,
     reviewedBy: row.reviewed_by,
     reviewedAt: row.reviewed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     images: images.map(mapSubmissionImage),
   };
+}
+
+// Selects with proof_links, retrying without it while the column has not been added yet.
+async function selectSubmissions(build: (query: any) => any) {
+  const supabase = await getSupabaseAdminClient();
+  const select = (columns: string) => build((supabase.from("place_submissions") as any).select(columns));
+  let { data, error } = await select(`${PLACE_SUBMISSION_COLUMNS}, ${PROOF_LINKS_COLUMN}`);
+
+  if (isMissingColumnError(error, PROOF_LINKS_COLUMN)) {
+    ({ data, error } = await select(PLACE_SUBMISSION_COLUMNS));
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as PlaceSubmissionRow[];
 }
 
 async function loadSubmissionImages(submissionIds: string[]) {
@@ -462,6 +502,7 @@ export async function createPlaceSubmission(
     const goodFor = getJsonStringArray(formData.get("good_for") ?? formData.get("goodFor"), 8);
     const notIdealFor = getJsonStringArray(formData.get("not_ideal_for") ?? formData.get("notIdealFor"), 8);
     const imageFiles = getImageFiles(formData);
+    const proof = normalizeProofLinks(formData.getAll("proof_links"));
 
     if (!name || !category || !address || !city || !description) {
       return response(400, "Name, category, address, city, and description are required.");
@@ -477,6 +518,10 @@ export async function createPlaceSubmission(
 
     if (imageFiles.length < MIN_SUBMISSION_IMAGES || imageFiles.length > MAX_SUBMISSION_IMAGES) {
       return response(400, "Submit at least 1 photo and at most 3 photos.");
+    }
+
+    if (proof.ok === false) {
+      return response(400, proof.error);
     }
 
     const duplicateMatch = await findDuplicatePlaceMatch(name, city);
@@ -547,7 +592,7 @@ export async function createPlaceSubmission(
 
     const supabase = await getSupabaseAdminClient();
     const googleMapsUrl = buildGoogleMapsUrl(name, address);
-    const { error: submissionError } = await (supabase.from("place_submissions") as any).insert({
+    const submissionRow = {
       id: submissionId,
       submitted_by: user.id,
       name,
@@ -573,7 +618,18 @@ export async function createPlaceSubmission(
       google_maps_url: googleMapsUrl,
       status: "pending",
       updated_at: now,
+    };
+    let { error: submissionError } = await (supabase.from("place_submissions") as any).insert({
+      ...submissionRow,
+      [PROOF_LINKS_COLUMN]: proof.links,
     });
+
+    if (isMissingColumnError(submissionError, PROOF_LINKS_COLUMN)) {
+      ({ error: submissionError } = await (supabase.from("place_submissions") as any).insert({
+        ...submissionRow,
+        admin_note: formatProofNote(proof.links),
+      }));
+    }
 
     if (submissionError) {
       throw submissionError;
@@ -607,6 +663,7 @@ export async function createPlaceSubmission(
           status: "pending",
           name,
           city,
+          proofLinks: proof.links,
           images: images.map(mapSubmissionImage),
         },
       },
@@ -636,17 +693,9 @@ export async function getMyPlaceSubmissions(
       return response(401, "Missing or invalid Authorization header.");
     }
 
-    const supabase = await getSupabaseAdminClient();
-    const { data, error } = await (supabase.from("place_submissions") as any)
-      .select(PLACE_SUBMISSION_COLUMNS)
-      .eq("submitted_by", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = (data ?? []) as PlaceSubmissionRow[];
+    const rows = await selectSubmissions((query) =>
+      query.eq("submitted_by", user.id).order("created_at", { ascending: false })
+    );
     const imagesBySubmissionId = await loadSubmissionImages(rows.map((row) => row.id));
 
     return {
@@ -673,16 +722,7 @@ export async function getPendingPlaceSubmissions(
     }
 
     const supabase = await getSupabaseAdminClient();
-    const { data, error } = await (supabase.from("place_submissions") as any)
-      .select(PLACE_SUBMISSION_COLUMNS)
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = (data ?? []) as PlaceSubmissionRow[];
+    const rows = await selectSubmissions((query) => query.eq("status", "pending").order("created_at", { ascending: true }));
     const imagesBySubmissionId = await loadSubmissionImages(rows.map((row) => row.id));
     const userIds = Array.from(new Set(rows.map((row) => row.submitted_by)));
     const profilesByUserId = new Map<string, ProfileRow>();
@@ -729,17 +769,8 @@ export async function getPendingPlaceSubmissions(
 }
 
 async function loadSubmissionOr404(submissionId: string) {
-  const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("place_submissions") as any)
-    .select(PLACE_SUBMISSION_COLUMNS)
-    .eq("id", submissionId)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return (data as PlaceSubmissionRow | null) ?? null;
+  const rows = await selectSubmissions((query) => query.eq("id", submissionId).limit(1));
+  return rows[0] ?? null;
 }
 
 export async function approvePlaceSubmission(
@@ -843,7 +874,7 @@ export async function approvePlaceSubmission(
       .update({
         status: "approved",
         approved_place_id: place.id,
-        admin_note: adminNote,
+        admin_note: withStoredProof(submission, adminNote),
         reviewed_by: admin.user?.id,
         reviewed_at: now,
         updated_at: now,
@@ -939,7 +970,7 @@ export async function rejectPlaceSubmission(
       .update({
         status: "rejected",
         rejection_reason: rejectionReason,
-        admin_note: adminNote,
+        admin_note: withStoredProof(submission, adminNote),
         reviewed_by: admin.user?.id,
         reviewed_at: now,
         updated_at: now,

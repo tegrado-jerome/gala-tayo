@@ -11,6 +11,7 @@ import {
   rejectPlaceSubmission,
   type AdminPlaceSubmission,
 } from '../../utils/placeSubmissionsApi'
+import { getProofSourceLabel, isSafeHttpsUrl } from '../../utils/proofLinks'
 import {
   AdminAccessCheck,
   AdminAccessRequired,
@@ -25,6 +26,33 @@ import {
 
 function buildOpenStreetMapUrl(latitude: number, longitude: number) {
   return `https://www.openstreetmap.org/?mlat=${encodeURIComponent(String(latitude))}&mlon=${encodeURIComponent(String(longitude))}#map=17/${encodeURIComponent(String(latitude))}/${encodeURIComponent(String(longitude))}`
+}
+
+function ProofLinks({ links }: { links: string[] | undefined }) {
+  const safeLinks = (links ?? []).filter(isSafeHttpsUrl)
+
+  return (
+    <AdminField label="Proof people go there">
+      {safeLinks.length > 0 ? (
+        <ul className="grid gap-2">
+          {safeLinks.map((link) => (
+            <li key={link} className="min-w-0">
+              <a href={link} target="_blank" rel="noopener noreferrer nofollow ugc" className="ga-link inline-flex max-w-full items-center gap-1.5 font-semibold">
+                {getProofSourceLabel(link)}
+                <ExternalLink aria-hidden="true" className="shrink-0" />
+              </a>
+              <p className="g-xs g-mut truncate">{link}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="flex flex-wrap items-center gap-2">
+          <Tag tone="warn">No proof links</Tag>
+          <span className="g-mut">Sent before proof links were required. Check it is gala-worthy before approving.</span>
+        </p>
+      )}
+    </AdminField>
+  )
 }
 
 function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
@@ -164,6 +192,8 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
 
                   <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
                     <div className="grid content-start gap-3">
+                      <ProofLinks links={submission.proofLinks} />
+
                       <div className="grid gap-3 sm:grid-cols-2">
                         <AdminField label="Address">
                           <p className="leading-6">{submission.address}</p>

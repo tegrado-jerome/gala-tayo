@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
-import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { LinkSimple } from '@phosphor-icons/react/dist/csr/LinkSimple'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { ImageSquare as ImagePlus } from '@phosphor-icons/react/dist/csr/ImageSquare'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
@@ -13,6 +13,7 @@ import MapView from '../components/MapView'
 import { METRO_MANILA_CENTER, destinations, resolveDestination } from '../data/destinations'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
+import { MAX_PROOF_LINKS, getProofSourceLabel, normalizeProofLink, validateProofLinkSlots, withHttps } from '../utils/proofLinks'
 import {
   IMAGE_UPLOAD_ERROR_MESSAGE,
   isValidImageFile,
@@ -50,22 +51,35 @@ type SearchResult = {
   address?: Record<string, string | undefined>
 }
 
+// No mall or study-spot options: those are not places people travel to on purpose.
 const categoryOptions = [
-  'cafe',
-  'kainan',
-  'mall',
-  'parke',
-  'museum',
-  'heritage',
   'tourist',
+  'parke',
+  'heritage',
+  'museum',
+  'kainan',
+  'cafe',
   'date',
   'barkada',
   'family',
-  'study',
   'chill',
   'nightlife',
   'shopping',
 ]
+
+const galaWorthyChecks = [
+  { title: 'People go here on purpose', hint: 'The kind of spot in TikTok "places to go in…" videos.' },
+  { title: 'Open to visitors and safe', hint: 'Public access, no trespassing, no risky stunts.' },
+  { title: 'More than just a cafe, restaurant or mall', hint: "Famous food is OK if it's worth the trip!" },
+]
+
+const proofPlaceholders = [
+  'https://www.tiktok.com/@…/video/…',
+  'IG, Facebook, YouTube or Reddit post',
+  'Or a tourism or news article',
+]
+
+const emptyProofSlots = () => Array.from({ length: MAX_PROOF_LINKS }, () => '')
 
 function toTitleCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1)
@@ -108,7 +122,7 @@ function formatCoordinates(value: [number, number]) {
 
 const emptyDraft: PlaceDraft = {
   name: '',
-  category: 'cafe',
+  category: 'tourist',
   address: '',
   city: '',
   area: '',
@@ -182,6 +196,9 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false)
+  const [checks, setChecks] = useState<boolean[]>(() => galaWorthyChecks.map(() => false))
+  const [proofSlots, setProofSlots] = useState<string[]>(emptyProofSlots)
+  const [proofErrors, setProofErrors] = useState<string[]>(emptyProofSlots)
   const { showSystemMessage } = useSystemMessage()
 
   const photoPreviews = useMemo(
@@ -323,6 +340,22 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
     }
   }
 
+  const updateProofSlot = (index: number, value: string) => {
+    setProofSlots((current) => current.map((slot, slotIndex) => (slotIndex === index ? value : slot)))
+    setProofErrors((current) => current.map((error, slotIndex) => (slotIndex === index ? '' : error)))
+  }
+
+  // On blur: show the cleaned link (https://, no tracking) or say what is wrong before the person reaches Submit.
+  const checkProofSlot = (index: number) => {
+    const value = proofSlots[index]
+    if (!value.trim()) return
+    const prefixed = withHttps(value)
+    const result = normalizeProofLink(prefixed)
+    const shown = result.ok ? result.url : prefixed
+    if (shown !== value) updateProofSlot(index, shown)
+    setProofErrors((current) => current.map((error, slotIndex) => (slotIndex === index ? (result.ok ? '' : result.error) : error)))
+  }
+
   const removePhotoAt = (index: number) => {
     setSelectedPhotos((current) => current.filter((_, currentIndex) => currentIndex !== index))
   }
@@ -336,6 +369,21 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
 
     if (!session) {
       navigateToPath('/login')
+      return
+    }
+
+    const firstUnchecked = checks.indexOf(false)
+    if (firstUnchecked !== -1) {
+      setErrorMessage('Tick all three gala-worthy checks first.')
+      document.getElementById(`gala-check-${firstUnchecked}`)?.focus()
+      return
+    }
+
+    const proof = validateProofLinkSlots(proofSlots)
+    if (!proof.ok) {
+      setProofErrors(proof.errors)
+      setErrorMessage(proof.message)
+      document.getElementById(`proof-link-${proof.errors.findIndex(Boolean)}`)?.focus()
       return
     }
 
@@ -374,6 +422,10 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
       formData.append('latitude', String(coordinates[0]))
       formData.append('longitude', String(coordinates[1]))
 
+      for (const link of proof.links) {
+        formData.append('proof_links', link)
+      }
+
       for (const photo of preparedPhotos) {
         formData.append('images', photo)
       }
@@ -386,6 +438,9 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
       setDraft(emptyDraft)
       setCoordinates(METRO_MANILA_CENTER)
       setSelectedPhotos([])
+      setChecks(galaWorthyChecks.map(() => false))
+      setProofSlots(emptyProofSlots())
+      setProofErrors(emptyProofSlots())
       setSearchQuery('')
       setSearchResults([])
     } catch (error) {
@@ -404,7 +459,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h1 className="g-h1">Submit a new place</h1>
-              <p className="g-mut mt-1 max-w-[60ch] text-[15px]">Exact pin, a short honest description, and a few real photos. It stays private until an admin approves it.</p>
+              <p className="g-mut mt-1 max-w-[60ch] text-[15px]">Know a spot everyone should go to? Share proof people go there, an exact pin and a few real photos. It stays private until an admin approves it.</p>
             </div>
             <Button variant="soft" size="sm" className="shrink-0 self-start sm:self-auto" onClick={() => navigateToPath(session ? '/submissions' : '/login')}>
               My submissions
@@ -412,7 +467,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
           </div>
           <ul className="mt-5 grid grid-cols-3 gap-2" aria-label="What you need">
             {[
-              { icon: Clock, label: 'Reviewed before it goes live' },
+              { icon: LinkSimple, label: 'Proof people go there' },
               { icon: ImagePlus, label: '1 to 3 real photos' },
               { icon: MapPin, label: 'Exact map pin' },
             ].map(({ icon: Icon, label }) => (
@@ -424,10 +479,34 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
           </ul>
 
           <form className="mt-8 grid gap-8" onSubmit={handleSubmit}>
+            <fieldset className="rounded-[var(--r-4)] bg-[var(--fill)] p-4 sm:p-5">
+              <legend className="sr-only">Is it gala-worthy?</legend>
+              <h2 className="g-h2" aria-hidden="true">Is it gala-worthy?</h2>
+              <p className="g-sm g-mut mt-1">We only list spots people visit on purpose. Tick all three.</p>
+              <div className="mt-3 grid gap-1">
+                {galaWorthyChecks.map((check, index) => (
+                  <label key={check.title} htmlFor={`gala-check-${index}`} className="flex min-h-11 cursor-pointer items-start gap-3 py-2">
+                    <input
+                      id={`gala-check-${index}`}
+                      type="checkbox"
+                      checked={checks[index]}
+                      onChange={(event) => setChecks((current) => current.map((value, checkIndex) => (checkIndex === index ? event.target.checked : value)))}
+                      className="mt-0.5 h-5 w-5 shrink-0"
+                      style={{ accentColor: 'var(--ink)' }}
+                    />
+                    <span className="min-w-0">
+                      <span className="g-sm block font-semibold">{check.title}</span>
+                      <span className="g-xs g-mut block">{check.hint}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <FormSection step={1} title="Basic details" description="Keep it short and searchable.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Place name">
-                  <input value={draft.name} onChange={(event) => updateDraft('name', event.target.value.slice(0, 160))} placeholder="10.25 Cafe" required className="g-input" />
+                  <input value={draft.name} onChange={(event) => updateDraft('name', event.target.value.slice(0, 160))} placeholder="Kawasan Falls" required className="g-input" />
                 </Field>
                 <Field label="Category">
                   <select value={draft.category} onChange={(event) => updateDraft('category', event.target.value)} className="g-input g-select">
@@ -441,7 +520,50 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </div>
             </FormSection>
 
-            <FormSection step={2} title="Pin the spot" description="Search first, then tap the exact entrance or storefront.">
+            <FormSection
+              step={2}
+              title="Show people go there"
+              description="Paste 1 to 3 public links: a TikTok, IG, Facebook, YouTube or Reddit post, or a tourism or news article."
+            >
+              <div className="grid gap-4">
+                {proofSlots.map((slot, index) => {
+                  const error = proofErrors[index]
+                  const checked = slot.trim() && !error ? normalizeProofLink(slot.trim()) : null
+                  const hintId = `proof-link-${index}-hint`
+
+                  return (
+                    <div key={index} className="grid gap-1.5">
+                      <Field label={`Link ${index + 1}`} optional={index > 0}>
+                        <input
+                          id={`proof-link-${index}`}
+                          value={slot}
+                          onChange={(event) => updateProofSlot(index, event.target.value.slice(0, 600))}
+                          onBlur={() => checkProofSlot(index)}
+                          placeholder={proofPlaceholders[index]}
+                          inputMode="url"
+                          autoComplete="off"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          aria-invalid={error ? true : undefined}
+                          aria-describedby={error || checked?.ok ? hintId : undefined}
+                          className="g-input"
+                        />
+                      </Field>
+                      {error ? (
+                        <span id={hintId} className="g-hint is-error">{error}</span>
+                      ) : checked?.ok ? (
+                        <span id={hintId} className="g-hint">
+                          {checked.source === 'article' ? `Article on ${getProofSourceLabel(checked.url)}` : `${getProofSourceLabel(checked.url)} post`}
+                        </span>
+                      ) : null}
+                    </div>
+                  )
+                })}
+                <p className="g-hint">Private accounts, stories and short links like bit.ly can't be checked.</p>
+              </div>
+            </FormSection>
+
+            <FormSection step={3} title="Pin the spot" description="Search first, then tap the exact entrance or storefront.">
               <div className="grid gap-3">
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <div className="relative min-w-0 flex-1">
@@ -496,7 +618,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </div>
             </FormSection>
 
-            <FormSection step={3} title="Where is it" description="Full address and area so it is easy to verify and find.">
+            <FormSection step={4} title="Where is it" description="Full address and area so it is easy to verify and find.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Address" className="sm:col-span-2">
                   <textarea value={draft.address} onChange={(event) => updateDraft('address', event.target.value.slice(0, 500))} rows={3} required className="g-input" />
@@ -524,7 +646,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </div>
             </FormSection>
 
-            <FormSection step={4} title="About the place" description="Write like a helpful caption, not a brochure.">
+            <FormSection step={5} title="About the place" description="Write like a helpful caption, not a brochure.">
               <Field label="Description">
                 <textarea
                   value={draft.description}
@@ -638,7 +760,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </details>
             </section>
 
-            <FormSection step={5} title="Photos" description="One strong cover is enough. Up to three helps reviewers.">
+            <FormSection step={6} title="Photos" description="One strong cover is enough. Up to three helps reviewers.">
               <label className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--r-3)] border-2 border-dashed border-[var(--line)] p-6 text-center transition-colors hover:border-[var(--ink)] focus-within:border-[var(--ink)]">
                 <ImagePlus weight="light" className="h-8 w-8" aria-hidden="true" />
                 <span className="g-h3">{photoPreviews.length > 0 ? 'Change photos' : 'Add photos'}</span>
@@ -697,6 +819,8 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
             <section>
               <p className="g-eyebrow">Before you post</p>
               <ul className="g-sm g-mut mt-3 grid gap-2">
+                <li>Only famous spots people go to on purpose, not just a cafe, restaurant or mall.</li>
+                <li>Add a public post or article that shows people go there.</li>
                 <li>Pin the exact place, not just the street or barangay center.</li>
                 <li>Write a quick practical description people can scan fast.</li>
                 <li>Upload real photos that show the vibe or actual location.</li>
@@ -705,7 +829,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
             <section>
               <p className="g-eyebrow">How approval works</p>
               <ol className="g-sm g-mut mt-3 grid list-decimal gap-2 pl-4">
-                <li>Fill the details and confirm the pin.</li>
+                <li>Fill the details, proof links and pin.</li>
                 <li>Add 1 to 3 photos for review.</li>
                 <li>An admin checks it before it becomes visible.</li>
               </ol>
@@ -713,7 +837,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
             <section>
               <p className="g-eyebrow">What gets saved</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {['Name', 'Category', 'Address', 'City', 'Area', 'Map pin', 'Description', 'Budget', 'Commute', 'Parking', 'Nearby context', 'Photos'].map((item) => (
+                {['Name', 'Category', 'Address', 'City', 'Area', 'Map pin', 'Description', 'Budget', 'Commute', 'Parking', 'Nearby context', 'Proof links', 'Photos'].map((item) => (
                   <Tag key={item}>{item}</Tag>
                 ))}
               </div>
