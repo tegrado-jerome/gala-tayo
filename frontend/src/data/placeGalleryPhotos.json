@@ -2567,6 +2567,40 @@
    "sourceUrl": "https://www.flickr.com/photos/lee_marq/30328195192/"
   }
  ],
+ "crosswinds-tagaytay": [
+  {
+   "url": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-1-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-1-v4-card.webp",
+   "author": "Miguel Aquino",
+   "license": "© Miguel Aquino, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/migsaquino/7377031584/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-2-v4-card.webp",
+   "author": "Brittany Corporation",
+   "license": "© Brittany Corporation, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.brittany.com.ph/location/crosswinds/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-3-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-3-v4-card.webp",
+   "author": "Joel Formales",
+   "license": "© Joel Formales, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/jiformales/5844808499/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-4-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/crosswinds-tagaytay/hd/crosswinds-tagaytay-4-v4-card.webp",
+   "author": "Brittany Corporation",
+   "license": "© Brittany Corporation, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.brittany.com.ph/location/crosswinds/"
+  }
+ ],
  "cuatro-islas-inopacan": [
   {
    "url": "https://media.galatayo.app/places/cuatro-islas-inopacan/hd/cuatro-islas-inopacan-1.webp",
@@ -4685,6 +4719,24 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vietnamese_Stall_in_Legazpi_Sunday_Market,_Makati,_Feb_2026.jpg"
   }
  ],
+ "leslies-tagaytay": [
+  {
+   "url": "https://media.galatayo.app/places/leslies-tagaytay/hd/leslies-tagaytay-1-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/leslies-tagaytay/hd/leslies-tagaytay-1-v4-card.webp",
+   "author": "LMP 2001",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Taal_Volcano_from_Leslie%27s_Tagaytay_2022-10-02.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/leslies-tagaytay/hd/leslies-tagaytay-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/leslies-tagaytay/hd/leslies-tagaytay-2-v4-card.webp",
+   "author": "Francis D",
+   "license": "© Francis D, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/maulller/1748529711/"
+  }
+ ],
  "lignon-hill-legazpi": [
   {
    "url": "https://media.galatayo.app/places/lignon-hill-legazpi/hd/lignon-hill-legazpi-1-v2.webp",
@@ -4975,19 +5027,35 @@
  ],
  "mahogany-market-tagaytay": [
   {
-   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-2-card.webp",
+   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-1-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-1-v4-card.webp",
    "author": "Ralff Nestor Nacor",
    "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tagaytay_Mahogany_Beef_Market,_Cavite,_Jul_2025.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-3-card.webp",
+   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-2-v4-card.webp",
    "author": "Ralff Nestor Nacor",
    "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bulalohan_Stalls_in_Tagaytay_Mahogany_Beef_Market,_Cavite,_Jul_2025.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-3-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-3-v4-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_from_Mahogany_Market,_Tagaytay,_Cavite,_Jul_2025.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-4-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/mahogany-market-tagaytay/hd/mahogany-market-tagaytay-4-v4-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tagaytay_Bulalo_in_Mahogany_Market,_July_2025_(1).jpg"
   }
  ],
@@ -5991,6 +6059,40 @@
    "license": "CC BY-SA 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_De_Baler.JPG"
+  }
+ ],
+ "museo-orlina-tagaytay": [
+  {
+   "url": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-1-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-1-v4-card.webp",
+   "author": "eLjeProks",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0",
+   "sourceUrl": "https://www.flickr.com/photos/sungityabang/23062519185/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-2-v4-card.webp",
+   "author": "kit kat",
+   "license": "© kit kat, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/davanita/23722667455/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-3-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-3-v4-card.webp",
+   "author": "okiaru",
+   "license": "© okiaru, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/trex_okiaru/31065978136/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-4-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/museo-orlina-tagaytay/hd/museo-orlina-tagaytay-4-v4-card.webp",
+   "author": "eLjeProks",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0",
+   "sourceUrl": "https://www.flickr.com/photos/sungityabang/23036474196/"
   }
  ],
  "nacpan-beach-el-nido": [
@@ -8255,6 +8357,48 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_from_Taal_Municipal_Hall,_Batangas,_May_2026.jpg"
+  }
+ ],
+ "taal-vista-hotel-tagaytay": [
+  {
+   "url": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-1-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-1-v4-card.webp",
+   "author": "Ron",
+   "license": "© Ron, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ronrag/15080167873/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-2-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-2-v4-card.webp",
+   "author": "Roel Balingit",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Taal_Vista_Hotel_main_building_rear_view_2.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-3-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-3-v4-card.webp",
+   "author": "Ron",
+   "license": "© Ron, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ronrag/15083239663/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-4-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-4-v4-card.webp",
+   "author": "Taal Vista Hotel",
+   "license": "© Taal Vista Hotel, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.taalvistahotel.com/gallery/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-5-v4.webp",
+   "cardUrl": "https://media.galatayo.app/places/taal-vista-hotel-tagaytay/hd/taal-vista-hotel-tagaytay-5-v4-card.webp",
+   "author": "Roel Balingit",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Taal_Vista_Hotel_Lake_Wing.jpg"
   }
  ],
  "tam-awan-village-baguio": [
