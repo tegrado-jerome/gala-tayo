@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 import { generateJsonFromGroq } from "./groqChatProvider";
@@ -12,7 +12,20 @@ const DEFAULT_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
-const GEMINI_TIMEOUT_MS = 40_000;
+// Gemini 3 models think before writing; at the default level a draft passed 40 s and was aborted.
+const GEMINI_TIMEOUT_MS = 75_000;
+const BUSY_RETRY_MS = 4_000;
+
+/** Low thinking keeps Gemini 3 drafts fast; 2.5 models take a budget instead. */
+function thinkingFor(model: string) {
+  return model.startsWith("gemini-2.5") ? { thinkingBudget: 0 } : { thinkingLevel: ThinkingLevel.LOW };
+}
+
+/** "High demand" (503) and rate limits (429) are usually brief, so the model gets one more try. */
+function isBusy(error: unknown) {
+  const text = error instanceof Error ? error.message : String(error);
+  return /(503|429)|high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED/i.test(text);
+}
 
 function geminiModels(): string[] {
   const configured = (process.env.GALA_TODAY_GEMINI_MODELS ?? "")
@@ -42,23 +55,32 @@ export async function writeGalaTodayDraft(
   if (apiKey) {
     const ai = new GoogleGenAI({ apiKey });
     for (const model of geminiModels()) {
-      try {
-        const response = await ai.models.generateContent({
-          model: `models/${model}`,
-          contents: userMessage,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature,
-            maxOutputTokens: 1600,
-            responseMimeType: "application/json",
-            abortSignal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-          },
-        });
-        const text = response.text?.trim();
-        if (text) return { text, model };
-        warn(`Gala Today: ${model} returned no text`);
-      } catch (error) {
-        warn(`Gala Today: ${model} failed (${error instanceof Error ? error.message.slice(0, 120) : "error"})`);
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const response = await ai.models.generateContent({
+            model: `models/${model}`,
+            contents: userMessage,
+            config: {
+              systemInstruction: systemPrompt,
+              temperature,
+              maxOutputTokens: 4096,
+              thinkingConfig: thinkingFor(model),
+              responseMimeType: "application/json",
+              abortSignal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+            },
+          });
+          const text = response.text?.trim();
+          if (text) return { text, model };
+          warn(`Gala Today: ${model} returned no text`);
+          break;
+        } catch (error) {
+          warn(`Gala Today: ${model} failed (${error instanceof Error ? error.message.slice(0, 120) : "error"})`);
+          if (attempt === 0 && isBusy(error)) {
+            await new Promise((resolve) => setTimeout(resolve, BUSY_RETRY_MS));
+            continue;
+          }
+          break;
+        }
       }
     }
   }
