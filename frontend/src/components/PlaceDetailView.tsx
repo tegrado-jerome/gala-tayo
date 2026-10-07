@@ -660,6 +660,10 @@ function PlaceDetailView({
     ...hdPhotos.map((photo) => photo.url),
     ...(placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name)),
   ])
+  const creditedPhotoUrls = new Set(hdPhotos.map((photo) => photo.url))
+  const leadCredit = hdPhotos.find((photo) => photo.url === galleryPhotos[0])?.author ?? null
+  // Until the manifest loads, the lead HD photo isn't known to be credited yet.
+  const uncreditedPhotos = hdGallery === null ? [] : galleryPhotos.filter((url) => !creditedPhotoUrls.has(url))
   const [allPhotosIndex, setAllPhotosIndex] = useState<number | null>(null)
   const closeAllPhotos = useCallback(() => setAllPhotosIndex(null), [])
   const approvedImageCount = place.approvedImageCount ?? 0
@@ -1684,6 +1688,11 @@ function PlaceDetailView({
     setIsPlaceConcernOpen(true)
   }
 
+  const handleOpenPhotoConcern = () => {
+    setPlaceConcernReason('photo_or_copyright')
+    handleOpenPlaceConcern()
+  }
+
   const handleSubmitPlaceConcern = async () => {
     if (isPlaceConcernSubmitting) {
       return
@@ -2321,6 +2330,7 @@ function PlaceDetailView({
         // Nearly every place with HD photos has three or more; keep their slots while the manifest loads so the hero doesn't resize.
         reservedTiles={hdGallery === null ? 3 : 0}
         placeName={place.name}
+        leadCredit={leadCredit}
         onBroken={markPhotoBroken}
         onOpen={setAllPhotosIndex}
         showAddPhotoAction={showAddPhotoAction}
@@ -2608,7 +2618,14 @@ function PlaceDetailView({
             </p>
           ) : null}
 
-          {hdPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} /> : null}
+          <p className="g-xs g-mut mt-6">
+            Prices, hours and access can change, and weather can close a spot fast. Check the official page and PAGASA or PHIVOLCS advisories before you go. GalaTayo is not affiliated with this place.{' '}
+            <InternalLink href="/disclaimer" className="underline underline-offset-2">
+              Disclaimer
+            </InternalLink>
+          </p>
+
+          {galleryPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} otherPhotos={uncreditedPhotos} onReport={handleOpenPhotoConcern} /> : null}
 
           <div className="mt-6 border-t border-[var(--line)] pt-2">
             <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
@@ -2685,7 +2702,7 @@ function PlaceDetailView({
           startIndex={allPhotosIndex}
           onBroken={markPhotoBroken}
           onClose={closeAllPhotos}
-          credits={Object.fromEntries(hdPhotos.map((photo) => [photo.url, `${photo.author} · ${photo.license}`]))}
+          credits={Object.fromEntries(hdPhotos.map((photo) => [photo.url, { label: `${photo.author} · ${photo.license}`, sourceUrl: photo.sourceUrl }]))}
           showAddPhotoAction={showAddPhotoAction}
           onContribute={() => {
             closeAllPhotos()

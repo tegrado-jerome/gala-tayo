@@ -481,7 +481,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           ) : null}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
-            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ni Tara AI. Edit anything bago i-save.</p>
+            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ni Tara AI, so it can be wrong. Check prices, hours and safety, and edit anything bago i-save.</p>
             <Button variant="text" size="sm" onClick={startOver}>
               Start over
             </Button>

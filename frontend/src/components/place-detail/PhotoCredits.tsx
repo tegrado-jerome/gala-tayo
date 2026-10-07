@@ -1,14 +1,7 @@
 import InternalLink from '../InternalLink'
 import type { PlaceGalleryPhoto } from '../../utils/placeGalleryPhotos'
-
-const removalEmail = 'officialgalatayo@gmail.com'
-
-function removalHref(photo: PlaceGalleryPhoto) {
-  const subject = `Photo removal request: ${photo.author}`
-  const page = typeof window === 'undefined' ? '' : window.location.href
-  const body = `Please remove or re-credit this photo.\n\nPhoto: ${photo.url}\nSource: ${photo.sourceUrl}\nPage: ${page}\n`
-  return `mailto:${removalEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-}
+import { PHOTO_CREDITS_ID } from './PlaceGallery'
+import { removalRequestHref } from './photoRemoval'
 
 function sourceName(sourceUrl: string) {
   try {
@@ -24,12 +17,12 @@ function sourceName(sourceUrl: string) {
   }
 }
 
-/** Author, licence/source and a takedown route for each credited photo. */
-function PhotoCredits({ photos }: { photos: PlaceGalleryPhoto[] }) {
+/** Author, licence/source and a takedown route for every photo on the page, credited or not. */
+function PhotoCredits({ photos, otherPhotos, onReport }: { photos: PlaceGalleryPhoto[]; otherPhotos: string[]; onReport: () => void }) {
   return (
-    <details className="group mt-8 text-[13px] text-[var(--ink-3)]">
+    <details id={PHOTO_CREDITS_ID} className="group mt-8 scroll-mt-24 text-[13px] text-[var(--ink-3)]">
       <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-semibold text-[var(--ink-2)] underline underline-offset-2 [&::-webkit-details-marker]:hidden">
-        Photo credits ({photos.length})
+        Photo credits and removal ({photos.length + otherPhotos.length})
       </summary>
       <ol className="mt-1 flex flex-col gap-1">
         {photos.map((photo, index) => (
@@ -48,16 +41,28 @@ function PhotoCredits({ photos }: { photos: PlaceGalleryPhoto[] }) {
             )}
             {sourceName(photo.sourceUrl) ? ` · via ${sourceName(photo.sourceUrl)}` : null}
             {' · '}
-            <a href={removalHref(photo)} className="underline underline-offset-2">
+            <a href={removalRequestHref(photo.url, photo.author, photo.sourceUrl)} className="underline underline-offset-2">
+              Request removal
+            </a>
+          </li>
+        ))}
+        {otherPhotos.map((url, index) => (
+          <li key={url}>
+            {photos.length + index + 1}. Added to GalaTayo, source not on file{' · '}
+            <a href={removalRequestHref(url, null)} className="underline underline-offset-2">
               Request removal
             </a>
           </li>
         ))}
       </ol>
       <p className="mt-2">
-        Is one of these your photo?{' '}
-        <InternalLink href="/feedback" className="underline underline-offset-2">
-          Ask us to credit it differently or take it down
+        Is one of these yours? We reply within 48 hours.{' '}
+        <button type="button" onClick={onReport} className="min-h-11 font-semibold underline underline-offset-2">
+          Report a photo
+        </button>{' '}
+        or read our{' '}
+        <InternalLink href="/copyright" className="underline underline-offset-2">
+          Copyright and Takedown Policy
         </InternalLink>
         .
       </p>

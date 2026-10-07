@@ -6,8 +6,8 @@ import { Info } from '@phosphor-icons/react/dist/csr/Info'
 import { Button, cx } from '../ui'
 import { uniqueList } from './helpers'
 import { resizedMediaUrl } from '../../data/r2Config'
+import { removalRequestHref } from './photoRemoval'
 
-const IMAGE_SOURCE_NOTE = 'Images come from third-party sources.'
 
 /** Every usable photo, with broken URLs dropped once they fail to load. */
 export function usePhotoList(imageUrls: Array<string | null | undefined>) {
@@ -32,29 +32,31 @@ export function usePhotoList(imageUrls: Array<string | null | undefined>) {
   return { photos, markPhotoBroken }
 }
 
-function ImageSourceInfo() {
-  const [isOpen, setIsOpen] = useState(false)
+export const PHOTO_CREDITS_ID = 'photo-credits'
+
+/** Opens the photo credits list at the bottom of the place page and scrolls to it. */
+export function openPhotoCredits() {
+  const credits = document.getElementById(PHOTO_CREDITS_ID)
+  if (credits instanceof HTMLDetailsElement) credits.open = true
+  credits?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
+}
+
+/** The lead photo's credit, always visible on the photo, linking to the full credits and removal list. */
+function PhotoCreditChip({ credit }: { credit: string | null }) {
   return (
-    <div className="flex items-center">
-      <button
-        type="button"
-        title={IMAGE_SOURCE_NOTE}
-        aria-label="About these images"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        onBlur={() => setIsOpen(false)}
-        className="pd-hit"
-      >
-        <span className="pd-round is-sm" aria-hidden="true">
-          <Info weight="light" />
-        </span>
-      </button>
-      {isOpen ? (
-        <span role="status" className="pd-pg-note">
-          {IMAGE_SOURCE_NOTE}
-        </span>
-      ) : null}
-    </div>
+    <a
+      href={`#${PHOTO_CREDITS_ID}`}
+      className="pd-hit pd-pg-credit"
+      onClick={(event) => {
+        event.preventDefault()
+        openPhotoCredits()
+      }}
+    >
+      <span>
+        <Info weight="bold" aria-hidden="true" />
+        <span className="truncate">{credit ? `Photo: ${credit}` : 'Photo info'}</span>
+      </span>
+    </a>
   )
 }
 
@@ -69,10 +71,12 @@ type PhotoGridProps = {
   onContribute: () => void
   /** Round back / share / save buttons laid over the photos on phones. */
   overlay?: ReactNode
+  /** Author of the first photo, shown on it. */
+  leadCredit?: string | null
 }
 
 /** Editorial photo grid: one big photo and two small ones, with an "All photos" pill. Full-bleed on phones. */
-export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOpen, showAddPhotoAction, onContribute, overlay }: PhotoGridProps) {
+export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOpen, showAddPhotoAction, onContribute, overlay, leadCredit = null }: PhotoGridProps) {
   const shown = photos.slice(0, 3)
   const tileCount = shown.length > 0 ? Math.min(3, Math.max(shown.length, reservedTiles)) : 0
 
@@ -119,7 +123,7 @@ export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOp
       {overlay ? <div className="pd-pg-top">{overlay}</div> : null}
       {shown.length > 0 ? (
         <div className="pd-pg-tools">
-          <ImageSourceInfo />
+          <PhotoCreditChip credit={leadCredit} />
           {showAddPhotoAction ? (
             <button type="button" onClick={onContribute} className="pd-hit" aria-label="Add a photo">
               <span className="pd-round is-sm" aria-hidden="true">
@@ -155,8 +159,8 @@ export function AllPhotos({
   photos: string[]
   placeName: string
   startIndex: number
-  /** Photo URL → "Author · Licence" line shown under that photo. */
-  credits?: Record<string, string>
+  /** Photo URL → "Author · Licence" line and the original's link, shown under that photo. */
+  credits?: Record<string, { label: string; sourceUrl: string }>
   onBroken: (url: string) => void
   onClose: () => void
   showAddPhotoAction: boolean
@@ -213,11 +217,31 @@ export function AllPhotos({
             return (
               <figure key={photo} data-photo-index={index} className={cx(isWide && 'is-wide')}>
                 <img src={resizedMediaUrl(photo, 'hero')} width={1280} height={960} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
-                {credits?.[photo] ? <figcaption className="g-xs g-mut mt-1">Photo: {credits[photo]}</figcaption> : null}
+                <figcaption className="g-xs g-mut mt-1">
+                  {credits?.[photo] ? (
+                    <>
+                      Photo:{' '}
+                      <a href={credits[photo].sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                        {credits[photo].label}
+                      </a>
+                      {' · '}
+                    </>
+                  ) : (
+                    'Photo added to GalaTayo, source not on file. '
+                  )}
+                  <a href={removalRequestHref(photo, credits?.[photo]?.label ?? null, credits?.[photo]?.sourceUrl)} className="underline underline-offset-2">
+                    Request removal
+                  </a>
+                </figcaption>
               </figure>
             )
           })}
-          <p className="g-xs g-fnt col-span-2 mt-2 text-center">{IMAGE_SOURCE_NOTE}</p>
+          <p className="g-xs g-fnt col-span-2 mt-2 text-center">
+            Some photos belong to other people and are shown with credit.{' '}
+            <a href="/copyright" className="underline underline-offset-2">
+              Copyright and takedown
+            </a>
+          </p>
         </div>
       </div>
     </div>

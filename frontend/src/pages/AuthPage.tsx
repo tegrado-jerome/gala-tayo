@@ -538,7 +538,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           <button type="button" onClick={() => navigateToPath('/privacy')}>
             Privacy Policy
           </button>
-          .
+          , and confirm you are 13 or older.
         </p>
       ) : null}
     </AuthCard>

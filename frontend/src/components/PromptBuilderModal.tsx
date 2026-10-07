@@ -264,6 +264,7 @@ export default function PromptBuilderModal({ isOpen, initialState, onClose }: Pr
                     <h3 className="g-h3 mt-4">Search manually</h3>
                     <p className="g-sm g-mut mt-0.5">Use the keyword across your social apps.</p>
                     <ExternalLinks links={searchLinks} />
+                    <p className="g-xs g-fnt mt-2">These names and logos belong to their owners. GalaTayo is not affiliated with them.</p>
 
                     <Button variant="text" block className="mt-3" onClick={handleReset}>
                       <RotateCcw aria-hidden="true" />

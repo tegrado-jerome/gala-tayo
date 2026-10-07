@@ -5,6 +5,7 @@ import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import InternalLink from '../components/InternalLink'
+import LegalFooter from '../components/navigation/LegalFooter'
 import SeoHead from '../components/SeoHead'
 import { Button, Page } from '../components/ui'
 import { getSiteOrigin } from '../utils/seo'
@@ -47,7 +48,7 @@ const curationStandards: Array<{ title: string; body: string }> = [
   },
   {
     title: 'Credited photos',
-    body: "HD photos list their author, licence and source, such as Wikimedia Commons, on each place page. If one is yours, tell us through Feedback and we'll fix the credit or take it down.",
+    body: "Photos list their author, licence or source, with a link to the original, on each place page. If one is yours, tap Request removal next to its credit and we'll fix the credit or take it down within 48 hours.",
   },
 ]
 
@@ -146,6 +147,7 @@ function AboutPage() {
             Saan tayo?
           </Button>
         </div>
+        <LegalFooter />
       </article>
     </Page>
   )

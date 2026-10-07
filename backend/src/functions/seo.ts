@@ -151,6 +151,9 @@ function buildSitemapEntries(args: {
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/privacy", priority: "0.4", changefreq: "yearly" },
     { path: "/terms", priority: "0.4", changefreq: "yearly" },
+    { path: "/cookies", priority: "0.3", changefreq: "yearly" },
+    { path: "/copyright", priority: "0.3", changefreq: "yearly" },
+    { path: "/disclaimer", priority: "0.3", changefreq: "yearly" },
   ]
 
   const areaEntries: SitemapEntry[] = areas

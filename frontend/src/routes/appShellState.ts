@@ -1,4 +1,5 @@
 import { shouldShowMobileBottomNav, getNoindexForPath } from '../utils/routeGuards'
+import { legalPages } from '../data/legalPages'
 import { parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath } from '../utils/routes'
 
 export function getAppShellState(pathname: string, search: string) {
@@ -12,8 +13,7 @@ export function getAppShellState(pathname: string, search: string) {
     !(pathname === '/' || pathname === '') &&
     !((pathname === '/places' || pathname === '/places/')) &&
     !((pathname === '/about' || pathname === '/about/')) &&
-    !((pathname === '/terms' || pathname === '/terms/')) &&
-    !((pathname === '/privacy' || pathname === '/privacy/'))
+    !legalPages.some((page) => pathname === page.href || pathname === `${page.href}/`)
 
   return {
     showMobileBottomNav,

@@ -180,7 +180,7 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
               {post.topic.source ? ` (${post.topic.source})` : ''}.{' '}
             </>
           ) : null}
-          Written with AI, checked by an AI editor and our rules, from our own place pages. Every pick is a real gala-worthy place on GalaTayo; prices are starting budgets from each place's page.
+          Written with AI, checked by an AI editor and our rules, from our own place pages. Every pick is a real gala-worthy place on GalaTayo; prices are starting budgets from each place's page and can change, so check before you go.
         </p>
       </article>
 

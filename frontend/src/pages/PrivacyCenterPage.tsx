@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { Cookie } from '@phosphor-icons/react/dist/csr/Cookie'
 import { EnvelopeSimple } from '@phosphor-icons/react/dist/csr/EnvelopeSimple'
 import { FileText } from '@phosphor-icons/react/dist/csr/FileText'
 import { Scales } from '@phosphor-icons/react/dist/csr/Scales'
 import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { Trash } from '@phosphor-icons/react/dist/csr/Trash'
+import LegalFooter from '../components/navigation/LegalFooter'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
 import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
@@ -209,7 +211,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
       <p className="g-mut mt-1 text-[15px]">
         {activeRequestCount > 0
           ? `${activeRequestCount} active request${activeRequestCount === 1 ? '' : 's'}${latestRequest ? `, latest is ${privacyRequestLabels[latestRequest.requestType]}.` : '.'}`
-          : 'Ask for your data, fix it, or delete it. We reply by email.'}
+          : 'Ask for your data, fix it, or delete it. We reply by email within 15 days.'}
       </p>
 
       <section className="me-sec">
@@ -326,6 +328,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
           <MeRow icon={EnvelopeSimple} title="Email us" sub={contactEmail} href={`mailto:${contactEmail}`} />
           <MeRow icon={Scales} title="Terms of service" href="/terms" />
           <MeRow icon={ShieldCheck} title="Privacy policy" href="/privacy" />
+          <MeRow icon={Cookie} title="Cookie choices" sub="Turn analytics on or off" href="/cookies" />
         </div>
       </section>
 
@@ -397,6 +400,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
           </form>
         ) : null}
       </section>
+      <LegalFooter />
     </Page>
   )
 }

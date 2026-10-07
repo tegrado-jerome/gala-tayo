@@ -127,7 +127,18 @@ function initializeAnalytics(): Promise<void> {
   return analyticsInitializationPromise
 }
 
+/** GA's documented opt-out flag: once set, the loaded gtag.js stops sending anything, including automatic events. */
+function setAnalyticsDisabled(disabled: boolean) {
+  if (!MEASUREMENT_ID || typeof window === 'undefined') return
+  ;(window as unknown as Record<string, unknown>)[`ga-disable-${MEASUREMENT_ID}`] = disabled
+}
+
+function disableAnalytics() {
+  setAnalyticsDisabled(true)
+}
+
 function reinitializeAnalytics() {
+  setAnalyticsDisabled(false)
   analyticsInitializationPromise = null
   lastPageViewSignature = ''
   return initializeAnalytics()
@@ -284,6 +295,7 @@ function trackOnboardingCompleted({ source = 'onboarding', method }: AuthComplet
 }
 
 export {
+  disableAnalytics,
   initializeAnalytics,
   reinitializeAnalytics,
   trackAskAiChatbotUsed,
