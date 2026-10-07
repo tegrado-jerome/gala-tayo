@@ -34,6 +34,7 @@ export type PlaceSubmission = {
   nearbyContext: string | null
   websiteUrl: string | null
   googleMapsUrl: string | null
+  proofLinks: string[]
   status: 'pending' | 'approved' | 'rejected' | string
   rejectionReason: string | null
   adminNote: string | null
@@ -76,7 +77,7 @@ export async function submitPlaceSubmission(formData: FormData, session: Session
     60000,
   )
 
-  return readJsonResponse<{ message: string; submission: { id: string; status: string; name: string; city: string; images: PlaceSubmissionImage[] } }>(response)
+  return readJsonResponse<{ message: string; submission: { id: string; status: string; name: string; city: string; proofLinks: string[]; images: PlaceSubmissionImage[] } }>(response)
 }
 
 export async function getMyPlaceSubmissions(session: Session) {
