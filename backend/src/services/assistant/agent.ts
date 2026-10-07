@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { NormalizedPlace } from "../../domain/places";
+import { parseQueryIntent, type VibeId } from "../../domain/queryIntent";
 import { classifyAskAiScope } from "../../functions/askAiStrictPgGuard";
 import { manilaToday } from "../galaPlanDraftPlanner";
 import { buildChips, buildItinerary, buildMap, buildWeather, fallbackText, mentionedPlaces, sanitizeAnswer, selectCards } from "./compose";
@@ -83,7 +84,10 @@ export function fallbackSearchArgs(message: string, memory: AssistantMemory): Re
 const PLAN_WORDS = /\b(itinerary|day plan|plan|schedule|whole day|buong araw|\d+\s*days|weekend trip|weekend getaway|day trip|family day|for a day)\b|\bweekend\s*[?!.]*$/i;
 const WEATHER_WORDS = /\b(umuulan|maulan|ulan|rain|raining|rainy|bagyo|storm|typhoon|weather|panahon)\b/i;
 const NEAR_WORDS = /\b(near|nearby|malapit|around|katabi|beside)\b/i;
-const GREETING = /^\s*(hi|hello|hey|yo|kumusta|kamusta|musta|good (morning|afternoon|evening)|magandang (umaga|hapon|gabi))\b/i;
+const FACT_WORDS = /\b(open|opens|closed?|hours?|bukas ba|sarado|oras|magkano|how much|price|presyo|entrance|fee|bayad|ticket|paano pumunta|how to get|parking|commute)\b/i;
+const ITINERARY_WORDS = /\b(itinerary|plan|schedule|whole day|buong araw|\d+\s*days)\b/i;
+const PLACE_KINDS = new Set<VibeId>(["beach", "waterfall", "mountain", "island", "hot-spring", "cave"]);
+const GREETING =/^\s*(hi|hello|hey|yo|kumusta|kamusta|musta|good (morning|afternoon|evening)|magandang (umaga|hapon|gabi))\b/i;
 
 export type ToolPlan = Array<{ name: string; args: Record<string, unknown> }>;
 
@@ -104,7 +108,11 @@ export function planTools(message: string, memory: AssistantMemory, places: Norm
   const plan: ToolPlan = [];
   const near = Boolean(named) && NEAR_WORDS.test(message);
   if (named) plan.push(near ? { name: "nearby_places", args: { slug: named.slug, radius_km: 2 } } : { name: "get_place", args: { slug: named.slug } });
-  if (PLAN_WORDS.test(message)) {
+  // "Fort Santiago open ba, magkano?" is about that place: its own facts, not a list of places with similar names.
+  if (named && !near && FACT_WORDS.test(message)) return plan;
+  // "Beach day trip near Manila" asks for beaches; only an itinerary ask gets a timed plan.
+  const kindAsk = parseQueryIntent(message, places).vibes.some((vibe) => PLACE_KINDS.has(vibe)) && !ITINERARY_WORDS.test(message);
+  if (PLAN_WORDS.test(message) && !kindAsk) {
     const request = memory.area && !message.toLowerCase().includes(memory.area.toLowerCase()) ? `${message} (${memory.area})` : message;
     plan.push({ name: "plan_day", args: { request } });
   } else if (!near) {

@@ -306,6 +306,8 @@ export type GalaPlanAiDraft = {
   group_size: number
   /** The budget per person read from the request, when it named one. */
   budget_per_head?: number | null
+  /** Per-head cost of meals the stops don't price (a food street, a meal no listed place covers). */
+  meal_estimate_per_head?: number
   /** Tara's notes on what changed from the request: a stop outside the asked area, a kind of stop GalaTayo can't fill. */
   notes?: string[]
   stops: Array<{

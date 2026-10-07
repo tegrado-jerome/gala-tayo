@@ -1,4 +1,5 @@
-// Checks that keep answers to facts we hold: prices must come from the user or our place data, and we hold no opening hours.
+// Checks that keep answers to facts we hold: prices must come from the user or our place data, and hours only
+// from what a place's own data states ("opens 6 AM" in its best time to visit).
 
 const PRICE_PATTERN = /(?:₱|php\s?|p(?=\d))\s?(\d[\d,]*(?:\.\d+)?)(?:\s?k\b)?|(\d[\d,]*)\s?(?:pesos|php)\b/gi;
 
@@ -36,4 +37,18 @@ const HOURS_PATTERN = /\b(open(?:s|ing)?|close[sd]?|closing|bukas|sarado|hours?)
 
 export function claimsHours(text: string): boolean {
   return HOURS_PATTERN.test(text);
+}
+
+const CLOCK_PATTERN = /\b(\d{1,2})(?::(\d{2}))?\s?(am|pm|nn|a\.m\.|p\.m\.)/gi;
+
+function clockTimes(text: string): string[] {
+  return [...text.matchAll(CLOCK_PATTERN)].map((match) => `${Number(match[1])}:${match[2] ?? "00"}${match[3][0].toLowerCase() === "p" ? "pm" : match[3][0].toLowerCase() === "n" ? "pm" : "am"}`);
+}
+
+/** True when every time a sentence gives appears in the referenced places' own data. */
+export function hoursBacked(sentence: string, places: Array<{ best_time_to_visit: string | null; faqs: Array<{ question: string; answer: string }> }>): boolean {
+  const times = clockTimes(sentence);
+  if (times.length === 0) return false;
+  const known = new Set(places.flatMap((place) => clockTimes([place.best_time_to_visit ?? "", ...place.faqs.map((faq) => faq.answer)].join(" "))));
+  return times.every((time) => known.has(time));
 }

@@ -1,15 +1,20 @@
+import galaScores from "../../data/galaScores.json";
 import type { NormalizedPlace } from "../../domain/places";
+import { FIELD_WEIGHT, isIndoorPlace, parseQueryIntent, termField, vibeScore, type VibeId } from "../../domain/queryIntent";
+import { detectAliasedCities } from "../../utils/areaAliases";
 import { isGalaWorthySlug } from "../../utils/galaWorthy";
+import { isMetroManilaDestination, resolveDestination } from "../../utils/phDestinations";
 import { resolveAreaSlug } from "../../utils/seoPlaces";
 import {
   buildFallbackDraft,
   detectLocationIntent,
   getPlanSunset,
   hasLocation,
+  isNightFriendly,
   matchesLocation,
-  placesForArea,
   scheduleStops,
   selectCandidates,
+  servesMeal,
   wantsSunset,
 } from "../galaPlanDraftPlanner";
 import type { ToolDeclaration } from "./providers/types";
@@ -40,16 +45,9 @@ export function newLedger(): ToolLedger {
 }
 
 const CATEGORIES = ["Activity", "Cafe", "Cinema", "Food", "Heritage", "Hotel", "Mall", "Museum", "Nightlife", "Park"];
-const INDOOR_CATEGORIES = new Set(["Cafe", "Cinema", "Food", "Hotel", "Mall", "Museum", "Nightlife"]);
-const OUTDOOR_CATEGORIES = new Set(["Park"]);
 
 /** Whether a place works in the rain: our own "Rainy Day" tag first, then the category. Null when unsure. */
-export function isIndoor(place: NormalizedPlace): boolean | null {
-  if (place.good_for.some((tag) => /rainy day|indoor/i.test(tag)) || place.tags.some((tag) => /indoor|aircon/i.test(tag))) return true;
-  if (INDOOR_CATEGORIES.has(place.category)) return true;
-  if (OUTDOOR_CATEGORIES.has(place.category) || /beach|island|falls|lagoon|hike|trail|terraces|peak|mount/i.test(`${place.name} ${place.tags.join(" ")}`)) return false;
-  return null;
-}
+export const isIndoor = isIndoorPlace;
 
 export function distanceKm(a: { latitude: number | null; longitude: number | null }, b: { latitude: number | null; longitude: number | null }) {
   if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) return null;
@@ -185,7 +183,7 @@ export function travelMode(km: number) {
   return "flight, or a ferry for islands";
 }
 
-function centre(places: NormalizedPlace[]) {
+function centreOf(places: NormalizedPlace[]) {
   const mapped = places.filter((place) => place.latitude != null && place.longitude != null);
   if (mapped.length === 0) return null;
   const median = (values: number[]) => values.sort((a, b) => a - b)[Math.floor(values.length / 2)];
@@ -215,13 +213,40 @@ export function queryTokens(query: string) {
     .filter((word) => word.length >= 4 && !QUERY_FILLER.has(word));
 }
 
-/** How strongly a place matches the words of the query: its name counts most, then tags, then its description. */
-export function keywordScore(place: NormalizedPlace, tokens: string[]) {
-  if (tokens.length === 0) return 0;
-  const name = place.name.toLowerCase();
-  const tags = [...place.search_terms, ...place.tags, ...place.good_for, place.category].join(" ").toLowerCase();
-  const about = (place.description ?? "").toLowerCase();
-  return tokens.reduce((score, token) => score + (name.includes(token) ? 3 : tags.includes(token) ? 2 : about.includes(token) ? 1 : 0), 0);
+const GALA_SCORES: Record<string, number> = galaScores;
+
+// Vibes that only rank: a view or a sunset is a plus. Every other vibe must fit: a beach ask shows beaches,
+// a "kainan" ask shows eateries, "with kids" never shows a bar.
+const RANKING_VIBES = new Set<VibeId>(["view", "sunset"]);
+// Time-of-day and filler words in chat asks that say when, not what.
+const ASK_FILLER = new Set(
+  "night gabi evening tonight morning umaga hapon afternoon tanghali noon later open bukas sarado ngayon magkano entrance fee price presyo hours oras para kasi sana yata pala kaya muna nalang nlang huwag wala meron mayroon with without".split(" ")
+);
+const NIGHT_ASK = /\b(night|gabi|evening|tonight|mamayang gabi|after work|after office|dinner|hapunan)\b/i;
+const THIN_AREA = 4;
+
+/** Places that can't be visited at night: museums, heritage sites and parks without an evening draw, breakfast spots. */
+function closedAtNight(place: NormalizedPlace) {
+  if (place.category === "Food") return !servesMeal(place, "dinner");
+  return ["Museum", "Heritage", "Park"].includes(place.category) && !isNightFriendly(place);
+}
+
+/** Words of the area the ask names ("bgc", "makati"): a filter, not something to find in a place's data. */
+function areaWords(text: string, places: NormalizedPlace[]) {
+  const intent = detectLocationIntent(places, text);
+  const { aliases } = detectAliasedCities(text);
+  return new Set([...intent.cities, ...aliases].flatMap((name) => name.toLowerCase().split(/[^a-z0-9ñ]+/)).filter(Boolean));
+}
+
+/** How a place fits the words of an ask: null when it misses a required word, else a score (name beats tags beats description). */
+export function askScore(place: NormalizedPlace, terms: string[][]): number | null {
+  let score = 0;
+  for (const alternatives of terms) {
+    const field = termField(place, alternatives);
+    if (!field) return null;
+    score += FIELD_WEIGHT[field];
+  }
+  return score;
 }
 
 function searchPlaces(args: Record<string, unknown>, context: ToolContext, ledger: ToolLedger) {
@@ -229,54 +254,123 @@ function searchPlaces(args: Record<string, unknown>, context: ToolContext, ledge
   const area = str(args.area);
   const vibe = str(args.vibe, 40);
   const category = CATEGORIES.includes(String(args.category)) ? String(args.category) : null;
-  const budget = num(args.budget_max, 0, 200000);
   const indoor = bool(args.indoor);
   const places = visiblePlaces(context.places);
   const locationText = area ?? query;
   const intent = detectLocationIntent(places, locationText);
   const named = hasLocation(intent);
-  const text = [query, vibe, category, indoor ? "indoor rainy day" : null].filter(Boolean).join(" ");
+
+  const ask = parseQueryIntent([query, vibe].filter(Boolean).join(" "), places);
+  // "Libre" means free, whatever budget was said earlier.
+  const budget = ask.vibes.includes("free") ? 0 : num(args.budget_max, 0, 200000);
+  const required = ask.vibes.filter((id) => !RANKING_VIBES.has(id) && id !== "free");
+  if (indoor && !required.includes("indoor")) required.push("indoor");
+  const ranking = ask.vibes.filter((id) => RANKING_VIBES.has(id));
+  const night = NIGHT_ASK.test(query);
+  // Only words some place is actually known by count ("sisig", "lagoon"); chat filler and the area itself don't.
+  const where = areaWords(locationText, places);
+  const known = (alternatives: string[]) => places.some((place) => ["name", "tags", "location"].includes(termField(place, alternatives) ?? ""));
+  const asked = ask.terms.filter(([word]) => !where.has(word) && !ASK_FILLER.has(word) && !QUERY_FILLER.has(word));
+  const terms = asked.filter(known);
+  // "xylophone in Makati": a thing no place is known by. Said plainly, with the area's best as alternatives.
+  const unlisted = terms.length === 0 && required.length === 0 && !category ? asked.map(([word]) => word) : [];
+
   // With a budget, only places whose price we know count: "unknown" must not pass as cheap.
   const withinBudget = (place: NormalizedPlace) => budget === null || (place.budget_min !== null && place.budget_min <= budget);
-  const fits = (place: NormalizedPlace) =>
-    (!category || place.category === category) &&
-    (!indoor || isIndoor(place) !== false) &&
-    withinBudget(place);
+  const fitsKind = (place: NormalizedPlace) =>
+    (!category || place.category === category) && required.every((id) => vibeScore(place, id) > 0) && (!night || !closedAtNight(place));
+  const fits = (place: NormalizedPlace) => fitsKind(place) && withinBudget(place);
+  const isMetro = (place: NormalizedPlace) => isMetroManilaDestination(resolveDestination(place.city, place.area));
+  // With no area named, Metro Manila comes first: most outings start there.
+  const homeBonus = (place: NormalizedPlace) => (!named && !intent.nearManila && isMetro(place) ? 4 : 0);
+  const rank = (place: NormalizedPlace) => {
+    const words = askScore(place, terms);
+    if (words === null) return null;
+    return words + homeBonus(place) + [...required, ...ranking].reduce((sum, id) => sum + vibeScore(place, id) * 3, 0);
+  };
+  const byRank = (pool: NormalizedPlace[]) =>
+    pool
+      .map((place) => ({ place, score: rank(place) }))
+      .filter((entry): entry is { place: NormalizedPlace; score: number } => entry.score !== null)
+      .sort((a, b) => b.score - a.score || (GALA_SCORES[b.place.slug] ?? 0) - (GALA_SCORES[a.place.slug] ?? 0))
+      .map((entry) => entry.place);
 
-  let ranked = selectCandidates(places, text, 60, locationText, { budgetPerHead: budget, start: null });
-  if (category && ranked.some((place) => place.category === category)) ranked = ranked.filter((place) => place.category === category);
-  ranked = ranked.filter((place) => (!indoor || isIndoor(place) !== false) && withinBudget(place));
-
-  // A dish or thing named in the query ("sisig", "lagoon") beats generic ranking. With no area named, a strong
-  // match anywhere counts (the best sisig is in Angeles); with an area, only matches in or near it.
-  const tokens = queryTokens(query);
-  // "Beach near Manila" is a day trip: within a few hours' drive, closest first.
-  const fromManila = (place: NormalizedPlace) => distanceKm(MANILA, place) ?? 9999;
-  const pool = named ? ranked : intent.nearManila ? places.filter((place) => fits(place) && fromManila(place) <= NEAR_MANILA_KM) : places.filter(fits);
-  const matches = pool
-    .map((place) => ({ place, score: keywordScore(place, tokens) }))
-    .filter((entry) => entry.score >= 2 || (entry.score >= 1 && tokens.length === 1))
-    .sort((a, b) => b.score - a.score || (named ? 0 : fromManila(a.place) - fromManila(b.place)))
-    .map((entry) => entry.place);
-  // In the named area first, then the nearby ones placesForArea lent (food a short ride away).
+  // A place that has the dish in its name or tags beats one whose long description mentions it in passing.
+  const strongly = (place: NormalizedPlace) => terms.every((alternatives) => !["description", null].includes(termField(place, alternatives)));
+  const fitting = places.filter(fits);
+  const candidates = terms.length > 0 && fitting.some(strongly) ? fitting.filter(strongly) : fitting;
   const inArea = (place: NormalizedPlace) => !named || matchesLocation(place, intent);
-  const ordered = [...matches, ...ranked.filter((place) => !matches.includes(place))];
-  const results = [...ordered.filter(inArea), ...ordered.filter((place) => !inArea(place))].slice(0, 8);
+  const inAreaPlaces = places.filter(inArea);
+  const covered = !named || inAreaPlaces.length > 0;
+  const centre = named ? centreOf(inAreaPlaces) : intent.nearManila ? MANILA : null;
+  const metro = !named || inAreaPlaces.some(isMetro);
+  const away = (place: NormalizedPlace) => (centre ? (distanceKm(centre, place) ?? 9999) : 0);
+
+  let results: NormalizedPlace[];
+  let nearest = false;
+  let relaxedWords = false;
+  if (!named && intent.nearManila) {
+    // "Beach near Manila" is a day trip: outside Metro Manila, within a few hours' drive, best fit then closest.
+    const outside = candidates.filter((place) => !isMetro(place) && away(place) <= NEAR_MANILA_KM);
+    results = byRank(outside).sort((a, b) => (rank(b) ?? 0) - (rank(a) ?? 0) || away(a) - away(b));
+  } else {
+    results = byRank(candidates.filter(inArea));
+    if (named && results.length < THIN_AREA) {
+      // A thin area borrows fitting places a short ride away, nearest first, after its own.
+      const reach = metro ? 12 : 30;
+      results = [...results, ...byRank(candidates.filter((place) => !inArea(place) && away(place) <= reach)).sort((a, b) => away(a) - away(b))];
+    }
+    if (results.length === 0 && terms.length > 0) {
+      // Nothing near has the dish or thing asked for: the closest places that do ("sisig" -> Angeles).
+      results = byRank(candidates).sort((a, b) => away(a) - away(b));
+      nearest = results.length > 0;
+    }
+    if (results.length === 0 && terms.length > 0) {
+      // Nobody lists it: the kind of place asked for, in the area, as an honest alternative.
+      relaxedWords = true;
+      const loose = fitting.filter(inArea).sort((a, b) => (GALA_SCORES[b.slug] ?? 0) - (GALA_SCORES[a.slug] ?? 0));
+      results = required.length > 0 || category ? loose : [];
+    }
+  }
+  let overBudget = false;
+  if (results.length === 0 && budget !== null && budget > 0 && terms.length === 0 && required.length > 0) {
+    // No place of that kind within the budget ("island hopping in Coron, budget"): the cheapest that are,
+    // so the answer can say what it costs. A dish asked "cheaper" stays empty: nothing cheaper is listed.
+    const cheapest = places
+      .filter((place) => fitsKind(place) && inArea(place) && place.budget_min !== null)
+      .sort((a, b) => a.budget_min! - b.budget_min!);
+    results = cheapest;
+    overBudget = cheapest.length > 0;
+  }
+  results = results.slice(0, 8);
   record(ledger, results);
 
-  const covered = !named || placesForArea(places, intent).length > 0;
+  const inAreaCount = results.filter(inArea).length;
+  const wanted = [...terms.map(([word]) => word), ...required].join(", ");
   const notes = [
     !covered ? `GalaTayo has no places in ${area} yet. Say so; do not name venues there.` : null,
-    covered && results.length === 0 ? "No GalaTayo place fits all of that. Say so and suggest loosening one filter." : null,
-    tokens.length > 0 && matches.length === 0 && results.length > 0
-      ? `No GalaTayo place mentions "${tokens.join(" ")}". Say GalaTayo doesn't list one yet, then offer these as alternatives.`
+    unlisted.length > 0 ? `No GalaTayo place mentions "${unlisted.join(" ")}". Say GalaTayo doesn't list one yet, then offer these as alternatives.` : null,
+    overBudget ? `Nothing like that fits PHP ${budget} a head${area ? ` in ${area}` : ""}. These are the cheapest; say they cost more than the budget.` : null,
+    covered && results.length === 0 ? `No GalaTayo place fits ${wanted || "all of that"}${named && area ? ` in or near ${area}` : ""}. Say so plainly and suggest loosening one filter.` : null,
+    nearest ? `No GalaTayo place in ${area ?? "the area"} has ${wanted}. These are the nearest that do; say where they are.` : null,
+    relaxedWords && results.length > 0 ? `No GalaTayo place mentions "${terms.map(([word]) => word).join(" ")}". Say GalaTayo doesn't list one yet, then offer these as alternatives.` : null,
+    named && covered && !nearest && results.length > 0 && inAreaCount === 0
+      ? `No GalaTayo place in ${area} fits. Say so; these are a short ride away.`
       : null,
+    named && covered && !nearest && inAreaCount > 0 && inAreaCount < THIN_AREA
+      ? `Only ${inAreaCount} GalaTayo place${inAreaCount === 1 ? "" : "s"} in ${area} fit${inAreaCount === 1 ? "s" : ""}. Say the area is thin on GalaTayo so far; places with in_area false are a short ride away.`
+      : null,
+    budget === 0 ? "Only free places are listed." : null,
     args.open_now === true ? "Opening hours are not in GalaTayo data: do not say a place is open now." : null,
   ].filter(Boolean);
   return {
     area_covered: covered,
     ...(notes.length ? { note: notes.join(" ") } : {}),
-    places: results.map((place) => ({ ...summarise(place), ...(named ? { in_area: inArea(place) } : {}), matches_query: matches.includes(place) })),
+    places: results.map((place) => ({
+      ...summarise(place),
+      ...(named ? { in_area: inArea(place) } : {}),
+      matches_query: terms.length > 0 && !relaxedWords,
+    })),
   };
 }
 
@@ -323,7 +417,7 @@ async function weather(args: Record<string, unknown>, context: ToolContext, ledg
   const latitude = num(args.latitude, -90, 90);
   const longitude = num(args.longitude, -180, 180);
   if (latitude !== null && longitude !== null) point = { latitude, longitude };
-  else if (area) point = centre(areaPlaces(places, area));
+  else if (area) point = centreOf(areaPlaces(places, area));
   // No area named: Metro Manila, where most outings start.
   point ??= { latitude: 14.5995, longitude: 120.9842 };
   const summary = await context.weather(point.latitude, point.longitude);

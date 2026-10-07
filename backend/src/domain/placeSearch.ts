@@ -1,6 +1,9 @@
 import type { NormalizedPlace } from "./places";
 import { FINAL_PLACE_CATEGORIES } from "./places";
-import { DESTINATIONS, getDestinationNameKeys, isMetroManilaDestination } from "../utils/phDestinations";
+import { DESTINATIONS, getDestinationNameKeys, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
+import galaScores from "../data/galaScores.json";
+import goodForTags from "../data/goodForTags.json";
+import { FIELD_WEIGHT, foldText, parseQueryIntent, termField, vibeMatches, vibeScore, type VibeId } from "./queryIntent";
 
 export type PlaceSearchFilters = {
   category?: string | null;
@@ -94,83 +97,6 @@ const BUDGET_KEYWORDS = {
   max: ["below", "budget", "for", "hanggang", "less than", "max", "maximum", "plus", "under", "up to", "within"],
   currency: ["p", "peso", "pesos", "php"],
 };
-
-const STOP_WORDS_SET = new Set([
-  "in", "at", "the", "for", "to", "and", "an", "a", "of",
-  "near", "with", "by", "on", "or", "is", "are", "was", "were",
-]);
-
-const KNOWN_WORDS = buildKnownWords();
-
-function buildKnownWords(): Set<string> {
-  const words = new Set<string>(STOP_WORDS_SET);
-
-  const addWords = (text: string): void => {
-    words.add(text.toLowerCase());
-    for (const w of text.split(" ")) {
-      if (w) words.add(w);
-    }
-  };
-
-  for (const [name, aliases] of Object.entries(CATEGORY_NAMES)) {
-    addWords(name);
-    for (const a of aliases) addWords(a);
-  }
-
-  for (const [city, aliases] of Object.entries(CITY_DICTIONARY)) {
-    addWords(city);
-    for (const a of aliases) addWords(a);
-  }
-
-  for (const aliases of Object.values(PROVINCIAL_CITY_DICTIONARY)) {
-    for (const alias of aliases) {
-      words.add(alias);
-      for (const w of alias.split(" ")) {
-        if (w && !GENERIC_LOCATION_WORDS.has(w)) words.add(w);
-      }
-    }
-  }
-
-  for (const [id, aliases] of Object.entries(GOOD_FOR_NAMES)) {
-    addWords(id);
-    for (const a of aliases) addWords(a);
-  }
-
-  for (const bws of Object.values(BUDGET_KEYWORDS)) {
-    for (const w of bws) addWords(w);
-  }
-
-  return words;
-}
-
-function matchesKnownWordAfterStemming(token: string): boolean {
-  if (token.endsWith("ies") && token.length > 4) {
-    if (KNOWN_WORDS.has(token.slice(0, -3) + "y")) return true;
-  }
-  if (token.endsWith("es") && token.length > 4) {
-    if (KNOWN_WORDS.has(token.slice(0, -2))) return true;
-  }
-  if (token.endsWith("s") && token.length > 3) {
-    if (KNOWN_WORDS.has(token.slice(0, -1))) return true;
-  }
-  return false;
-}
-
-function getSpecificTokens(normalizedQuery: string): string[] {
-  if (!normalizedQuery) return [];
-  return normalizedQuery
-    .split(" ")
-    .filter(Boolean)
-    .filter((t) => {
-      if (KNOWN_WORDS.has(t)) return false;
-      if (/^\d+(,\d{3})*(\.\d+)?$/.test(t)) return false;
-      return !matchesKnownWordAfterStemming(t);
-    });
-}
-
-function hasSpecificKeyword(normalizedQuery: string): boolean {
-  return getSpecificTokens(normalizedQuery).length > 0;
-}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -348,34 +274,22 @@ function getExplicitFilters(filters: PlaceSearchFilters): SearchSignals {
   };
 }
 
-function getQuerySignals(query: string): SearchSignals {
-  return {
-    category: detectCategoryFromQuery(query),
-    city: detectCityFromQuery(query),
-    good_for: detectGoodForFromQuery(query),
-    budget: detectBudgetFromQuery(query),
-  };
-}
-
-function emptySignals(): SearchSignals {
-  return { category: null, city: null, good_for: null, budget: null };
-}
-
-function mergeSignals(primary: SearchSignals, secondary: SearchSignals): SearchSignals {
-  return {
-    category: primary.category ?? secondary.category,
-    city: primary.city ?? secondary.city,
-    good_for: primary.good_for ?? secondary.good_for,
-    budget: primary.budget ?? secondary.budget,
-  };
-}
-
 function budgetMatches(placeBudget: number | null, budget: BudgetFilter | null): boolean {
   if (!budget) return true;
   if (placeBudget === null) return false;
   if (budget.min !== null && placeBudget < budget.min) return false;
   if (budget.max !== null && placeBudget > budget.max) return false;
   return true;
+}
+
+const GOOD_FOR_TAGS: Record<string, string[]> = goodForTags;
+const GOOD_FOR_VIBES: Record<string, VibeId> = { date: "date", barkada: "barkada", family: "family" };
+
+function goodForMatches(place: NormalizedPlace, goodFor: string): boolean {
+  const labels = (GOOD_FOR_TAGS[goodFor] ?? [goodFor]).map(normalizeSearchText);
+  if (place.good_for.some((label) => labels.includes(normalizeSearchText(label)))) return true;
+  const vibe = GOOD_FOR_VIBES[goodFor];
+  return vibe ? vibeMatches(place, vibe) : false;
 }
 
 export function filterPlaceByFilters(
@@ -393,7 +307,7 @@ export function filterPlaceByFilters(
     return false;
   }
 
-  if (goodFor && !place.good_for.some((gf) => normalizeSearchText(gf) === normalizeSearchText(goodFor))) {
+  if (goodFor && !goodForMatches(place, goodFor)) {
     return false;
   }
 
@@ -408,141 +322,95 @@ function scoreCandidateText(candidate: string, query: string, { exact, startsWit
   return 0;
 }
 
+/** How well the whole query matches the place's own name: exact, start of the name, or inside it. */
 export function scorePlaceNameMatch(place: NormalizedPlace, query: string): number {
   const cleanedQuery = normalizeSearchText(query);
   if (!cleanedQuery) return 0;
-
-  const tokens = cleanedQuery.split(" ").filter(Boolean);
-
-  // The place's own name outranks curated search terms: "San Agustin" should find San Agustin Church
-  // before a cafe that merely lists its barangay, San Agustin, as a search term.
-  const bestExactScore = Math.max(
+  return Math.max(
     scoreCandidateText(normalizeSearchText(place.name), cleanedQuery, { exact: 100, startsWith: 90, contains: 80 }),
-    scoreCandidateText(normalizeSearchText(place.slug), cleanedQuery, { exact: 95, startsWith: 85, contains: 70 }),
-    ...place.search_terms.map((term) =>
-      scoreCandidateText(normalizeSearchText(term), cleanedQuery, { exact: 75, startsWith: 60, contains: 50 }),
-    ),
+    scoreCandidateText(normalizeSearchText(place.slug.replace(/-/g, " ")), cleanedQuery, { exact: 95, startsWith: 85, contains: 70 }),
   );
-
-  if (bestExactScore > 0) return bestExactScore;
-
-  const allTextFieldValues = [
-    normalizeSearchText(place.name),
-    normalizeSearchText(place.slug),
-    ...place.search_terms.map((term) => normalizeSearchText(term)),
-    place.address ? normalizeSearchText(place.address) : "",
-    place.description ? normalizeSearchText(place.description) : "",
-    place.area ? normalizeSearchText(place.area) : "",
-  ].filter(Boolean);
-
-  if (allTextFieldValues.some((candidate) => candidate.includes(cleanedQuery))) {
-    return 40;
-  }
-
-  if (tokens.length > 0) {
-    const nonStopTokens = tokens.filter((t) => !STOP_WORDS_SET.has(t));
-    if (nonStopTokens.length === 0) return 0;
-
-    const bestRatio = Math.max(
-      ...allTextFieldValues.map((candidate) => {
-        const matched = nonStopTokens.filter((t) => candidate.includes(t)).length;
-        return matched / nonStopTokens.length;
-      }),
-    );
-
-    if (bestRatio > 0) {
-      return Math.max(1, Math.round(40 * bestRatio));
-    }
-  }
-
-  return 0;
 }
 
 export function getExactLocationLabelForIntent(query: string): string | null {
   return detectCityFromQuery(query);
 }
 
+const LOCATION_WORDS = [...new Set(
+  [...Object.entries(CITY_DICTIONARY), ...Object.entries(PROVINCIAL_CITY_DICTIONARY)]
+    .flatMap(([city, aliases]) => [city, ...aliases])
+    .flatMap((alias) => foldText(alias).split(" "))
+    .filter((word) => word.length >= 5),
+)];
+
+const PROVINCES = [...new Set(DESTINATIONS.filter((destination) => !isMetroManilaDestination(destination)).map((destination) => destination.provinceName))];
+
+/** A province named in the query ("waterfalls cebu", "beach batangas"), unless a city in it is named too. */
+function detectProvince(normalizedQuery: string, city: string | null): string | null {
+  const province = PROVINCES.filter((name) => includesWholePhrase(normalizedQuery, name)).sort((a, b) => b.length - a.length)[0] ?? null;
+  if (!province) return null;
+  // "Baguio, Benguet" stays Baguio; plain "cebu" means the province, not only Cebu City.
+  return city && normalizeSearchText(city) !== normalizeSearchText(province) && includesWholePhrase(normalizedQuery, city) ? null : province;
+}
+
+function locationWords(names: Array<string | null>): Set<string> {
+  const aliases = names.filter((name): name is string => Boolean(name)).flatMap((name) => [name, ...(CITY_DICTIONARY[name] ?? PROVINCIAL_CITY_DICTIONARY[name] ?? [])]);
+  return new Set(aliases.flatMap((alias) => foldText(alias).split(" ")));
+}
+
+const GALA_SCORES: Record<string, number> = galaScores;
+
+/**
+ * Ranks places for a search. Vibe words ("date", "libre", "talon", "kape") must fit the place's own tags,
+ * category or price; every other word must appear in the place's name, tags, area or search terms.
+ * A word found only in a long description counts as a match only when nothing matches better, for a
+ * one-word search ("fireflies"), so a beach that mentions halo-halo never outranks the halo-halo place.
+ * Equal matches go to the more gala-worthy place.
+ */
 export function rankPlaces(places: NormalizedPlace[], query: string, filters: PlaceSearchFilters = {}): RankedPlace[] {
   const activePlaces = places.filter((place) => place.status === "active");
-  const normalizedQuery = normalizeSearchText(query);
-  const explicitSignals = getExplicitFilters(filters);
+  const explicit = getExplicitFilters(filters);
+  const intent = parseQueryIntent(query, activePlaces, { locationWords: LOCATION_WORDS });
+  const normalizedQuery = normalizeSearchText(intent.text);
+  const detectedCity = explicit.city ?? (normalizedQuery ? detectCityFromQuery(normalizedQuery) : null);
+  const province = explicit.city ? null : detectProvince(normalizedQuery, detectedCity);
+  const city = province ? null : detectedCity;
+  const budget = explicit.budget ?? (normalizedQuery ? detectBudgetFromQuery(normalizedQuery) : null);
+  // The place is a filter, not a word to find in it: "date bgc" must not need "bgc" in the name.
+  const where = locationWords([detectedCity, province]);
+  const seen = new Set<string>();
+  const terms = intent.terms.filter(([word]) => !where.has(word) && !seen.has(word) && seen.add(word));
+  const hasFilter = Boolean(explicit.category ?? city ?? province ?? budget ?? explicit.good_for);
+  if (normalizedQuery && terms.length === 0 && intent.vibes.length === 0 && !hasFilter) return [];
 
-  const querySignals = normalizedQuery ? getQuerySignals(normalizedQuery) : null;
-  const specificTokens = normalizedQuery ? getSpecificTokens(normalizedQuery) : [];
-  const queryHasSpecificKeyword = specificTokens.length > 0;
+  const ranked = activePlaces.flatMap((place) => {
+    if (!filterPlaceByFilters(place, explicit.category, city, budget, explicit.good_for)) return [];
+    if (province && resolveDestination(place.city, place.area)?.provinceName !== province) return [];
+    let score = 0;
+    for (const vibe of intent.vibes) {
+      const fit = vibeScore(place, vibe);
+      if (fit === 0) return [];
+      score += fit * 5;
+    }
+    let descriptionOnly = terms.length > 0;
+    for (const alternatives of terms) {
+      const field = termField(place, alternatives);
+      if (!field) return [];
+      score += FIELD_WEIGHT[field];
+      if (field !== "description") descriptionOnly = false;
+    }
+    if (terms.length > 0) score += scorePlaceNameMatch(place, normalizedQuery);
+    return [{ place, score, descriptionOnly }];
+  });
 
-  const hardFilterSignals: SearchSignals = (!queryHasSpecificKeyword && querySignals)
-    ? mergeSignals(explicitSignals, querySignals)
-    : explicitSignals;
-
-  const hasActiveHardFilter = Boolean(
-    hardFilterSignals.category ?? hardFilterSignals.city ?? hardFilterSignals.budget ?? hardFilterSignals.good_for,
-  );
-
-  return activePlaces
-    .map((place) => {
-      if (!filterPlaceByFilters(
-        place,
-        hardFilterSignals.category,
-        hardFilterSignals.city,
-        hardFilterSignals.budget,
-        hardFilterSignals.good_for,
-      )) {
-        return null;
-      }
-
-      let score = 0;
-      if (normalizedQuery) {
-        score = scorePlaceNameMatch(place, normalizedQuery);
-
-        if (querySignals && queryHasSpecificKeyword) {
-          if (querySignals.category && normalizeSearchText(place.category) === normalizeSearchText(querySignals.category)) {
-            score += 15;
-          }
-          if (querySignals.city && place.city && normalizeSearchText(place.city) === normalizeSearchText(querySignals.city)) {
-            score += 10;
-          }
-          if (querySignals.good_for && place.good_for.some((gf) => normalizeSearchText(gf) === normalizeSearchText(querySignals.good_for!))) {
-            score += 10;
-          }
-          if (querySignals.budget && budgetMatches(place.budget_min, querySignals.budget)) {
-            score += 10;
-          }
-
-          const placeTextFields = [
-            normalizeSearchText(place.name),
-            normalizeSearchText(place.slug),
-            ...place.search_terms.map((t) => normalizeSearchText(t)),
-            place.address ? normalizeSearchText(place.address) : "",
-            place.description ? normalizeSearchText(place.description) : "",
-            place.area ? normalizeSearchText(place.area) : "",
-          ].filter(Boolean).join(" ");
-
-          const longSpecificTokens = specificTokens.filter((st) => st.length > 2);
-          if (longSpecificTokens.length > 0) {
-            if (!longSpecificTokens.some((st) => placeTextFields.includes(st))) {
-              return null;
-            }
-          } else {
-            if (!specificTokens.some((st) => placeTextFields.includes(st))) {
-              return null;
-            }
-          }
-        }
-
-        if (queryHasSpecificKeyword && score === 0) {
-          return null;
-        }
-        if (!queryHasSpecificKeyword && score === 0 && !hasActiveHardFilter) {
-          return null;
-        }
-      }
-
-      return { place, score };
-    })
-    .filter((r): r is RankedPlace => r !== null)
-    .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-      return left.place.name.localeCompare(right.place.name);
-    });
+  const strong = ranked.filter((entry) => !entry.descriptionOnly);
+  const kept = strong.length > 0 || terms.length > 1 || intent.vibes.length > 0 ? strong : ranked;
+  return kept
+    .map(({ place, score }) => ({ place, score }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        (GALA_SCORES[right.place.slug] ?? 0) - (GALA_SCORES[left.place.slug] ?? 0) ||
+        left.place.name.localeCompare(right.place.name),
+    );
 }
