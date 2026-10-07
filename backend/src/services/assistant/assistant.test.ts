@@ -15,7 +15,7 @@ import { FailingProvider, MockProvider, type RecordedConversation } from "./prov
 import { readChatStream, toOpenAiMessages } from "./providers/openaiCompatible";
 import type { AssistantModelProvider, ModelRequest, ModelStep } from "./providers/types";
 import { EMPTY_MEMORY, validateAssistantResponse, type AssistantEvent, type AssistantMemory, type AssistantResponse } from "./schema";
-import { isIndoor, keywordScore, newLedger, queryTokens, runTool, travelMode, visiblePlaces, type ToolContext } from "./tools";
+import { askScore, distanceKm, isIndoor, newLedger, queryTokens, runTool, travelMode, visiblePlaces, type ToolContext } from "./tools";
 import { summariseForecast, type WeatherSummary } from "./weather";
 
 const RAINY: WeatherSummary = { tempC: 26, code: 63, rainLikely: true, summary: "Rain likely until 6 PM", hours: [] };
@@ -194,7 +194,7 @@ describe("tools", () => {
     const route = (await runTool("route_hint", { from: "fort-santiago", to: "intramuros" }, context, newLedger())) as Record<string, unknown>;
     assert.equal(route.usual_mode, "walk");
     assert.ok(!("minutes" in route));
-    assert.ok(keywordScore(bySlug.get("aling-lucings-sisig") ?? visibleFixturePlaces.find((place) => place.name === "Aling Lucing's Sisig")!, ["sisig"]) >= 3);
+    assert.ok((askScore(visibleFixturePlaces.find((place) => place.name === "Aling Lucing's Sisig")!, [["sisig"]]) ?? 0) >= 10, "a name match scores highest");
   });
 
   it("plans a day with the planner rules and records weather", async () => {
@@ -301,7 +301,8 @@ describe("recorded conversations (12 prompts)", () => {
     "Baguio weekend": { cities: ["Baguio", "La Trinidad", "Tuba"], language: "english", itinerary: true, tools: ["plan_day"] },
     "beach malapit sa Manila": { language: "taglish", tools: ["search_places"] },
     "first time in Manila 2 days": { cities: ["Manila", "Makati", "Pasay", "Taguig", "Quezon City", "Mandaluyong", "San Juan", "Parañaque"], language: "english", itinerary: true, tools: ["plan_day"] },
-    "saan masarap mag-sisig": { language: "taglish", tools: ["search_places"] },
+    // Only places whose own data has the dish: the fixtures list one sisig place.
+    "saan masarap mag-sisig": { language: "taglish", tools: ["search_places"], minCards: 1 },
     "indoor activities ngayon umuulan": { language: "taglish", weather: true, tools: ["weather", "search_places"] },
     "date spot with view Makati": { cities: ["Makati"], language: "english", tools: ["search_places"] },
     "cheap gala QC": { cities: ["Quezon City"], budget: 500, language: "english", tools: ["search_places"], minCards: 1 },
@@ -352,7 +353,10 @@ describe("conversation memory across turns", () => {
     assertGrounded(second.response);
     assert.equal(second.response.memory.area, "QC");
     assert.ok(second.response.memory.budgetPerHead !== null && second.response.memory.budgetPerHead < 500);
-    for (const card of second.response.places) assert.equal(card.city, "Quezon City");
+    // QC is thin on GalaTayo: its own places come first, then a short ride away.
+    assert.equal(second.response.places[0].city, "Quezon City");
+    const qc = second.response.places.find((card) => card.city === "Quezon City")!;
+    for (const card of second.response.places) assert.ok((distanceKm(qc, card) ?? 99) <= 25, `${card.name} is far from QC`);
   });
 });
 
@@ -550,7 +554,11 @@ describe("tool plan (fast path)", () => {
     assert.deepEqual(names(plan("saan masarap mag-sisig")), ["search_places"]);
     assert.deepEqual(names(plan("indoor activities ngayon, umuulan")), ["search_places", "weather"]);
     assert.deepEqual(names(plan("Family day trip to Tagaytay with kids this Saturday")), ["plan_day"]);
-    assert.deepEqual(names(plan("What time does Fort Santiago open and how much is the entrance?")), ["get_place", "search_places"]);
+    // A question about one place gets its facts, not a list of places with similar names.
+    assert.deepEqual(names(plan("What time does Fort Santiago open and how much is the entrance?")), ["get_place"]);
+    assert.deepEqual(names(plan("Fort Santiago open ba ngayon at magkano entrance?")), ["get_place"]);
+    // A beach ask lists beaches even when it says "day trip"; only an itinerary ask gets a timed plan.
+    assert.deepEqual(names(plan("Beach malapit sa Manila na day trip lang")), ["search_places"]);
     assert.deepEqual(names(plan("Ano pa malapit sa Fort Santiago?")), ["nearby_places"]);
     const search = plan("Dinner spots in BGC")!.find((call) => call.name === "search_places")!;
     assert.equal(search.args.area, "BGC");

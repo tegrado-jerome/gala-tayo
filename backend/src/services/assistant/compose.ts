@@ -1,6 +1,6 @@
 import type { NormalizedPlace } from "../../domain/places";
 import { isGalaWorthySlug } from "../../utils/galaWorthy";
-import { allowedPrices, claimsHours, pricesIn } from "./facts";
+import { allowedPrices, claimsHours, hoursBacked, pricesIn } from "./facts";
 import type { ReplyLanguage } from "./language";
 import { OFF_TOPIC_MARKER } from "./prompt";
 import type { AssistantMemory, AssistantMode, Chip, ItineraryBlock, MapBlock, PlaceCard, WeatherBlock } from "./schema";
@@ -41,7 +41,7 @@ export function sanitizeAnswer(text: string, ledger: ToolLedger, curated: Normal
   const allowed = allowedPrices(userText, referenced);
   const lines = answer.split("\n").map((line) =>
     splitSentences(line)
-      .filter((sentence) => !claimsHours(sentence) && pricesIn(sentence).every((value) => allowed.has(value)))
+      .filter((sentence) => (!claimsHours(sentence) || hoursBacked(sentence, referenced)) && pricesIn(sentence).every((value) => allowed.has(value)))
       .join(" ")
   );
   answer = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();

@@ -1,4 +1,5 @@
 import type { NormalizedPlace } from "../domain/places";
+import { isFoodStreet } from "../domain/queryIntent";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 import { AREA_ALIASES, detectAliasedCities, isNearManila, locationText, mentionsPhrase } from "../utils/areaAliases";
@@ -173,6 +174,41 @@ export function placesForArea(places: NormalizedPlace[], location: LocationInten
   );
 }
 
+/** Fewer places than this in a named area and the plan borrows from the nearest neighbouring cities. */
+const THIN_AREA_PLACES = 6;
+
+/**
+ * A named area with too few GalaTayo places (QC has three) widens to the nearest cities around it, a short
+ * ride away (farther outside Metro Manila), so the plan isn't two stops and no meal. `added` lists the
+ * borrowed cities so the plan can say so. An area with no places at all stays as it is.
+ */
+export function widenThinArea(places: NormalizedPlace[], location: LocationIntent, minimum = THIN_AREA_PLACES): { location: LocationIntent; added: string[] } {
+  if (!hasLocation(location)) return { location, added: [] };
+  const mapped = places.filter((place) => place.latitude != null && place.longitude != null);
+  const inArea = mapped.filter((place) => matchesLocation(place, location));
+  const centre = centreOf(inArea);
+  if (inArea.length >= minimum || !centre) return { location, added: [] };
+  const metro = inArea.some((place) => isMetroManilaDestination(resolveDestination(place.city, place.area)));
+  const reach = metro ? 12 : 40;
+  const nearestByCity = new Map<string, number>();
+  for (const place of mapped) {
+    const city = (place.city ?? "").toLowerCase();
+    if (!city || matchesLocation(place, location)) continue;
+    const km = distanceKm(centre, place) ?? Infinity;
+    if (km <= reach && km < (nearestByCity.get(city) ?? Infinity)) nearestByCity.set(city, km);
+  }
+  const cities = new Set(location.cities);
+  const added: string[] = [];
+  let count = inArea.length;
+  for (const [city] of [...nearestByCity.entries()].sort((a, b) => a[1] - b[1])) {
+    if (count >= minimum) break;
+    cities.add(city);
+    added.push(city);
+    count += mapped.filter((place) => (place.city ?? "").toLowerCase() === city).length;
+  }
+  return { location: { ...location, cities }, added };
+}
+
 /** Venues that close before the plan starts (museums at 4 PM for a date night) can't be in it. */
 function isOpenDuring(place: NormalizedPlace, start: number | null) {
   const opening = CATEGORY_OPENING[place.category];
@@ -189,11 +225,11 @@ export function selectCandidates(
   places: NormalizedPlace[],
   prompt: string,
   limit = MAX_CANDIDATES,
-  locationSource = prompt,
+  locationSource: string | LocationIntent = prompt,
   constraints?: Pick<PlanConstraints, "budgetPerHead" | "start">,
 ) {
   const text = prompt.toLowerCase();
-  const location = detectLocationIntent(places, locationSource);
+  const location = typeof locationSource === "string" ? detectLocationIntent(places, locationSource) : locationSource;
   const categories = detectCategories(text);
   const budget = constraints?.budgetPerHead ?? null;
 
@@ -604,7 +640,16 @@ const roundTo5 = (minutes: number) => Math.round(minutes / 5) * 5;
  * Re-times stops so meals land in meal windows, the sunset stop meets the sunset,
  * venues are open, and each start allows for travel from the previous stop.
  */
-type ScheduleOptions = { sunsetMinutes: number; wantsSunset: boolean; notBefore?: number; notAfter?: number; fixedStart?: boolean; dinnerFrom?: number };
+type ScheduleOptions = {
+  sunsetMinutes: number;
+  wantsSunset: boolean;
+  notBefore?: number;
+  notAfter?: number;
+  fixedStart?: boolean;
+  dinnerFrom?: number;
+  /** Place ids picked as a meal that aren't filed as restaurants (a food street for dinner). */
+  meals?: Map<string, "breakfast" | "lunch" | "dinner">;
+};
 
 /** An opening time the place's own best-time text states: "Right at 9 PM opening", "opens at 5 PM". */
 export function statedOpening(place: NormalizedPlace): number | null {
@@ -637,7 +682,7 @@ function timeStops(stops: DraftStop[], placesById: Map<string, NormalizedPlace>,
 
   // Only one sunset stop makes sense; when sunset was asked for and no stop says so, the last outdoor stop takes it.
   const classify = () => {
-    const kinds = items.map((item) => stopKind(item.place, item.stop.note, item.clock, options.wantsSunset));
+    const kinds = items.map((item) => options.meals?.get(item.place.id) ?? stopKind(item.place, item.stop.note, item.clock, options.wantsSunset));
     const result = kinds.map((kind, index) => (kind === "sunset" && kinds.indexOf("sunset") !== index ? "general" : kind));
     if (options.wantsSunset && !result.includes("sunset")) {
       const categories = items.map((item) => item.place.category);
@@ -842,9 +887,9 @@ export function fitsKind(place: NormalizedPlace, kind: RequestedKind) {
       return place.category === "Food" && /\b(breakfast|morning|brunch|anytime|any time)\b/i.test(place.best_time_to_visit ?? "breakfast");
     case "lunch":
     case "dinner":
-      // A pasalubong shop sells food but is not a sit-down meal.
+      // A pasalubong shop sells food but is not a sit-down meal. A food street (Binondo, Cubao Expo) is a meal.
       return (
-        place.category === "Food" &&
+        (place.category === "Food" || isFoodStreet(place)) &&
         servesMeal(place, kind) &&
         !/\bbreakfast\b/i.test(place.name) &&
         !(place.tags.includes("pasalubong") && !place.tags.includes("restaurant"))
@@ -872,7 +917,7 @@ export function ensureRequested(
   stops: DraftStop[],
   candidates: NormalizedPlace[],
   kinds: RequestedKind[],
-  { budgetPerHead = null, location }: { budgetPerHead?: number | null; location?: LocationIntent } = {}
+  { budgetPerHead = null, location, taken = new Set<string>() }: { budgetPerHead?: number | null; location?: LocationIntent; taken?: Set<string> } = {}
 ): { stops: DraftStop[]; missing: RequestedKind[]; overBudget: Set<RequestedKind>; picks: Map<RequestedKind, string> } {
   const byId = new Map(candidates.map((place) => [place.id, place]));
   let kept = stops.filter((stop) => byId.has(stop.place_id));
@@ -881,7 +926,8 @@ export function ensureRequested(
   const picks = new Map<RequestedKind, string>();
 
   for (const kind of kinds) {
-    const already = kept.find((stop) => ![...picks.values()].includes(stop.place_id) && fitsKind(byId.get(stop.place_id)!, kind));
+    // A stop already doing another job (Binondo as lunch) can't also be the dinner.
+    const already = kept.find((stop) => !taken.has(stop.place_id) && ![...picks.values()].includes(stop.place_id) && fitsKind(byId.get(stop.place_id)!, kind));
     if (already) {
       picks.set(kind, already.place_id);
       continue;
@@ -930,7 +976,7 @@ export function ensureMeal(
 ): DraftStop[] {
   if (!meal) return stops;
   const byId = new Map(candidates.map((place) => [place.id, place]));
-  if (stops.some((stop) => byId.get(stop.place_id)?.category === "Food")) return stops;
+  if (stops.some((stop) => byId.has(stop.place_id) && fitsKind(byId.get(stop.place_id)!, meal))) return stops;
   return ensureRequested(stops, candidates, [meal], { budgetPerHead }).stops;
 }
 
@@ -1310,7 +1356,7 @@ export function wantsEvening(prompt: string) {
   return /\b(date night|night out|gabi|evening|tonight|mamayang gabi|dinner|hapunan|inuman|nightlife|after work|after office)\b/i.test(text);
 }
 
-const WHOLE_DAY = /\b(day ?trip|whole day|full day|buong araw|weekend|day tour|road ?trip)\b/i;
+const WHOLE_DAY = /\b(day ?trip|whole day|full day|buong araw|weekend|day tour|road ?trip|day out|(?:barkada|family|date) day)\b/i;
 
 /** "Tagaytay day trip", "Baguio weekend": a whole day out, so the plan should run into the afternoon. */
 export function wantsWholeDay(prompt: string) {
@@ -1343,6 +1389,19 @@ export function keepStopsNearby(stops: DraftStop[], placesById: Map<string, Norm
         return km === null || km <= maxKm;
       });
   return inArea.length >= MIN_STOPS ? inArea : resolved;
+}
+
+/**
+ * What a meal costs a head, from GalaTayo's own everyday eateries (the median of those up to PHP 1,000),
+ * for meals the plan can't price: a food street with no entrance fee, or a meal no listed place covers.
+ */
+export function typicalMealCost(places: NormalizedPlace[]): number {
+  const prices = places
+    .filter((place) => place.category === "Food" && place.budget_min !== null && place.budget_min > 0 && place.budget_min <= 1000)
+    .map((place) => place.budget_min!)
+    .sort((a, b) => a - b);
+  if (prices.length === 0) return 250;
+  return Math.round(prices[Math.floor(prices.length / 2)] / 50) * 50;
 }
 
 export function getPlanSunset(date: string, places: NormalizedPlace[]) {

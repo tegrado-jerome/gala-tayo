@@ -130,7 +130,8 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
 
   const stops = useMemo(() => draft?.stops ?? [], [draft])
   const legs = useMemo(() => getPlanLegs(stops), [stops])
-  const perHead = useMemo(() => estimatePerHead(stops, groupSize), [stops, groupSize])
+  // Meals the stops can't price still cost money, so a lunch-to-dinner plan never reads as ₱100 a head.
+  const perHead = useMemo(() => estimatePerHead(stops, groupSize) + (draft?.meal_estimate_per_head ?? 0), [stops, groupSize, draft])
   const timelineStops = useMemo<TimelineStop[]>(
     () => stops.map((stop) => ({ key: stop.place_id, time: stop.time ? formatTime24(stop.time) : null, minutes: stop.minutes, note: stop.note || null, place: stop.place })),
     [stops],

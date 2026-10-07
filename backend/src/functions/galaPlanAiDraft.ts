@@ -17,7 +17,6 @@ import {
   ensureAreaStop,
   ensureRequested,
   fillGaps,
-  findUncoveredArea,
   fitsKind,
   fitBudget,
   formatClock12,
@@ -42,9 +41,11 @@ import {
   selectCandidates,
   tightenRoute,
   topUpStops,
+  typicalMealCost,
   wantsSunset,
   wantsWholeDay,
   weekdayOf,
+  widenThinArea,
   type DraftResponse,
   type PlanConstraints,
 } from "../services/galaPlanDraftPlanner";
@@ -125,17 +126,24 @@ export async function buildPlanDraft({
   requestedDate,
   requestId,
   log = () => undefined,
+  model = draftWithModel,
+  loadImages = getApprovedPlaceImagesByPlaceIds,
 }: {
   prompt: string;
   places: NormalizedPlace[];
   requestedDate: string | null;
   requestId: string;
   log?: (message: string) => void;
+  /** Tests pass a stand-in for the model and the photo lookup. */
+  model?: typeof draftWithModel;
+  loadImages?: (placeIds: string[]) => Promise<Map<string, Array<{ storage_key: string }>>>;
 }): Promise<PlanDraftOutcome> {
-  const location = detectLocationIntent(places, prompt);
-  const uncovered = findUncoveredArea(places, prompt) ?? (hasLocation(location) && placesForArea(places, location).length < 2 ? titleCase([...location.cities][0] ?? "that area") : null);
-  if (uncovered) {
-    return { ok: false, status: 422, code: "NO_PLACES_IN_AREA", message: `GalaTayo doesn't have enough places in ${uncovered} yet, so Tara can't plan there without guessing. Try another area for now.` };
+  const askedArea = detectLocationIntent(places, prompt);
+  // A thin area (QC has three places) borrows the nearest cities around it; an empty one can't be planned.
+  const { location, added: borrowedCities } = widenThinArea(places, askedArea);
+  const askedLabel = areaLabel(askedArea) ?? titleCase([...askedArea.cities][0] ?? "that area");
+  if (hasLocation(location) && placesForArea(places, location).length < 2) {
+    return { ok: false, status: 422, code: "NO_PLACES_IN_AREA", message: `GalaTayo doesn't have enough places in ${askedLabel} yet, so Tara can't plan there without guessing. Try another area for now.` };
   }
 
   const groupSize = parseGroupSize(prompt);
@@ -156,19 +164,21 @@ export async function buildPlanDraft({
   const notBefore = Math.max(earliestToday, askedStart);
   const planConstraints: PlanConstraints = { ...constraints, start: notBefore || null };
 
-  let candidates = selectCandidates(places, prompt, PLAN_CANDIDATES, prompt, planConstraints);
-  if (constraints.meal && !candidates.some((place) => place.category === "Food")) {
+  let candidates = selectCandidates(places, prompt, PLAN_CANDIDATES, location, planConstraints);
+  if (constraints.meal && !candidates.some((place) => fitsKind(place, constraints.meal!))) {
     // A required meal needs Food options even when the vibe words ranked them out.
-    const food = selectCandidates(places, `${prompt} ${constraints.meal} food`, 6, prompt, planConstraints).filter((place) => place.category === "Food");
+    const food = selectCandidates(places, `${prompt} ${constraints.meal} food`, 6, location, planConstraints).filter((place) => fitsKind(place, constraints.meal!));
     candidates = [...candidates, ...food.filter((place) => !candidates.includes(place))];
   }
+  // The area that was asked for leads; borrowed neighbours fill in after it.
+  candidates = [...candidates.filter((place) => matchesLocation(place, askedArea)), ...candidates.filter((place) => !matchesLocation(place, askedArea))];
   if (candidates.length < 2) {
     return { ok: false, status: 422, code: "NO_FIT", message: "Tara couldn't find enough places that fit that budget and time. Try a bigger budget or a different time." };
   }
 
   const sunsetMinutes = getPlanSunset(planDate.date, candidates);
   const planContext = { date: planDate.date, weekday: weekdayOf(planDate.date), sunsetMinutes };
-  let draft: DraftResponse | null = await draftWithModel(prompt, candidates, planContext, planConstraints, requestId, log);
+  let draft: DraftResponse | null = await model(prompt, candidates, planContext, planConstraints, requestId, log);
   const source = draft ? "ai" : "fallback";
   if (!draft) draft = buildFallbackDraft(prompt, candidates);
   if (!draft) {
@@ -177,7 +187,7 @@ export async function buildPlanDraft({
 
   // The model's draft is a suggestion; these rules make it honour the request.
   // Every place that fits the area, budget and time can fill a requested stop, not just the top-ranked ones.
-  const pool = [...candidates, ...selectCandidates(places, prompt, Number.MAX_SAFE_INTEGER, prompt, planConstraints).filter((place) => !candidates.includes(place))];
+  const pool = [...candidates, ...selectCandidates(places, prompt, Number.MAX_SAFE_INTEGER, location, planConstraints).filter((place) => !candidates.includes(place))];
   const candidatesById = new Map(pool.map((place) => [place.id, place]));
   const nearby = keepStopsNearby(draft.stops, candidatesById, location);
   const inHours = dropOffHoursFood(nearby, candidatesById, notBefore >= 15 * 60);
@@ -185,6 +195,8 @@ export async function buildPlanDraft({
   const wholeDay = wantsWholeDay(prompt);
   const kinds = requestedKinds(prompt, constraints.meal ?? (wholeDay ? "lunch" : null));
   if (wholeDay && !kinds.includes("lunch")) kinds.push("lunch");
+  // "Lunch hanggang gabi" runs through dinner time: it needs dinner as well as lunch.
+  if (constraints.end !== null && constraints.end >= 19 * 60 && kinds.includes("lunch") && !kinds.includes("dinner")) kinds.push("dinner");
   const requested = ensureRequested(inHours, pool, kinds, { budgetPerHead: constraints.budgetPerHead, location });
   const centre = planCentre(requested.stops.map((stop) => candidatesById.get(stop.place_id)));
   if (requested.missing.length > 0 && centre) {
@@ -197,6 +209,7 @@ export async function buildPlanDraft({
     const pickedCost = [...requested.picks.values()].reduce((sum, id) => sum + (candidatesById.get(id)?.budget_min ?? 0), 0);
     const outsideFill = ensureRequested(requested.stops, [...requested.stops.map((stop) => candidatesById.get(stop.place_id)!), ...nearbyOutside], requested.missing, {
       budgetPerHead: constraints.budgetPerHead === null ? null : constraints.budgetPerHead - pickedCost,
+      taken: new Set(requested.picks.values()),
     });
     for (const place of nearbyOutside) {
       if (![...outsideFill.picks.values()].includes(place.id)) continue;
@@ -216,7 +229,7 @@ export async function buildPlanDraft({
   // One coffee stop is a break; two in a row is the same stop twice.
   const firstCafe = withoutExtraMeals.find((stop) => candidatesById.get(stop.place_id)?.category === "Cafe");
   const onlyAsked = withoutExtraMeals.filter((stop) => stop === firstCafe || asked.has(stop.place_id) || candidatesById.get(stop.place_id)?.category !== "Cafe");
-  const anchored = ensureAreaStop(onlyAsked, pool, location, { start: notBefore, sunsetMinutes, keep: asked });
+  const anchored = ensureAreaStop(onlyAsked, pool, hasLocation(askedArea) ? askedArea : location, { start: notBefore, sunsetMinutes, keep: asked });
   const local = preferInArea(anchored, pool, location, requested.picks, constraints.budgetPerHead);
   const tight = tightenRoute(local.stops, candidatesById, new Set(requested.picks.values()), destinationAnchor ? 15 : 6);
   const affordable = fitBudget(tight, candidatesById, constraints.budgetPerHead, new Set(requested.picks.values()));
@@ -241,6 +254,11 @@ export async function buildPlanDraft({
     fixedStart: constraints.start !== null || arrival !== null || wholeDay,
     // "Hanggang gabi" (to ~9 PM): dinner about two hours before the end, not at 5:30.
     dinnerFrom: constraints.end !== null && constraints.end >= 20 * 60 ? constraints.end - 120 : undefined,
+    meals: new Map(
+      [...requested.picks.entries()]
+        .filter((entry): entry is ["breakfast" | "lunch" | "dinner", string] => entry[0] === "breakfast" || entry[0] === "lunch" || entry[0] === "dinner")
+        .map(([kind, id]) => [id, kind] as const)
+    ),
   };
   let stopsInOrder = scheduleStops(ordered, candidatesById, scheduleOptions);
   // Idle gaps get a nearby stop; "hanggang gabi" runs to about 9 PM, a whole day into the late afternoon.
@@ -250,11 +268,12 @@ export async function buildPlanDraft({
     sunsetMinutes,
     budgetPerHead: constraints.budgetPerHead,
     location,
-    maxKm: destinationAnchor ? 10 : 3,
+    // A thin area's stops sit farther apart, so gaps may be filled from a little farther away.
+    maxKm: destinationAnchor ? 10 : borrowedCities.length > 0 ? 8 : 3,
   });
   if (filled.length > stopsInOrder.length) stopsInOrder = scheduleStops(filled, candidatesById, scheduleOptions);
 
-  const area = areaLabel(location);
+  const area = areaLabel(askedArea);
   const budgetText = constraints.budgetPerHead !== null ? ` that fits ${formatPeso(constraints.budgetPerHead)} a head` : "";
   const kindOf = (place: NormalizedPlace) => [...requested.picks.entries()].find(([, id]) => id === place.id)?.[0];
   /** Why no place in the area does a job: none listed yet, all over budget, or all closed then. */
@@ -266,7 +285,9 @@ export async function buildPlanDraft({
     if (budget !== null && inArea.every((place) => (place.budget_min ?? 0) > budget)) return `No ${label}${where}${budgetText}`;
     return `No ${label}${where} is open at that time`;
   };
+  const borrowedNames = borrowedCities.filter((city) => stopsInOrder.some((stop) => (candidatesById.get(stop.place_id)?.city ?? "").toLowerCase() === city)).map(titleCase);
   const notes = [
+    borrowedNames.length > 0 ? `GalaTayo has only a few places in ${askedLabel} so far, so the plan adds spots in nearby ${borrowedNames.join(" and ")}.` : null,
     arrival !== null && drive !== null && departure !== null && destinationAnchor
       ? `Alis ${formatClock12(departure)} from Manila: about ${formatDuration(drive)} by car to ${destinationAnchor.city ?? destinationAnchor.name}.`
       : null,
@@ -281,8 +302,18 @@ export async function buildPlanDraft({
       }),
   ].filter((note): note is string => Boolean(note));
 
+  // Meals the stops can't price (a food street with free entry) or that no listed place covers still cost
+  // money: the estimate per head counts them, so a lunch-to-dinner plan never reads as PHP 100 a head.
+  const mealCost = typicalMealCost(places);
+  const mealsNeeded = kinds.filter((kind) => kind === "lunch" || kind === "dinner" || kind === "breakfast").length;
+  const pricedMeals = stopsInOrder.filter((stop) => {
+    const place = candidatesById.get(stop.place_id);
+    return place?.category === "Food" && (place.budget_min ?? 0) > 0;
+  }).length;
+  const mealEstimate = Math.max(0, mealsNeeded - pricedMeals) * mealCost;
+
   const uploadIds = stopsInOrder.filter((stop) => !hasCuratedPhoto(candidatesById.get(stop.place_id)?.slug)).map((stop) => stop.place_id);
-  const images = uploadIds.length ? await getApprovedPlaceImagesByPlaceIds(uploadIds).catch(() => new Map()) : new Map();
+  const images = uploadIds.length ? await loadImages(uploadIds).catch(() => new Map()) : new Map();
   const stops = stopsInOrder.map((stop) => {
     const place = candidatesById.get(stop.place_id)!;
     const storageKey = placePhotoKey(place.slug, images.get(place.id)?.[0]?.storage_key);
@@ -313,6 +344,7 @@ export async function buildPlanDraft({
       notes,
       group_size: groupSize ?? draft.group_size,
       budget_per_head: constraints.budgetPerHead,
+      meal_estimate_per_head: mealEstimate,
       date: planDate.date,
       date_source: planDate.source,
       sunset: `${String(Math.floor(sunsetMinutes / 60)).padStart(2, "0")}:${String(sunsetMinutes % 60).padStart(2, "0")}`,

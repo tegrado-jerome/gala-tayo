@@ -5,7 +5,7 @@ import { EMPTY_MEMORY, type AssistantMemory } from "./schema";
 import { queryTokens } from "./tools";
 
 const CHEAP_WORDS = /\b(mura|murang|cheap|budget|tipid|hindi mahal|di mahal|affordable|sulit|walang gastos)\b/i;
-const FREE_WORDS = /\b(free|libre|walang bayad)\b/i;
+const FREE_WORDS = /\b(free|libreng?|walang bayad)\b/i;
 const CHEAPER_WORDS = /\b(mas mura|cheaper|less expensive|mas tipid|mas sulit|lower budget)\b/i;
 const CHEAP_PER_HEAD = 500;
 const INDOOR_WORDS = /\b(indoor|indoors|aircon|umuulan|maulan|ulan|rain|raining|rainy|bagyo|storm|typhoon|loob)\b/i;
@@ -53,8 +53,9 @@ export function updateMemory(
   if (groupSize) memory.groupSize = groupSize;
 
   const stated = parseBudgetPerHead(message, groupSize ?? memory.groupSize);
-  if (stated !== null) memory.budgetPerHead = stated;
-  else if (FREE_WORDS.test(message)) memory.budgetPerHead = 0;
+  // "Libreng gala, budget ₱300 each" asks for free places; the amount is only spending money.
+  if (FREE_WORDS.test(message)) memory.budgetPerHead = 0;
+  else if (stated !== null) memory.budgetPerHead = stated;
   else if (CHEAPER_WORDS.test(message)) {
     // "Cheaper" means below what was shown: under the earlier cap, or under the earlier picks' prices.
     const shown = memory.lastPlaceSlugs
