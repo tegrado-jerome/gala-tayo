@@ -788,6 +788,18 @@
               "aliases": [
                 "Baler, Aurora"
               ]
+            },
+            {
+              "slug": "dipaculao",
+              "name": "Dipaculao",
+              "type": "municipality",
+              "center": [
+                15.8484,
+                121.5368
+              ],
+              "aliases": [
+                "Dipaculao, Aurora"
+              ]
             }
           ]
         },
@@ -1253,6 +1265,42 @@
               ]
             }
           ]
+        },
+        {
+          "slug": "romblon",
+          "name": "Romblon",
+          "cities": [
+            {
+              "slug": "san-fernando-romblon",
+              "name": "San Fernando, Romblon",
+              "type": "municipality",
+              "center": [
+                12.3028,
+                122.6006
+              ],
+              "aliases": [
+                "San Fernando Romblon",
+                "San Fernando (Romblon)",
+                "Sibuyan",
+                "Sibuyan Island"
+              ]
+            },
+            {
+              "slug": "san-jose-romblon",
+              "name": "San Jose, Romblon",
+              "type": "municipality",
+              "center": [
+                12.0617,
+                121.9589
+              ],
+              "aliases": [
+                "San Jose Romblon",
+                "San Jose (Romblon)",
+                "Carabao Island",
+                "Hambil"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1362,6 +1410,25 @@
               "aliases": []
             }
           ]
+        },
+        {
+          "slug": "catanduanes",
+          "name": "Catanduanes",
+          "cities": [
+            {
+              "slug": "pandan-catanduanes",
+              "name": "Pandan, Catanduanes",
+              "type": "municipality",
+              "center": [
+                14.0492,
+                124.1702
+              ],
+              "aliases": [
+                "Pandan Catanduanes",
+                "Pandan (Catanduanes)"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1459,6 +1526,37 @@
                 122.556
               ],
               "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "antique",
+          "name": "Antique",
+          "cities": [
+            {
+              "slug": "culasi",
+              "name": "Culasi",
+              "type": "municipality",
+              "center": [
+                11.4258,
+                122.0561
+              ],
+              "aliases": [
+                "Culasi, Antique"
+              ]
+            },
+            {
+              "slug": "pandan-antique",
+              "name": "Pandan, Antique",
+              "type": "municipality",
+              "center": [
+                11.7199,
+                122.0946
+              ],
+              "aliases": [
+                "Pandan Antique",
+                "Pandan (Antique)"
+              ]
             }
           ]
         }
@@ -1774,6 +1872,18 @@
                 "Camotes Islands",
                 "Pacijan"
               ]
+            },
+            {
+              "slug": "barili",
+              "name": "Barili",
+              "type": "municipality",
+              "center": [
+                10.1165,
+                123.5094
+              ],
+              "aliases": [
+                "Barili, Cebu"
+              ]
             }
           ]
         },
@@ -1969,6 +2079,18 @@
                 "Ormoc City",
                 "City of Ormoc",
                 "Ormoc, Leyte"
+              ]
+            },
+            {
+              "slug": "matalom",
+              "name": "Matalom",
+              "type": "municipality",
+              "center": [
+                10.2821,
+                124.7859
+              ],
+              "aliases": [
+                "Matalom, Leyte"
               ]
             }
           ]

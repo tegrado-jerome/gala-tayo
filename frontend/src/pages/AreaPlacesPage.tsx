@@ -353,10 +353,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         ...(areaSeo?.faqs ?? []),
       ]
     : []
+  // Towns that share a name already carry their province ("Pandan, Antique"), so it is not added twice.
+  const placeName = destination && parentRegion && !areaName.endsWith(`, ${destination.provinceName}`) ? `${areaName}, ${destination.provinceName}` : areaName
   const pageDescription = areaSeo?.description ?? (topNames.length
-    ? `${payload.total} top ${payload.total === 1 ? 'place' : 'places'} in ${areaName}${destination && parentRegion ? `, ${destination.provinceName}` : ''}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
+    ? `${payload.total} top ${payload.total === 1 ? 'place' : 'places'} in ${placeName}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
     : `${PRODUCT_NAME} lists the top places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`)
-  const placeName = destination && parentRegion ? `${areaName}, ${destination.provinceName}` : areaName
 
   return (
     <Page>
