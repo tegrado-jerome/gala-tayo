@@ -2,15 +2,10 @@ import { isOutdoorPlace, isRainLikelyHour, type HourForecast } from './weather.t
 import { isRainFriendly } from './saanTayo.ts'
 
 /*
- * Pure plan math shared by the itinerary, Hatian and the barkada deck: the group size behind every
- * per-head number, a time slot for a stop added after the plan was made, and indoor swaps for
- * outdoor stops when rain is likely. No data imports, so node:test can run it.
+ * Pure plan math shared by the itinerary and the barkada deck: a time slot for a stop added after the
+ * plan was made, and indoor swaps for outdoor stops when rain is likely. The group size and every
+ * per-head number live in planCost.ts. No data imports, so node:test can run it.
  */
-
-/** The size set when the plan was made counts until more people say Tara. */
-export function planGroupSize(planned: number | null | undefined, goingCount: number) {
-  return Math.max(1, goingCount, planned ?? 0)
-}
 
 /** "6:30 PM", "6 pm", "18:30" -> minutes after midnight; null when it isn't a clock time. */
 export function parseClockLabel(label: string | null | undefined): number | null {

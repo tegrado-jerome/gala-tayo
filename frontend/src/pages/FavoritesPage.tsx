@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { CloudArrowUp } from '@phosphor-icons/react/dist/csr/CloudArrowUp'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { DotsThree as MoreHorizontal } from '@phosphor-icons/react/dist/csr/DotsThree'
@@ -7,17 +8,18 @@ import { X } from '@phosphor-icons/react/dist/csr/X'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
-import GoogleSignInButton from '../components/GoogleSignInButton'
 import GalaListsSection from '../components/lists/GalaListsSection'
 import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
-import { Button, Empty, Masonry, Page, PlaceCardSkeleton, Sheet } from '../components/ui'
+import { Button, Empty, Masonry, Page, Panel, PlaceCardSkeleton, Sheet } from '../components/ui'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { listFavoriteGalaPlans } from '../utils/galaPlansApi'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { planWithAiHref } from '../utils/planWithAiLink'
 import { getPublicSiteUrl } from '../utils/site'
+import { hasAccountSession } from '../utils/guestSession'
+import { buildAuthPath } from '../services/authApi'
 import '../design/me.css'
 import { resizedMediaUrl } from '../data/r2Config'
 
@@ -66,6 +68,27 @@ function GridSkeleton() {
 }
 
 type SavedPlans = { count: number; photos: string[] } | null
+
+/** A soft nudge, never a wall: what a guest saved stays on screen right below it. */
+function KeepSavesPrompt({ className }: { className?: string }) {
+  return (
+    <Panel as="section" aria-labelledby="keep-saves-title" className={className}>
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--tara-soft)] text-[var(--tara-ink)]" aria-hidden="true">
+          <CloudArrowUp weight="light" className="h-6 w-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id="keep-saves-title" className="g-h3">Sign up to keep them</h2>
+          <p className="g-sm g-mut mt-0.5">Your lists and saves live on this device for now. A free account keeps them on every device!</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="tara" size="sm" href={buildAuthPath('/signup', '/favorites')}>Sign up free</Button>
+            <Button variant="line" size="sm" href={buildAuthPath('/login', '/favorites')}>Log in</Button>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  )
+}
 
 function FavoritesPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -180,6 +203,8 @@ function FavoritesPage() {
   }
 
   const isSignedIn = !isSessionLoading && Boolean(session?.user)
+  // Guests keep everything on this device: no wall, just a nudge to make it stick.
+  const showKeepPrompt = !isSessionLoading && !hasAccountSession(session)
   const removeAllItem = (
     <button
       type="button"
@@ -232,16 +257,21 @@ function FavoritesPage() {
         </div>
       ) : null}
 
-      {!isSessionLoading && !session?.user ? (
-        <Empty
-          className="mt-6"
-          title="Sign in to see your saved places."
-          description="Your saved places are connected to your account."
-          action={<GoogleSignInButton redirectTo={getPublicSiteUrl('/favorites')} />}
-        />
-      ) : null}
+      {showKeepPrompt ? <KeepSavesPrompt className="mt-6" /> : null}
 
-      {!isSessionLoading && !session?.user ? <GalaListsSection className="mt-10" /> : null}
+      {!isSessionLoading && !session?.user ? (
+        <>
+          <GalaListsSection className="mt-8" />
+          <section aria-labelledby="saved-places-title" className="mt-10 grid gap-4">
+            <h2 id="saved-places-title" className="g-h2">Saved places</h2>
+            <Empty
+              title="No saved places yet."
+              description="Tap the heart on any place to keep it here."
+              action={<Button variant="tara" href="/search">Explore places</Button>}
+            />
+          </section>
+        </>
+      ) : null}
 
       {isSignedIn ? (
         <>

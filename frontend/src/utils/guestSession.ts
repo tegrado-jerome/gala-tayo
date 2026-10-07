@@ -23,3 +23,10 @@ const manager = createGuestSessionManager({
 
 export const isGuestModeAvailable = manager.isGuestModeAvailable
 export const ensureGuestSession = manager.ensureGuestSession
+
+/** The name a guest typed, kept on their guest user; the API shows it to the barkada instead of "Guest 1a2b". */
+export async function setGuestName(name: string) {
+  const clean = name.replace(/\s+/g, ' ').trim().slice(0, 40)
+  if (!clean) return
+  await supabase.auth.updateUser({ data: { guest_name: clean } }).catch(() => undefined)
+}

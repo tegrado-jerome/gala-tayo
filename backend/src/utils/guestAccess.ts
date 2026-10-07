@@ -84,7 +84,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "galaTodayTimer",
 ]);
 
-/** Account-only: profile/social, community content, reports, submissions, privacy, MFA and admin. */
+/** Account-only: profile/social, synced lists, community content, reports, submissions, privacy, MFA and admin. */
 export const ACCOUNT_ONLY_FUNCTIONS = new Set([
   "profileMe",
   "currentUserMe",
@@ -102,6 +102,9 @@ export const ACCOUNT_ONLY_FUNCTIONS = new Set([
   "acceptFollowRequest",
   "rejectFollowRequest",
   "toggleGalaPlanHeart",
+  // Gala lists sync to the account; a guest's lists stay on the device until they sign up.
+  "galaListsGet",
+  "galaListsPut",
   "placeCommentsCreate",
   "placeCommentRepliesCreate",
   "placeCommentsUpdate",

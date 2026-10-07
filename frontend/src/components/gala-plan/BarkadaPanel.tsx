@@ -115,8 +115,8 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
       <div className="mt-3.5 flex min-w-0 items-center gap-2.5">
         {going.length > 0 ? <AvatarStack people={toStackPeople(going)} live /> : null}
         <span className="g-sm min-w-0">
-          <b>{going.length} tara</b>
-          {maybe ? <span className="g-mut"> · {maybe} baka</span> : null}
+          <b>{going.length} going</b>
+          {maybe ? <span className="g-mut"> · {maybe} maybe</span> : null}
         </span>
       </div>
       {error ? <p role="alert" className="g-hint is-error mt-2">{error}</p> : null}

@@ -1,5 +1,5 @@
 import type { NormalizedPlace } from "../domain/places";
-import { isFoodStreet, isIndoorPlace, parseQueryIntent, vibeScore, type VibeId } from "../domain/queryIntent";
+import { isFoodStreet, isIndoorPlace, isMealStop, parseQueryIntent, vibeScore, type VibeId } from "../domain/queryIntent";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { DESTINATIONS, inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 import { AREA_ALIASES, detectAliasedCities, isNearManila, locationText, mentionsPhrase } from "../utils/areaAliases";
@@ -1533,6 +1533,16 @@ export function typicalMealCost(places: NormalizedPlace[]): number {
     .sort((a, b) => a - b);
   if (prices.length === 0) return 250;
   return Math.round(prices[Math.floor(prices.length / 2)] / 50) * 50;
+}
+
+/**
+ * Meal money per head the stops' own prices miss: each food stop with no price (a food street with free
+ * entry) is still a meal, and so is each asked-for meal no food stop covers. Same rule as the app's planCost.
+ */
+export function mealEstimatePerHead(stops: Array<NormalizedPlace | undefined>, mealsNeeded: number, mealCost: number): number {
+  const food = stops.filter((place): place is NormalizedPlace => place !== undefined && isMealStop(place));
+  const unpriced = food.filter((place) => !((place?.budget_min ?? 0) > 0)).length;
+  return (unpriced + Math.max(0, mealsNeeded - food.length)) * mealCost;
 }
 
 export function getPlanSunset(date: string, places: NormalizedPlace[]) {

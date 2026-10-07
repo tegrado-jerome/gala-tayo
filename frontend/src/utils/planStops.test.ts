@@ -1,13 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { formatClockLabel, parseClockLabel, planGroupSize, rainSwaps, slotForNewStop } from './planStops.ts'
-
-test('group size: the planned size counts until more people say Tara', () => {
-  assert.equal(planGroupSize(5, 2), 5)
-  assert.equal(planGroupSize(5, 7), 7)
-  assert.equal(planGroupSize(null, 0), 1)
-  assert.equal(planGroupSize(undefined, 3), 3)
-})
+import { formatClockLabel, parseClockLabel, rainSwaps, slotForNewStop } from './planStops.ts'
 
 test('reads and writes clock labels', () => {
   assert.equal(parseClockLabel('6:30 PM'), 18 * 60 + 30)

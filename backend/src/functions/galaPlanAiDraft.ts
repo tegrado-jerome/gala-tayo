@@ -32,6 +32,7 @@ import {
   KIND_LABEL,
   manilaToday,
   matchesLocation,
+  mealEstimatePerHead,
   orderByTimeOfDay,
   parseDeparture,
   parseDraft,
@@ -58,6 +59,7 @@ import {
   type DraftStop,
   type PlanConstraints,
 } from "../services/galaPlanDraftPlanner";
+import { isMealStop } from "../domain/queryIntent";
 import { isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 
 /** Straight-line km between two points. */
@@ -345,11 +347,9 @@ export async function buildPlanDraft({
   // The hard budget: the stops' prices plus the meals they don't price must fit the per-head budget.
   const mealCost = typicalMealCost(places);
   const mealsNeeded = kinds.filter((kind) => kind === "lunch" || kind === "dinner" || kind === "breakfast").length;
+  // Same rule as the app's planCost, so the cap and the shown price always agree.
   const mealEstimateFor = (stops: DraftStop[]) =>
-    Math.max(0, mealsNeeded - stops.filter((stop) => {
-      const place = candidatesById.get(stop.place_id);
-      return place?.category === "Food" && (place.budget_min ?? 0) > 0;
-    }).length) * mealCost;
+    mealEstimatePerHead(stops.map((stop) => candidatesById.get(stop.place_id)), mealsNeeded, mealCost);
   const perHead = (stops: DraftStop[]) => stops.reduce((sum, stop) => sum + (candidatesById.get(stop.place_id)?.budget_min ?? 0), 0) + mealEstimateFor(stops);
   const overBudget: NormalizedPlace[] = [];
   const budget = constraints.budgetPerHead;
@@ -440,6 +440,7 @@ export async function buildPlanDraft({
         area: place.area,
         address: place.address,
         budget_min: place.budget_min,
+        meal_stop: isMealStop(place),
         latitude: place.latitude,
         longitude: place.longitude,
         image_url: storageKey ? buildImageUrl(storageKey) : null,
@@ -457,6 +458,9 @@ export async function buildPlanDraft({
       group_size: groupSize ?? draft.group_size,
       budget_per_head: constraints.budgetPerHead,
       meal_estimate_per_head: mealEstimate,
+      // The app prices every screen of the plan from these two (frontend utils/planCost.ts).
+      meals_needed: mealsNeeded,
+      meal_cost: mealCost,
       date: planDate.date,
       date_source: planDate.source,
       sunset: `${String(Math.floor(sunsetMinutes / 60)).padStart(2, "0")}:${String(sunsetMinutes % 60).padStart(2, "0")}`,

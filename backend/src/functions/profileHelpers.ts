@@ -316,16 +316,27 @@ export async function getOrCreateAccountUser(userId: string, email: string | nul
 }
 
 /**
- * gala_plans.user_id references profiles, which references users, so a guest needs both rows before
- * saving a plan. Display name is "Guest" plus a short id. No-op for real accounts.
+ * The name a guest goes by in a plan: the one they typed when they RSVP'd (auth user_metadata.guest_name),
+ * else "Guest" plus a short id. Returns the name to save, or null when the profile already has the right one.
+ * A name the guest typed replaces the "Guest xxxx" default but never a name they set some other way.
  */
-export async function ensureGuestProfile(user: { id: string; isAnonymous?: boolean }) {
+export function guestDisplayName(userId: string, metadata: Record<string, unknown> | undefined, current: string | null | undefined) {
+  const fallback = `Guest ${userId.slice(0, 4)}`;
+  const typed = typeof metadata?.guest_name === "string" ? metadata.guest_name.replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 40) : "";
+  if (!current) return typed || fallback;
+  return typed && current === fallback ? typed : null;
+}
+
+/**
+ * gala_plans.user_id references profiles, which references users, so a guest needs both rows before
+ * saving a plan or an RSVP. No-op for real accounts.
+ */
+export async function ensureGuestProfile(user: { id: string; isAnonymous?: boolean; metadata?: Record<string, unknown> }) {
   if (!user.isAnonymous) return;
   await getOrCreateAccountUser(user.id, guestPlaceholderEmail(user.id));
   const profile = await getOrCreateProfile(user.id);
-  if (!profile.display_name) {
-    await saveProfile(user.id, { display_name: `Guest ${user.id.slice(0, 4)}` });
-  }
+  const name = guestDisplayName(user.id, user.metadata, profile.display_name);
+  if (name) await saveProfile(user.id, { display_name: name });
 }
 
 export async function assertUsernameAvailable(username: string, userId: string) {

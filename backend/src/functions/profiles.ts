@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { isMealStopRow } from "../domain/queryIntent";
 import { validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit, checkPublicReadRateLimit, getClientIp } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
@@ -1407,7 +1408,7 @@ export async function publicGalaPlan(
     }
 
       const { data: itemsData, error: itemsError } = await (supabase.from("gala_plan_items") as any)
-        .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, places(id, name, slug, category, city, address, budget_min, latitude, longitude)")
+        .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, places(id, name, slug, category, city, address, budget_min, latitude, longitude, tags, good_for)")
         .eq("plan_id", plan.id)
         .order("day_number", { ascending: true })
         .order("sort_order", { ascending: true });
@@ -1452,6 +1453,7 @@ export async function publicGalaPlan(
                 city: place?.city ?? null,
                 address: place?.address ?? null,
                 budget_min: toNullableNumber(place?.budget_min),
+                meal_stop: isMealStopRow(place),
                 latitude: toNullableNumber(place?.latitude),
                 longitude: toNullableNumber(place?.longitude),
                 ...(place?.storage_key ? { image_url: buildImageUrl(place.storage_key) } : {}),

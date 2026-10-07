@@ -79,6 +79,29 @@ export function parseListsState(raw: unknown): GalaListsState {
   return { version: 1, lists, following }
 }
 
+/**
+ * Joins two lists documents, e.g. a guest's device lists into the account's. A list in both keeps the
+ * newer edit; lists stay newest first. Deletions don't carry over, so only merge lists that never synced.
+ */
+export function mergeListsStates(base: GalaListsState, incoming: GalaListsState): GalaListsState {
+  const lists = new Map(base.lists.map((list) => [list.id, list]))
+  for (const list of incoming.lists) {
+    const current = lists.get(list.id)
+    if (!current || list.updatedAt > current.updatedAt) lists.set(list.id, list)
+  }
+  const following = new Map(base.following.map((item) => [item.key, item]))
+  for (const item of incoming.following) if (!following.has(item.key)) following.set(item.key, item)
+  return {
+    version: 1,
+    lists: [...lists.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    following: [...following.values()].sort((a, b) => b.followedAt.localeCompare(a.followedAt)),
+  }
+}
+
+export function isEmptyListsState(state: GalaListsState) {
+  return state.lists.length === 0 && state.following.length === 0
+}
+
 export function createList(state: GalaListsState, name: string, id: string, now: string): GalaListsState {
   const clean = cleanListName(name)
   if (!clean) return state

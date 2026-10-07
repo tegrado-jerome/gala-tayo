@@ -184,7 +184,8 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
   const parsed = parseGalaPlanDescription(plan.description)
   const sorted = [...dates].sort((a, b) => `${a.date} ${a.time ?? ''}`.localeCompare(`${b.date} ${b.time ?? ''}`))
   const best = bestDate(dates)
-  const locked = lockedDate(dates, parsed.dateMode === 'date' ? parsed.date : null)
+  const planDate = parsed.dateMode === 'date' ? parsed.date : null
+  const locked = lockedDate(dates, parsed.lockedPollId, planDate)
   const voterCount = new Set(dates.flatMap((choice) => choice.yes.map((voter) => voter.user_id))).size
 
   if (dates.length === 0) {
@@ -217,7 +218,7 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
 
   const lock = (choice: DateChoice) =>
     action.run('lock', async (activeSession) => {
-      const description = composeGalaPlanDescription({ description: parsed.description, dateMode: 'date', date: choice.date, groupSize: parsed.groupSize })
+      const description = composeGalaPlanDescription({ ...parsed, dateMode: 'date', date: choice.date, lockedPollId: choice.pollId })
       onPlanChange((await updateGalaPlan(plan.id, { description }, activeSession)).plan)
     })
 
@@ -243,6 +244,7 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
         {sorted.map((choice) => {
           const isBest = !locked && best?.pollId === choice.pollId
           const isLocked = locked?.pollId === choice.pollId
+          const isPlanDate = !locked && !isBest && choice.date === planDate
           return (
             <button
               key={choice.pollId}
@@ -256,6 +258,7 @@ export function KailanPoll({ plan, dates, session, onChange, onPlanChange }: Vot
               <span className="min-w-0 flex-1">
                 <span className="g-when-day">{formatDateChoice(choice)}</span>
                 {isBest ? <Tag tone="tara" className="ml-2">Best date</Tag> : null}
+                {isPlanDate ? <Tag className="ml-2">Plan date</Tag> : null}
                 {isLocked ? (
                   <Tag tone="tara" className="ml-2">
                     <LockSimple weight="fill" />
@@ -460,7 +463,7 @@ export function SpotDeck({ plan, spots, session, onChange, onPlanChange }: VoteP
           <span className="g-vote-ic" aria-hidden="true"><Cards weight="light" /></span>
           <div className="min-w-0 flex-1">
             <h3 id="spot-title" className="g-h3">Pick the spot</h3>
-            <p className="g-sm g-mut">Add {SPOT_OPTIONS.min} to {SPOT_OPTIONS.max} places. The barkada swipes Tara or Pass.</p>
+            <p className="g-sm g-mut">Add {SPOT_OPTIONS.min} to {SPOT_OPTIONS.max} places. Everyone swipes Yes or Pass.</p>
           </div>
         </div>
         {isComposing ? (
@@ -551,8 +554,8 @@ export function SpotDeck({ plan, spots, session, onChange, onPlanChange }: VoteP
               <span className="min-w-0 flex-1">
                 <span className="g-rank-name">{spot.name}</span>
                 <span className="g-rank-meta">
-                  {spot.tara} tara · {spot.pass} pass
-                  {spot.viewerChoice ? ` · you said ${spot.viewerChoice}` : ''}
+                  {spot.tara} yes · {spot.pass} pass
+                  {spot.viewerChoice ? ` · you said ${spot.viewerChoice === 'tara' ? 'yes' : 'pass'}` : ''}
                 </span>
                 {isWinner ? (
                   <span className="mt-1.5 flex flex-wrap items-center gap-2">

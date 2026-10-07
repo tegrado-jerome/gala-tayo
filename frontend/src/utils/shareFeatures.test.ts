@@ -9,7 +9,9 @@ import {
   decodeSharedList,
   deleteList,
   encodeSharedList,
+  isEmptyListsState,
   isFollowing,
+  mergeListsStates,
   parseListsState,
   renameList,
   toggleFollow,
@@ -150,4 +152,16 @@ test('stored state is parsed defensively', () => {
   assert.equal(parsed.lists.length, 1)
   assert.equal(parsed.lists[0].places.length, 1)
   assert.deepEqual(parsed.following, [])
+})
+
+test('guest device lists join the account once; the newer edit of a list wins', () => {
+  const account = renameList(createList(EMPTY_LISTS_STATE, 'Date night', 'shared-id', '2026-10-01T00:00:00.000Z'), 'shared-id', 'Date night (laptop)', '2026-10-05T00:00:00.000Z')
+  const device = createList(createList(EMPTY_LISTS_STATE, 'Old name', 'shared-id', '2026-10-01T00:00:00.000Z'), 'Food trip', 'device-id', NOW)
+  const merged = mergeListsStates(account, device)
+  assert.deepEqual(merged.lists.map((list) => list.name), ['Food trip', 'Date night (laptop)'])
+  assert.deepEqual(mergeListsStates(merged, merged), merged, 'merging twice changes nothing')
+  const followed = toggleFollow(EMPTY_LISTS_STATE, { name: 'Rainy day', slugs: ['the-mind-museum'], by: 'juan' }, NOW)
+  assert.equal(mergeListsStates(followed, followed).following.length, 1)
+  assert.equal(isEmptyListsState(EMPTY_LISTS_STATE), true)
+  assert.equal(isEmptyListsState(merged), false)
 })

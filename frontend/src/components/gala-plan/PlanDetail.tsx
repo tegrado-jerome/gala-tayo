@@ -36,9 +36,9 @@ import {
   updateGalaPlan,
   type GalaPlanDetail,
 } from '../../utils/galaPlansApi'
-import { planGroupSize, type RainSwap } from '../../utils/planStops'
+import type { RainSwap } from '../../utils/planStops'
 import type { CompactPlace } from '../../utils/compactPlaces'
-import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs } from '../../utils/galaPlanTrip'
+import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs, splitHeadcount } from '../../utils/galaPlanTrip'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
@@ -288,10 +288,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const going = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'going') : []
   const maybe = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'maybe') : []
   const passing = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'no') : []
-  // The group size set when the plan was made counts until more people RSVP.
-  // One group size for the itinerary budget, Hatian and the story; the Hatian stepper can change it.
-  const groupSize = planGroupSize(sizeOverride ?? parsedDescription.groupSize, going.length)
-  const perHead = estimatePerHead(plan.items, groupSize)
+  // Everyone going once friends reply, else the planned size; the Split costs stepper can change it.
+  // One group size and one cost for the itinerary, Split costs and the story.
+  const groupSize = splitHeadcount(parsedDescription.groupSize, going.length, sizeOverride)
+  const perHead = estimatePerHead(plan.items, groupSize, parsedDescription.meals)
   const payingGuests = going.filter((member) => !member.is_owner)
   const paidCount = payingGuests.filter((member) => member.paid).length
   const shareUrl = buildGalaPlanInviteUrl(plan.id)
@@ -303,7 +303,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
   const hasRoute = plan.items.some((item) => item.place.latitude != null && item.place.longitude != null)
   const votes = readyBarkada ? splitPolls(readyBarkada.polls) : null
-  const lockedChoice = votes ? lockedDate(votes.dates, parsedDescription.dateMode === 'date' ? parsedDescription.date : null) : null
+  const lockedChoice = votes ? lockedDate(votes.dates, parsedDescription.lockedPollId, parsedDescription.dateMode === 'date' ? parsedDescription.date : null) : null
   const leadingDate = votes ? bestDate(votes.dates) : null
   const openDates = votes && votes.dates.length > 0 && !lockedChoice ? votes.dates : []
   const spotsOpen = Boolean(votes && votes.spots.length > 0 && !votes.spots.some((spot) => spot.placeId && plan.items.some((item) => item.place_id === spot.placeId)))
@@ -540,7 +540,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       : [`${going.length} going`, maybe.length ? `${maybe.length} maybe` : null].filter(Boolean).join(', ')
   const rsvpSub =
     maybe.length > 0
-      ? `${joinNames(replyNames(maybe, readyBarkada?.members ?? [], session?.user?.id))} said baka`
+      ? `${joinNames(replyNames(maybe, readyBarkada?.members ?? [], session?.user?.id))} said maybe`
       : passing.length > 0
         ? `${passing.length} can't make it`
         : going.length > 1
@@ -643,7 +643,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               ) : null}
               {spotsOpen && votes ? (
                 <span>
-                  <b>Pick the spot</b> {votes.spots.length} places · swipe Tara or Pass
+                  <b>Pick the spot</b> {votes.spots.length} places · swipe Yes or Pass
                 </span>
               ) : null}
             </button>
@@ -686,7 +686,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               ) : (
                 <>
                   {!isDesktop ? routeMap : null}
-                  <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
+                  <PlanTimeline stops={stops} mealCost={parsedDescription.meals?.cost} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
                   {plan.viewer_is_owner ? (
                     <div className="mt-6 flex flex-wrap gap-2">
                       <Button variant="soft" size="sm" onClick={suggestNextStop}>
@@ -734,7 +734,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             ) : null}
             {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={applyBarkada} onPlanChange={applyPlan} /> : null}
             {activeTab === 'barkada' && readyBarkada ? <MembersList barkada={readyBarkada} /> : null}
-            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} groupSize={groupSize} onGroupSizeChange={setSizeOverride} onBarkadaChange={applyBarkada} /> : null}
+            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} groupSize={groupSize} plannedSize={parsedDescription.groupSize} meals={parsedDescription.meals} onGroupSizeChange={setSizeOverride} onBarkadaChange={applyBarkada} /> : null}
           </div>
         </div>
 

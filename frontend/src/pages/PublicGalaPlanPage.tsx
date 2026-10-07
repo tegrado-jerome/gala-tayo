@@ -14,7 +14,7 @@ import { useAppUser } from '../context/AppUserContext'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
-import { estimatePerHead, formatPeso, getPlanLegs } from '../utils/galaPlanTrip'
+import { estimatePerHead, formatPeso, getPlanLegs, splitHeadcount } from '../utils/galaPlanTrip'
 import { navigateToPath } from '../utils/navigation'
 import { shareGalaPlanLink } from '../utils/share'
 import '../design/plans.css'
@@ -122,12 +122,14 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
     )
   }
 
-  const description = parseGalaPlanDescription(plan.description).description
+  const settings = parseGalaPlanDescription(plan.description)
+  const description = settings.description
   const ownerName = getDisplayName(plan.owner)
   const city = items.find((item) => item.place.city)?.place.city
   const hasRoute = items.some((item) => item.place.latitude != null && item.place.longitude != null)
   const totalKm = getPlanLegs(items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
-  const perHead = estimatePerHead(items, 1)
+  // The size the host planned for: this page has no RSVP list, so it can't count who's going.
+  const perHead = estimatePerHead(items, splitHeadcount(settings.groupSize, 0), settings.meals)
   const planHref = `/gala-plans/${encodeURIComponent(plan.id)}`
 
   const joinPlan = () => {
@@ -221,7 +223,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
           ) : (
             <>
               {isDesktop ? null : routeMap}
-              <PlanTimeline stops={stops} />
+              <PlanTimeline stops={stops} mealCost={settings.meals?.cost} />
             </>
           )}
 

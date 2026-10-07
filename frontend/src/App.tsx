@@ -16,6 +16,7 @@ import { useAppLocationState } from './app/useAppLocationState'
 import { useAppScrollRestoration } from './app/useAppScrollRestoration'
 import { useLogoutTransitionState } from './app/useLogoutTransitionState'
 import { hasSignupOnboardingAccess as hasStoredSignupOnboardingAccess } from './services/authApi'
+import { syncGalaLists } from './utils/galaListsStore'
 
 function App() {
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
@@ -64,6 +65,20 @@ function App() {
   useEffect(() => {
     initializeAnalytics()
   }, [])
+
+  // Gala lists follow the account: load them on sign-in and again when the tab comes back into view.
+  const listsUserId = hasResolvedInitialAuth ? (session?.user?.id ?? null) : undefined
+  useEffect(() => {
+    if (listsUserId === undefined) return undefined
+    void syncGalaLists(session)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void syncGalaLists(session)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+    // Re-sync per user, not on every token refresh; the store reads a fresh token itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listsUserId, session?.user?.is_anonymous])
   useAppScrollRestoration({
     navigationSource,
     pathname,

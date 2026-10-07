@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { apiFetch, getApiUrl } from '../utils/apiClient'
 import { getPublicSiteOrigin } from '../utils/site'
+import { decodeReturnPath, encodeReturnPath } from '../utils/authReturnPath'
 import {
   LOGOUT_TRANSITION_DURATION_MS,
   endLogoutTransition,
@@ -21,6 +22,7 @@ const signupOnboardingAccessKey = 'galatayo:signup-onboarding-access'
 const SIGNUP_ONBOARDING_ACCESS_TTL_MS = 30 * 60 * 1000
 
 const rememberMeKey = 'galatayo:remember-me'
+const authReturnPathKey = 'galatayo:auth-return'
 
 type AdminPasswordSession = {
   userId: string
@@ -31,8 +33,40 @@ type SignupOnboardingAccess = {
   expiresAt: number
 }
 
+/** Keeps where a sign-in started, for when the confirm link or onboarding loses the `next` in the URL. */
+function rememberAuthReturnPath(nextPath: string | null) {
+  if (!nextPath || nextPath.startsWith('/onboarding')) return
+  try {
+    window.localStorage.setItem(authReturnPathKey, encodeReturnPath(nextPath))
+  } catch {
+    // Storage blocked: the `next` in the URL still works.
+  }
+}
+
+function peekAuthReturnPath() {
+  try {
+    return sanitizeNextPath(decodeReturnPath(window.localStorage.getItem(authReturnPathKey)))
+  } catch {
+    return null
+  }
+}
+
+export function clearAuthReturnPath() {
+  try {
+    window.localStorage.removeItem(authReturnPathKey)
+  } catch {
+    // Nothing stored.
+  }
+}
+
+/** The page to return to after signing in: the URL's `next`, else the one remembered on this device. */
+export function getReturnPath(search: string = window.location.search) {
+  return getRequestedNextPath(search) ?? peekAuthReturnPath()
+}
+
 export function getAuthCallbackUrl(nextPath?: string | null, flow?: 'signup' | 'recovery') {
   const sanitizedNextPath = sanitizeNextPath(nextPath)
+  if (flow !== 'recovery') rememberAuthReturnPath(sanitizedNextPath)
   const params = new URLSearchParams()
 
   if (sanitizedNextPath) {
@@ -370,7 +404,9 @@ export async function updateAccountPassword(password: string) {
 }
 
 export async function getPostAuthRedirect(_session: Session, search: string = window.location.search): Promise<AuthRedirectTarget> {
-  return resolvePostAuthPath('/home', search)
+  const path = getReturnPath(search) ?? '/home'
+  clearAuthReturnPath()
+  return path
 }
 
 export function sanitizeNextPath(value: string | null | undefined) {
@@ -434,8 +470,9 @@ export function buildOnboardingPath(nextPath?: string | null) {
   return next && !next.startsWith('/onboarding') ? `/onboarding?next=${encodeURIComponent(next)}` : '/onboarding'
 }
 
-/** Where finished onboarding goes: the remembered page, else Home. */
+/** Where finished onboarding goes: the page the sign-up started on (URL, else this device), else Home. */
 export function resolvePostOnboardingPath(search: string = window.location.search) {
-  const next = getRequestedNextPath(search)
+  const next = getReturnPath(search)
+  clearAuthReturnPath()
   return next && !next.startsWith('/onboarding') ? next : '/home'
 }

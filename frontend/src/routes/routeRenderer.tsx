@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import WelcomePage from '../pages/WelcomePage'
 import HomePage from '../pages/HomePage'
-import { buildAuthPath } from '../services/authApi'
+import { buildAuthPath, resolvePostOnboardingPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { openFloatingChat } from '../utils/floatingChat'
@@ -109,7 +109,8 @@ function OnboardingAccessGate({
         }
 
         if (!status.needsOnboarding) {
-          replaceWithPath('/home')
+          // Already set up (finished in another tab): go where the sign-up started, not just Home.
+          replaceWithPath(resolvePostOnboardingPath())
           return
         }
 
