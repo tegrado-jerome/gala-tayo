@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkEndpointRateLimit, checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import {
   canSeeFollowers,
   canSeeFollowing,
@@ -355,7 +355,7 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
 
 export async function publicProfileSocial(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "public-profile", 30, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "public-profile", 30, 60);
     if (!rateCheck.allowed && rateCheck.response) {
       return rateCheck.response;
     }
@@ -523,7 +523,7 @@ async function getProfilesByUserId(userIds: string[]) {
 
 async function followList(request: HttpRequest, context: InvocationContext, kind: "followers" | "following"): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, `follow-${kind}`, 30, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, `follow-${kind}`, 30, 60);
     if (!rateCheck.allowed && rateCheck.response) {
       return rateCheck.response;
     }
@@ -566,7 +566,7 @@ export function profileFollowing(request: HttpRequest, context: InvocationContex
 
 export async function myFollowRequests(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "follow-requests", 20, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "follow-requests", 20, 60);
     if (!rateCheck.allowed && rateCheck.response) {
       return rateCheck.response;
     }

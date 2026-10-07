@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { CATEGORIES } from "./filters";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { REGIONS } from "../utils/phDestinations";
 import { getSiteUrl } from "../utils/siteUrl";
@@ -198,7 +198,7 @@ function buildSitemapEntries(args: {
 }
 
 export async function seoPlaces(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "seo-places", 30, 60)
+  const rateCheck = await checkPublicReadRateLimit(request, "seo-places", 30, 60)
   if (!rateCheck.allowed && rateCheck.response) {
     return rateCheck.response
   }
@@ -235,7 +235,7 @@ export async function seoPlaces(request: HttpRequest, context: InvocationContext
 }
 
 export async function seoArea(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "seo-area", 30, 60)
+  const rateCheck = await checkPublicReadRateLimit(request, "seo-area", 30, 60)
   if (!rateCheck.allowed && rateCheck.response) {
     return rateCheck.response
   }
@@ -261,7 +261,7 @@ export async function seoArea(request: HttpRequest, context: InvocationContext):
 }
 
 export async function seoListings(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "seo-listings", 60, 60)
+  const rateCheck = await checkPublicReadRateLimit(request, "seo-listings", 60, 60)
   if (!rateCheck.allowed && rateCheck.response) {
     return rateCheck.response
   }
@@ -292,7 +292,7 @@ export async function seoListings(request: HttpRequest, context: InvocationConte
 }
 
 export async function sitemapXml(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "sitemap", 10, 60)
+  const rateCheck = await checkPublicReadRateLimit(request, "sitemap", 10, 60)
   if (!rateCheck.allowed && rateCheck.response) {
     return rateCheck.response
   }

@@ -40,10 +40,6 @@ export function buildApprovedPlaceImagesCacheKey(placeId: string): string {
   return `${CACHE_VERSION}:approved-place-images:${sanitizeCachePart(placeId)}`;
 }
 
-export function buildApprovedPlaceImagesCountCacheKey(placeId: string): string {
-  return `${CACHE_VERSION}:approved-place-images-count:${sanitizeCachePart(placeId)}`;
-}
-
 export function buildGeoapifyLookupCacheKey(normalizedKey: string): string {
   return `${CACHE_VERSION}:geoapify-lookup:${sanitizeCachePart(normalizedKey)}`;
 }

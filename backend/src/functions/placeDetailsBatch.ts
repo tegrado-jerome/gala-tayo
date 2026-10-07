@@ -9,7 +9,7 @@ import {
   resolveCityImageDetails,
   type CityImageRequest,
 } from "../data/placeDetails";
-import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { checkPublicReadRateLimit } from "../utils/redisRateLimit";
 
 type PlaceDetailsBatchRequest = {
   slugs?: unknown;
@@ -50,7 +50,7 @@ export async function placeDetailsBatch(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  const rateCheck = await checkEndpointRateLimit(request, "place-detail-batch", 30, 60);
+  const rateCheck = await checkPublicReadRateLimit(request, "place-detail-batch", 30, 60);
   if (!rateCheck.allowed && rateCheck.response) {
     return rateCheck.response;
   }

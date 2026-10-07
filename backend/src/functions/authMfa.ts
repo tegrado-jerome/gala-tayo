@@ -246,18 +246,16 @@ export async function getMfaStatus(
 
     const redis = await getRedisClient();
 
-    if (sessionId && redis) {
-      const verifiedKey = `mfa:verified:${authUser.id}:${sessionId}`;
-      const verified = await redis.get(verifiedKey);
-      if (verified) {
-        return { status: 200, jsonBody: { needsMfa: false } };
-      }
-    }
-
     const deviceToken = request.headers.get("x-device-token");
-    if (deviceToken && redis) {
-      const trusted = await redis.get(`mfa:trusted:${deviceToken}`);
-      if (isDeviceTrustedFor(trusted, authUser.id)) {
+    const verifiedKey = sessionId ? `mfa:verified:${authUser.id}:${sessionId}` : null;
+    const trustedKey = deviceToken ? `mfa:trusted:${deviceToken}` : null;
+
+    if (redis && (verifiedKey || trustedKey)) {
+      // Both checks in one MGET.
+      const values = await redis.mget<unknown[]>(...[verifiedKey, trustedKey].filter((key): key is string => Boolean(key)));
+      const verified = verifiedKey ? values[0] : null;
+      const trusted = trustedKey ? values[verifiedKey ? 1 : 0] : null;
+      if (verified || isDeviceTrustedFor(trusted, authUser.id)) {
         return { status: 200, jsonBody: { needsMfa: false } };
       }
     }
@@ -283,12 +281,13 @@ export async function getTrustedDevices(
     const tokenIds = await redis.smembers(`mfa:trusted:list:${authUser.id}`);
     const devices: Array<{ deviceToken: string; userAgent: string; trustedAt: number }> = [];
 
-    for (const tid of tokenIds) {
-      const parsed = parseTrustedDevice(await redis.get(`mfa:trusted:${tid}`));
+    const storedDevices = tokenIds.length ? await redis.mget<unknown[]>(...tokenIds.map((tid) => `mfa:trusted:${tid}`)) : [];
+    tokenIds.forEach((tid, index) => {
+      const parsed = parseTrustedDevice(storedDevices[index]);
       if (parsed?.userId === authUser.id) {
         devices.push({ deviceToken: tid, userAgent: parsed.userAgent, trustedAt: parsed.trustedAt });
       }
-    }
+    });
 
     return { status: 200, jsonBody: { devices } };
   } catch (error) {
@@ -347,10 +346,7 @@ export async function revokeAllTrustedDevices(
     }
 
     const tokenIds = await redis.smembers(`mfa:trusted:list:${authUser.id}`);
-    for (const tid of tokenIds) {
-      await redis.del(`mfa:trusted:${tid}`);
-    }
-    await redis.del(`mfa:trusted:list:${authUser.id}`);
+    await redis.del(...tokenIds.map((tid) => `mfa:trusted:${tid}`), `mfa:trusted:list:${authUser.id}`);
 
     return { status: 200, jsonBody: { revoked: true } };
   } catch (error) {

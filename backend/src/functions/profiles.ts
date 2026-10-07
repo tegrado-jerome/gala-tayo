@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
-import { checkEndpointRateLimit, getClientIp } from "../utils/redisRateLimit";
+import { checkEndpointRateLimit, checkPublicReadRateLimit, getClientIp } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
 import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage, detectImageFormatFromBytes } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
@@ -1061,7 +1061,7 @@ export async function profileSearch(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "profile-search", 20, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "profile-search", 20, 60);
     if (!rateCheck.allowed && rateCheck.response) {
       return rateCheck.response;
     }
@@ -1160,7 +1160,7 @@ export async function profileSuggestions(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const rateCheck = await checkEndpointRateLimit(request, "profile-suggestions", 20, 60);
+    const rateCheck = await checkPublicReadRateLimit(request, "profile-suggestions", 20, 60);
     if (!rateCheck.allowed && rateCheck.response) {
       return rateCheck.response;
     }

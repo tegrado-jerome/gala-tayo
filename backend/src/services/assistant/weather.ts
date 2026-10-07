@@ -1,4 +1,7 @@
-import { getJsonCacheValue, setJsonCacheValue } from "../redisCacheService";
+import { MemoryCache } from "../../utils/memoryCache";
+
+// Open-Meteo is free and fast, and the key changes every hour, so a shared Redis copy is rarely reused: memory only.
+const weatherCache = new MemoryCache(300);
 
 /** Rain rules match the place-page weather (frontend/src/utils/weather.ts): likely = 70%+ chance and 0.5 mm+. */
 const RAIN_LIKELY_CHANCE = 70;
@@ -61,7 +64,7 @@ export async function fetchWeather(latitude: number, longitude: number, fetcher:
   const lat = latitude.toFixed(2);
   const lon = longitude.toFixed(2);
   const key = `assistant:weather:${lat}:${lon}:${manilaHourKey()}`;
-  const cached = await getJsonCacheValue<WeatherSummary>(key).catch(() => null);
+  const cached = weatherCache.get<WeatherSummary>(key);
   if (cached) return cached;
   try {
     const response = await fetcher(
@@ -70,7 +73,7 @@ export async function fetchWeather(latitude: number, longitude: number, fetcher:
     );
     if (!response.ok) return null;
     const summary = summariseForecast((await response.json()) as OpenMeteoForecast, manilaHourKey());
-    await setJsonCacheValue(key, summary, { ttlSeconds: 20 * 60 }).catch(() => undefined);
+    weatherCache.set(key, summary, 20 * 60);
     return summary;
   } catch {
     return null;
