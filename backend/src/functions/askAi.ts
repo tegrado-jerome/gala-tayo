@@ -6,7 +6,6 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
-  checkAskAiUsageForActorType,
   consumeAskAiUsageForActor,
   refundAskAiUsageForActor,
   type AskAiUsageResult,
@@ -388,30 +387,21 @@ export async function postAskAiChatbot(
     const aiUsage = await consumeAskAiUsageForActor(resolvedActor!, "chatbot_ai");
 
     if (!aiUsage.allowed) {
-      const doubleCheck = await checkAskAiUsageForActorType(resolvedActor!, "chatbot_ai").catch(() => null);
-
-      if (!doubleCheck?.allowed || doubleCheck.remaining <= 0) {
-        context.log(
-          `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
-        );
-
-        return {
-          status: 429,
-          headers: JSON_HEADERS,
-          jsonBody: {
-            ok: false,
-            error: "daily_ai_limit_reached",
-            message: buildDailyLimitMessage(resolvedActor!, aiUsage.dailyLimit),
-            usage: toUsageBody(aiUsage),
-            requestId,
-          },
-        };
-      }
-
-      context.warn(
-        `[AskAI Chatbot] RPC quota block overridden: requestCount=${doubleCheck.requestCount} remaining=${doubleCheck.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
+      context.log(
+        `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );
-      Object.assign(aiUsage, { allowed: true, remaining: doubleCheck.remaining, requestCount: doubleCheck.requestCount });
+
+      return {
+        status: 429,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: "daily_ai_limit_reached",
+          message: buildDailyLimitMessage(resolvedActor!, aiUsage.dailyLimit),
+          usage: toUsageBody(aiUsage),
+          requestId,
+        },
+      };
     }
 
     quotaConsumedUserId = resolvedActor!.id;

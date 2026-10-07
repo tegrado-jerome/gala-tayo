@@ -483,7 +483,31 @@ async function refundAskAiGuestUsage(params: {
   }
 }
 
+/**
+ * The live consume_ask_ai_usage function only creates the day's row on the first call and answers
+ * allowed=false with request_count 0, which showed "You've used all N" to people with nothing used.
+ * A denial while quota is left is retried once (the row exists by then, so the retry counts atomically);
+ * a second such answer is an error, never a false "limit reached".
+ */
+export async function consumeWithFirstCallRetry(call: () => Promise<AskAiUsageResult>): Promise<AskAiUsageResult> {
+  const hasQuotaLeft = (usage: AskAiUsageResult) => !usage.allowed && usage.requestCount < usage.dailyLimit;
+  const first = await call();
+  if (!hasQuotaLeft(first)) return first;
+  const second = await call();
+  if (hasQuotaLeft(second)) {
+    throw new Error("Failed to process usage quota right now. Please try again.");
+  }
+  return second;
+}
+
 async function consumeAskAiUsageRpc(params: {
+  userId: string;
+  usageType: AskAiUsageType;
+}): Promise<AskAiUsageResult> {
+  return consumeWithFirstCallRetry(() => callConsumeAskAiUsageRpc(params));
+}
+
+async function callConsumeAskAiUsageRpc(params: {
   userId: string;
   usageType: AskAiUsageType;
 }): Promise<AskAiUsageResult> {
