@@ -45,7 +45,7 @@ export type AgentDeps = {
 
 export function cacheKey(mode: AssistantMode, message: string) {
   const normalised = message.toLowerCase().replace(/[^\p{L}\p{N}₱ ]+/gu, " ").replace(/\s+/g, " ").trim();
-  return `assistant:answer:v3:${mode}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
+  return `assistant:answer:v4:${mode}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
 }
 
 function historyTurns(history: AgentHistoryTurn[]): ModelTurn[] {
@@ -318,7 +318,7 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
       if (memory.indoor) await runTool("weather", memory.area ? { area: memory.area } : {}, context, ledger);
     }
     const cards = selectCards("", ledger, input.mode, memory, deps.imageUrl);
-    const text = fallbackText(cards, memory, buildWeather(ledger));
+    const text = fallbackText(cards, memory, buildWeather(ledger), ledger.inArea);
     emit({ type: "delta", text });
     response = finish({ text, refused: false, provider: "fallback" });
   }

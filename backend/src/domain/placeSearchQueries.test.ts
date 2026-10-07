@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { visibleFixturePlaces } from "../services/assistant/fixtures/testPlaces";
-import { correctTypo, isIndoorPlace, parseQueryIntent } from "./queryIntent";
-import { rankPlaces } from "./placeSearch";
+import { correctTypo, isIndoorPlace, parseQueryIntent, vibeMatches, vibeScore } from "./queryIntent";
+import { resolveDestination } from "../utils/phDestinations";
+import { rankPlaces, searchPlacesInArea } from "./placeSearch";
 
 // Real searches from QA (round 3) against the fixture snapshot of live places.
 // `top`: these must be the first results, in any order. `include`: must be in the first `within`.
@@ -62,6 +63,17 @@ const CASES: Case[] = [
   { query: "island hopping coron", every: (slug) => ["Coron", "Busuanga"].includes(place(slug).city ?? "") },
   { query: "el nido", every: (slug) => place(slug).city === "El Nido" },
   { query: "lake", include: ["kayangan-lake-coron"], within: 4 },
+  // QA round 4: everyday intent words. "Pasyalan" and "outing" ask for the best places, not a word in their names.
+  { query: "pasyalan", top: ["fort-santiago"], within: 1 },
+  { query: "pasyalan sa manila", include: ["fort-santiago", "intramuros"], within: 6, every: (slug) => place(slug).city === "Manila" },
+  { query: "family outing", include: ["the-mind-museum", "star-city"], within: 3, every: (slug) => vibeMatches(place(slug), "family") },
+  { query: "barkada outing qc", include: ["la-mesa-eco-park", "cubao-expo"], within: 3, every: (slug) => place(slug).city === "Quezon City" },
+  { query: "things to do in cebu", include: ["kawasan-falls-badian"], within: 5, every: (slug) => resolveDestination(place(slug).city, place(slug).area)?.provinceName === "Cebu" },
+  // "Near <city>" measures from the city instead of filtering to it.
+  { query: "hiking near manila", include: ["mount-batulao-nasugbu"], within: 5, every: (slug) => vibeMatches(place(slug), "mountain") && place(slug).city !== "Kabayan" },
+  { query: "beach near manila", include: ["anawangin-cove-zambales", "laiya-beach-san-juan-batangas"], within: 4, exclude: ["white-beach-boracay"] },
+  // "Date night" is the date-night places, ranked, not half the catalogue.
+  { query: "date night", include: ["toyo-eatery", "gallery-by-chele"], within: 3, every: (slug) => vibeScore(place(slug), "date") === 2 },
 ];
 
 describe("search: real queries", () => {
@@ -96,6 +108,29 @@ describe("query understanding", () => {
     const intent = parseQueryIntent("libreng talon na may view para sa barkada", visibleFixturePlaces);
     assert.deepEqual([...intent.vibes].sort(), ["barkada", "free", "view", "waterfall"]);
     assert.deepEqual(intent.terms, []);
+  });
+
+  it("keeps 'date night' narrow: the clear date spots only", () => {
+    const loose = visibleFixturePlaces.filter((entry) => vibeMatches(entry, "date")).length;
+    const results = rankPlaces(visibleFixturePlaces, "date night");
+    assert.ok(results.length <= 30 && results.length < loose / 2, `${results.length} of ${loose} loose date matches`);
+  });
+
+  it("answers a place with nothing of that kind with the place's best picks and a plain note", () => {
+    const { ranked, note } = searchPlacesInArea(visibleFixturePlaces, "cafe tagaytay");
+    assert.ok(ranked.length > 0);
+    assert.ok(ranked.every(({ place: entry }) => entry.city === "Tagaytay"));
+    assert.equal(note, "No cafes in Tagaytay on GalaTayo yet. Here are Tagaytay's top picks instead.");
+    // A search that finds things has no note; a search with no place stays honestly empty.
+    assert.equal(searchPlacesInArea(visibleFixturePlaces, "coffee baguio").note, null);
+    assert.deepEqual(searchPlacesInArea(visibleFixturePlaces, "xylophone").ranked, []);
+  });
+
+  it("never calls a district or a park rain-proof; indoor comes from the place's own data", () => {
+    assert.equal(isIndoorPlace(place("poblacion-makati")), false);
+    assert.equal(isIndoorPlace(place("binondo-chinatown")), false);
+    assert.equal(isIndoorPlace(place("art-in-island")), true);
+    assert.equal(isIndoorPlace(place("toyo-eatery")), true);
   });
 
   it("maps an explicit good-for filter to the labels editors use", () => {

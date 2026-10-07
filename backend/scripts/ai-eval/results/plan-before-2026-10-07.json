@@ -1,0 +1,385 @@
+{
+ "label": "plan-before-2026-10-07",
+ "mean": 0.8107142857142857,
+ "pass": 0,
+ "rows": [
+  {
+   "id": "binondo-food-800",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱5200 a head, budget ₱800"
+   ],
+   "score": 0.8333333333333334,
+   "stops": [
+    "11:30 Jones Bridge",
+    "12:40 Binondo Chinatown",
+    "14:00 Intramuros",
+    "15:35 Manila Cathedral",
+    "16:55 Rizal Park / Luneta Park",
+    "19:00 Celera"
+   ]
+  },
+  {
+   "id": "binondo-food-800",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱5920 a head, budget ₱800"
+   ],
+   "score": 0.8333333333333334,
+   "stops": [
+    "11:30 Jones Bridge",
+    "12:40 Metropolitan Theater",
+    "13:55 Binondo Chinatown",
+    "15:15 Intramuros",
+    "16:30 Manila Ocean Park",
+    "19:00 Celera"
+   ]
+  },
+  {
+   "id": "binondo-food-800",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱6145 a head, budget ₱800"
+   ],
+   "score": 0.8333333333333334,
+   "stops": [
+    "11:30 Manila Ocean Park",
+    "12:40 Baluarte de San Diego",
+    "13:55 Binondo Chinatown",
+    "15:10 Casa Manila",
+    "16:25 Fort Santiago",
+    "19:00 Celera"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 0.5,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "park after dark: 18:55 Sirao Flower Garden"
+   ],
+   "score": 0.9166666666666666,
+   "stops": [
+    "17:30 Tops Lookout",
+    "18:55 Sirao Flower Garden"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 0.5,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "park after dark: 18:55 Sirao Flower Garden"
+   ],
+   "score": 0.9166666666666666,
+   "stops": [
+    "17:30 Tops Lookout",
+    "18:55 Sirao Flower Garden"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 0.5,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "park after dark: 18:55 Sirao Flower Garden"
+   ],
+   "score": 0.9166666666666666,
+   "stops": [
+    "17:30 Tops Lookout",
+    "18:55 Sirao Flower Garden"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 0.33333333333333337,
+    "required": null
+   },
+   "notes": [
+    "₱1070 a head, budget ₱1000",
+    "not marked indoor on a rainy day: Cubao Expo",
+    "not marked indoor on a rainy day: La Mesa Eco Park"
+   ],
+   "score": 0.7619047619047619,
+   "stops": [
+    "10:00 Art in Island",
+    "11:35 Cubao Expo",
+    "14:15 La Mesa Eco Park"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 0.33333333333333337,
+    "required": null
+   },
+   "notes": [
+    "₱1145 a head, budget ₱1000",
+    "not marked indoor on a rainy day: Cubao Expo",
+    "not marked indoor on a rainy day: Binondo Chinatown",
+    "not marked indoor on a rainy day: Intramuros",
+    "not marked indoor on a rainy day: La Mesa Eco Park"
+   ],
+   "score": 0.7619047619047619,
+   "stops": [
+    "10:00 Art in Island",
+    "11:05 Cubao Expo",
+    "12:40 Binondo Chinatown",
+    "14:00 Intramuros",
+    "15:05 Casa Manila",
+    "17:10 La Mesa Eco Park"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 0.33333333333333337,
+    "required": null
+   },
+   "notes": [
+    "₱1995 a head, budget ₱1000",
+    "not marked indoor on a rainy day: Cubao Expo",
+    "not marked indoor on a rainy day: Baluarte de San Diego",
+    "not marked indoor on a rainy day: Manila Ocean Park",
+    "not marked indoor on a rainy day: Fort Santiago"
+   ],
+   "score": 0.7619047619047619,
+   "stops": [
+    "10:00 Art in Island",
+    "11:05 Cubao Expo",
+    "12:45 Casa Manila",
+    "13:50 Baluarte de San Diego",
+    "15:05 Manila Ocean Park",
+    "16:20 Fort Santiago"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱550 a head, budget ₱500"
+   ],
+   "score": 0.8333333333333334,
+   "stops": [
+    "14:00 Baluarte de San Diego",
+    "15:10 Casa Manila",
+    "16:50 Jones Bridge",
+    "18:05 Rizal Park / Luneta Park",
+    "19:20 Binondo Chinatown"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 0.5,
+    "meals": 0,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱6000 a head, budget ₱500",
+    "2 stops, want 3",
+    "no dinner and no note"
+   ],
+   "score": 0.5833333333333334,
+   "stops": [
+    "14:00 National Museum of Fine Arts",
+    "15:55 Helm by Josh Boutwood"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 0,
+    "area": 1,
+    "full": 0.5,
+    "meals": 0,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [
+    "₱6000 a head, budget ₱500",
+    "2 stops, want 3",
+    "no dinner and no note"
+   ],
+   "score": 0.5833333333333334,
+   "stops": [
+    "14:00 National Museum of Fine Arts",
+    "15:55 Helm by Josh Boutwood"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 0.5
+   },
+   "notes": [
+    "dropped saved place ayala-museum without saying why"
+   ],
+   "score": 0.875,
+   "stops": [
+    "10:00 Casa Manila",
+    "11:45 Binondo Chinatown",
+    "13:00 National Museum of Fine Arts",
+    "14:35 National Museum of Natural History"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 0.5
+   },
+   "notes": [
+    "dropped saved place ayala-museum without saying why"
+   ],
+   "score": 0.875,
+   "stops": [
+    "10:00 Jones Bridge",
+    "11:15 Casa Manila",
+    "12:25 Fort Santiago",
+    "13:45 Binondo Chinatown",
+    "15:00 National Museum of Fine Arts",
+    "16:05 National Museum of Natural History"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 0.5
+   },
+   "notes": [
+    "dropped saved place ayala-museum without saying why"
+   ],
+   "score": 0.875,
+   "stops": [
+    "10:00 Manila Ocean Park",
+    "11:10 Baluarte de San Diego",
+    "12:20 Casa Manila",
+    "13:35 Binondo Chinatown",
+    "14:50 Fort Santiago",
+    "16:05 National Museum of Fine Arts"
+   ]
+  }
+ ]
+}

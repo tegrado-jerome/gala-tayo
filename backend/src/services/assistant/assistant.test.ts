@@ -416,10 +416,11 @@ describe("fallbacks and cache", () => {
   });
 
   it("map mode returns more pins", async () => {
-    const { response } = await ask("Museums in Manila", [new MockProvider()], { mode: "map" });
+    // Chat shows four cards; the map shows up to eight (Manila has more than four free places).
+    const { response } = await ask("Free places in Manila", [new MockProvider()], { mode: "map" });
     assertGrounded(response);
     assert.equal(response.mode, "map");
-    assert.ok(response.places.length > 3);
+    assert.ok(response.places.length > 4);
     assert.ok(!response.chips.some((chip) => chip.kind === "map"));
   });
 });

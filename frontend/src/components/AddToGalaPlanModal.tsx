@@ -9,6 +9,7 @@ import { supabase } from '../supabase'
 import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
 import { getPlanDate } from '../utils/galaPlanTrip'
 import { navigateToPath } from '../utils/navigation'
+import { planWithAiHref } from '../utils/planWithAiLink'
 import { Button, Empty, Sheet, Skeleton } from './ui'
 
 function planThumbs(plan: GalaPlanSummary) {
@@ -24,10 +25,12 @@ type AddToGalaPlanModalProps = {
   isOpen: boolean
   placeId: string
   placeName: string
+  /** With it, Plan with AI keeps this place as a stop instead of reading its name from the prompt. */
+  placeSlug?: string | null
   onClose: () => void
 }
 
-function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPlanModalProps) {
+function AddToGalaPlanModal({ isOpen, placeId, placeName, placeSlug, onClose }: AddToGalaPlanModalProps) {
   const [plans, setPlans] = useState<GalaPlanSummary[]>([])
   const [session, setSession] = useState<Session | null>(null)
   const [selectedPlanId, setSelectedPlanId] = useState('')
@@ -129,7 +132,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                 <Plus />
                 Create plan
               </Button>
-              <Button variant="soft" onClick={() => goTo(`/plan-with-ai?q=${encodeURIComponent(`A day out that includes ${placeName}`)}`)}>
+              <Button variant="soft" onClick={() => goTo(planWithAiHref(`A day out that includes ${placeName}`, placeSlug ? [placeSlug] : []))}>
                 <Sparkles />
                 Plan with AI
               </Button>

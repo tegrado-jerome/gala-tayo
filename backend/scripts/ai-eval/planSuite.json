@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "notes": "Plan with AI eval (QA round 4). Each case is one prompt to the planner, run over the places snapshot with the no-model fallback and two stand-in models that ignore the request (one takes the first candidates, one the priciest), so the rules must hold whatever the model returns. budgetPerHead: entry costs plus the meal estimate must fit. cities: every stop's city must be one of these, unless a plan note names the stop. minStops / minMinutes: the plan must be at least this full. meals: meal kinds that need a stop (or a note saying why there is none). indoor: every stop must be marked indoor in its own data. required: slugs that must be stops (or named in a note).",
+  "cases": [
+    { "id": "binondo-food-800", "prompt": "Saturday food trip in Binondo for 4 friends, around 800 each, lunch until early dinner", "budgetPerHead": 800, "cities": ["Manila"], "minStops": 3, "meals": ["lunch", "dinner"] },
+    { "id": "cebu-date-3000", "prompt": "Date night in Cebu City for 2, 3000 total", "budgetPerHead": 1500, "cities": ["Cebu City"], "minStops": 2, "minMinutes": 120, "meals": ["dinner"] },
+    { "id": "qc-rainy-1000", "prompt": "Rainy Saturday in Quezon City for 6 friends, 1000 each", "budgetPerHead": 1000, "cities": ["Quezon City"], "minStops": 3, "meals": ["lunch"], "indoor": true },
+    { "id": "intramuros-500", "prompt": "Saturday barkada day in Intramuros for 4, around 500 each, afternoon to dinner", "budgetPerHead": 500, "cities": ["Manila"], "minStops": 3, "meals": ["dinner"] },
+    { "id": "saved-ayala-binondo", "prompt": "Plan a day out from my saved places: Ayala Museum, Binondo Chinatown", "places": ["ayala-museum", "binondo-chinatown"], "required": ["ayala-museum", "binondo-chinatown"], "minStops": 2 }
+  ]
+}

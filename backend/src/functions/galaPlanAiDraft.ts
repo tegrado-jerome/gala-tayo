@@ -1,18 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
+import { isIndoorPlace } from "../domain/queryIntent";
 import { consumeAskAiUsageForActor, refundAskAiUsageForActor } from "../services/askAiUsageService";
 import { generateJsonFromGroq } from "../services/groqChatProvider";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
 import {
   areaLabel,
   buildFallbackDraft,
+  capSightsForFoodTrip,
   buildSystemPrompt,
   buildUserMessage,
   cleanSummary,
   defaultStart,
+  describeStop,
   detectLocationIntent,
   driveMinutesFromManila,
+  dropParentAreas,
   dropOffHoursFood,
   ensureAreaStop,
   ensureRequested,
@@ -22,6 +26,7 @@ import {
   formatClock12,
   formatDuration,
   getPlanSunset,
+  isDarkOutdoor,
   hasLocation,
   keepStopsNearby,
   KIND_LABEL,
@@ -30,8 +35,10 @@ import {
   orderByTimeOfDay,
   parseDeparture,
   parseDraft,
+  parseClock,
   parseGroupSize,
   parsePlanConstraints,
+  pickSunsetStop,
   PLAN_CANDIDATES,
   placesForArea,
   preferInArea,
@@ -42,11 +49,13 @@ import {
   tightenRoute,
   topUpStops,
   typicalMealCost,
+  wantsEvening,
   wantsSunset,
   wantsWholeDay,
   weekdayOf,
   widenThinArea,
   type DraftResponse,
+  type DraftStop,
   type PlanConstraints,
 } from "../services/galaPlanDraftPlanner";
 import { isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
@@ -69,7 +78,15 @@ function planCentre(places: Array<NormalizedPlace | undefined>) {
 }
 
 const MEAL_TIMES: Record<string, string> = { breakfast: "08:00", lunch: "12:00", dinner: "19:00" };
+// Chosen places farther apart than this can't share one day out.
+const PINNED_REACH_KM = 60;
+const MAX_PINNED = 6;
+// Inside Metro Manila a missing meal may come from just outside the asked area, never across the metro.
+const METRO_OUTSIDE_KM = 3;
 const formatPeso = (value: number) => `₱${value.toLocaleString("en-PH")}`;
+const STATED_CLOCK = /\b\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)|\b\d{1,2}:\d{2}\b|\balas[-\s]?\d/i;
+const DATE_ASK = /\b(date|romantic|jowa|anniversary|monthsary|sunset)\b/i;
+const FOOD_TRIP = /\b(food ?trip|food crawl|foodie|food tour|kainan|eat(?:ing)? our way)\b/i;
 import { isAskAiIpAllowed, resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { hasCuratedPhoto, placePhotoKey } from "../utils/hdPhotos";
 import { buildImageUrl } from "../utils/r2UrlResolver";
@@ -79,16 +96,21 @@ import { ASK_AI_SCOPE_REJECTION_MESSAGE } from "./askAiStrictPgGuard";
 const JSON_HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 const MAX_PROMPT_LENGTH = 400;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const PLACE_SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
 
 async function getBody(request: HttpRequest) {
   try {
-    const body = (await request.json()) as { prompt?: unknown; date?: unknown };
+    const body = (await request.json()) as { prompt?: unknown; date?: unknown; places?: unknown };
     return {
       prompt: typeof body?.prompt === "string" ? body.prompt.trim() : "",
       date: typeof body?.date === "string" && ISO_DATE.test(body.date) ? body.date : null,
+      // Slugs of places the user chose; only slugs, never anything about the user.
+      places: Array.isArray(body?.places)
+        ? [...new Set(body.places.filter((slug): slug is string => typeof slug === "string" && PLACE_SLUG.test(slug)))].slice(0, MAX_PINNED)
+        : [],
     };
   } catch {
-    return { prompt: "", date: null };
+    return { prompt: "", date: null, places: [] };
   }
 }
 
@@ -123,6 +145,7 @@ export type PlanDraftOutcome =
 export async function buildPlanDraft({
   prompt,
   places,
+  placeSlugs = [],
   requestedDate,
   requestId,
   log = () => undefined,
@@ -131,6 +154,8 @@ export async function buildPlanDraft({
 }: {
   prompt: string;
   places: NormalizedPlace[];
+  /** Places the user chose ("Plan a trip from these"): every one is a stop, or a note says why not. */
+  placeSlugs?: string[];
   requestedDate: string | null;
   requestId: string;
   log?: (message: string) => void;
@@ -138,7 +163,20 @@ export async function buildPlanDraft({
   model?: typeof draftWithModel;
   loadImages?: (placeIds: string[]) => Promise<Map<string, Array<{ storage_key: string }>>>;
 }): Promise<PlanDraftOutcome> {
-  const askedArea = detectLocationIntent(places, prompt);
+  // Chosen places a day can hold: the first one and the others within a day's reach of it.
+  const chosen = placeSlugs.map((slug) => places.find((place) => place.slug === slug)).filter((place): place is NormalizedPlace => Boolean(place));
+  const pinned = chosen.filter((place, index) => index === 0 || distanceKm(chosen[0], place) <= PINNED_REACH_KM).slice(0, MAX_PINNED);
+  const tooFar = chosen.filter((place) => !pinned.includes(place));
+  const promptArea = detectLocationIntent(places, prompt);
+  // With chosen places, the plan's area is where they are (plus any area the request names).
+  const askedArea = pinned.length
+    ? {
+        ...promptArea,
+        cities: new Set([...promptArea.cities, ...pinned.map((place) => (place.city ?? "").toLowerCase()).filter(Boolean)]),
+        // The chosen places' names ("Binondo Chinatown") aren't a district the whole plan must sit in.
+        areaWords: new Set<string>(),
+      }
+    : promptArea;
   // A thin area (QC has three places) borrows the nearest cities around it; an empty one can't be planned.
   const { location, added: borrowedCities } = widenThinArea(places, askedArea);
   const askedLabel = areaLabel(askedArea) ?? titleCase([...askedArea.cities][0] ?? "that area");
@@ -160,18 +198,32 @@ export async function buildPlanDraft({
   });
   const drive = departure !== null && destinationAnchor ? driveMinutesFromManila(destinationAnchor) : null;
   const arrival = departure !== null && drive !== null ? departure + drive : null;
-  const askedStart = arrival ?? constraints.start ?? defaultStart(prompt) ?? 0;
+  let askedStart = arrival ?? constraints.start ?? defaultStart(prompt) ?? 0;
+  // A date night with no clock time starts before sunset, so the golden-hour stop and the view are in it.
+  const sunsetDate = arrival === null && !STATED_CLOCK.test(prompt) && DATE_ASK.test(prompt) && askedStart >= 17 * 60;
+  if (sunsetDate) {
+    const sunset = getPlanSunset(planDate.date, placesForArea(places, location));
+    askedStart = Math.min(askedStart, Math.floor((sunset - 75) / 15) * 15);
+  }
   const notBefore = Math.max(earliestToday, askedStart);
-  const planConstraints: PlanConstraints = { ...constraints, start: notBefore || null };
+  const planConstraints: PlanConstraints = { ...constraints, start: notBefore || null, pinned: pinned.length };
+  // No time and no evening is a day out: from the morning, with lunch and at least three stops.
+  // "Barkada day ... afternoon to dinner" starts in the afternoon, so it is not.
+  const wholeDay =
+    (wantsWholeDay(prompt) && (constraints.start === null || constraints.start < 12 * 60)) ||
+    (arrival === null && constraints.start === null && constraints.end === null && defaultStart(prompt) === null && !wantsEvening(prompt));
 
   let candidates = selectCandidates(places, prompt, PLAN_CANDIDATES, location, planConstraints);
+  // Chosen places lead the list (refs p1..pN), whatever their price or hours.
+  candidates = [...pinned, ...candidates.filter((place) => !pinned.includes(place))];
   if (constraints.meal && !candidates.some((place) => fitsKind(place, constraints.meal!))) {
     // A required meal needs Food options even when the vibe words ranked them out.
     const food = selectCandidates(places, `${prompt} ${constraints.meal} food`, 6, location, planConstraints).filter((place) => fitsKind(place, constraints.meal!));
     candidates = [...candidates, ...food.filter((place) => !candidates.includes(place))];
   }
-  // The area that was asked for leads; borrowed neighbours fill in after it.
-  candidates = [...candidates.filter((place) => matchesLocation(place, askedArea)), ...candidates.filter((place) => !matchesLocation(place, askedArea))];
+  // The area that was asked for leads; borrowed neighbours fill in after it. Chosen places stay first.
+  const rest = candidates.filter((place) => !pinned.includes(place));
+  candidates = [...pinned, ...rest.filter((place) => matchesLocation(place, askedArea)), ...rest.filter((place) => !matchesLocation(place, askedArea))];
   if (candidates.length < 2) {
     return { ok: false, status: 422, code: "NO_FIT", message: "Tara couldn't find enough places that fit that budget and time. Try a bigger budget or a different time." };
   }
@@ -192,7 +244,6 @@ export async function buildPlanDraft({
   const nearby = keepStopsNearby(draft.stops, candidatesById, location);
   const inHours = dropOffHoursFood(nearby, candidatesById, notBefore >= 15 * 60);
   // A whole day out needs lunch even when the request doesn't say so.
-  const wholeDay = wantsWholeDay(prompt);
   const kinds = requestedKinds(prompt, constraints.meal ?? (wholeDay ? "lunch" : null));
   if (wholeDay && !kinds.includes("lunch")) kinds.push("lunch");
   // "Lunch hanggang gabi" runs through dinner time: it needs dinner as well as lunch.
@@ -201,10 +252,11 @@ export async function buildPlanDraft({
   const centre = planCentre(requested.stops.map((stop) => candidatesById.get(stop.place_id)));
   if (requested.missing.length > 0 && centre) {
     // Nothing in the area does an asked-for job: take the closest place that does, and say so.
-    const reach = destinationAnchor ? 15 : 5;
+    // In a province a meal may be a drive away; in Metro Manila only just outside the area (never Makati for Binondo).
+    const reach = destinationAnchor ? 15 : METRO_OUTSIDE_KM;
     const nearbyOutside = selectCandidates(places, prompt, Number.MAX_SAFE_INTEGER, "", planConstraints)
       // A meal may be a little farther (a dinner a short ride away beats no dinner); a cafe stays close.
-      .filter((place) => !candidatesById.has(place.id) && distanceKm(centre, place) <= reach + (place.category === "Food" ? 2 : 0))
+      .filter((place) => !candidatesById.has(place.id) && distanceKm(centre, place) <= reach + (destinationAnchor && place.category === "Food" ? 2 : 0))
       .sort((a, b) => distanceKm(centre, a) - distanceKm(centre, b));
     const pickedCost = [...requested.picks.values()].reduce((sum, id) => sum + (candidatesById.get(id)?.budget_min ?? 0), 0);
     const outsideFill = ensureRequested(requested.stops, [...requested.stops.map((stop) => candidatesById.get(stop.place_id)!), ...nearbyOutside], requested.missing, {
@@ -229,11 +281,18 @@ export async function buildPlanDraft({
   // One coffee stop is a break; two in a row is the same stop twice.
   const firstCafe = withoutExtraMeals.find((stop) => candidatesById.get(stop.place_id)?.category === "Cafe");
   const onlyAsked = withoutExtraMeals.filter((stop) => stop === firstCafe || asked.has(stop.place_id) || candidatesById.get(stop.place_id)?.category !== "Cafe");
-  const anchored = ensureAreaStop(onlyAsked, pool, hasLocation(askedArea) ? askedArea : location, { start: notBefore, sunsetMinutes, keep: asked });
+  const pinnedIds = new Set(pinned.map((place) => place.id));
+  const keep = () => new Set([...requested.picks.values(), ...pinnedIds]);
+  const anchored = ensureAreaStop(onlyAsked, pool, hasLocation(askedArea) ? askedArea : location, { start: notBefore, sunsetMinutes, keep: keep() });
   const local = preferInArea(anchored, pool, location, requested.picks, constraints.budgetPerHead);
-  const tight = tightenRoute(local.stops, candidatesById, new Set(requested.picks.values()), destinationAnchor ? 15 : 6);
-  const affordable = fitBudget(tight, candidatesById, constraints.budgetPerHead, new Set(requested.picks.values()));
-  const full = topUpStops(affordable, pool, { start: notBefore, sunsetMinutes, location });
+  const tight = tightenRoute(local.stops, candidatesById, keep(), destinationAnchor ? 15 : 6);
+  const affordable = fitBudget(tight, candidatesById, constraints.budgetPerHead, keep());
+  const focused = dropParentAreas(FOOD_TRIP.test(prompt) ? capSightsForFoodTrip(affordable, candidatesById, keep()) : affordable, candidatesById, keep());
+  // Every chosen place is a stop: one the model or a rule left out goes back in.
+  const withPinned = [...focused, ...pinned.filter((place) => !focused.some((stop) => stop.place_id === place.id)).map((place) => ({ place_id: place.id, time: "", minutes: 60, note: describeStop(place) }))];
+  // A day out has at least three stops; an evening or a short window at least two.
+  const minStops = wholeDay || (constraints.end !== null && constraints.end - notBefore >= 5 * 60) ? 3 : 2;
+  const full = topUpStops(withPinned, pool, { start: notBefore, sunsetMinutes, location, min: minStops });
   const picked = new Map([...requested.picks.entries()].map(([kind, id]) => [id, kind]));
   // A whole day is timed from the morning: the model's clock only matters for meals.
   const timed = wholeDay
@@ -244,11 +303,15 @@ export async function buildPlanDraft({
         return { ...stop, time };
       })
     : full;
-  const ordered = orderByTimeOfDay(timed, candidatesById, requested.picks);
+  // A date or sunset plan saves its best view for sunset: the stop that stays good after dark closes the day.
+  const sunsetAsk = wantsSunset(prompt) || sunsetDate;
+  const sunsetPlaceId = sunsetAsk ? pickSunsetStop(timed, candidatesById) : undefined;
+  const ordered = orderByTimeOfDay(timed, candidatesById, requested.picks, sunsetPlaceId);
 
   const scheduleOptions = {
     sunsetMinutes,
-    wantsSunset: wantsSunset(prompt),
+    wantsSunset: sunsetAsk,
+    sunsetPlaceId,
     notBefore: notBefore || undefined,
     notAfter: constraints.end ?? undefined,
     fixedStart: constraints.start !== null || arrival !== null || wholeDay,
@@ -273,6 +336,51 @@ export async function buildPlanDraft({
   });
   if (filled.length > stopsInOrder.length) stopsInOrder = scheduleStops(filled, candidatesById, scheduleOptions);
 
+  /** Times a changed plan from scratch: only meals keep their clock, so a dropped first stop doesn't push the day later. */
+  const retime = (stops: DraftStop[]) => {
+    scheduleOptions.sunsetPlaceId = sunsetAsk ? pickSunsetStop(stops, candidatesById) : undefined;
+    const cleared = stops.map((stop) => (scheduleOptions.meals.has(stop.place_id) || candidatesById.get(stop.place_id)?.category === "Food" ? stop : { ...stop, time: "" }));
+    return scheduleStops(orderByTimeOfDay(cleared, candidatesById, requested.picks, scheduleOptions.sunsetPlaceId), candidatesById, scheduleOptions);
+  };
+  // The hard budget: the stops' prices plus the meals they don't price must fit the per-head budget.
+  const mealCost = typicalMealCost(places);
+  const mealsNeeded = kinds.filter((kind) => kind === "lunch" || kind === "dinner" || kind === "breakfast").length;
+  const mealEstimateFor = (stops: DraftStop[]) =>
+    Math.max(0, mealsNeeded - stops.filter((stop) => {
+      const place = candidatesById.get(stop.place_id);
+      return place?.category === "Food" && (place.budget_min ?? 0) > 0;
+    }).length) * mealCost;
+  const perHead = (stops: DraftStop[]) => stops.reduce((sum, stop) => sum + (candidatesById.get(stop.place_id)?.budget_min ?? 0), 0) + mealEstimateFor(stops);
+  const overBudget: NormalizedPlace[] = [];
+  const budget = constraints.budgetPerHead;
+  /** Drops the priciest stops the user didn't choose until the plan fits; a dropped meal still counts at a typical price. */
+  const trimToBudget = (stops: DraftStop[]) => {
+    let trimmed = stops;
+    while (budget !== null && perHead(trimmed) > budget) {
+      const droppable = trimmed.filter((stop) => !pinnedIds.has(stop.place_id) && (candidatesById.get(stop.place_id)?.budget_min ?? 0) > 0);
+      if (droppable.length === 0) break;
+      const priciest = droppable.reduce((max, stop) => ((candidatesById.get(stop.place_id)?.budget_min ?? 0) > (candidatesById.get(max.place_id)?.budget_min ?? 0) ? stop : max));
+      overBudget.push(candidatesById.get(priciest.place_id)!);
+      trimmed = trimmed.filter((stop) => stop !== priciest);
+    }
+    return trimmed;
+  };
+  // Gap fillers follow the same rules: no whole-area stop next to places inside it, a food trip stays about food,
+  // no garden after dark, and the budget holds.
+  const focused2 = dropParentAreas(FOOD_TRIP.test(prompt) ? capSightsForFoodTrip(stopsInOrder, candidatesById, keep()) : stopsInOrder, candidatesById, keep());
+  const lit = focused2.filter((stop) => keep().has(stop.place_id) || !isDarkOutdoor(candidatesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, sunsetMinutes));
+  const affordableNow = trimToBudget(lit);
+  if (affordableNow.length < stopsInOrder.length) stopsInOrder = affordableNow.length > 0 ? retime(affordableNow) : affordableNow;
+  if (stopsInOrder.length < minStops) {
+    // A stop was dropped (a garden after dark, over budget): top up with what is open and affordable, then time it again.
+    const topped = trimToBudget(topUpStops(stopsInOrder, pool, { start: notBefore, sunsetMinutes, location, min: minStops }));
+    if (topped.length > stopsInOrder.length) {
+      const retimed = retime(topped);
+      stopsInOrder = retimed.filter((stop) => keep().has(stop.place_id) || !isDarkOutdoor(candidatesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, sunsetMinutes));
+    }
+  }
+  const missingPinned = pinned.filter((place) => !stopsInOrder.some((stop) => stop.place_id === place.id));
+
   const area = areaLabel(askedArea);
   const budgetText = constraints.budgetPerHead !== null ? ` that fits ${formatPeso(constraints.budgetPerHead)} a head` : "";
   const kindOf = (place: NormalizedPlace) => [...requested.picks.entries()].find(([, id]) => id === place.id)?.[0];
@@ -281,8 +389,12 @@ export async function buildPlanDraft({
     const where = area ? ` in ${area}` : "";
     const inArea = places.filter((place) => matches(place) && (!hasLocation(location) || matchesLocation(place, location)));
     if (inArea.length === 0) return `GalaTayo has no ${label}${where} yet`;
+    // Binondo can be the lunch or the dinner, not both.
+    const used = inArea.find((place) => stopsInOrder.some((stop) => stop.place_id === place.id));
+    if (used && inArea.every((place) => stopsInOrder.some((stop) => stop.place_id === place.id))) return `${used.name} is already in the plan, and GalaTayo has no other ${label}${where} yet`;
     const budget = constraints.budgetPerHead;
     if (budget !== null && inArea.every((place) => (place.budget_min ?? 0) > budget)) return `No ${label}${where}${budgetText}`;
+    if (constraints.indoor && inArea.every((place) => isIndoorPlace(place) !== true)) return `No indoor ${label}${where} yet`;
     return `No ${label}${where} is open at that time`;
   };
   const borrowedNames = borrowedCities.filter((city) => stopsInOrder.some((stop) => (candidatesById.get(stop.place_id)?.city ?? "").toLowerCase() === city)).map(titleCase);
@@ -300,17 +412,17 @@ export async function buildPlanDraft({
         const reason = whyNone(label, (other) => other.category === place.category && (!kind || fitsKind(other, kind)));
         return `${reason}, so ${place.name} in ${[place.area, place.city].filter(Boolean).join(", ")} is the closest pick.`;
       }),
+    ...overBudget.map((place) => `${place.name} (from ${formatPeso(place.budget_min ?? 0)}) doesn't fit ${formatPeso(budget ?? 0)} a head with the meals, so the plan leaves it out.`),
+    budget !== null && perHead(stopsInOrder) > budget
+      ? `Your chosen places and meals come to about ${formatPeso(perHead(stopsInOrder))} a head, over the ${formatPeso(budget)} budget.`
+      : null,
+    ...missingPinned.map((place) => `${place.name} isn't open at the time this plan reaches it, so it's left out. Start earlier to fit it in.`),
+    ...tooFar.map((place) => `${place.name} is in ${place.city ?? place.area ?? "another area"}, too far to share a day with ${pinned[0]?.city ?? "the rest"}, so plan it on its own day.`),
   ].filter((note): note is string => Boolean(note));
 
   // Meals the stops can't price (a food street with free entry) or that no listed place covers still cost
   // money: the estimate per head counts them, so a lunch-to-dinner plan never reads as PHP 100 a head.
-  const mealCost = typicalMealCost(places);
-  const mealsNeeded = kinds.filter((kind) => kind === "lunch" || kind === "dinner" || kind === "breakfast").length;
-  const pricedMeals = stopsInOrder.filter((stop) => {
-    const place = candidatesById.get(stop.place_id);
-    return place?.category === "Food" && (place.budget_min ?? 0) > 0;
-  }).length;
-  const mealEstimate = Math.max(0, mealsNeeded - pricedMeals) * mealCost;
+  const mealEstimate = mealEstimateFor(stopsInOrder);
 
   const uploadIds = stopsInOrder.filter((stop) => !hasCuratedPhoto(candidatesById.get(stop.place_id)?.slug)).map((stop) => stop.place_id);
   const images = uploadIds.length ? await loadImages(uploadIds).catch(() => new Map()) : new Map();
@@ -370,7 +482,7 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
       return { status: 429, headers: JSON_HEADERS, jsonBody: { code: "RATE_LIMITED", message: "Too many Plan with AI requests. Try again in a few minutes." } };
     }
 
-    const { prompt, date: requestedDate } = await getBody(request);
+    const { prompt, date: requestedDate, places: placeSlugs } = await getBody(request);
     if (prompt.length < 3 || prompt.length > MAX_PROMPT_LENGTH) {
       return { status: 400, headers: JSON_HEADERS, jsonBody: { message: `Describe your gala in 3 to ${MAX_PROMPT_LENGTH} characters.` } };
     }
@@ -389,6 +501,7 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
     const outcome = await buildPlanDraft({
       prompt,
       places,
+      placeSlugs,
       requestedDate,
       requestId,
       log: (message) => context.warn(`[GalaPlan AI] requestId=${requestId} ${message}`),

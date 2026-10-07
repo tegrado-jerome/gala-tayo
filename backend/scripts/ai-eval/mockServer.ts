@@ -4,6 +4,7 @@
  * streaming NDJSON with a little delay. Other GET requests are proxied to the live API.
  *
  *   npx tsx scripts/ai-eval/mockServer.ts [port]      then build the frontend with VITE_API_BASE_URL=http://localhost:<port>/api
+ *   npx tsx scripts/ai-eval/mockServer.ts [port] --no-model   answers as when every AI provider is busy (the fallback path)
  */
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
@@ -19,6 +20,7 @@ import { FIXTURE_TODAY, RAINY } from "./record";
 const port = Number(process.argv[2] ?? 7199);
 const LIVE = "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api";
 const provider = new MockProvider((conversations as { conversations: RecordedConversation[] }).conversations);
+const providers = process.argv.includes("--no-model") ? [] : [provider];
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const usage = (usageType: string, dailyLimit: number) => ({ usageType, allowed: true, dailyLimit, requestCount: 1, remaining: dailyLimit - 1, resetsAt: new Date(Date.now() + 864e5).toISOString() });
 
@@ -45,7 +47,7 @@ createServer(async (request, response) => {
     const events: unknown[] = [];
     const result = await runAssistant(
       { message: String(body.message ?? ""), mode: body.mode === "map" ? "map" : "chat", history: Array.isArray(body.history) ? body.history : [], memory: parseClientMemory(body.memory), requestId: randomUUID() },
-      { providers: [provider], tools: { places: allFixturePlaces, weather: async () => RAINY }, imageUrl: (place) => buildImageUrl(hdPhotoKey(place.slug)), today: () => FIXTURE_TODAY },
+      { providers, tools: { places: allFixturePlaces, weather: async () => RAINY }, imageUrl: (place) => buildImageUrl(hdPhotoKey(place.slug)), today: () => FIXTURE_TODAY },
       (event) => events.push(event)
     );
     // Replay with timing like the real stream: status, cards, then words.

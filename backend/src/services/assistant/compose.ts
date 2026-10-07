@@ -64,8 +64,9 @@ function shortSentence(text: string | null, max = 140) {
 }
 
 /** One honest line on why a place fits, only from our own data and the user's stated needs. */
-export function whyLine(place: NormalizedPlace, memory: AssistantMemory): string {
+export function whyLine(place: NormalizedPlace, memory: AssistantMemory, outsideArea = false): string {
   const parts: string[] = [];
+  if (outsideArea && memory.area) parts.push(`Outside ${memory.area}, in ${place.city ?? place.area ?? "a nearby area"}`);
   if (memory.indoor && isIndoor(place)) parts.push("Indoor, rain-proof");
   if (memory.budgetPerHead !== null && place.budget_min !== null && place.budget_min <= memory.budgetPerHead) parts.push(`Fits ₱${memory.budgetPerHead} a head`);
   const about = shortSentence(place.description);
@@ -103,7 +104,7 @@ export function selectCards(
       imageUrl: imageUrl(place),
       budgetMin: place.budget_min,
       budgetLabel: budgetLabel(place),
-      why: whyLine(place, memory),
+      why: whyLine(place, memory, Boolean(ledger.inArea && !ledger.inArea.has(place.slug))),
       latitude: place.latitude,
       longitude: place.longitude,
       goodFor: place.good_for.slice(0, 4),
@@ -180,11 +181,21 @@ export function buildChips({
   return chips.slice(0, 5);
 }
 
-/** The answer when no model is reachable: honest, short, built from the tool results alone. */
-export function fallbackText(cards: PlaceCard[], memory: AssistantMemory, weather: WeatherBlock | null): string {
-  const where = memory.area ? ` in ${memory.area}` : "";
+/**
+ * The answer when no model is reachable: honest, short, built from the tool results alone. `inArea` lists the
+ * cards that are really in the asked area; the rest are titled as outside it, never "in" it.
+ */
+export function fallbackText(cards: PlaceCard[], memory: AssistantMemory, weather: WeatherBlock | null, inArea: Set<string> | null = null): string {
+  const area = memory.area;
+  const where = area ? (/^near\b/i.test(area) ? ` ${area}` : ` in ${area}`) : "";
   if (cards.length === 0) return `No GalaTayo place${where} for that yet! Want to try another area or budget?`;
   const rain = weather?.rainLikely ? ` (${weather.summary.toLowerCase()})` : "";
-  const lines = cards.slice(0, 4).map((card) => `- **${card.name}**${card.budgetLabel ? ` · ${card.budgetLabel.toLowerCase()}` : ""}`);
-  return [`Here are great picks${where}${rain}:`, ...lines].join("\n");
+  const shown = cards.slice(0, 4);
+  const line = (card: PlaceCard, withCity: boolean) =>
+    `- **${card.name}**${withCity && card.city ? ` (${card.city})` : ""}${card.budgetLabel ? ` · ${card.budgetLabel.toLowerCase()}` : ""}`;
+  const local = inArea && area ? shown.filter((card) => inArea.has(card.slug)) : shown;
+  const outside = shown.filter((card) => !local.includes(card));
+  if (outside.length === 0) return [`Here are great picks${where}${rain}:`, ...local.map((card) => line(card, false))].join("\n");
+  if (local.length === 0) return [`Nothing${where} fits that yet. The closest picks${rain}:`, ...outside.map((card) => line(card, true))].join("\n");
+  return [`Here are great picks${where}${rain}:`, ...local.map((card) => line(card, false)), `A short ride away:`, ...outside.map((card) => line(card, true))].join("\n");
 }

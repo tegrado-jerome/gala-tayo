@@ -1,0 +1,329 @@
+{
+ "label": "plan-after-2026-10-07",
+ "mean": 1,
+ "pass": 1,
+ "rows": [
+  {
+   "id": "binondo-food-800",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "11:30 Jones Bridge",
+    "12:40 Binondo Chinatown",
+    "14:30 Manila Cathedral"
+   ]
+  },
+  {
+   "id": "binondo-food-800",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "11:30 Jones Bridge",
+    "12:40 Metropolitan Theater",
+    "13:55 Binondo Chinatown",
+    "15:45 Intramuros"
+   ]
+  },
+  {
+   "id": "binondo-food-800",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "11:30 Casa Manila",
+    "12:45 Fort Santiago",
+    "14:00 Binondo Chinatown",
+    "15:40 Jones Bridge"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "16:15 Temple of Leah",
+    "17:30 Tops Lookout"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "16:15 Temple of Leah",
+    "17:30 Tops Lookout"
+   ]
+  },
+  {
+   "id": "cebu-date-3000",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "16:15 Temple of Leah",
+    "17:30 Tops Lookout"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 1,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "10:00 National Museum of Fine Arts",
+    "11:40 National Museum of Natural History",
+    "13:25 Casa Manila"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 1,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "10:00 National Museum of Fine Arts",
+    "11:10 National Museum of Natural History",
+    "12:25 Casa Manila"
+   ]
+  },
+  {
+   "id": "qc-rainy-1000",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": 1,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "10:00 National Museum of Fine Arts",
+    "11:10 National Museum of Natural History",
+    "12:25 Casa Manila"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "14:00 Baluarte de San Diego",
+    "15:10 Casa Manila",
+    "17:30 Binondo Chinatown"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "14:00 Baluarte de San Diego",
+    "15:10 Casa Manila",
+    "16:15 Manila Cathedral",
+    "17:20 Fort Santiago",
+    "18:40 Binondo Chinatown"
+   ]
+  },
+  {
+   "id": "intramuros-500",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": 1,
+    "area": 1,
+    "full": 1,
+    "meals": 1,
+    "timing": 1,
+    "indoor": null,
+    "required": null
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "14:00 Baluarte de San Diego",
+    "15:10 Casa Manila",
+    "16:15 Manila Cathedral",
+    "17:20 Fort Santiago",
+    "18:40 Binondo Chinatown"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "fallback",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 1
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "10:00 Ayala Museum",
+    "12:00 Binondo Chinatown",
+    "13:45 Casa Manila",
+    "15:20 San Agustin Church"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "first",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 1
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "10:00 Ayala Museum",
+    "11:05 Ayala Triangle Gardens",
+    "12:30 National Museum of Natural History",
+    "13:45 Binondo Chinatown",
+    "15:30 National Museum of Fine Arts"
+   ]
+  },
+  {
+   "id": "saved-ayala-binondo",
+   "model": "priciest",
+   "checks": {
+    "planned": 1,
+    "budget": null,
+    "area": null,
+    "full": 1,
+    "meals": null,
+    "timing": 1,
+    "indoor": null,
+    "required": 1
+   },
+   "notes": [],
+   "score": 1,
+   "stops": [
+    "11:00 Blackbird at the Nielson Tower",
+    "12:05 Ayala Museum",
+    "13:50 Celera",
+    "15:15 Binondo Chinatown"
+   ]
+  }
+ ]
+}

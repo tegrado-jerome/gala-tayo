@@ -719,22 +719,29 @@ function SearchHub({
         <SearchResultsSkeleton />
       ) : visiblePlaces.length > 0 ? (
         shownPlaces.length > 0 ? (
-          <SearchResults
-            places={shownPlaces}
-            totalCount={totalResults}
-            currentPage={safeCurrentPage}
-            totalPages={totalPages}
-            heading={searchResultSummary.heading}
-            subheading={[searchResultSummary.subheading || 'in GalaTayo', rainSafeOnly && hasRainData ? '· rain-safe on this page' : ''].filter(Boolean).join(' ')}
-            selectedPlaceId={selectedPlaceId}
-            isPageLoading={isPageLoading}
-            mobileView={mobileResultsView}
-            onMobileViewChange={setMobileResultsView}
-            onSelectPlace={handleMapPlaceSelect}
-            onOpenPlace={handlePlaceSelect}
-            onPageChange={handlePageChange}
-            onGuestSave={(retry) => guestAuth.open('favorite', retry)}
-          />
+          <>
+            {searchFeedbackMessage ? (
+              <p className="g-hint mt-4" role="status">
+                {searchFeedbackMessage}
+              </p>
+            ) : null}
+            <SearchResults
+              places={shownPlaces}
+              totalCount={totalResults}
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              heading={searchResultSummary.heading}
+              subheading={[searchResultSummary.subheading || 'in GalaTayo', rainSafeOnly && hasRainData ? '· rain-safe on this page' : ''].filter(Boolean).join(' ')}
+              selectedPlaceId={selectedPlaceId}
+              isPageLoading={isPageLoading}
+              mobileView={mobileResultsView}
+              onMobileViewChange={setMobileResultsView}
+              onSelectPlace={handleMapPlaceSelect}
+              onOpenPlace={handlePlaceSelect}
+              onPageChange={handlePageChange}
+              onGuestSave={(retry) => guestAuth.open('favorite', retry)}
+            />
+          </>
         ) : (
           <Empty
             className="mt-8"

@@ -3,8 +3,9 @@ import { describe, it } from "node:test";
 import { isFoodStreet, vibeMatches } from "../../domain/queryIntent";
 import { planTools } from "./agent";
 import { allFixturePlaces, visibleFixturePlaces } from "./fixtures/testPlaces";
+import { fallbackText } from "./compose";
 import { updateMemory } from "./memory";
-import { EMPTY_MEMORY } from "./schema";
+import { EMPTY_MEMORY, type PlaceCard } from "./schema";
 import { newLedger, runTool, type ToolContext } from "./tools";
 
 // QA round 3 (R3-02): every card must fit what was asked; a question about one place gets its facts.
@@ -53,7 +54,7 @@ describe("Tara relevance", () => {
     assert.deepEqual(ledger.ranked, ["fort-santiago"]);
   });
 
-  it("a BGC date night shows evening date spots in and near BGC, and says the area is thin", async () => {
+  it("a BGC date night shows evening date spots in and near BGC, and says which ones are outside it", async () => {
     const { search } = await ask("Date sa BGC Saturday night");
     const slugs = search!.places.map((place) => place.slug);
     assert.equal(slugs[0], "gallery-by-chele");
@@ -63,7 +64,9 @@ describe("Tara relevance", () => {
       assert.ok(["Taguig", "Makati"].includes(place.city ?? ""), `${slug} is far from BGC`);
       assert.ok(vibeMatches(place, "date"), `${slug} is not a date spot`);
     }
-    assert.match(search!.note ?? "", /thin/);
+    // Never "GalaTayo is still growing here": the model is told which places are outside BGC instead.
+    assert.match(search!.note ?? "", /outside BGC/);
+    assert.doesNotMatch(search!.note ?? "", /thin/);
   });
 
   it("rain with kids in QC shows indoor family places, never a bar", async () => {
@@ -74,6 +77,52 @@ describe("Tara relevance", () => {
       assert.notEqual(place.category, "Nightlife");
       assert.ok(vibeMatches(place, "family"), `${slug} is not for kids`);
     }
+  });
+
+  it("'waterfalls in cebu' is the province: Kawasan and Aguinid, not 'none in Cebu City'", async () => {
+    const { search } = await ask("waterfalls in cebu");
+    const slugs = search!.places.map((place) => place.slug);
+    assert.ok(slugs.includes("kawasan-falls-badian") && slugs.includes("aguinid-falls-samboan"), slugs.join(", "));
+    assert.equal(updateMemory({ ...EMPTY_MEMORY }, "waterfalls in cebu", visibleFixturePlaces, "2026-10-10").area, "Cebu");
+  });
+
+  it("'waterfalls near cebu city' checks the catalogue: the nearest falls in the same province, said plainly", async () => {
+    const { search } = await ask("waterfalls near cebu city");
+    const slugs = search!.places.map((place) => place.slug);
+    assert.deepEqual(slugs.slice(0, 2).sort(), ["aguinid-falls-samboan", "kawasan-falls-badian"]);
+    assert.ok(slugs.every((slug) => ["Badian", "Samboan"].includes(bySlug.get(slug)!.city ?? "")), slugs.join(", "));
+    assert.match(search!.note ?? "", /nearest/);
+  });
+
+  it("a rainy QC ask never shows a bar district, and only borrows outside QC when QC has almost nothing", async () => {
+    const { search, ledger } = await ask("rainy day saan pwede sa QC with barkada?");
+    const slugs = search!.places.map((place) => place.slug);
+    assert.ok(!slugs.includes("poblacion-makati"));
+    assert.equal(slugs[0], "art-in-island");
+    for (const slug of slugs.filter((entry) => bySlug.get(entry)!.city !== "Quezon City")) assert.ok(!ledger.inArea!.has(slug));
+  });
+
+  it("a Makati date night under ₱1,000 a head stays in Makati", async () => {
+    const { search } = await ask("date night in makati under 2000 for two");
+    assert.ok(search!.places.length >= 2);
+    for (const { slug } of search!.places) assert.equal(bySlug.get(slug)!.city, "Makati", slug);
+  });
+
+  it("a tourist's one day in Manila gets the city's best, not two picks and 'still growing'", async () => {
+    const { search } = await ask("I'm visiting Manila for one day from Japan. What should I see?");
+    const slugs = search!.places.map((place) => place.slug);
+    assert.ok(slugs.length >= 4, slugs.join(", "));
+    assert.ok(slugs.includes("fort-santiago"));
+    assert.doesNotMatch(search!.note ?? "", /thin|growing/);
+  });
+
+  it("the no-AI answer titles places outside the area as outside it", () => {
+    const card = (slug: string, city: string) => ({ slug, name: slug, city, budgetLabel: null }) as unknown as PlaceCard;
+    const memory = { ...EMPTY_MEMORY, area: "QC" };
+    const text = fallbackText([card("art-in-island", "Quezon City"), card("the-mind-museum", "Taguig")], memory, null, new Set(["art-in-island"]));
+    assert.match(text, /^Here are great picks in QC:\n- \*\*art-in-island\*\*\nA short ride away:\n- \*\*the-mind-museum\*\* \(Taguig\)$/);
+    assert.match(fallbackText([card("the-mind-museum", "Taguig")], memory, null, new Set()), /^Nothing in QC fits that yet/);
+    assert.match(fallbackText([card("x", "Zambales")], { ...EMPTY_MEMORY, area: "near Manila" }, null), /^Here are great picks near Manila:/);
   });
 
   it("knows food streets that aren't filed as restaurants", () => {

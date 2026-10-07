@@ -1,4 +1,3 @@
-import galaScores from "../data/galaScores.json";
 import {
   app,
   HttpRequest,
@@ -38,7 +37,7 @@ import {
 } from "./searchHelpers";
 import { mapPlaceRowToSearchResult } from "./searchScoring";
 import { getActiveNormalizedPlaces } from "../domain/places";
-import { getExactLocationLabelForIntent, normalizeSearchText, rankPlaces, type PlaceSearchFilters } from "../domain/placeSearch";
+import { getExactLocationLabelForIntent, normalizeSearchText, searchPlacesInArea, type PlaceSearchFilters } from "../domain/placeSearch";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 
 export type { SearchPlaceResult } from "./searchHelpers";
@@ -106,8 +105,6 @@ async function resolveUserContext(request: HttpRequest): Promise<SearchUserConte
   }
 }
 
-
-const GALA_SCORES: Record<string, number> = galaScores;
 function createSearchId(): string {
   return `search_${randomUUID()}`;
 }
@@ -198,18 +195,19 @@ export async function findSearchPlaces({
   normalizedQuery, nearbySearch, explicitFilters,
 }: {
   normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters;
-}): Promise<SearchPlaceResult[]> {
-  const rankedRows = rankPlaces(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters)
-    .map(({ place, score }) => {
+}): Promise<{ places: SearchPlaceResult[]; note: string | null }> {
+  const { ranked, note } = searchPlacesInArea(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters);
+  const rankedRows = ranked
+    .map(({ place, score }, rank) => {
       const row = place as unknown as PlaceRow;
-      return { row, score, distanceKm: nearbySearch ? getRowDistanceKm(row, nearbySearch.userLocation) : null };
+      return { row, score, rank, distanceKm: nearbySearch ? getRowDistanceKm(row, nearbySearch.userLocation) : null };
     });
 
   const hasNearbyMatches = nearbySearch
     ? rankedRows.some(({ distanceKm }) => distanceKm !== null && distanceKm <= nearbySearch.radiusKm)
     : false;
 
-  return rankedRows
+  const places = rankedRows
     .sort((left, right) => {
       if (nearbySearch && hasNearbyMatches) {
         const leftIsNearby = left.distanceKm !== null && left.distanceKm <= nearbySearch.radiusKm;
@@ -225,14 +223,13 @@ export async function findSearchPlaces({
       if (nearbySearch && left.distanceKm !== null && right.distanceKm !== null && left.distanceKm !== right.distanceKm) {
         return left.distanceKm - right.distanceKm;
       }
-      // Equal matches: the more gala-worthy (higher scored) place first, not alphabetical.
-      const scoreGap = (GALA_SCORES[String(right.row.slug ?? "")] ?? 0) - (GALA_SCORES[String(left.row.slug ?? "")] ?? 0);
-      if (scoreGap !== 0) return scoreGap;
-      return String(left.row.name ?? "").localeCompare(String(right.row.name ?? ""));
+      // Equal matches keep the search's own order: closer for "near X", then the more gala-worthy place.
+      return left.rank - right.rank;
     })
     .map(({ row, distanceKm, score }) =>
       mapPlaceRowToSearchResult(row, { normalizedQuery, categoryIds: [], distanceKm, score })
     );
+  return { places, note };
 }
 
 export async function search(
@@ -320,7 +317,7 @@ export async function search(
       };
     }
 
-    const places = await findSearchPlaces({
+    const { places, note: areaNote } = await findSearchPlaces({
       normalizedQuery,
       nearbySearch,
       explicitFilters: {
@@ -343,7 +340,7 @@ export async function search(
             areaId: effectiveAreaId,
             fallbackMessage: "No places found. Try another place, city or budget.",
           })
-        : null;
+        : areaNote;
     const responsePayload = buildSearchResponsePayload({
       searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
       searchStatus,

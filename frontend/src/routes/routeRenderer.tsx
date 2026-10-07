@@ -277,7 +277,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return (
         <>
           <SeoHead title="Plan with AI | GalaTayo" description="Describe your day in one sentence and get a full-day plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
-          <PlanWithAiPage initialPrompt={descriptor.initialPrompt} />
+          <PlanWithAiPage initialPrompt={descriptor.initialPrompt} initialPlaces={descriptor.initialPlaces} />
         </>
       )
     case 'prompt-builder':

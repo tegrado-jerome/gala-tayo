@@ -20,7 +20,21 @@ export type EvalCase = {
   budgetMax?: number;
   indoor?: boolean;
   canary?: string[];
-  expect?: { refuse?: boolean; injection?: boolean; memoryArea?: boolean; noInventedVenues?: boolean; noInventedHours?: boolean };
+  expect?: {
+    refuse?: boolean;
+    injection?: boolean;
+    memoryArea?: boolean;
+    noInventedVenues?: boolean;
+    noInventedHours?: boolean;
+    /** At least this many curated cards. */
+    minPlaces?: number;
+    /** At least one of these places must be among the cards (the catalogue has them). */
+    anySlugs?: string[];
+    /** None of these places may be a card (wrong for the ask, e.g. a bar district on a rainy day). */
+    forbidSlugs?: string[];
+    /** None of these phrases may appear in the answer. */
+    forbidText?: string[];
+  };
 };
 
 export type CuratedPlace = {
@@ -66,6 +80,7 @@ export type CheckScores = {
   memory: number | null;
   latency: number | null;
   payload: number | null;
+  expected: number | null;
 };
 
 export type CaseScore = {
@@ -187,6 +202,7 @@ export function scoreCase(evalCase: EvalCase, answers: TurnAnswer[], index: Cura
     memory: null,
     latency: null,
     payload: null,
+    expected: null,
   };
   if (!checks.ok) notes.push(`error: ${answers.map((answer) => answer.error ?? answer.status).join(" / ")}`);
 
@@ -253,6 +269,32 @@ export function scoreCase(evalCase: EvalCase, answers: TurnAnswer[], index: Cura
   if (evalCase.expect?.memoryArea) {
     checks.memory = checks.area !== null && checks.area >= 0.6 ? 1 : 0;
     if (!checks.memory) notes.push("follow-up lost the earlier area");
+  }
+
+  const expect = evalCase.expect ?? {};
+  if (expect.minPlaces !== undefined || expect.anySlugs || expect.forbidSlugs || expect.forbidText) {
+    const slugs = visible.map((place) => place.slug);
+    const parts: number[] = [];
+    if (expect.minPlaces !== undefined) {
+      parts.push(visible.length >= expect.minPlaces ? 1 : 0);
+      if (visible.length < expect.minPlaces) notes.push(`${visible.length} places, want ${expect.minPlaces}`);
+    }
+    if (expect.anySlugs) {
+      const hit = expect.anySlugs.some((slug) => slugs.includes(slug));
+      parts.push(hit ? 1 : 0);
+      if (!hit) notes.push(`none of ${expect.anySlugs.join(", ")}`);
+    }
+    if (expect.forbidSlugs) {
+      const bad = expect.forbidSlugs.filter((slug) => slugs.includes(slug));
+      parts.push(bad.length ? 0 : 1);
+      if (bad.length) notes.push(`should not show ${bad.join(", ")}`);
+    }
+    if (expect.forbidText) {
+      const said = expect.forbidText.filter((phrase) => allText.toLowerCase().includes(phrase.toLowerCase()));
+      parts.push(said.length ? 0 : 1);
+      if (said.length) notes.push(`said "${said.join('", "')}"`);
+    }
+    checks.expected = parts.reduce((sum, value) => sum + value, 0) / parts.length;
   }
 
   const first = last.firstTokenMs ?? last.totalMs;
