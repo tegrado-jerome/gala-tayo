@@ -17,7 +17,6 @@ import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavorites
 import { listFavoriteGalaPlans } from '../utils/galaPlansApi'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { planWithAiHref } from '../utils/planWithAiLink'
-import { getPublicSiteUrl } from '../utils/site'
 import { hasAccountSession } from '../utils/guestSession'
 import { buildAuthPath } from '../services/authApi'
 import '../design/me.css'
