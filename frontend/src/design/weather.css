@@ -6,10 +6,11 @@
 .gw-row.is-pending::before { content: ''; position: absolute; top: 10px; left: 40px; width: min(220px, 60%); height: 34px; border-radius: var(--r-1); background: var(--fill); }
 .gw-plan.is-pending { min-height: 64px; margin-top: 16px; border-radius: var(--r-2); background: var(--fill); }
 
-.gw-now { display: grid; grid-template-columns: 28px minmax(0, 1fr) 20px; gap: 12px; align-items: center; width: 100%; min-height: 44px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+/* Icon on the first text line like the other key facts; the caret stays centred on the row. */
+.gw-now { display: grid; grid-template-columns: 28px minmax(0, 1fr) 20px; gap: 12px; align-items: start; width: 100%; min-height: 44px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .gw-now:hover b { text-decoration: underline; text-underline-offset: 2px; }
 .gw-now:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
-.pd-kl .gw-now svg.gw-caret { width: 18px; height: 18px; color: var(--ink-2); }
+.pd-kl .gw-now svg.gw-caret { align-self: center; width: 18px; height: 18px; color: var(--ink-2); }
 
 .gw-line { display: flex; gap: 6px; align-items: flex-start; margin: -2px 0 6px 40px; font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--sea); }
 .gw-line.is-warn { color: var(--warn); }

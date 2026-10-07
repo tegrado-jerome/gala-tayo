@@ -74,7 +74,8 @@
 .g-sun.pd-sun-lg i { width: 15px; height: 15px; border-width: 2px; }
 
 /* ---------- Sections ---------- */
-.pd-sec { margin-top: 28px; }
+.pd-sec { margin-top: var(--sec-gap); }
+.pd-sec.is-first { margin-top: 28px; }
 .pd-sec-title { margin: 0 0 10px; font: 600 21px/1.2 var(--font-display); letter-spacing: -0.01em; }
 .pd-prose { max-width: 680px; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
 .pd-more, .pd-ask { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: 700 14px/1 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -82,12 +83,14 @@
 .pd-about-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
 .pd-about-actions:empty { display: none; }
 .pd-ask svg { width: 18px; height: 18px; }
-@media (min-width: 1024px) { .pd-sec { margin-top: 40px; } .pd-sec.is-first { margin-top: 28px; } .pd-sec-title { font-size: 24px; } }
+@media (min-width: 1024px) { .pd-sec-title { font-size: 24px; } }
 
 /* Key facts list */
 .pd-kl { display: grid; gap: 4px; margin: 20px 0 0; padding: 10px 0; border-block: 1px solid var(--line); list-style: none; }
 .pd-kl li > a, .pd-kl li > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; padding: 8px 0; color: inherit; text-decoration: none; }
 .pd-kl svg { width: 24px; height: 24px; color: var(--ink); }
+/* Centre the 24px icon on the first 15px/1.35 text line rather than letting it hang 1.9px low. */
+.pd-kl li > a > svg, .pd-kl li > div > svg, .pd-kl .gw-now > svg:first-child { margin-top: calc((15px * 1.35 - 24px) / 2); }
 .pd-kl svg.is-warn { color: var(--warn); }
 .pd-kl b { display: -webkit-box; font-size: 15px; font-weight: 600; line-height: 1.35; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pd-kl b + span { display: block; margin-top: 1px; font-size: 13px; color: var(--ink-2); }
@@ -107,7 +110,7 @@
 
 /* Where it is */
 .pd-addr, .pd-commute { display: flex; gap: 10px; margin: 0; font-size: 15px; line-height: 1.5; }
-.pd-addr svg, .pd-commute svg { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 1px; }
+.pd-addr svg, .pd-commute svg { width: 22px; height: 22px; flex: 0 0 auto; margin-top: calc((1.5em - 22px) / 2); }
 .pd-commute { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
 .pd-commute b { display: block; color: var(--ink); font-weight: 600; }
 .pd-map { height: 200px; margin-top: 14px; overflow: hidden; border-radius: var(--r-2); }
@@ -117,7 +120,7 @@
 .pd-score { display: flex; align-items: center; gap: 14px; }
 .pd-score-num { font: 600 40px/1 var(--font-display); letter-spacing: -0.02em; }
 .pd-rvh { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
-.pd-rvh li { padding: 5px 12px; border: 1px solid #cfcfcf; border-radius: var(--r-pill); font-size: 13px; }
+.pd-rvh li { display: inline-flex; align-items: center; height: var(--chip-h); padding: 0 var(--chip-px); border: 1px solid #cfcfcf; border-radius: var(--r-pill); font-size: var(--chip-fs); }
 
 /* Review cards: hairline-separated, no boxes */
 .pd-reviews { display: grid; margin: 0; padding: 0; list-style: none; }
@@ -150,8 +153,9 @@
 @media (min-width: 1024px) { .pd-anchor { scroll-margin-top: 132px; } }
 
 /* Related links */
-.pd-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
-.pd-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--ink); font: 500 14px/1 var(--font-body); text-decoration: none; }
+.pd-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--sec-gap); }
+.pd-link { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: var(--chip-h); padding: 0 var(--chip-px); border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--ink); font: 500 var(--chip-fs)/1 var(--font-body); text-decoration: none; }
+.pd-link::after { content: ''; position: absolute; inset: -4px 0; }
 .pd-link svg { width: 18px; height: 18px; }
 .pd-link:hover { border-color: var(--ink); }
 

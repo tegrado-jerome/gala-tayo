@@ -41,6 +41,12 @@
   --r-3: 12px;
   --r-4: 16px;
   --r-pill: 999px;
+  /* One chip size site-wide: filter, city, guide, quick-pick and link chips. Rows add a 4px hit area above and below for 44px taps. */
+  --chip-h: 36px;
+  --chip-px: 14px;
+  --chip-fs: 13px;
+  /* Vertical rhythm between page sections (Home rails, place sections). */
+  --sec-gap: 36px;
   --sh-1: 0 1px 2px rgba(0, 0, 0, 0.06);
   --sh-2: 0 4px 14px rgba(0, 0, 0, 0.08);
   --sh-3: 0 16px 40px rgba(0, 0, 0, 0.16);
@@ -101,6 +107,7 @@
   --night: #222222;
   --stone: var(--ink-2);
 }
+@media (min-width: 768px) { :root:root { --sec-gap: 48px; } }
 
 /* Sunset Jeepney after dark: deep teal-black surfaces, warm cream text, the same orange for the one main action. All text pairs pass WCAG AA. */
 :root:root[data-theme='dark'] {
@@ -223,9 +230,9 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 
 /* ---------- Chips, tags ---------- */
 .g-chip {
-  position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; flex: 0 0 auto;
+  position: relative; display: inline-flex; align-items: center; gap: 6px; height: var(--chip-h); padding: 0 var(--chip-px); flex: 0 0 auto;
   border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  font: 500 13px/1 var(--font-body); white-space: nowrap; cursor: pointer;
+  font: 500 var(--chip-fs)/1 var(--font-body); white-space: nowrap; cursor: pointer;
   transition: border-color var(--t) var(--ease-g), background var(--t) var(--ease-g), color var(--t) var(--ease-g);
 }
 .g-chip:hover { border-color: var(--ink); }
@@ -237,7 +244,7 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-chips::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
 .g-tag {
-  display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--r-1);
+  display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--r-1);
   background: var(--fill); color: var(--ink-2); font: 500 12px/1 var(--font-body); white-space: nowrap;
 }
 .g-tag.is-ok { background: var(--ok-soft); color: var(--ok); }
@@ -268,9 +275,10 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-page { width: 100%; max-width: 1240px; margin: 0 auto; padding: 20px 16px calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom, 0px)); }
 .g-page-narrow { max-width: 760px; }
 @media (min-width: 1024px) { .g-page { padding: 32px 32px 96px; } }
-.g-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 36px 0 12px; }
+/* Baseline: "See all" sits on the title's baseline, with or without a subtitle under it. */
+.g-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: var(--sec-gap) 0 12px; }
 .g-sec-head .g-sub { font-size: 14px; color: var(--ink-2); margin-top: 2px; }
-@media (min-width: 768px) { .g-sec-head { margin: 48px 0 16px; } }
+@media (min-width: 768px) { .g-sec-head { margin-bottom: 16px; } }
 .g-split { display: grid; gap: 24px; align-items: start; }
 .g-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (min-width: 1024px) {
@@ -319,12 +327,13 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-ttab svg { width: 18px; height: 18px; }
 .g-ttab:hover { color: var(--ink); }
 .g-ttab[aria-current='page'], .g-ttab[aria-selected='true'] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
-.g-moods { display: flex; gap: 10px; margin: 16px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+.g-moods { display: flex; gap: 8px; margin: 16px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
 .g-moods::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-moods { flex-wrap: wrap; margin-inline: 0; padding: 0; } }
-.g-mood { display: inline-flex; flex: none; align-items: center; gap: 8px; height: 44px; padding: 0 16px 0 6px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 500 14px/1 var(--font-body); white-space: nowrap; text-decoration: none; }
+.g-mood { position: relative; display: inline-flex; flex: none; align-items: center; gap: 8px; height: var(--chip-h); padding: 0 var(--chip-px) 0 4px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 500 var(--chip-fs)/1 var(--font-body); white-space: nowrap; text-decoration: none; }
 .g-mood:hover { background: var(--fill-2); }
-.g-mood > :first-child { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; object-fit: cover; overflow: hidden; }
+.g-mood::after { content: ''; position: absolute; inset: -4px 0; }
+.g-mood > :first-child { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; object-fit: cover; overflow: hidden; }
 .g-feat { position: relative; display: block; height: 300px; margin-top: 20px; border-radius: var(--r-4); overflow: hidden; background: #222; color: #fff; text-decoration: none; }
 @media (min-width: 768px) { .g-feat { height: 420px; } }
 .g-feat > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
@@ -348,18 +357,19 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-guide-img { display: block; aspect-ratio: 3 / 2; border-radius: var(--r-2); overflow: hidden; background: var(--fill); }
 .g-guide-img > * { width: 100%; height: 100%; object-fit: cover; }
 .g-guide b { display: block; margin-top: 8px; font: 700 15px/1.3 var(--font-body); }
-.g-guide small { font-size: 12px; color: var(--ink-2); }
+/* Block, so its line box is its own 12px line, not the 16px body strut that left 3px extra under the card. */
+.g-guide small { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-2); }
 /* Guest landing: one sign-up action right under the search. */
 .g-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 640px; margin-top: 12px; padding: 12px 12px 12px 16px; border-radius: var(--r-2); background: var(--fill); }
 .g-cta p { min-width: 0; }
 .g-cta b { display: block; font: 700 15px/1.3 var(--font-body); }
 .g-cta span { display: block; margin-top: 2px; font-size: 13px; color: var(--ink-2); }
 .g-cta .g-btn { flex-shrink: 0; }
-.g-saan { margin-top: 28px; padding: 18px; border-radius: var(--r-4); background: #111111; color: #ffffff; }
+.g-saan { margin-top: var(--sec-gap); padding: 18px; border-radius: var(--r-4); background: #111111; color: #ffffff; }
 :root[data-theme='dark'] .g-saan { background: var(--surface); border: 1px solid var(--line); }
 .g-saan-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: inherit; text-decoration: none; }
 .g-saan-main b { display: block; font: 600 20px/1.2 var(--font-display); }
-.g-saan-main > span > span { font-size: 13px; color: #cfcfcf; }
+.g-saan-main > span > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: #cfcfcf; }
 .g-saan-go { display: inline-flex; align-items: center; flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: var(--r-pill); background: #34e0a1; color: #111111; font: 700 14px/1 var(--font-body); }
 .g-saan-main:focus-visible { outline: 2px solid #34e0a1; outline-offset: 4px; border-radius: var(--r-2); }
 
@@ -403,7 +413,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 @media (min-width: 1024px) { .g-head-in { height: 68px; padding: 0 32px; gap: 24px; } }
 .g-logo { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font: 700 20px/1 var(--font-display); letter-spacing: -0.04em; color: var(--ink); text-decoration: none; }
 .g-nav { display: none; gap: 4px; }
-.g-nav a { position: relative; padding: 10px 12px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color var(--t) var(--ease-g); }
+/* 2.5px more top than bottom padding puts the 14px link baseline on the 20px Fraunces wordmark baseline. */
+.g-nav a { position: relative; padding: 12.5px 12px 7.5px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color var(--t) var(--ease-g); }
 .g-nav a:hover { color: var(--ink); }
 .g-nav a[aria-current='page'] { color: var(--ink); font-weight: 600; }
 .g-nav a[aria-current='page']::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: -15px; height: 2px; border-radius: 2px; background: var(--ink); }
@@ -500,8 +511,9 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-num { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--on-ink); font: 600 12px/22px var(--font-body); text-align: center; flex: 0 0 auto; }
 .g-leg { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 6px 0; }
 .g-leg-rail { justify-self: end; width: 2px; margin-right: 10px; background: repeating-linear-gradient(var(--line) 0 4px, transparent 4px 8px); }
-.g-modes { display: flex; gap: 6px; flex-wrap: wrap; }
-.g-mode { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 10px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 12px/1 var(--font-body); cursor: pointer; }
+.g-modes { display: flex; gap: 8px; flex-wrap: wrap; }
+.g-mode { position: relative; display: inline-flex; align-items: center; gap: 5px; min-height: var(--chip-h); padding: 0 var(--chip-px); border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 var(--chip-fs)/1 var(--font-body); cursor: pointer; }
+.g-mode::after { content: ''; position: absolute; inset: -4px 0; }
 .g-mode.is-on { border-color: var(--ink); background: var(--ink); color: var(--on-ink); }
 .g-mode svg { width: 14px; height: 14px; }
 

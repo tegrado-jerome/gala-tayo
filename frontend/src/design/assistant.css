@@ -80,7 +80,8 @@
 .a-hop svg { width: 14px; height: 14px; }
 
 .a-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.a-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 600 13.5px/1.2 var(--font-body); cursor: pointer; }
+.a-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: var(--chip-h); padding: 0 var(--chip-px); border: 0; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 600 var(--chip-fs)/1.2 var(--font-body); cursor: pointer; }
+.a-chip::after { content: ''; position: absolute; inset: -4px 0; }
 .a-chip:hover:not(:disabled) { background: var(--fill-2); }
 .a-chip.is-action { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
 .a-chip:disabled { opacity: 0.5; cursor: not-allowed; }
