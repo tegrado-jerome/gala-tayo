@@ -249,6 +249,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const isPageTransitionLoading = isLoading || isRefreshing
   const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
+  const homeRegion = destination ? getRegionBySlug(destination.regionSlug) : null
   const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
     return getSeoListingPage({
       areaSlug: normalizedAreaSlug,
@@ -401,7 +402,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         </nav>
       ) : null}
 
-      <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />
+      {/* A city with no places at all gets no category tabs: every tab would be empty too. */}
+      {shouldShowEmptyState && activeCategory === 'all' ? null : <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />}
       <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Best first" />
 
       {errorMessage ? (
@@ -415,8 +417,14 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         <Empty
           className="mt-8"
           title={`Wala pang places in ${areaName}`}
-          description="Check back later for new gala spots, or try another category in this city."
-          action={<Button variant="line" href="/places">Browse other cities</Button>}
+          description={activeCategory === 'all' ? 'Check back later for new gala spots.' : 'Check back later for new gala spots, or try another category in this city.'}
+          action={
+            homeRegion && homeRegion.slug !== normalizedAreaSlug ? (
+              <Button variant="line" href={`/places/${homeRegion.slug}`}>See places in {homeRegion.name}</Button>
+            ) : (
+              <Button variant="line" href="/places">Browse other cities</Button>
+            )
+          }
         />
       ) : (
         <section aria-label={`Places in ${areaName}`}>

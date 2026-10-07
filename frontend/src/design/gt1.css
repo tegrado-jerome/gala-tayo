@@ -322,7 +322,7 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-moods { display: flex; gap: 10px; margin: 16px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
 .g-moods::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-moods { flex-wrap: wrap; margin-inline: 0; padding: 0; } }
-.g-mood { display: inline-flex; flex: none; align-items: center; gap: 8px; height: 44px; padding: 0 16px 0 6px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 500 14px/1 var(--font-body); text-decoration: none; }
+.g-mood { display: inline-flex; flex: none; align-items: center; gap: 8px; height: 44px; padding: 0 16px 0 6px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 500 14px/1 var(--font-body); white-space: nowrap; text-decoration: none; }
 .g-mood:hover { background: var(--fill-2); }
 .g-mood > :first-child { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; object-fit: cover; overflow: hidden; }
 .g-feat { position: relative; display: block; height: 300px; margin-top: 20px; border-radius: var(--r-4); overflow: hidden; background: #222; color: #fff; text-decoration: none; }

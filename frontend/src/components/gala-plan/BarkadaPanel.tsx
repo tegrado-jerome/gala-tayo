@@ -18,6 +18,7 @@ import {
 import type { GalaPlanDetail, GalaPlanOwner } from '../../utils/galaPlansApi'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { splitPolls } from '../../utils/barkadaVotes'
+import { clearPendingRsvp, rememberPendingRsvp } from '../../utils/pendingRsvp'
 import { formatPeso } from '../../utils/galaPlanTrip'
 import { KailanPoll, SpotDeck, TaraBurst } from './BarkadaVotes'
 import SwipeVote, { type SwipeCard } from './SwipeVote'
@@ -96,7 +97,13 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               onClick={() => {
                 if (option.value === 'going' && barkada.viewer_rsvp !== 'going') setBurst((count) => count + 1)
                 if (canJoin) void run(() => setGalaPlanRsvp(plan.id, option.value, session))
-                else guestAuth.open('plan-rsvp', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
+                else {
+                  rememberPendingRsvp(plan.id, option.value)
+                  guestAuth.open('plan-rsvp', (guestSession) => {
+                    clearPendingRsvp()
+                    void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession))
+                  })
+                }
               }}
             >
               {option.label}

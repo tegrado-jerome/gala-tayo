@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Avatar, Button, Empty, KeyValue, Panel, SectionHead, Tag, cx } from '../ui'
 import { personAvatar, personName } from './BarkadaPanel'
 import { setGalaPlanMemberPaid, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
-import { parseGalaPlanDescription, type GalaPlanDetail } from '../../utils/galaPlansApi'
+import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, getPlanLegs } from '../../utils/galaPlanTrip'
 import '../../design/plans.css'
 
@@ -14,13 +14,15 @@ type BudgetPanelProps = {
   plan: GalaPlanDetail
   barkada: GalaPlanBarkada | null
   session: Session | null | undefined
+  /** The plan's group size (planned size until more RSVP), the same number the itinerary budget uses. */
+  groupSize: number
+  onGroupSizeChange: (size: number) => void
   onBarkadaChange: (barkada: GalaPlanBarkada) => void
 }
 
-function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelProps) {
+function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onBarkadaChange }: BudgetPanelProps) {
   const goingMembers = barkada?.available ? barkada.members.filter((member) => member.rsvp === 'going') : []
-  const [manualSize, setManualSize] = useState(() => parseGalaPlanDescription(plan.description).groupSize ?? 2)
-  const groupSize = goingMembers.length > 1 ? goingMembers.length : manualSize
+  const minSize = Math.max(1, goingMembers.length)
   const perHead = estimatePerHead(plan.items, groupSize)
   const legs = getPlanLegs(plan.items)
   const rides = legs.reduce((sum, leg) => sum + (leg?.fare ?? 0), 0)
@@ -56,20 +58,18 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
         ))}
       </div>
 
-      {goingMembers.length <= 1 ? (
-        <div className="mt-4 flex items-center gap-3">
-          <span className="g-sm">Group size</span>
-          <div className="flex items-center gap-1">
-            <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setManualSize((size) => Math.max(1, size - 1))}>
-              <Minus />
-            </Button>
-            <span className="g-h3 w-8 text-center">{manualSize}</span>
-            <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setManualSize((size) => Math.min(30, size + 1))}>
-              <Plus />
-            </Button>
-          </div>
+      <div className="mt-4 flex items-center gap-3">
+        <span className="g-sm">Group size</span>
+        <div className="flex items-center gap-1">
+          <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" disabled={groupSize <= minSize} onClick={() => onGroupSizeChange(Math.max(minSize, groupSize - 1))}>
+            <Minus />
+          </Button>
+          <span className="g-h3 w-8 text-center" aria-live="polite">{groupSize}</span>
+          <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => onGroupSizeChange(Math.min(30, groupSize + 1))}>
+            <Plus />
+          </Button>
         </div>
-      ) : null}
+      </div>
 
       {perHead === 0 ? (
         <Empty className="mt-4" title="Libre lahat" description="Every stop is free, so there's nothing to split. Rides are paid as you go." />

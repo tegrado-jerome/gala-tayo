@@ -26,20 +26,24 @@ import { RecapStoryButton } from './RecapStory'
 import PlanDayWeather from '../weather/PlanDayWeather'
 import { getGalaPlanBarkada, setGalaPlanRsvp, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
+import { clearPendingRsvp, rememberPendingRsvp, takePendingRsvp } from '../../utils/pendingRsvp'
 import {
   deleteGalaPlan,
   getGalaPlan,
   parseGalaPlanDescription,
   reorderGalaPlanItems,
   toggleGalaPlanHeart,
+  updateGalaPlan,
   type GalaPlanDetail,
 } from '../../utils/galaPlansApi'
+import { planGroupSize, type RainSwap } from '../../utils/planStops'
+import type { CompactPlace } from '../../utils/compactPlaces'
 import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs } from '../../utils/galaPlanTrip'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildGalaPlanInviteUrl } from '../../utils/share'
-import { bestDate, formatDateChoice, inviteMessage, lockedDate, splitPolls } from '../../utils/barkadaVotes'
+import { bestDate, formatDateChoice, inviteMessage, joinNames, lockedDate, replyNames, splitPolls } from '../../utils/barkadaVotes'
 import { trackShare } from '../../utils/analytics'
 import { withShareRef } from '../../utils/shareRef'
 import '../../design/plans.css'
@@ -102,9 +106,27 @@ function BackLink() {
   )
 }
 
-function joinNames(names: string[]) {
-  if (names.length <= 2) return names.join(' and ')
-  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`
+const isTextField = (target: EventTarget | null) =>
+  target instanceof HTMLElement && target.matches('input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]), textarea, select')
+
+/** True while a text field has focus: the phone keyboard is up, so the sticky bar steps aside. */
+function useIsTyping() {
+  const [isTyping, setIsTyping] = useState(false)
+  useEffect(() => {
+    const onFocusIn = (event: FocusEvent) => {
+      if (isTextField(event.target)) setIsTyping(true)
+    }
+    const onFocusOut = (event: FocusEvent) => {
+      if (!isTextField(event.relatedTarget)) setIsTyping(false)
+    }
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
+  return isTyping
 }
 
 function PlanDetail({ planId, session }: { planId: string; session?: Session | null }) {
@@ -124,6 +146,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const [burst, setBurst] = useState(0)
   const [liveBurst, setLiveBurst] = useState(0)
   const [liveNote, setLiveNote] = useState<string | null>(null)
+  const [sizeOverride, setSizeOverride] = useState<number | null>(null)
+  const isTyping = useIsTyping()
   const tabsRef = useRef<HTMLDivElement>(null)
   // Bumped on every write so a slower background refresh never overwrites a newer result.
   const writeVersion = useRef(0)
@@ -205,6 +229,20 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     }
   }, [planId, session])
 
+  // A friend who tapped Tara/Baka/Pass before signing up gets that answer applied once they are back.
+  const canReplayRsvp = Boolean(session && barkada?.available && plan && !plan.viewer_is_owner && barkada.viewer_rsvp === null)
+  useEffect(() => {
+    if (!canReplayRsvp) return
+    const rsvp = takePendingRsvp(planId)
+    if (!rsvp) return
+    setGalaPlanRsvp(planId, rsvp, session)
+      .then((next) => {
+        writeVersion.current += 1
+        setBarkada(next)
+      })
+      .catch(() => setNotice('Could not save your RSVP. Tap it again.'))
+  }, [canReplayRsvp, planId, session])
+
   const stops = useMemo<TimelineStop[]>(
     () =>
       (plan?.items ?? []).map((item) => ({
@@ -251,7 +289,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const maybe = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'maybe') : []
   const passing = readyBarkada ? readyBarkada.members.filter((member) => member.rsvp === 'no') : []
   // The group size set when the plan was made counts until more people RSVP.
-  const groupSize = Math.max(1, going.length, parsedDescription.groupSize ?? 0)
+  // One group size for the itinerary budget, Hatian and the story; the Hatian stepper can change it.
+  const groupSize = planGroupSize(sizeOverride ?? parsedDescription.groupSize, going.length)
   const perHead = estimatePerHead(plan.items, groupSize)
   const payingGuests = going.filter((member) => !member.is_owner)
   const paidCount = payingGuests.filter((member) => member.paid).length
@@ -298,7 +337,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
   const joinPlan = async (activeSession: Session | null | undefined = session) => {
     if (!activeSession) {
-      guestAuth.open('plan-rsvp', (guestSession) => void joinPlan(guestSession))
+      rememberPendingRsvp(plan.id, 'going')
+      guestAuth.open('plan-rsvp', (guestSession) => {
+        clearPendingRsvp()
+        void joinPlan(guestSession)
+      })
       return
     }
     setBurst((count) => count + 1)
@@ -307,6 +350,21 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     } catch (joinError) {
       setNotice(joinError instanceof Error ? joinError.message : 'Hindi ma-RSVP. Try again.')
     }
+  }
+
+  // Rain plan: each rainy outdoor stop becomes the suggested indoor place, keeping its time and order.
+  const swapToIndoor = async (swaps: Array<RainSwap<CompactPlace>>) => {
+    const byIndex = new Map(swaps.map((swap) => [swap.index, swap.option.id]))
+    const items = plan.items.map((item, index) => ({
+      place_id: byIndex.get(index) ?? item.place_id,
+      day_number: item.day_number,
+      sort_order: item.sort_order,
+      time_label: item.time_label,
+      notes: byIndex.has(index) ? null : item.notes,
+      estimated_minutes: item.estimated_minutes,
+    }))
+    applyPlan((await updateGalaPlan(plan.id, { items }, session)).plan)
+    setNotice(`Swapped ${swaps.length} outdoor ${swaps.length === 1 ? 'stop' : 'stops'} for indoor ones.`)
   }
 
   const copyInvite = async () => {
@@ -482,7 +540,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       : [`${going.length} going`, maybe.length ? `${maybe.length} maybe` : null].filter(Boolean).join(', ')
   const rsvpSub =
     maybe.length > 0
-      ? `${joinNames(maybe.map((member) => personName(member.profile).split(' ')[0]))} said baka`
+      ? `${joinNames(replyNames(maybe, readyBarkada?.members ?? [], session?.user?.id))} said baka`
       : passing.length > 0
         ? `${passing.length} can't make it`
         : going.length > 1
@@ -549,6 +607,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               date={parsedDescription.dateMode === 'date' ? parsedDescription.date : null}
               position={storyStop.latitude != null && storyStop.longitude != null ? { lat: storyStop.latitude, lng: storyStop.longitude } : null}
               stopName={storyStop.name}
+              stops={plan.items}
+              onSwap={plan.viewer_is_owner ? swapToIndoor : undefined}
             />
           ) : null}
           {description ? <p className="mt-3 max-w-[65ch] text-[15px] leading-relaxed">{description}</p> : null}
@@ -666,7 +726,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                     <div className="min-w-0">
                       <h2 id="plan-story-title" className="g-story-t">Share as a story</h2>
                       <p className="g-story-s">A 9:16 picture of the route for IG or FB stories.</p>
-                      <RecapStoryButton plan={plan} friends={going.length || readyBarkada?.members.length || 0} variant="line" size="sm" label="Make story" />
+                      <RecapStoryButton plan={plan} friends={groupSize} variant="line" size="sm" label="Make story" />
                     </div>
                   </section>
                 </>
@@ -674,7 +734,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             ) : null}
             {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={applyBarkada} onPlanChange={applyPlan} /> : null}
             {activeTab === 'barkada' && readyBarkada ? <MembersList barkada={readyBarkada} /> : null}
-            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={applyBarkada} /> : null}
+            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} groupSize={groupSize} onGroupSizeChange={setSizeOverride} onBarkadaChange={applyBarkada} /> : null}
           </div>
         </div>
 
@@ -683,7 +743,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
       {guestAuth.promptElement}
       <div className="h-16 lg:hidden" aria-hidden="true" />
-      <div className="g-sticky-bar lg:hidden">
+      <div className={cx('g-sticky-bar lg:hidden', isTyping && 'is-typing')}>
         <div className="mx-auto flex max-w-[720px] gap-2">
           <Button variant="soft" className="min-w-0 flex-1" onClick={() => void share()}>
             <Share />

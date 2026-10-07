@@ -55,12 +55,18 @@ function ExploreCities() {
   )
   // A destination tile needs a cover photo; an empty sand box says nothing about the place.
   const destinationTiles = featuredDestinations.filter((destination) => placeCounts[destination.slug] && coverBySlug[destination.slug])
+  // Only cities with visible places get a chip, so none opens an empty page. Until places load,
+  // Metro Manila uses the curated tiles.
   const chips: CityChip[] =
-    regionSlug === METRO_MANILA_REGION_SLUG
+    regionSlug === METRO_MANILA_REGION_SLUG && places.length === 0
       ? metroManilaChips
       : (getRegionBySlug(regionSlug)?.destinations ?? [])
           .filter((destination) => placeCounts[destination.slug])
-          .map((destination) => ({ slug: destination.slug, label: displayCityName(destination.label), imageUrl: coverBySlug[destination.slug] ?? null }))
+          .map((destination) => ({
+            slug: destination.slug,
+            label: displayCityName(destination.label),
+            imageUrl: metroManilaChips.find((chip) => chip.slug === destination.slug)?.imageUrl ?? coverBySlug[destination.slug] ?? null,
+          }))
 
   return (
     <>

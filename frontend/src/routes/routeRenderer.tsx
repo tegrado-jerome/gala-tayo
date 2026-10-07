@@ -91,7 +91,8 @@ function OnboardingAccessGate({
     }
 
     if (!session) {
-      replaceWithPath(buildAuthPath('/signup', '/onboarding'))
+      // Someone who already signed up and comes back logged out needs to log in, not sign up again.
+      replaceWithPath(buildAuthPath('/login', `/onboarding${window.location.search}`))
       return
     }
 

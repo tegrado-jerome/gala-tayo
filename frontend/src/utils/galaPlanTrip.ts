@@ -1,4 +1,5 @@
-import { parseGalaPlanDescription, type GalaPlanSummary } from './galaPlansApi'
+import { parseGalaPlanDescription, type GalaPlanDetail, type GalaPlanItemPayload, type GalaPlanSummary } from './galaPlansApi'
+import { slotForNewStop, stayMinutes } from './planStops'
 
 type Coordinates = { latitude: number | null; longitude: number | null }
 type Stop = { place: Coordinates & { budget_min?: number | null } }
@@ -89,6 +90,34 @@ export function estimatePerHead(items: Stop[], groupSize = 1) {
   const entry = items.reduce((sum, item) => sum + (item.place.budget_min ?? 0), 0)
   const rides = getPlanLegs(items).reduce((sum, leg) => sum + (leg?.fare ?? 0), 0)
   return Math.round(entry + rides / Math.max(1, groupSize))
+}
+
+/**
+ * The plan's items with a new place slotted into the last day at a time it is open (see slotForNewStop),
+ * ready to save in one update.
+ */
+export function planItemsWithStop(items: GalaPlanDetail['items'], added: { placeId: string; category: string | null } & Coordinates): GalaPlanItemPayload[] {
+  const lastDay = Math.max(1, ...items.map((item) => item.day_number ?? 1))
+  const ordered = [...items].sort((a, b) => (a.day_number ?? 1) - (b.day_number ?? 1) || a.sort_order - b.sort_order)
+  const dayItems = ordered.filter((item) => (item.day_number ?? 1) === lastDay)
+  const slot = slotForNewStop(
+    dayItems.map((item) => ({ time_label: item.time_label, estimated_minutes: item.estimated_minutes, place: item.place as Coordinates })),
+    { category: added.category, place: { latitude: added.latitude, longitude: added.longitude } },
+    (from, to) => estimateLeg(from, to)?.minutes ?? null,
+  )
+  const toPayload = (item: GalaPlanDetail['items'][number], time: string | null) => ({
+    place_id: item.place_id,
+    day_number: item.day_number ?? 1,
+    time_label: time,
+    notes: item.notes,
+    estimated_minutes: item.estimated_minutes,
+  })
+  const newDay = [
+    ...dayItems.map((item, index) => toPayload(item, slot.times[index < slot.index ? index : index + 1])),
+  ]
+  newDay.splice(slot.index, 0, { place_id: added.placeId, day_number: lastDay, time_label: slot.times[slot.index], notes: null, estimated_minutes: stayMinutes(added.category) })
+  const otherDays = ordered.filter((item) => (item.day_number ?? 1) !== lastDay).map((item) => toPayload(item, item.time_label))
+  return [...otherDays, ...newDay].map((item, index) => ({ ...item, sort_order: index + 1 }))
 }
 
 export function formatPeso(value: number) {

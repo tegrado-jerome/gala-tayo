@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { createRefreshRetryFetch } from './utils/authRefreshRetry'
 
 const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '').trim()
 const supabaseAnonKey = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
@@ -10,12 +11,15 @@ const authStorage = {
   getItem(key: string): string | null {
     return localStorage.getItem(key) ?? sessionStorage.getItem(key)
   },
+  // Sessions persist unless "Remember me" was unticked at login. An email-confirm link opens a new tab
+  // with empty sessionStorage, so defaulting to tab-only storage logged new users out on tab close.
   setItem(key: string, value: string): void {
-    const rememberMe = sessionStorage.getItem(rememberMeKey)
-    if (rememberMe === 'true') {
-      localStorage.setItem(key, value)
-    } else {
+    if (sessionStorage.getItem(rememberMeKey) === 'false') {
       sessionStorage.setItem(key, value)
+      localStorage.removeItem(key)
+    } else {
+      localStorage.setItem(key, value)
+      sessionStorage.removeItem(key)
     }
   },
   removeItem(key: string): void {
@@ -24,7 +28,39 @@ const authStorage = {
   },
 }
 
+let lastRefreshFailureAt = 0
+
+/** Fired on window when a signed-in user lost their session to a failed refresh (not by logging out). */
+export const SESSION_LOST_EVENT = 'galatayo:session-lost'
+let isSessionLostPending = false
+
+export function reportSessionLost() {
+  isSessionLostPending = true
+  window.dispatchEvent(new Event(SESSION_LOST_EVENT))
+}
+
+/** Read once by the notice, which may mount after the loss was reported. */
+export function takeSessionLost() {
+  const pending = isSessionLostPending
+  isSessionLostPending = false
+  return pending
+}
+
+/** True right after a token refresh failed for good, so a SIGNED_OUT that follows was not the user's choice. */
+export function consumeRecentRefreshFailure(windowMs = 30_000) {
+  const failed = Date.now() - lastRefreshFailureAt < windowMs
+  lastRefreshFailureAt = 0
+  return failed
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: createRefreshRetryFetch((input, init) => fetch(input, init), {
+      onRefreshFailed: () => {
+        lastRefreshFailureAt = Date.now()
+      },
+    }),
+  },
   auth: {
     autoRefreshToken: true,
     persistSession: true,

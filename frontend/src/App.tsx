@@ -89,6 +89,7 @@ function App() {
       needsOnboarding,
       isOnboardingAllowedPath,
       pathname,
+      search,
     })
 
     if (redirectTarget) {

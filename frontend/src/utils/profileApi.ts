@@ -216,25 +216,15 @@ export type OnboardingCompleteRequest = {
 }
 
 export type PrivacyRequestType = 'access' | 'correction' | 'deletion' | 'blocking' | 'objection' | 'portability' | 'withdraw_consent'
+/** Requests listed under "Your requests"; account deletion requests come from their own table. */
+export type ListedPrivacyRequestType = PrivacyRequestType | 'account_deletion'
 export type PrivacyRequestStatus = 'pending' | 'in_review' | 'resolved' | 'rejected' | 'cancelled'
 
 export type PrivacyRequest = {
   id: string
   userId: string
-  requestType: PrivacyRequestType
+  requestType: ListedPrivacyRequestType
   details: string | null
-  status: PrivacyRequestStatus
-  resolvedBy: string | null
-  resolvedAt: string | null
-  moderatorNote: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export type AccountDeletionRequest = {
-  id: string
-  userId: string
-  reason: string | null
   status: PrivacyRequestStatus
   resolvedBy: string | null
   resolvedAt: string | null
@@ -614,18 +604,21 @@ export async function submitPrivacyRequest(payload: { requestType: PrivacyReques
   return readJsonResponse<{ message: string; request: PrivacyRequest }>(response)
 }
 
-export async function submitAccountDeletionRequest(payload: { reason?: string | null }, session?: Session | null) {
-  const token = await getAccessToken(session)
-  if (!token) throw new Error('Sign in is required.')
-
-  const response = await apiFetch('/me/account-deletion-request', {
+/** Deletes the signed-in account and its data. The server asks for a sign-in from the last 15 minutes. */
+export async function deleteMyAccount(session: Session) {
+  const response = await apiFetch('/me/account/delete', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ confirm: 'DELETE' }),
   })
-
-  return readJsonResponse<{ message: string; request: AccountDeletionRequest }>(response)
+  const data = (await response.json().catch(() => ({}))) as { message?: string; code?: string }
+  if (!response.ok) {
+    const error = new Error(data.message || 'Could not delete your account.')
+    ;(error as Error & { code?: string }).code = data.code
+    throw error
+  }
+  return data
 }

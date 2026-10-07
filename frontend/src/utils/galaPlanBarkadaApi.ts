@@ -10,6 +10,8 @@ export type GalaPlanMember = {
   paid: boolean
   is_owner: boolean
   profile: GalaPlanOwner | null
+  /** When this member last changed their RSVP or paid status. */
+  updated_at?: string | null
 }
 
 export type GalaPlanPoll = {

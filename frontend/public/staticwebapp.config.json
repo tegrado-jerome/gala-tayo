@@ -526,7 +526,7 @@
   ],
   "responseOverrides": {
     "404": {
-      "rewrite": "/app-shell.html"
+      "rewrite": "/not-found.html"
     }
   },
   "globalHeaders": {
