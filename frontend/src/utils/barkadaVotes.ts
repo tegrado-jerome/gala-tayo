@@ -130,16 +130,16 @@ export function formatDateChoice(choice: Pick<DateChoice, 'date' | 'time'>) {
   return `${day} · ${hours % 12 || 12}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''} ${hours >= 12 ? 'PM' : 'AM'}`
 }
 
-/** "Sama ka? Gala tayo sa Intramuros on Sat, Oct 12 👉" — the link follows in the share sheet. */
+/** "Are you in? Let's go to Intramuros on Sat, Oct 12! 👉" — the link follows in the share sheet. */
 export function inviteMessage(where: string, when: string | null) {
-  return `Sama ka? Gala tayo sa ${where}${when ? ` on ${when}` : ''} 👉`
+  return `Are you in? Let's go to ${where}${when ? ` on ${when}` : ''}! 👉`
 }
 
 /** The group-chat message for a Plan with AI draft: the invite, the route and the cost each. */
 export function gcInviteText({ stops, when, perHead }: { stops: string[]; when: string | null; perHead: number | null }) {
   const route = stops.length > 1 ? `\n${stops.join(' → ')}` : ''
-  const cost = perHead ? `\nMga ₱${perHead.toLocaleString('en-PH')} each. G?` : perHead === 0 ? '\nLibre lang! G?' : '\nG?'
-  return `${inviteMessage(stops[0] ?? 'labas', when)}${route}${cost}`
+  const cost = perHead ? `\nAbout ₱${perHead.toLocaleString('en-PH')} each. Who's in?` : perHead === 0 ? '\nAll free! Who\'s in?' : '\nWho\'s in?'
+  return `${inviteMessage(stops[0] ?? 'a day out', when)}${route}${cost}`
 }
 
 type ReplyMember = { user_id: string; profile: GalaPlanOwner | null; updated_at?: string | null }

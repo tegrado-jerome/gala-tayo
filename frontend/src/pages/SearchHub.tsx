@@ -742,7 +742,7 @@ function SearchHub({
         ) : (
           <Empty
             className="mt-8"
-            title="Walang rain-safe spots dito"
+            title="No rain-safe spots here"
             description="None of the places on this page are marked indoor or rain-friendly."
             action={
               <Button variant="line" onClick={() => setRainSafeOnly(false)}>
@@ -757,7 +757,7 @@ function SearchHub({
           status={searchStatus}
           message={searchFeedbackMessage}
           error={searchError}
-          askAiQuestion={searchLabel ? `Find me ${searchLabel}` : 'Help me find a gala spot in Metro Manila'}
+          askAiQuestion={searchLabel ? `Find me ${searchLabel}` : 'Help me find a great spot in Metro Manila'}
           onSearchAgain={handleSearchAgain}
         />
       )}

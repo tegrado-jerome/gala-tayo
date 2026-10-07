@@ -90,7 +90,7 @@ function StoryPreview({ render, fileName, title, shareText, summary, label, onCl
         {state.status === 'ready' ? (
           <img src={state.url} alt={summary} className="block h-full w-full motion-safe:animate-[g-fade_300ms_var(--ease-g)_both]" />
         ) : state.status === 'failed' ? (
-          <p className="grid h-full place-items-center px-6 text-center text-[15px] text-white">Hindi nagawa ang story. Close and try again.</p>
+          <p className="grid h-full place-items-center px-6 text-center text-[15px] text-white">Couldn't make the story. Close and try again.</p>
         ) : (
           <>
             <Skeleton className="absolute inset-0 !rounded-none opacity-20" />

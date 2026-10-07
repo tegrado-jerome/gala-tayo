@@ -39,7 +39,7 @@ async function request(path: string, session: Session | null | undefined, init: 
 
   const response = await fetch(getApiUrl(path), { ...init, headers: { ...headers, ...(init.headers as Record<string, string>) } })
   const data = (await response.json().catch(() => ({}))) as GalaPlanBarkada & { message?: string }
-  if (!response.ok) throw new Error(data.message || 'Could not update the barkada. Try again.')
+  if (!response.ok) throw new Error(data.message || 'Couldn\'t update the group. Try again.')
   return data
 }
 

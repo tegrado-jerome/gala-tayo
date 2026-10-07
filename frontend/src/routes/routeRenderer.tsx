@@ -233,8 +233,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return (
         <>
           <SeoHead
-            title={`Places to Visit in the Philippines, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
-            description={`${BRAND_NAME} helps you discover gala-worthy places around the Philippines, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
+            title={`Places to Visit in the Philippines, Date Spots and Trip Ideas | ${BRAND_NAME}`}
+            description={`${BRAND_NAME} helps you discover the best places around the Philippines, date spots, hangouts with friends, family-friendly plans, and searchable local recommendations.`}
             canonicalPath="/"
             jsonLd={buildBrandJsonLd()}
           />
@@ -270,14 +270,14 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       }
       return (
         <>
-          <SeoHead title="Pasyal Passport | GalaTayo" description="Your city stamps from around the Philippines and weekly gala streak." canonicalPath="/passport" robots="noindex,follow" />
+          <SeoHead title="Travel Passport | GalaTayo" description="Your city stamps from around the Philippines and weekly trip streak." canonicalPath="/passport" robots="noindex,follow" />
           <PassportPage session={session} />
         </>
       )
     case 'plan-with-ai':
       return (
         <>
-          <SeoHead title="Plan with AI | GalaTayo" description="Describe your gala in one sentence and get a full-day gala plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
+          <SeoHead title="Plan with AI | GalaTayo" description="Describe your day in one sentence and get a full-day plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
           <PlanWithAiPage initialPrompt={descriptor.initialPrompt} />
         </>
       )
@@ -361,7 +361,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
     case 'gala-list':
       return (
         <>
-          <SeoHead title="Gala list | GalaTayo" description="A list of places to go, made on GalaTayo." canonicalPath={pathname} robots="noindex,follow" />
+          <SeoHead title="List | GalaTayo" description="A list of places to go, made on GalaTayo." canonicalPath={pathname} robots="noindex,follow" />
           <GalaListPage key={descriptor.listId ?? 'shared'} listId={descriptor.listId} search={search} />
         </>
       )

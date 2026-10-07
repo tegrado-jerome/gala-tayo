@@ -17,7 +17,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
     <section aria-label="Cookie consent" className="m-cookie flex-wrap sm:flex-nowrap">
       <Cookie weight="light" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="g-sm font-semibold leading-5">Cookies, okay lang?</p>
+        <p className="g-sm font-semibold leading-5">Cookies okay?</p>
         <p className="g-xs g-mut leading-4">
           Analytics only, to make GalaTayo better.{' '}
           <button type="button" onClick={() => setShowDetails((value) => !value)} className="font-semibold text-[var(--ink)] underline underline-offset-2" aria-expanded={showDetails}>

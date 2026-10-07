@@ -91,9 +91,9 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
             ))}
           </div>
         ) : errorMessage && submissions.length === 0 ? (
-          <Empty title="Hindi ma-load ang submissions" description={errorMessage} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
+          <Empty title="Couldn't load submissions" description={errorMessage} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
         ) : submissions.length === 0 ? (
-          <Empty title="Wala pang na-submit" description="Once you submit a place for review, it shows up here with its status." />
+          <Empty title="No submissions yet" description="Once you submit a place for review, it shows up here with its status." />
         ) : (
           <div>
             {submissions.map((submission) => (

@@ -82,21 +82,21 @@ test('spots rank by tara, then fewer pass, then the order added', () => {
   assert.equal(spotWinner(splitPolls([poll('s', '[spot] x', [0, 3], null, 'p', ['X', 'Pass'])]).spots), null)
 })
 
-test('formats dates and the Taglish invite', () => {
+test('formats dates and the invite', () => {
   assert.equal(formatDateChoice({ date: '2026-10-10', time: null }), 'Sat, Oct 10')
   assert.equal(formatDateChoice({ date: '2026-10-10', time: '18:30' }), 'Sat, Oct 10 · 6:30 PM')
   assert.equal(formatDateChoice({ date: '2026-10-10', time: '09:00' }), 'Sat, Oct 10 · 9 AM')
-  assert.equal(inviteMessage('Intramuros', 'Sat, Oct 10'), 'Sama ka? Gala tayo sa Intramuros on Sat, Oct 10 👉')
-  assert.equal(inviteMessage('Intramuros', null), 'Sama ka? Gala tayo sa Intramuros 👉')
+  assert.equal(inviteMessage('Intramuros', 'Sat, Oct 10'), "Are you in? Let's go to Intramuros on Sat, Oct 10! 👉")
+  assert.equal(inviteMessage('Intramuros', null), "Are you in? Let's go to Intramuros! 👉")
 })
 
 test('gcInviteText: invite, route and cost for the group chat', () => {
   assert.equal(
     gcInviteText({ stops: ['Fort Santiago', 'Binondo Chinatown'], when: 'Sat, Oct 10', perHead: 1200 }),
-    'Sama ka? Gala tayo sa Fort Santiago on Sat, Oct 10 👉\nFort Santiago → Binondo Chinatown\nMga ₱1,200 each. G?',
+    "Are you in? Let's go to Fort Santiago on Sat, Oct 10! 👉\nFort Santiago → Binondo Chinatown\nAbout ₱1,200 each. Who's in?",
   )
-  assert.equal(gcInviteText({ stops: ['Intramuros'], when: null, perHead: null }), 'Sama ka? Gala tayo sa Intramuros 👉\nG?')
-  assert.equal(gcInviteText({ stops: ['Rizal Park'], when: null, perHead: 0 }), 'Sama ka? Gala tayo sa Rizal Park 👉\nLibre lang! G?')
+  assert.equal(gcInviteText({ stops: ['Intramuros'], when: null, perHead: null }), "Are you in? Let's go to Intramuros! 👉\nWho's in?")
+  assert.equal(gcInviteText({ stops: ['Rizal Park'], when: null, perHead: 0 }), "Are you in? Let's go to Rizal Park! 👉\nAll free! Who's in?")
 })
 
 test('reply names: latest first, "You" for the viewer, full names when first names clash', () => {

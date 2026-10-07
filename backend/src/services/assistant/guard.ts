@@ -1,5 +1,4 @@
 import { classifyAskAiScope } from "../../functions/askAiStrictPgGuard";
-import type { ReplyLanguage } from "./language";
 
 // Phrases that try to steer the model instead of asking about a gala.
 const INJECTION_PATTERNS: RegExp[] = [
@@ -46,8 +45,6 @@ export function guardMessage(message: string): GuardDecision {
   return { action: offTopic ? "refuse" : "answer", injection };
 }
 
-export function refusalText(language: ReplyLanguage): string {
-  return language === "taglish"
-    ? "Pang-gala lang ako, eh! Hindi ko 'yan masasagot. Pero kung may lakad ka, tara, tulungan kita: saan, kanino, magkano?"
-    : "I can only help with gala plans: places, food, dates and trips around the Philippines. Where are you thinking of going?";
+export function refusalText(): string {
+  return "I'm all about trips and outings: places, food, dates and day trips around the Philippines! Where are you thinking of going?";
 }

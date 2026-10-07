@@ -10,7 +10,6 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { runAssistant } from "../../src/services/assistant/agent";
 import { visibleFixturePlaces } from "../../src/services/assistant/fixtures/testPlaces";
-import { detectLanguage } from "../../src/services/assistant/language";
 import { GeminiProvider } from "../../src/services/assistant/providers/gemini";
 import type { RecordedConversation, RecordedTurn } from "../../src/services/assistant/providers/mock";
 import type { AssistantModelProvider, ModelRequest, ModelStep } from "../../src/services/assistant/providers/types";
@@ -38,18 +37,11 @@ export const PROMPTS: Array<{ prompt: string; mode?: "chat" | "map"; calls: Call
 ];
 
 function seedAnswer(prompt: string, places: Array<{ name: string; budget_min: number | null; area: string | null; city: string | null }>, rainy: boolean) {
-  const taglish = detectLanguage(prompt) === "taglish";
   const picks = places.slice(0, 3);
-  if (picks.length === 0) return taglish ? "Wala pa akong swak na lugar diyan. Subukan natin ibang area?" : "GalaTayo doesn't have a fit for that yet. Want to try another area?";
-  const price = (place: (typeof picks)[number]) => (place.budget_min === null ? "" : place.budget_min === 0 ? (taglish ? ", libre pa" : ", and it's free") : `, from PHP ${place.budget_min}`);
-  const intro = taglish
-    ? rainy ? "Umuulan? Walang problema, indoor muna tayo:" : "Tara, heto ang mga swak:"
-    : rainy ? "Rain likely, so here are indoor picks:" : "Here are good picks:";
-  const lines = picks.map((place, index) =>
-    taglish
-      ? `- **${place.name}**${price(place)}. ${index === 0 ? "Top pick ko 'to!" : "Sulit din 'to."}`
-      : `- **${place.name}** in ${place.area ?? place.city}${price(place)}.`
-  );
+  if (picks.length === 0) return "GalaTayo doesn't have a fit for that yet. Want to try another area?";
+  const price = (place: (typeof picks)[number]) => (place.budget_min === null ? "" : place.budget_min === 0 ? ", and it's free!" : `, from PHP ${place.budget_min}`);
+  const intro = rainy ? "Rain likely, so here are great indoor picks:" : "Here are great picks:";
+  const lines = picks.map((place) => `- **${place.name}** in ${place.area ?? place.city}${price(place)}.`);
   return [intro, ...lines].join("\n");
 }
 

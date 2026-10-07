@@ -349,7 +349,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       <ListToolbar count={payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null} sort="Best first" />
 
       {errorMessage ? (
-        <Empty className="mt-8" title={`Hindi ma-load ang ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />
+        <Empty className="mt-8" title={`Couldn't load ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
         <div className="mt-2" aria-busy="true">
           <span className="sr-only">Loading {categoryLabel.toLowerCase()} places.</span>
@@ -358,7 +358,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       ) : shouldShowEmptyState ? (
         <Empty
           className="mt-8"
-          title={`Wala pang ${categoryLabel.toLowerCase()} places`}
+          title={`No ${categoryLabel.toLowerCase()} places yet`}
           description="Check back later or try another category."
           action={<Button variant="line" href="/places/categories">See all categories</Button>}
         />

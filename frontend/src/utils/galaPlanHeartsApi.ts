@@ -29,7 +29,7 @@ async function readJson<T>(response: Response): Promise<T> {
 export async function heartGalaPlan(planId: string, session?: Session | null) {
   const token = await getAccessToken(session)
   if (!token) {
-    throw new Error('Log in to heart this gala plan.')
+    throw new Error('Log in to heart this plan.')
   }
 
   const response = await fetch(getApiUrl(`/gala-plans/${encodeURIComponent(planId)}/heart`), {

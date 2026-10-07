@@ -413,7 +413,7 @@ function HistoryPage() {
 
           {!errorMessage && displayHistory !== null && visibleHistory.length === 0 ? (
             <Empty
-              title="Wala ka pang viewed places."
+              title="No viewed places yet."
               description="Places you open show up here."
               action={<Button variant="tara" href="/search">Explore places</Button>}
             />

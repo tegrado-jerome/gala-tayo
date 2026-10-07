@@ -11,7 +11,7 @@ import {
   parseClock,
   parseEditorReview,
   pesoAmounts,
-  tagalogGrammarCount,
+  tagalogWordCount,
   unbackedSuperlatives,
   uniqueSlug,
   validateDraft,
@@ -65,7 +65,7 @@ export const FIXTURE_BUDGET = {
   title: "The ₱300 ube cheesecake day: Binondo, Fort Santiago, art",
   slug: "300-peso-ube-cheesecake-day",
   hook: "Everyone's hunting ube cheesecake. Here's a full Manila day for ₱75, so the rest of your ₱300 goes to dessert.",
-  body: "The ube cheesecake craze is real, and your wallet needs a game plan. Start free at the National Museum of Fine Arts and say hi to Juan Luna's Spoliarium in air-con comfort. Walk to Fort Santiago for ₱75 of walls, river views and Rizal's last footsteps. End with a Binondo food crawl and spend the ₱225 change on whatever sweet thing calls your name. Total gala spend: ₱75. Sulit? Very.",
+  body: "The ube cheesecake craze is real, and your wallet needs a game plan. Start free at the National Museum of Fine Arts and say hi to Juan Luna's Spoliarium in air-con comfort. Walk to Fort Santiago for ₱75 of walls, river views and Rizal's last footsteps. End with a Binondo food crawl and spend the ₱225 change on whatever sweet thing calls your name. Total spend: ₱75. Worth it? Very!",
   meme: { top: "Me: a whole Manila day for ₱75", bottom: "Also me: ₱225 left for ube cheesecake. Strategy." },
   picks: [
     { slug: "fort-santiago", why: "₱75 for walls, dungeons and Pasig River views. History, but make it cardio." },
@@ -78,12 +78,12 @@ export const FIXTURE_TIER = {
   title: "Matcha in hand: the official Manila stroll tier list",
   slug: "matcha-manila-stroll-tier-list",
   hook: "Your matcha is the main character today. We ranked where to carry it. Zero bias. Okay, some bias.",
-  body: "The matcha trend isn't slowing down, so give your cup a view. S tier goes to Intramuros: thick stone walls, bastions and streets that make every sip look like a film still. A tier is Rizal Park, 58 hectares by Manila Bay, free and roomy enough for the whole barkada. B tier is Binondo, only because you'll abandon the matcha for the food crawl in five minutes. Tara, pick your tier.",
+  body: "The matcha trend isn't slowing down, so give your cup a view. S tier goes to Intramuros: thick stone walls, bastions and streets that make every sip look like a film still. A tier is Rizal Park, 58 hectares by Manila Bay, free and roomy enough for the whole crew. B tier is Binondo, only because you'll abandon the matcha for the food crawl in five minutes. Now pick your tier!",
   meme: { top: "S tier: matcha on Intramuros's stone walls", bottom: "B tier: still beats your couch, honestly" },
   picks: [
     { slug: "binondo-chinatown", tier: "B", why: "Loses only because the food crawl will steal you from your matcha." },
     { slug: "intramuros", tier: "S", why: "Stone walls and bastions from 1571. Your matcha has never looked this cultured." },
-    { slug: "rizal-park-luneta-park", tier: "A", why: "58 hectares by Manila Bay, free. Room for the barkada and their twelve orders." },
+    { slug: "rizal-park-luneta-park", tier: "A", why: "58 hectares by Manila Bay, free. Room for the whole crew and their twelve orders." },
   ],
 };
 
@@ -92,7 +92,7 @@ export const FIXTURE_GUESS = {
   slug: "guess-the-free-manila-spot",
   hook: "Three clues, one free weekend plan in Manila. Guess it before you scroll down.",
   body: "Weekend plans in Metro Manila don't need a budget meeting. Read the three clues, send your guess to the group chat, then reveal. Bonus stops nearby: Rizal Park for a long walk by Manila Bay, and Intramuros for stone walls and bastions. One afternoon, three spots, no entrance fees. You get bragging rights if you guessed right.",
-  meme: { top: "Guess where this is. Hint: it's free", bottom: "Wrong answers only in the GC, then go" },
+  meme: { top: "Guess where this is. Hint: it's free", bottom: "Wrong answers only in the group chat, then go" },
   clues: [
     "Entry is free and so is the air-con.",
     "It sits in a grand neoclassical building where lawmakers once met.",
@@ -226,10 +226,11 @@ test("voice and safety rules reject hedges, unkind jokes, heavy Tagalog grammar 
   const reject = (patch: Record<string, unknown>) => validateDraft({ ...FIXTURE_TIER, ...patch }, context);
   assert.deepEqual(reject({ hook: "Check the hours first, then bring your matcha to the walls." }), { ok: false, reason: "hedge" });
   assert.deepEqual(reject({ hook: "Matcha walks so easy even your tanga cousin can do it." }), { ok: false, reason: "unkind or religious joke" });
-  assert.deepEqual(reject({ hook: "Tara na sa Intramuros, kahit umuulan pa rin ang mga plano natin ngayon." }), { ok: false, reason: "too much Tagalog grammar" });
+  assert.deepEqual(reject({ hook: "Tara na sa Intramuros, kahit umuulan pa rin ang mga plano natin ngayon." }), { ok: false, reason: "not in English" });
   assert.deepEqual(reject({ hook: "The best matcha walk in the whole of Metro Manila today, period." }), { ok: false, reason: "unbacked claim: best" });
   assert.deepEqual(reject({ title: "Matcha in hand: the Manila stroll tier list 🍵" }), { ok: false, reason: "emoji in title or meme" });
-  assert.equal(tagalogGrammarCount("Tara, barkada! Sulit and kilig."), 0);
+  assert.deepEqual(reject({ hook: "Tara, barkada! Sulit matcha walk in Intramuros today." }), { ok: false, reason: "not in English" });
+  assert.equal(tagalogWordCount("Gala tayo! Halo-halo after a walk in Intramuros."), 1);
   assert.deepEqual(unbackedSuperlatives("The oldest church", "Completed in 1607, it is the oldest stone church."), []);
 });
 
@@ -252,7 +253,7 @@ test("prompt carries the trend phrasing, format rules, budgets and fame; never r
     budget: { cap: 300 },
   });
   assert.match(system, /No politics, religion/);
-  assert.match(system, /mostly simple English/i);
+  assert.match(system, /Simple, enthusiastic English/);
   assert.match(user, /QUERY: ube cheesecake manila/);
   assert.match(user, /STICKER: ₱300 Challenge/);
   assert.match(user, /fort-santiago \| Fort Santiago \| Heritage, Manila \| from ₱75 \| ICON/);

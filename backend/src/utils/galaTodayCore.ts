@@ -1,4 +1,4 @@
-// Pure rules for "Gala Today": the daily creator-style post that turns what's hot into a gala plan.
+// Pure rules for "Gala Today": the daily creator-style post that turns what's hot into a plan to go out.
 // No network or AI here, so the rules that keep posts funny, safe and honest are unit-tested.
 import { isSafeTrend, normalizeTopic, type ScoredTrend, type TodayTopic } from "./galaTodaySignals";
 
@@ -74,7 +74,7 @@ export const FORMATS: Record<FormatId, FormatSpec> = {
     picks: 3,
     sticker: ({ cap }) => `₱${(cap ?? 0).toLocaleString("en-PH")} Challenge`,
     brief:
-      "A whole gala day under BUDGET. Use only places with a price in PLACES; their starting budgets must add up to BUDGET or less. Mention the cap and the total (TOTAL is computed for you, use those exact numbers), and make the money math part of the fun (the sukli, the 'still have change for merienda').",
+      "A whole day out under BUDGET. Use only places with a price in PLACES; their starting budgets must add up to BUDGET or less. Mention the cap and the total (TOTAL is computed for you, use those exact numbers), and make the money math part of the fun (the leftover change, the 'still enough for merienda').",
   },
   "24-hours": {
     name: "24 hours in the area",
@@ -104,7 +104,7 @@ export const FORMATS: Record<FormatId, FormatSpec> = {
     name: "Starter pack",
     picks: 3,
     sticker: () => "Starter Pack",
-    brief: "The starter pack for the topic's kind of gala. Give 3–6 'items' (max 40 chars each): the relatable things you bring or do (the extra shirt, the 'one more photo'). Then the 3 picks are where to use the pack.",
+    brief: "The starter pack for the topic's kind of outing. Give 3–6 'items' (max 40 chars each): the relatable things you bring or do (the extra shirt, the 'one more photo'). Then the 3 picks are where to use the pack.",
   },
   pov: {
     name: "POV",
@@ -206,11 +206,11 @@ export function uniqueSlug(slug: string, date: string, taken: Set<string>): stri
   return taken.has(dated) ? `${dated}-2` : dated;
 }
 
-// Tagalog grammar words: a few are fine, more means machine-made Taglish that tourists can't read.
-const TAGALOG_GRAMMAR = ["ang", "ng", "mga", "sa", "pa", "rin", "din", "kahit", "pero", "lang", "naman", "ba", "yung", "ito", "kasi", "talaga", "mo", "ko", "niya", "nila", "natin", "tayo", "kayo"];
+// Posts are English only. Tagalog grammar words and slang give Taglish away; one is allowed for the "Gala tayo" tagline.
+const TAGALOG_WORDS = ["ang", "ng", "mga", "sa", "pa", "rin", "din", "kahit", "pero", "lang", "naman", "ba", "yung", "ito", "kasi", "talaga", "mo", "ko", "niya", "nila", "natin", "tayo", "kayo", "tara", "sulit", "barkada", "tropa", "kilig", "chika", "sukli", "lakad", "na"];
 
-export function tagalogGrammarCount(text: string): number {
-  return normalizeTopic(text).split(" ").filter((word) => TAGALOG_GRAMMAR.includes(word)).length;
+export function tagalogWordCount(text: string): number {
+  return normalizeTopic(text).split(" ").filter((word) => TAGALOG_WORDS.includes(word)).length;
 }
 
 const HEDGE_PATTERN = /\b(check|confirm|verify|call ahead|subject to change|may change|may vary|be sure to)\b/i;
@@ -264,7 +264,7 @@ export function buildPrompt({ date, topic, format, places, areaName, weather, da
   const system = `You are the head writer of "Gala Today" on GalaTayo, an app of famous, gala-worthy places in the Philippines. Write like a top creator: one big, clear idea a stranger gets in 2 seconds, a twist that makes them smile, and a real reason to go out today.
 
 VOICE
-- Mostly simple English with a light Filipino flavour: at most 2–3 well-known words such as tara, sulit, barkada, kilig, chika, merienda, G. Never full Tagalog sentences or mixed Tagalog grammar ("may planong galang pa rin" is wrong). A foreign tourist must understand every line.
+- Simple, enthusiastic English, like a lively, knowledgeable Filipino tour guide; exclamation points where natural. No Tagalog or Taglish words (no tara, sulit, barkada, kilig, chika): place names, food names (merienda, halo-halo) and the brand "Gala tayo" are the only exceptions. A foreign tourist and a local must both understand every line.
 - Punchy, witty, wholesome. Short sentences. Specific beats generic: every joke uses a real detail from that place's facts.
 - The humour comes from relatable truths about going out (the 400 photos, the group chat that never decides, "one more round", the budget math), surprise and playful exaggeration. Never from making fun of anyone.
 
@@ -421,7 +421,7 @@ export function validateDraft(raw: Record<string, unknown>, context: ValidationC
   if (/#\w/.test(allText)) return { ok: false, reason: "hashtag" };
   if (!isSafeTrend(allText)) return { ok: false, reason: "unsafe topic" };
   if (UNKIND_PATTERN.test(allText)) return { ok: false, reason: "unkind or religious joke" };
-  if (tagalogGrammarCount(allText) > 3) return { ok: false, reason: "too much Tagalog grammar" };
+  if (tagalogWordCount(allText) > 1) return { ok: false, reason: "not in English" };
   const facts = picks.map((pick) => `${pick.place.name} ${pick.place.summary}`).join(" ");
   const unbacked = unbackedSuperlatives(allText, facts);
   if (unbacked.length > 0) return { ok: false, reason: `unbacked claim: ${unbacked.join(", ")}` };
@@ -476,7 +476,7 @@ export function buildEditorPrompt(post: GalaTodayPost, places: TodayPlace[]) {
 - funny: would a stranger smile or laugh? Generic or forced jokes score 5 or less.
 - purpose: can a reader tell in 2 seconds what to do today and why? Vague posts score 5 or less.
 - accuracy: every claim is backed by FACTS, picks fit WEATHER (if given), nothing invented.
-- natural: reads like a native English speaker with light, correct Filipino words. Awkward or machine-made Taglish scores 4 or less.
+- natural: reads like a lively native English speaker, a knowledgeable local guide. Any Taglish or Tagalog slang scores 4 or less.
 - safe: 10 unless it touches politics, religion jokes, tragedy, crime, body shaming, stereotypes, punching down, private people, gossip or brand mockery.
 Return JSON only: {"funny": number, "purpose": number, "accuracy": number, "natural": number, "safe": number, "fix": string (the one change that would most improve it, max 200 chars)}`;
   const user = [

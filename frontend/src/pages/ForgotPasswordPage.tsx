@@ -98,7 +98,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard bar="Reset password" onBack={() => navigateToPath('/login')} backLabel="Back to login" title="Forgot your password?" sub="Walang problema. Enter your email and we'll send you a reset link.">
+    <AuthCard bar="Reset password" onBack={() => navigateToPath('/login')} backLabel="Back to login" title="Forgot your password?" sub="No problem! Enter your email and we'll send you a reset link.">
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <div className="g-field">
           <label htmlFor="forgot-email">Email</label>

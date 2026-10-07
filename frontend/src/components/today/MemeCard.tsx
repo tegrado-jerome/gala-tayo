@@ -48,7 +48,7 @@ function MemeCard({ post }: { post: GalaTodayPost }) {
         return
       }
       const result = await shareImage(blob, `galatayo-${post.slug}.png`, post.title, `${post.title} ${withShareRef(`${getSiteOrigin()}/today/${post.slug}`, 'story')}`)
-      if (result === 'downloaded') setMessage('Saved to your downloads. Post it and tag the barkada!')
+      if (result === 'downloaded') setMessage('Saved to your downloads. Post it and tag your friends!')
     } finally {
       setBusy(false)
     }

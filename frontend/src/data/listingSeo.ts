@@ -23,18 +23,18 @@ type CategorySeo = {
 
 export const AREA_SEO: Record<string, AreaSeo> = {
   manila: {
-    title: 'Pasyalan sa Manila: Tourist Spots and Things to Do',
+    title: 'Manila Tourist Spots and Things to Do',
     description: 'Tourist spots in Manila, ranked: Intramuros, Fort Santiago, the free National Museums, Binondo and Rizal Park, with budgets and the best time to go.',
-    subtitle: 'Pasyalan sa Manila, from the walls of Intramuros to the food stops of Binondo, ranked best first.',
+    subtitle: 'Manila\'s best spots, from the walls of Intramuros to the food stops of Binondo, ranked best first.',
     gettingThere: 'LRT-1 stops at Central Terminal, near Intramuros, and United Nations, near Rizal Park and the National Museums. Binondo is a walk across Jones Bridge.',
     faqs: [
       { question: 'What are the free tourist spots in Manila?', answer: 'Intramuros, Rizal Park, Binondo, Jones Bridge, the National Museum of Fine Arts and the National Museum of Natural History are all free. Fort Santiago starts at around ₱75.' },
     ],
   },
   'quezon-city': {
-    title: 'Pasyalan sa Quezon City: Tourist Spots and Things to Do',
-    description: 'Pasyalan sa Quezon City: Art in Island\'s 3D murals, vintage shops and gigs at Cubao Expo, and the trails of La Mesa Eco Park, with budgets per head.',
-    subtitle: 'Pasyalan sa QC, from 3D art and vintage shops in Cubao to the trails of La Mesa Eco Park.',
+    title: 'Quezon City Tourist Spots and Things to Do',
+    description: 'Quezon City\'s best: Art in Island\'s 3D murals, vintage shops and gigs at Cubao Expo, and the trails of La Mesa Eco Park, with budgets per head.',
+    subtitle: 'QC\'s best spots, from 3D art and vintage shops in Cubao to the trails of La Mesa Eco Park.',
     gettingThere: 'MRT-3 and LRT-2 both stop in Cubao, a short walk from Cubao Expo in Araneta City. Art in Island is a quick ride away.',
   },
   'davao-city': {
@@ -59,7 +59,7 @@ export const CATEGORY_SEO: Record<string, CategorySeo> = {
     title: 'Things to Do in the Philippines: Islands, Hikes, Tours',
     h1: 'Things to do in the Philippines',
     description: 'Things to do around the Philippines: El Nido and Coron island hopping, Badian canyoneering, the Moalboal sardine run and day hikes near Manila.',
-    intro: 'Island tours, canyons, reefs and day hikes, ranked by how gala-worthy they are. Every pick shows the starting budget per head.',
+    intro: 'Island tours, canyons, reefs and day hikes, ranked by how worth the trip they are. Every pick shows the starting budget per head.',
   },
   heritage: {
     title: 'Historical Places and Heritage Sites in the Philippines',

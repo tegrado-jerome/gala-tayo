@@ -101,7 +101,7 @@ function PlacesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: `Places to Visit in the Philippines | ${BRAND_NAME}`,
-      description: `${PRODUCT_NAME} organizes Metro Manila cities and destinations around the Philippines so you can browse local places and gala ideas city by city.`,
+      description: `${PRODUCT_NAME} organizes Metro Manila cities and destinations around the Philippines so you can browse local places and trip ideas city by city.`,
       url: `${getSiteOrigin()}/places`,
     },
     {
@@ -128,7 +128,7 @@ function PlacesIndexPage() {
     <Page>
       <SeoHead
         title={`Cities and Places to Visit in the Philippines | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} lets you browse Metro Manila cities and destinations around the Philippines, with local place pages and city-based gala ideas in one directory.`}
+        description={`${PRODUCT_NAME} lets you browse Metro Manila cities and destinations around the Philippines, with local place pages and city-based trip ideas in one directory.`}
         canonicalPath="/places"
         jsonLd={jsonLd}
       />

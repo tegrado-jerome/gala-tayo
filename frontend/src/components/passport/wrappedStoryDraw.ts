@@ -63,7 +63,7 @@ function draw(ctx: CanvasRenderingContext2D, story: WrappedStory) {
   ctx.fillStyle = STORY_INK
   ctx.font = `700 30px ${BODY_FONT}`
   ctx.letterSpacing = '5px'
-  ctx.fillText('GALA WRAPPED', PAD + 32, 230)
+  ctx.fillText('TRIP WRAPPED', PAD + 32, 230)
   ctx.letterSpacing = '0px'
 
   ctx.font = `600 168px ${DISPLAY_FONT}`

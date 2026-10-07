@@ -1,4 +1,3 @@
-import { detectLanguage } from "../language";
 import { readGroundedResults } from "../prompt";
 import { queryTokens } from "../tools";
 import type { AssistantModelProvider, ModelRequest, ModelStep, ToolCall } from "./types";
@@ -75,13 +74,10 @@ export class MockProvider implements AssistantModelProvider {
     const results = [...request.turns].reverse().find((turn) => turn.role === "tool");
     const toolResults = grounded ? Object.values(grounded) : results?.role === "tool" ? results.results.map((entry) => entry.result) : [];
     const found = toolResults.flatMap((result) => (result as Found)?.places ?? (result as Found)?.stops ?? []);
-    const taglish = detectLanguage(message) === "taglish" || /natural Taglish/.test(request.system);
     const picks = found.slice(0, 3);
     const text = picks.length
-      ? [taglish ? "Tara, heto ang swak:" : "Here's what fits:", ...picks.map((place) => `- **${place.name}**: ${(place.about ?? "").split(/(?<=[.!?])\s/)[0]}`)].join("\n")
-      : taglish
-        ? "Wala pa akong swak na lugar para diyan. Ibang area kaya?"
-        : "I couldn't find a GalaTayo place for that yet. Another area?";
+      ? ["Here's what fits!", ...picks.map((place) => `- **${place.name}**: ${(place.about ?? "").split(/(?<=[.!?])\s/)[0]}`)].join("\n")
+      : "No GalaTayo place for that yet! Want to try another area?";
     emitText(text, onDelta);
     return { text, toolCalls: [], model: "rule-based" };
   }

@@ -336,10 +336,10 @@ function ReportsPage() {
               <Skeleton className="h-24" />
             </div>
           ) : visibleErrorMessage ? (
-            <Empty title="Hindi ma-load ang reports" description={visibleErrorMessage} />
+            <Empty title="Couldn't load reports" description={visibleErrorMessage} />
           ) : activeReports.length === 0 ? (
             <Empty
-              title={activeTab === 'places' ? 'Wala pang place report' : 'Wala pang comment report'}
+              title={activeTab === 'places' ? 'No place reports yet' : 'No comment reports yet'}
               description={
                 activeTab === 'places'
                   ? 'When you report a place concern or a photo issue, it will show up here.'

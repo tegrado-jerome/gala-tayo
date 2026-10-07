@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import suiteJson from "../../../scripts/ai-eval/suite.json";
-import { cacheKey, fallbackSearchArgs, planTools, replyLanguage, runAssistant, wrongLanguage, type AgentDeps, type AnswerCache } from "./agent";
+import { cacheKey, fallbackSearchArgs, planTools, runAssistant, type AgentDeps, type AnswerCache } from "./agent";
 import { fallbackText, mentionedPlaces, sanitizeAnswer } from "./compose";
 import { allowedPrices, claimsHours, pricesIn } from "./facts";
 import conversations from "./fixtures/conversations.json";
 import { allFixturePlaces, hiddenFixturePlaces, visibleFixturePlaces } from "./fixtures/testPlaces";
 import { guardMessage, looksLikeInjection, redactPersonalData } from "./guard";
-import { answerLanguage, detectLanguage } from "./language";
+import { answerLanguage } from "./language";
 import { parseClientMemory, updateMemory } from "./memory";
 import { buildSystemPrompt, OFF_TOPIC_MARKER, readGroundedResults } from "./prompt";
 import { toGeminiContents } from "./providers/gemini";
@@ -78,21 +78,10 @@ function assertGrounded(response: AssistantResponse) {
 }
 
 describe("language", () => {
-  it("mirrors Taglish and English", () => {
-    assert.equal(detectLanguage("saan masarap mag-sisig"), "taglish");
-    assert.equal(detectLanguage("beach malapit sa Manila"), "taglish");
-    assert.equal(detectLanguage("indoor activities ngayon umuulan"), "taglish");
-    assert.equal(detectLanguage("Saan maganda pumunta sa Antipolo kasama ang pamilya ko?"), "taglish");
-    assert.equal(detectLanguage("First time in Manila, 2 days. What should I do?"), "english");
-    assert.equal(detectLanguage("date spot with view Makati"), "english");
-    // Loanwords alone don't make a message Taglish.
-    assert.equal(detectLanguage("cheap gala QC"), "english");
-    assert.equal(detectLanguage("Rainy QC barkada"), "english");
-  });
-
-  it("keeps the earlier language for short follow-ups", () => {
-    assert.equal(replyLanguage("BGC", [{ role: "user", content: "Saan masarap kumain mamaya?" }]), "taglish");
-    assert.equal(replyLanguage("Something cheaper?", [{ role: "user", content: "Saan masarap kumain?" }]), "english");
+  it("tells the model to answer in English, even for Tagalog asks", () => {
+    const system = buildSystemPrompt({ mode: "chat", memory: { ...EMPTY_MEMORY }, todayIso: "2026-10-07", weekday: "Wednesday", injection: false });
+    assert.match(system, /Always reply in simple, enthusiastic English/);
+    assert.doesNotMatch(system, /reply in natural Taglish/i);
   });
 
   it("reads the language of an answer", () => {
@@ -252,7 +241,7 @@ describe("guard", () => {
     assert.equal(guardMessage("Chill LGBTQ+ friendly bar in Poblacion?").action, "answer");
     const { response } = await ask("Gawan mo ako ng essay tungkol sa climate change", [new NeverProvider()]);
     assert.equal(response.refused, true);
-    assert.equal(response.language, "taglish");
+    assert.equal(response.language, "english");
     assert.equal(response.places.length, 0);
     assert.ok(response.chips.length > 0);
   });
@@ -299,11 +288,11 @@ describe("recorded conversations (12 prompts)", () => {
     // Intramuros is also a curated place, so its details are looked up next to the search.
     "Intramuros history walk": { cities: ["Manila"], language: "english", tools: ["get_place", "search_places"] },
     "Baguio weekend": { cities: ["Baguio", "La Trinidad", "Tuba"], language: "english", itinerary: true, tools: ["plan_day"] },
-    "beach malapit sa Manila": { language: "taglish", tools: ["search_places"] },
+    "beach malapit sa Manila": { language: "english", tools: ["search_places"] },
     "first time in Manila 2 days": { cities: ["Manila", "Makati", "Pasay", "Taguig", "Quezon City", "Mandaluyong", "San Juan", "Parañaque"], language: "english", itinerary: true, tools: ["plan_day"] },
     // Only places whose own data has the dish: the fixtures list one sisig place.
-    "saan masarap mag-sisig": { language: "taglish", tools: ["search_places"], minCards: 1 },
-    "indoor activities ngayon umuulan": { language: "taglish", weather: true, tools: ["weather", "search_places"] },
+    "saan masarap mag-sisig": { language: "english", tools: ["search_places"], minCards: 1 },
+    "indoor activities ngayon umuulan": { language: "english", weather: true, tools: ["weather", "search_places"] },
     "date spot with view Makati": { cities: ["Makati"], language: "english", tools: ["search_places"] },
     "cheap gala QC": { cities: ["Quezon City"], budget: 500, language: "english", tools: ["search_places"], minCards: 1 },
     "island hopping Coron budget": { cities: ["Coron", "Busuanga"], language: "english", tools: ["search_places"] },
@@ -409,7 +398,7 @@ describe("fallbacks and cache", () => {
   it("answers from the tools alone when every provider is down", async () => {
     const { response } = await ask("indoor activities ngayon umuulan", [new FailingProvider("gemini", 429), new FailingProvider("groq", 503)]);
     assert.equal(response.provider, "fallback");
-    assert.equal(response.language, "taglish");
+    assert.equal(response.language, "english");
     assert.ok(response.places.length > 0);
     assert.ok(response.places.every((card) => card.indoor !== false));
     assertGrounded(response);
@@ -423,7 +412,7 @@ describe("fallbacks and cache", () => {
     assert.equal(store.size, 1);
     const { response } = await ask("Date spot with view, Makati!", [new NeverProvider()], { extra: { cache } });
     assert.equal(response.provider, "cache");
-    assert.equal(cacheKey("chat", "english", "date spot with view Makati"), cacheKey("chat", "english", "Date spot with view, Makati!"));
+    assert.equal(cacheKey("chat", "date spot with view Makati"), cacheKey("chat", "Date spot with view, Makati!"));
   });
 
   it("map mode returns more pins", async () => {
@@ -506,32 +495,9 @@ class ScriptedProvider implements AssistantModelProvider {
 
 const suite = (suiteJson as { cases: Array<{ id: string; lang: "english" | "taglish"; turns: string[] }> }).cases;
 
-describe("language detection (same rule as the eval)", () => {
-  it("reads every eval prompt in the language the eval expects", () => {
-    for (const entry of suite) {
-      const history: Array<{ role: "user" | "assistant"; content: string }> = [];
-      for (const turn of entry.turns) {
-        assert.equal(replyLanguage(turn, history), entry.lang, `${entry.id}: "${turn}"`);
-        history.push({ role: "user", content: turn });
-      }
-    }
-  });
-
-  it("treats greetings and common Tagalog words as Taglish, loanwords alone as English", () => {
-    assert.equal(detectLanguage("Hi Tara! Kumusta?"), "taglish");
-    assert.equal(detectLanguage("May kainan ba malapit dun?"), "taglish");
-    assert.equal(detectLanguage("gala tayo"), "taglish");
-    assert.equal(detectLanguage("ano masarap dito"), "taglish");
-    assert.equal(detectLanguage("cheap gala QC"), "english");
-    assert.equal(detectLanguage("barkada night out in BGC"), "english");
-    assert.equal(detectLanguage("Where can I watch the sunset in Manila tonight?"), "english");
-  });
-
-  it("writes the no-model answer so the eval's answer check reads it as Taglish", () => {
-    const text = fallbackText([], { ...EMPTY_MEMORY }, "taglish", null);
-    assert.equal(answerLanguage(text), "taglish");
-    assert.equal(wrongLanguage("Here are good picks in Makati for a date night with a view and good food.", "taglish"), true);
-    assert.equal(wrongLanguage("Tara!", "english"), false, "too short to judge");
+describe("English replies", () => {
+  it("writes the no-model answer in English", () => {
+    assert.equal(answerLanguage(fallbackText([], { ...EMPTY_MEMORY }, null)), "english");
   });
 });
 
@@ -594,41 +560,30 @@ describe("staged response", () => {
     assert.equal(events.at(-1)!.type, "final");
     assert.equal(provider.requests.length, 1);
     assert.equal(provider.requests[0].grounded, true);
-    assert.equal(response.language, "taglish");
+    assert.equal(response.language, "english");
     assert.deepEqual(response.places.map((card) => card.name), ["Fort Santiago"]);
     const timing = logs.find((line) => line.startsWith("timings"))!;
     assert.match(timing, /path=fast .*search=\d+ .*places=\d+ .*firstDelta=\d+ .*model=\d+ .*total=\d+/);
   });
 
   it("does not wait long for a slow weather lookup", async () => {
-    const provider = new ScriptedProvider(["Indoor muna tayo! Tara sa **Cubao Expo**, pwede kayo mag-ikot sa mga shops dito habang umuulan."]);
+    const provider = new ScriptedProvider(["Rain later? Go indoors! **Cubao Expo** has quirky shops to browse while it pours."]);
     const started = Date.now();
     const { response } = await ask("indoor activities ngayon, umuulan", [provider], { extra: { tools: { places: allFixturePlaces, weather: () => new Promise(() => undefined) } } });
     assert.ok(Date.now() - started < 2500);
-    assert.equal(response.language, "taglish");
+    assert.equal(response.language, "english");
     assert.ok(response.places.length > 0);
   });
 
-  it("rewrites an English answer to a Taglish ask once", async () => {
-    const provider = new ScriptedProvider([
-      "Here are great spots for sisig. Try the classic version at the first place and the crispy one at the second.",
-      "Tara, heto ang mga swak para sa sisig! Subukan mo 'yung classic sa una at 'yung crispy sa pangalawa.",
-    ]);
+  it("answers a Taglish ask in English with one model call", async () => {
+    const provider = new ScriptedProvider(["Craving sisig? Here are great spots! Try the classic version at the first and the crispy one at the second."]);
     const { response, events } = await ask("saan masarap mag-sisig", [provider]);
-    assert.equal(provider.requests.length, 2);
-    assert.match(provider.requests[1].system, /Taglish/);
-    assert.equal(answerLanguage(response.text), "taglish");
-    const order = events.map((event) => event.type);
-    assert.ok(order.lastIndexOf("reset") > order.indexOf("delta") && order.lastIndexOf("reset") < order.indexOf("final"));
-  });
-
-  it("falls back to the Taglish card list when the rewrite is still English", async () => {
-    const english = "Here are great spots for sisig. Try the classic version at the first place and the crispy one at the second.";
-    const provider = new ScriptedProvider([english, english]);
-    const { response } = await ask("saan masarap mag-sisig", [provider]);
-    assert.equal(answerLanguage(response.text), "taglish");
-    assert.ok(response.places.length > 0);
-    assertGrounded(response);
+    assert.equal(provider.requests.length, 1);
+    const lastTurn = provider.requests[0].turns.at(-1);
+    assert.match(lastTurn?.role === "user" ? lastTurn.text : "", /Reply in simple, lively English/);
+    assert.equal(response.language, "english");
+    assert.equal(answerLanguage(response.text), "english");
+    assert.ok(!events.some((event) => event.type === "reset"));
   });
 
   it("leaves an English answer to an English ask alone", async () => {

@@ -481,7 +481,7 @@ const fallbackCategories = [
 
 const fallbackGoodForOptions: GoodForChip[] = [
   { id: 'date', name: 'Date' },
-  { id: 'barkada', name: 'Barkada' },
+  { id: 'barkada', name: 'Friends' },
   { id: 'family', name: 'Family' },
   { id: 'study', name: 'Study' },
   { id: 'chill', name: 'Chill' },

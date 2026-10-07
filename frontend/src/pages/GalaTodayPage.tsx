@@ -101,7 +101,7 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
-        { '@type': 'ListItem', position: 2, name: 'Gala Today', item: `${getSiteOrigin()}/today` },
+        { '@type': 'ListItem', position: 2, name: 'Today\'s Plan', item: `${getSiteOrigin()}/today` },
         { '@type': 'ListItem', position: 3, name: post.title, item: url },
       ],
     },
@@ -109,13 +109,13 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
 
   return (
     <Page narrow>
-      <SeoHead title={`${post.title} | Gala Today`} description={post.hook.slice(0, 155)} canonicalPath={`/today/${post.slug}`} jsonLd={jsonLd} />
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Gala Today', href: '/today' }, { label: formatPostDate(post.date) }]} />
+      <SeoHead title={`${post.title} | Today's Plan`} description={post.hook.slice(0, 155)} canonicalPath={`/today/${post.slug}`} jsonLd={jsonLd} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan', href: '/today' }, { label: formatPostDate(post.date) }]} />
 
       <article className="t-post">
         <p className="t-kicker mt-5">
           <span className="t-live" aria-hidden="true" />
-          Gala Today · {formatPostDate(post.date)}
+          Today's Plan · {formatPostDate(post.date)}
         </p>
         <FormatSticker post={post} />
         <h1 className="g-h1 mt-3">{post.title}</h1>
@@ -180,13 +180,13 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
               {post.topic.source ? ` (${post.topic.source})` : ''}.{' '}
             </>
           ) : null}
-          Written with AI, checked by an AI editor and our rules, from our own place pages. Every pick is a real gala-worthy place on GalaTayo; prices are starting budgets from each place's page and can change, so check before you go.
+          Written with AI, checked by an AI editor and our rules, from our own place pages. Every pick is a real top place on GalaTayo; prices are starting budgets from each place's page and can change, so check before you go.
         </p>
       </article>
 
       {more.length > 0 ? (
         <section aria-labelledby="more-today">
-          <SectionHead title={<span id="more-today">More Gala Today</span>} action={<Button variant="text" href="/today">See all</Button>} />
+          <SectionHead title={<span id="more-today">More Today's Plan</span>} action={<Button variant="text" href="/today">See all</Button>} />
           <div className="t-list">
             {more.slice(0, 4).map((item) => (
               <GalaTodayCard key={item.slug} post={item} />
@@ -217,8 +217,8 @@ function GalaTodayPage({ slug }: { slug?: string }) {
     if (!post) {
       return (
         <Page narrow>
-          <SeoHead title="Post not found | Gala Today" robots="noindex,follow" />
-          <Empty title="Wala na 'tong post" description="It may have been replaced by a fresher one." action={<Button href="/today">See today's post</Button>} />
+          <SeoHead title="Post not found | Today's Plan" robots="noindex,follow" />
+          <Empty title="This post is gone" description="It may have been replaced by a fresher one." action={<Button href="/today">See today's post</Button>} />
         </Page>
       )
     }
@@ -228,19 +228,19 @@ function GalaTodayPage({ slug }: { slug?: string }) {
   return (
     <Page narrow>
       <SeoHead
-        title="Gala Today: what's trending, turned into gala plans | GalaTayo"
-        description="Every day, what the Philippines is searching and sharing, turned into a fun gala plan: budget challenges, tier lists, guess the place and more, with real gala-worthy places."
+        title="Today's Plan: What's Trending, Turned Into Trips | GalaTayo"
+        description="Every day, what the Philippines is searching and sharing, turned into a fun plan: budget challenges, tier lists, guess the place and more, with real top places."
         canonicalPath="/today"
         robots={posts.length === 0 ? 'noindex,follow' : undefined}
       />
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Gala Today' }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan' }]} />
       <header className="mt-5">
         <p className="t-kicker">
           <span className="t-live" aria-hidden="true" />
           Fresh every morning
         </p>
-        <h1 className="g-h1 mt-2">Gala Today</h1>
-        <p className="g-mut mt-2">What everyone's searching today, turned into a fun gala plan with real places. Budget challenges, tier lists, guess the place and more.</p>
+        <h1 className="g-h1 mt-2">Today's Plan</h1>
+        <p className="g-mut mt-2">What everyone's searching today, turned into a fun plan with real places! Budget challenges, tier lists, guess the place and more.</p>
       </header>
       {posts.length === 0 ? (
         <Empty className="mt-8" title="Today's post is on the way" description="New posts land every morning at 6:30." action={<Button href="/saan-tayo">Pick a spot now</Button>} />

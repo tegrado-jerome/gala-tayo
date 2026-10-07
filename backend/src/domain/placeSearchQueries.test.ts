@@ -57,7 +57,7 @@ const CASES: Case[] = [
   { query: "date makati", include: ["toyo-eatery", "blackbird-at-the-nielson-tower"], within: 4, every: (slug) => place(slug).city === "Makati" },
   { query: "barkada qc", include: ["la-mesa-eco-park", "cubao-expo"], within: 3, every: (slug) => place(slug).city === "Quezon City" },
   { query: "coffee baguio", top: ["cafe-by-the-ruins-baguio"], every: (slug) => place(slug).city === "Baguio" },
-  { query: "waterfalls cebu", include: ["kawasan-falls-badian", "tumalog-falls-oslob"], within: 3 },
+  { query: "waterfalls cebu", include: ["kawasan-falls-badian", "aguinid-falls-samboan"], within: 3 },
   { query: "beach batangas", top: ["laiya-beach-san-juan-batangas"] },
   { query: "island hopping coron", every: (slug) => ["Coron", "Busuanga"].includes(place(slug).city ?? "") },
   { query: "el nido", every: (slug) => place(slug).city === "El Nido" },

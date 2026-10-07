@@ -74,8 +74,8 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
   return (
     <>
       <SeoHead
-        title={`Discover Places Around the Philippines and Gala Ideas | ${BRAND_NAME}`}
-        description={`${BRAND_NAME} helps you discover gala-worthy places around the Philippines by city, category, budget, and vibe, with AI help to plan your next gala.`}
+        title={`Discover the Best Places Around the Philippines | ${BRAND_NAME}`}
+        description={`${BRAND_NAME} helps you discover the best places around the Philippines by city, category, budget and vibe, with AI help to plan your next trip.`}
         robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
@@ -85,14 +85,14 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         <HomeDiscover
           headline={
             <header data-navigation-source={navigationSource} className="mb-5 min-w-0 md:mb-7">
-              <h1 className="g-d1">Gala tayo. Kami na sa plano.</h1>
+              <h1 className="g-d1">Gala tayo! Let's go out. We'll plan it.</h1>
               <p className="g-mut mt-2 text-[16px]">Find the place, vote on the date, split the bill.</p>
             </header>
           }
           top={
             <div className="g-cta">
               <p>
-                <b>Plan it with the barkada</b>
+                <b>Plan it with friends</b>
                 <span>One link: pick spots, vote on a date, split the bill. Free.</span>
               </p>
               <Button variant="ink" href="/signup">
@@ -102,7 +102,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           }
         />
 
-        <SectionHead title="Less chasing, more gala" sub="One link for the whole barkada" />
+        <SectionHead title="Less chasing, more going" sub="One link for the whole group" />
         <ol className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6">
           <Step
             n={1}
@@ -123,14 +123,14 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             art={
               <div className="flex flex-col items-center gap-3">
                 <AvatarStack people={[{ name: 'Bea' }, { name: 'Migs' }, { name: 'Jo' }]} size={44} />
-                <span className="rounded-full bg-[var(--ink)] px-4 py-1.5 text-[15px] font-semibold text-[var(--on-ink)]">Tara!</span>
+                <span className="rounded-full bg-[var(--ink)] px-4 py-1.5 text-[15px] font-semibold text-[var(--on-ink)]">I'm in!</span>
               </div>
             }
           />
           <Step
             n={3}
             title="Split"
-            body="Hatian (split the bill)"
+            body="Split the bill"
             art={
               <div className="flex flex-col items-center">
                 <span className="text-[56px] font-semibold leading-none" style={{ fontFamily: "var(--font-display)" }}>₱450</span>
@@ -148,15 +148,15 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           <div className="mt-2 grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
             <div className="flex flex-col gap-2">
             <p>
-              Gala Tayo (written GalaTayo) is a free place discovery app for gala-worthy places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
-              the whole idea: find a place, invite the barkada, and go.
+              Gala Tayo (written GalaTayo) is a free place discovery app for the best places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
+              the whole idea: find a place, invite friends and go!
             </p>
             <p>
               Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes, and common
               questions. You can browse by city or category, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
             </p>
             <p>
-              {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days, from Metro
+              {BRAND_NAME} is built in the Philippines for people planning dates, hangouts with friends, family outings and solo days out, from Metro
               Manila to the provinces.{' '}
               <InternalLink href="/about" className="text-[var(--ink)] underline underline-offset-2">
                 Read more about Gala Tayo
@@ -182,10 +182,10 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             </li>
           </ul>
 
-          <h3 className="mt-5 font-semibold text-[var(--ink)]">Hindi makapag-decide?</h3>
+          <h3 className="mt-5 font-semibold text-[var(--ink)]">Can't decide?</h3>
           <p className="mt-2">
             <InternalLink href="/saan-tayo" className="text-[var(--ink)] underline underline-offset-2">
-              Try Saan tayo?
+              Try Pick for me
             </InternalLink>{' '}
             Pick a city, budget per head and who you&apos;re with, and get 3 places to go.
           </p>

@@ -5,9 +5,8 @@ import { classifyAskAiScope } from "../../functions/askAiStrictPgGuard";
 import { manilaToday } from "../galaPlanDraftPlanner";
 import { buildChips, buildItinerary, buildMap, buildWeather, fallbackText, mentionedPlaces, sanitizeAnswer, selectCards } from "./compose";
 import { guardMessage, redactPersonalData, refusalText } from "./guard";
-import { answerLanguage, detectLanguage, type ReplyLanguage } from "./language";
 import { updateMemory } from "./memory";
-import { buildSystemPrompt, groundedUserTurn, OFF_TOPIC_MARKER, rewritePrompt } from "./prompt";
+import { buildSystemPrompt, groundedUserTurn, OFF_TOPIC_MARKER } from "./prompt";
 import { ProviderError, type AssistantModelProvider, type ModelTurn, type ToolDeclaration } from "./providers/types";
 import { ASSISTANT_PROVIDERS, validateAssistantResponse, type AssistantEvent, type AssistantMemory, type AssistantMode, type AssistantProvider, type AssistantResponse } from "./schema";
 import { newLedger, queryTokens, runTool, TOOL_DECLARATIONS, VERIFY_TOOL, visiblePlaces, type ToolContext, type ToolLedger } from "./tools";
@@ -17,8 +16,6 @@ const MAX_HISTORY_TURNS = 6;
 const CACHE_TTL_SECONDS = 30 * 60;
 // Weather only adds a line to the answer; past this wait the model writes without it.
 const WEATHER_WAIT_MS = 1500;
-// Answers shorter than this are too short to judge their language.
-const MIN_WORDS_FOR_LANGUAGE_CHECK = 8;
 
 export type AgentHistoryTurn = { role: "user" | "assistant"; content: string };
 
@@ -46,19 +43,9 @@ export type AgentDeps = {
   log?: (message: string) => void;
 };
 
-const ENGLISH_HINTS = /\b(something|cheaper|more|what|where|how|any|nearby|please|thanks|show|else|other|instead)\b/i;
-
-/** Short follow-ups ("BGC", "ok sige") keep the language the user has been using. */
-export function replyLanguage(message: string, history: AgentHistoryTurn[]): ReplyLanguage {
-  const detected = detectLanguage(message);
-  if (detected === "taglish" || message.trim().split(/\s+/).length > 3 || ENGLISH_HINTS.test(message)) return detected;
-  const lastUser = [...history].reverse().find((turn) => turn.role === "user");
-  return lastUser ? detectLanguage(lastUser.content) : detected;
-}
-
-export function cacheKey(mode: AssistantMode, language: ReplyLanguage, message: string) {
+export function cacheKey(mode: AssistantMode, message: string) {
   const normalised = message.toLowerCase().replace(/[^\p{L}\p{N}₱ ]+/gu, " ").replace(/\s+/g, " ").trim();
-  return `assistant:answer:v2:${mode}:${language}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
+  return `assistant:answer:v3:${mode}:${createHash("sha256").update(normalised).digest("hex").slice(0, 32)}`;
 }
 
 function historyTurns(history: AgentHistoryTurn[]): ModelTurn[] {
@@ -204,11 +191,6 @@ async function runModel(
   return null;
 }
 
-/** Whether an answer is long enough to judge and written in another language than the user's. */
-export function wrongLanguage(text: string, language: ReplyLanguage): boolean {
-  return text.split(/\s+/).filter(Boolean).length >= MIN_WORDS_FOR_LANGUAGE_CHECK && answerLanguage(text) !== language;
-}
-
 /**
  * One assistant turn. Common asks take the fast path: GalaTayo's own search runs in code, the cards stream
  * at once, and one model call ranks and phrases them. Everything else goes through the tool-calling loop.
@@ -223,19 +205,18 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
   const today = deps.today?.() ?? manilaToday();
   const context: ToolContext = { ...deps.tools, todayIso: today.iso };
   const places = visiblePlaces(deps.tools.places);
-  const language = replyLanguage(input.message, input.history);
   const ledger = newLedger();
   const memory = updateMemory(input.memory, input.message, places, today.iso);
 
   const finish = (partial: Pick<AssistantResponse, "text" | "refused" | "provider"> & { clarify?: string | null }): AssistantResponse => {
-    const cards = partial.refused || partial.clarify ? [] : selectCards(partial.text, ledger, input.mode, memory, language, deps.imageUrl);
+    const cards = partial.refused || partial.clarify ? [] : selectCards(partial.text, ledger, input.mode, memory, deps.imageUrl);
     const itinerary = partial.refused ? null : buildItinerary(ledger);
     memory.lastPlaceSlugs = cards.length ? cards.map((card) => card.slug) : memory.lastPlaceSlugs;
     const response: AssistantResponse = {
       version: 1,
       requestId: input.requestId,
       mode: input.mode,
-      language,
+      language: "english",
       text: partial.text,
       refused: partial.refused,
       clarify: partial.clarify ?? null,
@@ -243,7 +224,7 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
       map: buildMap(cards),
       itinerary,
       weather: partial.refused ? null : buildWeather(ledger),
-      chips: buildChips({ language, mode: input.mode, memory, cards, hasItinerary: Boolean(itinerary), refused: partial.refused }),
+      chips: buildChips({ mode: input.mode, memory, cards, hasItinerary: Boolean(itinerary), refused: partial.refused }),
       memory,
       attribution: ledger.verified.size
         ? { google: true, sources: [...ledger.verified.values()].filter((entry) => entry.uri).map((entry) => ({ title: entry.title ?? "Google Maps", uri: entry.uri! })) }
@@ -261,14 +242,14 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
 
   const guard = guardMessage(input.message);
   if (guard.action === "refuse") {
-    const response = finish({ text: refusalText(language), refused: true, provider: "fallback" });
+    const response = finish({ text: refusalText(), refused: true, provider: "fallback" });
     emit({ type: "final", response });
     logTimings("refused");
     return response;
   }
 
   const firstTurn = input.history.length === 0 && !input.memory.area && input.memory.budgetPerHead === null;
-  const key = cacheKey(input.mode, language, input.message);
+  const key = cacheKey(input.mode, input.message);
   const plan = planTools(input.message, memory, places, input.history, guard.injection);
   // The search is local and takes milliseconds: run it while the cache lookup is in flight.
   const prefetch = plan ? runToolPlan(plan, context, ledger) : null;
@@ -285,12 +266,12 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
     }
   }
 
-  emit({ type: "status", text: language === "taglish" ? "Naghahanap sa GalaTayo places…" : "Searching GalaTayo places…" });
+  emit({ type: "status", text: "Searching GalaTayo places…" });
   let previewSent = false;
   const preview = () => {
     if (previewSent || ledger.ranked.length === 0) return;
     previewSent = true;
-    const cards = selectCards("", ledger, input.mode, memory, language, deps.imageUrl);
+    const cards = selectCards("", ledger, input.mode, memory, deps.imageUrl);
     emit({ type: "places", places: cards, map: buildMap(cards) });
     mark("places");
   };
@@ -299,7 +280,7 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
     emit(event);
   };
 
-  const system = buildSystemPrompt({ mode: input.mode, language, memory, todayIso: today.iso, weekday: today.weekday, injection: guard.injection, grounded: Boolean(plan) });
+  const system = buildSystemPrompt({ mode: input.mode, memory, todayIso: today.iso, weekday: today.weekday, injection: guard.injection, grounded: Boolean(plan) });
   const maxOutputTokens = input.mode === "map" ? 450 : 700;
   const allTools = context.verify ? [...TOOL_DECLARATIONS, VERIFY_TOOL] : TOOL_DECLARATIONS;
   const history = historyTurns(input.history);
@@ -313,7 +294,7 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
     mark("weather");
     // The search, plan and weather already ran; the model may still look up one place or what's near it.
     const extraTools = allTools.filter((tool) => !["search_places", "plan_day", "weather"].includes(tool.name));
-    call = { system, turns: [...history, { role: "user", text: groundedUserTurn(message, results, language) }], tools: extraTools, forceTool: false, grounded: true, maxOutputTokens };
+    call = { system, turns: [...history, { role: "user", text: groundedUserTurn(message, results) }], tools: extraTools, forceTool: false, grounded: true, maxOutputTokens };
   } else {
     const forceTool = classifyAskAiScope(input.message) === "allow" && !guard.injection && input.message.trim().split(/\s+/).length > 1;
     call = { system, turns: [...history, { role: "user", text: message }], tools: allTools, forceTool, grounded: false, maxOutputTokens };
@@ -324,15 +305,9 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
   let response: AssistantResponse;
   if (outcome && outcome.text.includes(OFF_TOPIC_MARKER)) {
     const line = outcome.text.split(OFF_TOPIC_MARKER)[1]?.trim();
-    response = finish({ text: line && line.length > 10 ? sanitizeAnswer(line, newLedger(), places, input.message) : refusalText(language), refused: true, provider: outcome.provider });
+    response = finish({ text: line && line.length > 10 ? sanitizeAnswer(line, newLedger(), places, input.message) : refusalText(), refused: true, provider: outcome.provider });
   } else if (outcome) {
-    let text = sanitizeAnswer(outcome.text, ledger, places, input.message);
-    if (wrongLanguage(text, language)) {
-      text = await fixLanguage(text, language, input, deps, context, ledger, memory);
-      mark("languageFix");
-      emit({ type: "reset" });
-      emit({ type: "delta", text });
-    }
+    const text = sanitizeAnswer(outcome.text, ledger, places, input.message);
     const clarify = ledger.calls.length === 0 && /\?\s*$/.test(text) ? text.split(/(?<=[.!])\s+/).pop() ?? text : null;
     response = finish({ text, refused: false, clarify, provider: outcome.provider });
   } else {
@@ -342,8 +317,8 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
       if (PLAN_WORDS.test(input.message)) await runTool("plan_day", { request: [input.message, memory.area].filter(Boolean).join(" ") }, context, ledger);
       if (memory.indoor) await runTool("weather", memory.area ? { area: memory.area } : {}, context, ledger);
     }
-    const cards = selectCards("", ledger, input.mode, memory, language, deps.imageUrl);
-    const text = fallbackText(cards, memory, language, buildWeather(ledger));
+    const cards = selectCards("", ledger, input.mode, memory, deps.imageUrl);
+    const text = fallbackText(cards, memory, buildWeather(ledger));
     emit({ type: "delta", text });
     response = finish({ text, refused: false, provider: "fallback" });
   }
@@ -354,28 +329,4 @@ export async function runAssistant(input: AgentInput, deps: AgentDeps, emit: (ev
   const cacheable = firstTurn && deps.cache && !response.refused && response.provider !== "fallback" && !ledger.weather && ledger.verified.size === 0 && response.places.length > 0;
   if (cacheable) await deps.cache!.set(key, response, CACHE_TTL_SECONDS).catch(() => undefined);
   return response;
-}
-
-/**
- * An answer came back in the wrong language: one quick rewrite, checked again. If that fails too, the
- * honest card list in the right language replaces it.
- */
-async function fixLanguage(text: string, language: ReplyLanguage, input: AgentInput, deps: AgentDeps, context: ToolContext, ledger: ToolLedger, memory: AssistantMemory): Promise<string> {
-  deps.log?.(`language mismatch: wanted ${language}, rewriting once`);
-  const rewrite = await runModel(
-    input,
-    deps,
-    context,
-    ledger,
-    { system: rewritePrompt(language), turns: [{ role: "user", text }], tools: [], forceTool: false, grounded: true, maxOutputTokens: 500 },
-    () => undefined,
-    () => undefined
-  ).catch((error) => {
-    if (input.signal?.aborted) throw error;
-    return null;
-  });
-  const rewritten = rewrite ? sanitizeAnswer(rewrite.text, ledger, visiblePlaces(context.places), input.message) : "";
-  if (rewritten && !rewritten.includes(OFF_TOPIC_MARKER) && !wrongLanguage(rewritten, language)) return rewritten;
-  const cards = selectCards(text, ledger, input.mode, memory, language, deps.imageUrl);
-  return fallbackText(cards, memory, language, buildWeather(ledger));
 }

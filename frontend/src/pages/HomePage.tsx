@@ -18,7 +18,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   const seoConfig = useMemo(
     () => ({
       title: 'Home | GalaTayo',
-      description: 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe.',
+      description: 'Discover the best places around the Philippines by city, category, budget and vibe.',
       canonicalPath: '/',
       preconnectOrigins: [new URL(R2_PUBLIC_BASE_URL).origin],
     }),
@@ -30,7 +30,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
       <SeoHead {...seoConfig} />
       <HomeDiscover
         isRaining={isRaining}
-        headline={<h1 className="g-home-title">{greetingName ? `Tara, ${greetingName} — saan ang gala this weekend?` : 'Saan ang gala this weekend?'}</h1>}
+        headline={<h1 className="g-home-title">{greetingName ? `Hi ${greetingName}! Where to this weekend?` : 'Where to this weekend?'}</h1>}
         top={
           <>
             {isRaining && weather ? (

@@ -146,7 +146,7 @@ export function SulitMeter({ score, max = 10 }: { score: number | null | undefin
   if (score == null || Number.isNaN(score)) return null
   const filled = Math.max(0, Math.min(5, Math.round((score / max) * 5)))
   return (
-    <span className="g-meter" role="img" aria-label={`Sulit ${score.toFixed(1)} of ${max}`}>
+    <span className="g-meter" role="img" aria-label={`Value ${score.toFixed(1)} of ${max}`}>
       {Array.from({ length: 5 }, (_, index) => (
         <i key={index} className={index < filled ? 'is-f' : undefined} />
       ))}

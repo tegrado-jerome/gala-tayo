@@ -666,7 +666,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                 <label htmlFor="settings-bio" className="sr-only">
                   Bio
                 </label>
-                <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" placeholder="Kape, museums, and long walks sa Intramuros." />
+                <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" placeholder="Coffee, museums and long walks in Intramuros." />
                 <span className="g-hint text-right">{bioInput.length}/280</span>
               </div>
             </EditRow>
@@ -715,7 +715,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       ) : (
         <Empty
           className="mt-6"
-          title="Hindi ma-load ang settings"
+          title="Couldn't load settings"
           description={errorMessage || 'Account settings are unavailable right now.'}
           action={
             <Button variant="line" onClick={() => window.location.reload()}>

@@ -41,7 +41,7 @@ const examplePrompts = [
   { icon: CloudRain, title: 'Rainy Saturday in Makati, indoor, ₱1k each', prompt: 'Rainy Saturday in Makati for 4, indoor spots only, ₱1,000 each' },
   { icon: Sunset, title: 'Sunday in Manila, museums to sunset', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
   { icon: Clapperboard, title: 'BGC date night, ₱2k', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
-  { icon: Trees, title: 'Barkada day in QC for 6', prompt: 'Barkada day in Quezon City for 6: a park, then a food trip, ₱600 each' },
+  { icon: Trees, title: 'Day with friends in QC for 6', prompt: 'Day with friends in Quezon City for 6: a park, then a food trip, ₱600 each' },
 ]
 
 function addMinutes(time: string, minutes: number) {
@@ -261,9 +261,9 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     try {
       await copyTextToClipboard(`${text}\n${withShareRef(listUrl, 'copy')}`)
       trackShare({ channel: 'copy', contentType: 'plan' })
-      setGcNote('Copied! I-paste mo na sa GC.')
+      setGcNote('Copied! Paste it in your group chat.')
     } catch {
-      setGcNote('Hindi ma-copy. Try again.')
+      setGcNote('Couldn\'t copy. Try again.')
     }
   }
 
@@ -287,14 +287,14 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           void save(guestSession)
         }} />
 
-      <p className="g-eyebrow">Tara AI · Barkada plans</p>
+      <p className="g-eyebrow">Tara AI · Group plans</p>
       <h1 className="g-h1 mt-2">Plan with AI</h1>
-      <p className="g-mut mt-2 text-[15px]">Say the vibe in one line. Tara maps the day, you tweak it and invite the barkada.</p>
+      <p className="g-mut mt-2 text-[15px]">Say the vibe in one line. Tara maps the day, you tweak it and invite friends!</p>
 
       <div className="mt-6 grid gap-5" aria-live="polite">
         {showComposer ? (
           <TaraSays>
-            <p className="g-chat-say">Kumusta! Tell me the vibe, the area, your budget and who's coming. I'll map the whole day, then you can edit it and invite the barkada.</p>
+            <p className="g-chat-say">Hi! Tell me the vibe, the area, your budget and who's coming. I'll map the whole day, then you can edit it and invite friends.</p>
           </TaraSays>
         ) : (
           <MeSays text={submittedPrompt} onEdit={status === 'building' ? undefined : editPrompt} />
@@ -337,7 +337,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
         <>
           <form onSubmit={handleSubmit} className="g-ai is-plan mt-5">
             <label htmlFor="plan-with-ai-prompt" className="sr-only">
-              Describe your gala
+              Describe your day
             </label>
             <textarea
               id="plan-with-ai-prompt"
@@ -472,7 +472,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
 
           <Button variant="line" block className="mt-4" onClick={() => void sendToGc()}>
             <ChatsCircle aria-hidden="true" />
-            Send to GC
+            Send to group chat
           </Button>
           {gcNote ? (
             <p role="status" className="g-sm g-mut mt-2 text-center">
@@ -481,7 +481,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           ) : null}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
-            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ni Tara AI, so it can be wrong. Check prices, hours and safety, and edit anything bago i-save.</p>
+            <p className="g-xs g-fnt min-w-0 flex-1">Made by Tara AI, so it can be wrong. Check prices, hours and safety, and edit anything before you save.</p>
             <Button variant="text" size="sm" onClick={startOver}>
               Start over
             </Button>

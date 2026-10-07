@@ -264,7 +264,7 @@ The gala is on ${plan.weekday}, ${plan.date}. Sunset is about ${formatClock12(pl
 Pick ${MIN_STOPS}-${MAX_STOPS} stops ONLY from CANDIDATES, by their ref (p1, p2...). Never invent places. Always return at least ${MIN_STOPS} stops: if nothing fits exactly, use the closest fitting candidates (a mall for a movie, a cafe for snacks).
 Stay in the area the request names. Include every kind of stop the request asks for, in the order it asks ("cafe tapos dinner" = a Cafe first, then dinner at a Food place). A Cafe is never the lunch or dinner stop.
 Use realistic 24h times in time-of-day order: breakfast 7:00-10:30, lunch 11:00-14:00, dinner 17:30-21:00, bars after 19:00, museums close about 16:00-17:00, parks and outdoor walks only in daylight, a sunset stop starts about 45 min before sunset. Durations: meals 60-120 min, cafes 45-90, parks and sights 30-90, museums and malls 60-150.
-${rules.length ? `${rules.join("\n")}\n` : ""}Write the title, summary and notes in the same language mix as the request (Taglish in, Taglish out). The summary is one short line on the vibe of the day, with no times, counts, prices or place names. Notes are one friendly sentence on why the stop fits; never put prices, refs, "2x" or the place name in a note.
+${rules.length ? `${rules.join("\n")}\n` : ""}Write the title, summary and notes in simple, enthusiastic English, like a lively, knowledgeable Filipino tour guide, even when the request is in Tagalog or Taglish (no Taglish words). The summary is one short line on the vibe of the day, with no times, counts, prices or place names. Notes are one friendly sentence on why the stop fits; never put prices, refs, "2x" or the place name in a note.
 Reply with JSON only:
 {"title": string (max 60 chars), "summary": string (max 120 chars), "group_size": integer (1 if not stated), "stops": [{"ref": "p1", "time": "HH:MM", "minutes": integer, "note": string (max 80 chars)}]}`;
 }
@@ -1332,7 +1332,7 @@ export function buildFallbackDraft(prompt: string, candidates: NormalizedPlace[]
   const city = [...cityCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 
   return {
-    title: city ? `Gala sa ${city}` : "Gala plan",
+    title: city ? `Day out in ${city}` : "Day plan",
     summary: "",
     group_size: parseGroupSize(prompt) ?? 1,
     stops: picks.map((place) => ({

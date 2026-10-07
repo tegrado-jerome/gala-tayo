@@ -215,7 +215,7 @@ export default function SharedPlacePage({
         <Page narrow>
           <Empty
             title="Place not found"
-            description="We could not find this spot. Baka na-move or na-remove na."
+            description="We couldn't find this spot. It may have moved or been removed."
             action={<Button href="/places">Browse places</Button>}
           />
         </Page>

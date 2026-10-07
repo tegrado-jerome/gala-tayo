@@ -18,12 +18,12 @@ export const PICK_COUNT = 3
 export const TIPID_MAX = 300
 
 export const VIBES = [
-  { value: 'any', label: 'Kahit ano', tags: [] },
+  { value: 'any', label: 'Anything', tags: [] },
   { value: 'date', label: 'Date', tags: ['Casual Date', 'Date Night', 'Anniversary', 'Special Occasion'] },
-  { value: 'barkada', label: 'Barkada', tags: ['Barkada Hangout', 'Group Dining', 'Barkada Dinner', 'Nightlife'] },
+  { value: 'barkada', label: 'Friends', tags: ['Barkada Hangout', 'Group Dining', 'Barkada Dinner', 'Nightlife'] },
   { value: 'family', label: 'Family', tags: ['Family Trip', 'Family Dinner'] },
   { value: 'solo', label: 'Solo', tags: ['Solo Trip', 'Chill', 'Quiet Visit'] },
-  { value: 'tipid', label: 'Tipid', tags: [] },
+  { value: 'tipid', label: 'Budget', tags: [] },
 ] as const
 
 export type Vibe = (typeof VIBES)[number]['value']
@@ -119,14 +119,14 @@ export type WeatherMood = { rainy: boolean; line: string }
 
 /** Rain now or likely in the next hours → indoor picks with a short line; otherwise a go-ahead line. */
 export function weatherMood(current: Pick<CurrentWeather, 'code' | 'precipitation'>, nextHours: HourForecast[]): WeatherMood {
-  if (isStormCode(current.code)) return { rainy: true, line: 'May thunderstorm, indoor muna.' }
-  if (current.precipitation > 0.1 || isRainCode(current.code)) return { rainy: true, line: 'Umuulan ngayon, indoor muna.' }
+  if (isStormCode(current.code)) return { rainy: true, line: 'Thunderstorm now, so indoor picks first!' }
+  if (current.precipitation > 0.1 || isRainCode(current.code)) return { rainy: true, line: 'Raining now, so indoor picks first!' }
   const window = findRainWindow(nextHours)
-  if (window) return { rainy: true, line: `Maulan mamaya (${formatHour(window.start)}), indoor muna.` }
+  if (window) return { rainy: true, line: `Rain later (${formatHour(window.start)}), so indoor picks first!` }
   const last = nextHours.at(-1)
   if (!last) return { rainy: false, line: '' }
   const until = new Date(Date.parse(`${last.time}:00Z`) + 3_600_000).toISOString().slice(0, 16)
-  return { rainy: false, line: `Mukhang dry hanggang ${formatHour(until)}. G sa outdoor!` }
+  return { rainy: false, line: `Dry until ${formatHour(until)}. Great time to go outdoors!` }
 }
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/
@@ -138,11 +138,11 @@ export function parseVoteSlugs(value: string | null) {
 
 /** The text that goes with a single pick sent to the group chat. */
 export function gcMessage(name: string, where: string | null) {
-  return `G ka? ${name}${where ? ` sa ${where}` : ''} tayo 👉`
+  return `Up for it? ${name}${where ? ` in ${where}` : ''}! 👉`
 }
 
-export const VOTE_MESSAGE = 'Saan tayo? Botohan na, tap mo ang gusto mo 👇'
+export const VOTE_MESSAGE = 'Where should we go? Vote for your pick 👇'
 
 export function voteReply(name: string) {
-  return `Team ${name} ako! 🙋 Ikaw?`
+  return `I'm Team ${name}! 🙋 You?`
 }

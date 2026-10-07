@@ -134,7 +134,7 @@ export default function SeoLandingPage({
       <Page>
         <SeoHead title={`Guide Not Found | ${PRODUCT_NAME}`} robots="noindex,follow" />
         <h1 className="g-h1">Guide not found</h1>
-        <p className="g-mut mt-2">Baka na-move na ito. Try browsing places instead.</p>
+        <p className="g-mut mt-2">It may have moved. Try browsing places instead.</p>
         <Button variant="line" href="/places" className="mt-5">
           Browse places
         </Button>
@@ -220,7 +220,7 @@ export default function SeoLandingPage({
     try {
       const hadNativeShare = typeof navigator.share === 'function'
       await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}`, contentType: 'guide', itemId: target.slug })
-      setShareNote(hadNativeShare ? null : 'Link copied. I-send mo na sa GC!')
+      setShareNote(hadNativeShare ? null : 'Link copied! Send it to your group chat.')
     } catch (error) {
       if ((error as Error).name !== 'AbortError') setShareNote(pageUrl)
     }
@@ -312,10 +312,10 @@ export default function SeoLandingPage({
             <MasonrySkeleton />
           </div>
         ) : errorMessage ? (
-          <Empty title="Hindi ma-load ang guide" description={errorMessage} />
+          <Empty title="Couldn't load the guide" description={errorMessage} />
         ) : items.length === 0 ? (
           <Empty
-            title="Wala pang matching places"
+            title="No matching places yet"
             description="We'll keep this guide updated as more places are added."
             action={<Button variant="line" href="/places">Browse places</Button>}
           />
@@ -363,15 +363,15 @@ export default function SeoLandingPage({
                     <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                     All places in {areaHub.name}
                   </div>
-                  <div className="g-xs g-mut truncate">Every gala-worthy place, by category</div>
+                  <div className="g-xs g-mut truncate">Every top place, by category</div>
                 </Row>
               ) : null}
               <Row href="/saan-tayo" className="!bg-[var(--tara-soft)] !border-transparent" action={<ChevronRight className="g-ic text-[var(--tara-ink)]" aria-hidden="true" />}>
                 <div className="g-h3 flex items-center gap-2 truncate">
                   <Shuffle className="h-4 w-4 shrink-0 text-[var(--tara-ink)]" aria-hidden="true" />
-                  Saan tayo? Bahala na!
+                  Pick for me!
                 </div>
-                <div className="g-xs g-mut truncate">Near you, rain-smart, vote in the GC</div>
+                <div className="g-xs g-mut truncate">Near you, rain-smart, vote in your group chat</div>
               </Row>
             </div>
           </aside>

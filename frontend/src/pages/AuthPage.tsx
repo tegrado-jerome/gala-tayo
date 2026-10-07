@@ -349,8 +349,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       : isCreateMode
         ? isGuest
           ? 'Keep everything you did as a guest and use it on any device.'
-          : 'Make an account and start planning your next gala with the barkada.'
-        : 'Log in to see your plans and barkadas.'
+          : 'Make an account and start planning your next trip with friends.'
+        : 'Log in to see your plans and groups.'
 
   if (isConfirmationPending) {
     const resendLabel = signUpCooldown.isCoolingDown

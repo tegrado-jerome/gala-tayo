@@ -469,7 +469,7 @@ function SearchEmptyState({
     return null
   }
 
-  const title = status === 'unsupported_location' ? 'Wala pa kami diyan' : 'Wala kaming nahanap'
+  const title = status === 'unsupported_location' ? 'Not there yet' : 'Nothing found'
   const description =
     message ||
     (status === 'unsupported_location'

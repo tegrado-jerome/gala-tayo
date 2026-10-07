@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { NormalizedPlace } from "../domain/places";
 import { detectLocationIntent, selectCandidates } from "../services/galaPlanDraftPlanner";
-import { chatBudgetPerHead, findMentionedPlaces, isTaglish, missingKind } from "./askAi";
+import { chatBudgetPerHead, findMentionedPlaces, missingKind } from "./askAi";
 
 function place(overrides: Partial<NormalizedPlace>): NormalizedPlace {
   return {
@@ -44,12 +44,6 @@ describe("chat grounding", () => {
     ];
     const sources = findMentionedPlaces("Try **Bambike Ecotours Intramuros** for a bike tour.", places);
     assert.deepEqual(sources.map((source) => source.title), ["Bambike Ecotours Intramuros"]);
-  });
-
-  it("spots Taglish questions so the reply matches", () => {
-    assert.equal(isTaglish("date sa BGC na hindi mahal"), true);
-    assert.equal(isTaglish("Saan masarap kumain sa Binondo?"), true);
-    assert.equal(isTaglish("Quiet cafe to study in Makati"), false);
   });
 
   it("notes when the area has no place of the asked kind", () => {

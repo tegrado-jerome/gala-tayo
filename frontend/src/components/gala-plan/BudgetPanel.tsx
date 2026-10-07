@@ -72,12 +72,12 @@ function BudgetPanel({ plan, barkada, session, groupSize, onGroupSizeChange, onB
       </div>
 
       {perHead === 0 ? (
-        <Empty className="mt-4" title="Libre lahat" description="Every stop is free, so there's nothing to split. Rides are paid as you go." />
+        <Empty className="mt-4" title="All free!" description="Every stop is free, so there's nothing to split. Rides are paid as you go." />
       ) : null}
 
       {guests.length > 0 && perHead > 0 ? (
         <>
-          <SectionHead title="Hatian (who owes whom)" sub={`${hostName} pays up front. Everyone else sends ${hostName} their share.`} />
+          <SectionHead title="Split costs (who owes whom)" sub={`${hostName} pays up front. Everyone else sends ${hostName} their share.`} />
           <Panel style={{ paddingBlock: 4 }}>
             {guests.map((member) => {
               const name = personName(member.profile)

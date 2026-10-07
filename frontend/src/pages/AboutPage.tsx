@@ -14,12 +14,12 @@ import '../design/misc.css'
 const aboutHighlights: Array<{ title: string; body: string; icon: PhosphorIcon }> = [
   {
     title: 'Discover places around the Philippines',
-    body: 'GalaTayo helps people browse places to visit for dates, barkada hangouts, family plans, chill days, and everyday gala ideas.',
+    body: 'GalaTayo helps people browse places to visit for dates, hangouts with friends, family plans, chill days and everyday trip ideas.',
     icon: Compass,
   },
   {
-    title: 'Plan your next gala',
-    body: 'You can search places, build gala plans, and save ideas for later without changing how you already explore the app.',
+    title: 'Plan your next trip',
+    body: 'You can search places, build plans and save ideas for later without changing how you already explore the app.',
     icon: CalendarPlus,
   },
   {
@@ -31,7 +31,7 @@ const aboutHighlights: Array<{ title: string; body: string; icon: PhosphorIcon }
 
 const curationStandards: Array<{ title: string; body: string }> = [
   {
-    title: 'Gala-worthy only',
+    title: 'Only the best',
     body: 'Every place is scored on real evidence: editorial lists, Philippine travel apps, Reddit threads, social buzz, review volume and Michelin, plus how well it fits a day out. Places you could find on any map app, like plain eateries, chains, ordinary malls and hotels, stay out of lists, search, AI picks and the sitemap.',
   },
   {
@@ -58,7 +58,7 @@ function AboutPage() {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
       name: 'About GalaTayo | Place discovery around the Philippines',
-      description: 'What GalaTayo is and how we pick places: gala-worthy only, scored on real evidence, no fake reviews and credited photos.',
+      description: 'What GalaTayo is and how we pick places: only the best, scored on real evidence, no fake reviews and credited photos.',
       url: `${getSiteOrigin()}/about`,
       mainEntity: { '@id': `${getSiteOrigin()}/#organization` },
     },
@@ -76,7 +76,7 @@ function AboutPage() {
     <Page narrow>
       <SeoHead
         title="About GalaTayo | Place discovery around the Philippines"
-        description="What GalaTayo is and how we pick places: gala-worthy only, scored on real evidence, no fake reviews and credited photos."
+        description="What GalaTayo is and how we pick places: only the best, scored on real evidence, no fake reviews and credited photos."
         canonicalPath="/about"
         jsonLd={jsonLd}
       />
@@ -99,12 +99,12 @@ function AboutPage() {
 
         <div className="m-prose mt-6 max-w-[65ch]">
           <p>
-            GalaTayo, also written Gala Tayo, is a place discovery and planning app built to help people find gala-worthy spots around the Philippines,
-            browse public place pages, and map out their next gala.
+            GalaTayo, also written Gala Tayo, is a place discovery and planning app built to help people find the best spots around the Philippines,
+            browse public place pages, and map out their next trip.
           </p>
           <p className="g-mut">
             The name comes from the Filipino phrase &ldquo;gala tayo&rdquo;, which means &ldquo;let&apos;s go out&rdquo;. GalaTayo launched in July 2026 and is built in
-            the Philippines. It is free to use, and every place page is public so you can share it with the barkada without signing in.
+            the Philippines. It is free to use, and every place page is public so you can share it with friends without signing in.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ function AboutPage() {
             Browse places
           </Button>
           <Button variant="line" size="lg" href="/saan-tayo">
-            Saan tayo?
+            Pick for me
           </Button>
         </div>
         <LegalFooter />

@@ -52,7 +52,7 @@ const PLACE_SEARCH_DEFAULT_LIMIT = 10
 const PLACE_SEARCH_DEBOUNCE_MS = 325
 const TIME_PERIODS = ['AM', 'PM'] as const
 const TABBAR_OFF_CLASS = 'g-tabbar-off'
-const TITLE_REQUIRED = 'Give your gala a name first.'
+const TITLE_REQUIRED = 'Give your plan a name first.'
 
 type TimePeriod = (typeof TIME_PERIODS)[number]
 
@@ -276,7 +276,7 @@ function ItineraryBuilder({
       return
     }
     if (items.some((item) => item.place_id === selectedPlace.id)) {
-      setErrorMessage('That place is already in this gala plan.')
+      setErrorMessage('That place is already in this plan.')
       return
     }
     draftIdSequence.current += 1
@@ -418,7 +418,7 @@ function ItineraryBuilder({
       {errorMessage ? <p role="alert" className="g-hint is-error mt-3">{errorMessage}</p> : null}
 
       {items.length === 0 ? (
-        <Empty className="mt-4" title="Wala pang stops" description="Search a place above, choose it, then add it here." />
+        <Empty className="mt-4" title="No stops yet" description="Search a place above, choose it, then add it here." />
       ) : (
         <div className="mt-5 grid gap-6">
           {groupedItems.map(([dayNumber, dayItems]) => (
@@ -508,7 +508,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
       try {
         setIsLoading(true)
         const data = await getGalaPlan(planId, session)
-        if (!data.plan.viewer_is_owner) { setErrorMessage('Only the owner can edit this gala plan.'); return }
+        if (!data.plan.viewer_is_owner) { setErrorMessage('Only the owner can edit this plan.'); return }
         const parsed = parseGalaPlanDescription(data.plan.description)
         setTitle(data.plan.title)
         setDescription(parsed.description)
@@ -518,7 +518,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
         setVisibility(data.plan.visibility)
         setItems(data.plan.items.map((item) => ({ draft_id: item.id, place_id: item.place_id, day_number: item.day_number, sort_order: item.sort_order, time_label: item.time_label, notes: item.notes, estimated_minutes: item.estimated_minutes, place: item.place })))
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plan.')
+        setErrorMessage(error instanceof Error ? error.message : 'Couldn\'t load the plan.')
       } finally {
         setIsLoading(false)
       }
@@ -547,7 +547,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
       const data = planId ? await updateGalaPlan(planId, payload, session) : await createGalaPlan(payload, session)
       navigateToPath(`/gala-plans/${encodeURIComponent(data.plan.id)}`)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to save gala plan.')
+      setErrorMessage(error instanceof Error ? error.message : 'Couldn\'t save the plan.')
     } finally {
       setIsSaving(false)
     }
@@ -587,7 +587,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
               setTitle(event.target.value)
               if (titleMissing) setErrorMessage('')
             }}
-            placeholder="Name your gala"
+            placeholder="Name your plan"
             aria-invalid={titleMissing || undefined}
             aria-describedby={titleMissing ? 'plan-title-error' : undefined}
             autoFocus={!isEdit}

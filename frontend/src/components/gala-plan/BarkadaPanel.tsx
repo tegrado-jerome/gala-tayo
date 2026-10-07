@@ -33,14 +33,14 @@ type BarkadaProps = {
 }
 
 const rsvpOptions: Array<{ value: GalaPlanRsvp; label: string }> = [
-  { value: 'going', label: 'Tara!' },
-  { value: 'maybe', label: 'Baka' },
+  { value: 'going', label: "I'm in!" },
+  { value: 'maybe', label: 'Maybe' },
   { value: 'no', label: 'Pass' },
 ]
 
 const rsvpTag: Record<GalaPlanRsvp, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
-  going: { label: 'Tara', tone: 'ok' },
-  maybe: { label: 'Baka', tone: 'warn' },
+  going: { label: 'Going', tone: 'ok' },
+  maybe: { label: 'Maybe', tone: 'warn' },
   no: { label: 'Pass', tone: 'neutral' },
 }
 
@@ -85,7 +85,7 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
   return (
     <Panel>
       {guestAuth.promptElement}
-      <h2 className="g-h3">{plan.viewer_is_owner ? 'Sino ang sasama?' : 'Sasama ka?'}</h2>
+      <h2 className="g-h3">{plan.viewer_is_owner ? "Who's coming?" : 'Are you in?'}</h2>
       {!plan.viewer_is_owner ? (
         <div className="g-rsvp mt-3" role="group" aria-label="Your RSVP">
           {rsvpOptions.map((option) => (
@@ -257,7 +257,7 @@ export function PollsPanel({ plan, barkada, session, onChange, onPlanChange }: B
       ) : null}
       <KailanPoll {...voteProps} dates={dates} />
       <SpotDeck {...voteProps} spots={spots} />
-      {barkada.polls.length === 0 && !isOwner ? <Empty title="Wala pang poll" description="When the host opens a vote, it shows up here." /> : null}
+      {barkada.polls.length === 0 && !isOwner ? <Empty title="No polls yet" description="When the host opens a vote, it shows up here." /> : null}
       {regular.map((poll) => (
         <Panel as="article" key={poll.id}>
           <div className="flex items-start justify-between gap-3">

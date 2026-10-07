@@ -105,7 +105,7 @@ function buildStory(plan: GalaPlanDetail, friends: number): Story {
   const link = buildPrivateGalaPlanShareUrl(plan.id).replace(/^https?:\/\//, '')
 
   return {
-    eyebrow: ([day, city].filter(Boolean).join(' · ') || 'Gala recap').toUpperCase(),
+    eyebrow: ([day, city].filter(Boolean).join(' · ') || 'Trip recap').toUpperCase(),
     lines,
     pins: placePins(plan.items),
     stops,
@@ -477,7 +477,7 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
     try {
       const blob = await (pngRef.current ?? renderStoryPng(story))
       if (!blob) {
-        setMessage('Hindi nagawa ang image. Try again.')
+        setMessage('Couldn\'t make the image. Try again.')
         return
       }
       const file = new File([blob], story.fileName, { type: 'image/png' })
@@ -504,7 +504,7 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
       className="fixed inset-0 z-[7500] flex flex-col items-center justify-center gap-4 bg-[var(--ink-hover)] px-4 pt-[max(env(safe-area-inset-top,0px),16px)] pb-[max(env(safe-area-inset-bottom,0px),16px)] motion-safe:animate-[g-fade_200ms_var(--ease-g)_both]"
       role="dialog"
       aria-modal="true"
-      aria-label="Gala recap story"
+      aria-label="Trip recap story"
     >
       <div
         className="overflow-hidden rounded-[var(--r-4)] shadow-[var(--sh-3)] ring-1 ring-[color-mix(in_srgb,var(--on-ink)_14%,transparent)] motion-safe:animate-[g-up_320ms_var(--ease-g)_both]"

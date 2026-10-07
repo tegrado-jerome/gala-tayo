@@ -303,7 +303,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: `${areaName} Places | ${BRAND_NAME}`,
-          description: `${PRODUCT_NAME} helps you browse places in ${areaName}, compare categories, and find local gala ideas.`,
+          description: `${PRODUCT_NAME} helps you browse places in ${areaName}, compare categories and find local trip ideas.`,
           url: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}`,
         },
         {
@@ -337,7 +337,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     : null
 
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
-  const spotCount = payload.total > 0 ? `: ${payload.total} Gala-Worthy ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
+  const spotCount = payload.total > 0 ? `: ${payload.total} Top ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
   const baseTitle = `Things to Do in ${areaName}${spotCount}`
   const areaSeo = AREA_SEO[normalizedAreaSlug]
   const pageTitle = withBrand(areaSeo?.title ?? baseTitle)
@@ -347,14 +347,14 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const budgetRange = describeBudgetRange(allPlaces.map((place) => place.budgetMin))
   const areaFaqs = showAnswers
     ? [
-        { question: `What are the best tourist spots in ${areaName}?`, answer: `${topNames[0]}, ${topNames[1]} and ${topNames[2]} top the list, out of ${payload.total} gala-worthy places in ${areaName} ranked best first on this page.` },
+        { question: `What are the best tourist spots in ${areaName}?`, answer: `${topNames[0]}, ${topNames[1]} and ${topNames[2]} top the list, out of ${payload.total} top places in ${areaName} ranked best first on this page.` },
         ...(budgetRange && budgetRange !== 'Free' ? [{ question: `How much do places in ${areaName} cost?`, answer: `Starting prices for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }] : []),
         ...(areaSeo?.faqs ?? []),
       ]
     : []
   const pageDescription = areaSeo?.description ?? (topNames.length
-    ? `${payload.total} gala-worthy ${payload.total === 1 ? 'place' : 'places'} in ${areaName}${destination && parentRegion ? `, ${destination.provinceName}` : ''}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
-    : `${PRODUCT_NAME} lists gala-worthy places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`)
+    ? `${payload.total} top ${payload.total === 1 ? 'place' : 'places'} in ${areaName}${destination && parentRegion ? `, ${destination.provinceName}` : ''}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
+    : `${PRODUCT_NAME} lists the top places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`)
   const placeName = destination && parentRegion ? `${areaName}, ${destination.provinceName}` : areaName
 
   return (
@@ -407,7 +407,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Best first" />
 
       {errorMessage ? (
-        <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />
+        <Empty className="mt-8" title={`Couldn't load places in ${areaName}`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
         <div className="mt-2" aria-busy="true">
           <span className="sr-only">Loading places in {areaName}.</span>
@@ -416,8 +416,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ) : shouldShowEmptyState ? (
         <Empty
           className="mt-8"
-          title={`Wala pang places in ${areaName}`}
-          description={activeCategory === 'all' ? 'Check back later for new gala spots.' : 'Check back later for new gala spots, or try another category in this city.'}
+          title={`No places in ${areaName} yet`}
+          description={activeCategory === 'all' ? 'New spots are on the way!' : 'New spots are on the way! Try another category in this city.'}
           action={
             homeRegion && homeRegion.slug !== normalizedAreaSlug ? (
               <Button variant="line" href={`/places/${homeRegion.slug}`}>See places in {homeRegion.name}</Button>

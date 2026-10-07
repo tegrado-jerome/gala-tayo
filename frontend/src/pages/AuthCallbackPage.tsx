@@ -168,7 +168,7 @@ function AuthCallbackPage() {
 
   if (errorMessage) {
     return (
-      <AuthCard bar="Log in" icon={<Warning weight="duotone" style={{ color: 'var(--warn)' }} />} title="Hindi natuloy ang sign-in" sub={errorMessage}>
+      <AuthCard bar="Log in" icon={<Warning weight="duotone" style={{ color: 'var(--warn)' }} />} title="Sign-in didn't go through" sub={errorMessage}>
         <div className="grid gap-2">
           <Button
             variant="tara"
@@ -203,7 +203,7 @@ function AuthCallbackPage() {
             <i />
           </span>
           <p className="g-h3">Signing you in</p>
-          <p className="g-sm g-mut -mt-3">Sandali lang, almost there.</p>
+          <p className="g-sm g-mut -mt-3">One moment, almost there!</p>
         </div>
       </div>
     </main>

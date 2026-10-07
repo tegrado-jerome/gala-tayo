@@ -35,7 +35,7 @@ type SeoConfig = {
 }
 
 const DEFAULT_TITLE = 'GalaTayo'
-const DEFAULT_DESCRIPTION = 'Find gala-worthy places around the Philippines by city, budget and vibe, then plan the day with your barkada on GalaTayo.'
+const DEFAULT_DESCRIPTION = 'Find the best places around the Philippines by city, budget and vibe, then plan the day with friends on GalaTayo.'
 const MAX_DESCRIPTION_LENGTH = 155
 
 /** Search results cut descriptions near 155 characters, so keep whole sentences that fit, or end on a clause. */

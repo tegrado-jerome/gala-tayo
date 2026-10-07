@@ -16,7 +16,7 @@ type LoadState = { status: 'loading' } | { status: 'ready'; plans: GalaPlanSumma
 type Bucket = 'today' | 'upcoming' | 'anytime' | 'invited' | 'past'
 type Tab = 'upcoming' | 'invited' | 'past'
 
-const planIdeas = ['Food crawl in Poblacion', 'Rainy day in Makati, indoor lang', 'Sunset at Manila Bay', 'Museum day in Manila']
+const planIdeas = ['Food crawl in Poblacion', 'Rainy day in Makati, indoors only', 'Sunset at Manila Bay', 'Museum day in Manila']
 
 function bucketOf(plan: GalaPlanSummary): Bucket {
   const date = getPlanDate(plan)
@@ -141,7 +141,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
     <Page>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="g-eyebrow">Your galas</p>
+          <p className="g-eyebrow">Your plans</p>
           <h1 className="g-h1 mt-1">Plans</h1>
         </div>
         {/* One main action: Plan with AI. Building by hand stays a quiet text link. */}
@@ -166,7 +166,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         {isEmpty ? (
           <>
             <Empty
-              title="Wala pang plano"
+              title="No plans yet"
               description="Say the vibe in one sentence and Tara drafts the whole day. Or add places yourself."
               action={
                 <div className="flex flex-col items-center gap-1">

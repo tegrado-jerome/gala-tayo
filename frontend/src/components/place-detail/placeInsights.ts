@@ -1,3 +1,4 @@
+import { goodForText } from '../../utils/goodForText'
 import { cleanString, titleCase, uniqueList } from './helpers'
 
 /** Splits prose into trimmed sentences; keeps abbreviations like "St." mostly intact by requiring a capital or digit after the break. */
@@ -40,7 +41,7 @@ function joinList(values: string[]) {
   return `${values.slice(0, -1).join(', ')} and ${values[values.length - 1]}`
 }
 
-/** "Why it's gala-worthy" bullets, built only from fields the place already has. */
+/** "Why go" bullets, built only from fields the place already has. */
 export function buildHighlights(place: HighlightInput, max = 4) {
   const bullets: string[] = []
   const add = (value: string | null | undefined) => {
@@ -50,7 +51,7 @@ export function buildHighlights(place: HighlightInput, max = 4) {
 
   uniqueList(place.highlights ?? []).slice(0, 3).forEach(add)
 
-  const goodFor = uniqueList(place.good_for ?? []).map((value) => value.toLowerCase())
+  const goodFor = uniqueList((place.good_for ?? []).map(goodForText)).map((value) => value.toLowerCase())
   if (goodFor.length > 0) add(`Good for ${joinList(goodFor.slice(0, 5))}`)
 
   const tagNames = uniqueList((place.tags ?? []).map((tag) => titleCase(tag.name)))

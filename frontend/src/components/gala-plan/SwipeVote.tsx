@@ -54,7 +54,7 @@ function OptionCard({ card, dx, dragging }: { card: SwipeCard; dx: number; dragg
         style={{ border: '3px solid var(--tara)', color: 'var(--tara-ink)', background: 'var(--surface)', font: '700 20px/1 var(--font-display)', transform: 'rotate(-12deg)', opacity: Math.max(0, lean) }}
         aria-hidden="true"
       >
-        TARA!
+        YES!
       </span>
       <span
         className="absolute right-5 top-5 rounded-[var(--r-1)] px-3 py-1"
@@ -73,7 +73,7 @@ function OptionCard({ card, dx, dragging }: { card: SwipeCard; dx: number; dragg
             <AvatarStack people={card.voters.map((voter) => ({ id: voter.user_id, avatarUrl: personAvatar(voter), name: personName(voter) }))} max={4} size={26} />
           ) : null}
           <span className="g-sm font-semibold">
-            {card.votes === 0 ? 'Be the first to say tara' : isMine && others === 0 ? 'Only you so far' : `${card.votes} already said tara`}
+            {card.votes === 0 ? 'Be the first to vote' : isMine && others === 0 ? 'Only you so far' : `${card.votes} already said yes`}
           </span>
         </div>
       </div>
@@ -233,7 +233,7 @@ function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVot
         <div className="min-w-0 flex-1 text-center">
           <h2 id="swipe-vote-title" className="g-h3 truncate">{title}</h2>
           <p className="g-xs g-mut">
-            {phase === 'deck' || phase === 'saving' ? `Vote with the barkada · ${index + 1} of ${cards.length}` : 'Vote with the barkada'}
+            {phase === 'deck' || phase === 'saving' ? `Vote with the group · ${index + 1} of ${cards.length}` : 'Vote with the group'}
           </p>
         </div>
         <span className="w-11 shrink-0" aria-hidden="true" />
@@ -245,7 +245,7 @@ function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVot
             <Check className="h-10 w-10" weight="bold" />
           </span>
           <p className="g-h1 mt-6" role="status">You picked {result.label}</p>
-          <p className="g-mut mt-2">{result.others === 0 ? "You're the first. Hatakin mo na sila." : `${result.others} ${result.others === 1 ? 'other' : 'others'} too`}</p>
+          <p className="g-mut mt-2">{result.others === 0 ? "You're the first! Now pull your friends in." : `${result.others} ${result.others === 1 ? 'other' : 'others'} too`}</p>
           <Button variant="ink" className="mt-8" onClick={onClose}>Back to plan</Button>
         </div>
       ) : phase === 'rated' ? (
@@ -253,15 +253,15 @@ function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVot
           <span className="grid h-24 w-24 place-items-center rounded-full" style={{ background: 'var(--tara)', color: ON_TARA }} aria-hidden="true">
             <Check className="h-10 w-10" weight="bold" />
           </span>
-          <p className="g-h1 mt-6" role="status">Tapos ka na!</p>
+          <p className="g-h1 mt-6" role="status">All done!</p>
           <p className="g-mut mt-2">
-            {taraCount === 0 ? 'You passed on every place.' : `You said tara to ${taraCount} of ${cards.length}.`} The ranking updates as the barkada swipes.
+            {taraCount === 0 ? 'You passed on every place.' : `You said yes to ${taraCount} of ${cards.length}.`} The ranking updates as the group swipes.
           </p>
           <Button variant="ink" className="mt-8" onClick={onClose}>See the ranking</Button>
         </div>
       ) : phase === 'end' ? (
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center px-6 text-center">
-          <p className="g-h1" role="status">Walang napili</p>
+          <p className="g-h1" role="status">Nothing picked</p>
           <p className="g-mut mt-2">You skipped every option. Go again or close the deck.</p>
           <div className="mt-8 flex gap-2">
             <Button variant="soft" onClick={onClose}>Close</Button>
@@ -288,7 +288,7 @@ function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVot
               <OptionCard card={card} dx={dx} dragging={dragging} />
             </div>
           </div>
-          <p className="sr-only" aria-live="polite">{`${card.title}, ${card.votes} ${card.votes === 1 ? 'vote' : 'votes'}. Right arrow for tara, left arrow to pass.`}</p>
+          <p className="sr-only" aria-live="polite">{`${card.title}, ${card.votes} ${card.votes === 1 ? 'vote' : 'votes'}. Right arrow for yes, left arrow to pass.`}</p>
           {error ? <p role="alert" className="g-hint is-error text-center">{error}</p> : null}
           <div className="flex items-center justify-center gap-8 pb-[calc(env(safe-area-inset-bottom,0px)+28px)] pt-2">
             <button
@@ -305,7 +305,7 @@ function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVot
               type="button"
               className={roundButton}
               style={{ background: 'var(--tara)', color: ON_TARA, boxShadow: 'var(--sh-2)' }}
-              aria-label={`Tara! Vote for ${card.title}`}
+              aria-label={`Yes! Vote for ${card.title}`}
               aria-busy={phase === 'saving' || undefined}
               disabled={phase !== 'deck'}
               onClick={() => void tara()}

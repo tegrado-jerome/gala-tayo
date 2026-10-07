@@ -54,7 +54,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
         } = await supabase.auth.getSession()
 
         if (!session) {
-          setErrorMessage('Sign in to add places to a gala plan.')
+          setErrorMessage('Sign in to add places to a plan.')
           return
         }
 
@@ -63,7 +63,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
         setPlans(data.plans)
         setSelectedPlanId(data.plans[0]?.id ?? '')
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plans.')
+        setErrorMessage(error instanceof Error ? error.message : 'Couldn\'t load your plans.')
       } finally {
         setIsLoading(false)
       }
@@ -83,7 +83,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
 
   const handleAdd = async () => {
     if (!selectedPlanId) {
-      setErrorMessage('Choose a gala plan first.')
+      setErrorMessage('Choose a plan first.')
       return
     }
 
@@ -94,7 +94,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
       await addPlaceToGalaPlan(selectedPlanId, {
         place_id: placeId,
       }, session)
-      setMessage('Added to gala plan.')
+      setMessage('Added to your plan!')
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to add place.')
     } finally {
@@ -113,7 +113,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
 
       {isLoading ? (
         <div className="g-list" aria-busy="true" aria-live="polite">
-          <span className="sr-only">Loading gala plans</span>
+          <span className="sr-only">Loading plans</span>
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
         </div>
@@ -121,7 +121,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
 
       {!isLoading && !errorMessage && plans.length === 0 ? (
         <Empty
-          title="Wala ka pang plano"
+          title="No plans yet"
           description="Start one and this place becomes its first stop."
           action={
             <div className="flex flex-wrap justify-center gap-2">
@@ -129,7 +129,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                 <Plus />
                 Create plan
               </Button>
-              <Button variant="soft" onClick={() => goTo(`/plan-with-ai?q=${encodeURIComponent(`A gala that includes ${placeName}`)}`)}>
+              <Button variant="soft" onClick={() => goTo(`/plan-with-ai?q=${encodeURIComponent(`A day out that includes ${placeName}`)}`)}>
                 <Sparkles />
                 Plan with AI
               </Button>
