@@ -16,7 +16,7 @@ const CASES: Case[] = [
   // Dishes and things: only places whose own data has them, never a beach that mentions halo-halo.
   // No visible place lists sisig (Aling Lucing is hidden until it has great photos), so nothing is the honest answer.
   { query: "sisig", none: true },
-  { query: "halo-halo", top: ["halo-halo-de-iloko-san-fernando-la-union"], exclude: ["nacpan-beach-el-nido"] },
+  { query: "lemon pie", top: ["sagada-lemon-pie-house"], exclude: ["nacpan-beach-el-nido"] },
   { query: "night market", top: ["baguio-night-market"], exclude: ["batad-rice-terraces-banaue", "apo-island-dauin"] },
   { query: "fort santiago", top: ["fort-santiago"], exclude: ["miagao-church", "fortune-island-nasugbu"] },
   { query: "hot spring", top: ["maquinit-hot-spring-coron"], exclude: ["fort-santiago"] },
@@ -52,7 +52,7 @@ const CASES: Case[] = [
   { query: "free museum manila", top: ["national-museum-of-fine-arts", "national-museum-of-natural-history"] },
   { query: "rainy day", every: (slug) => isIndoorPlace(place(slug)) === true },
   { query: "museum", every: (slug) => place(slug).category === "Museum" },
-  { query: "food trip", include: ["halo-halo-de-iloko-san-fernando-la-union", "binondo-chinatown"], within: 30, exclude: ["siargao-island-hopping", "ayala-museum"] },
+  { query: "food trip", include: ["toyo-eatery", "binondo-chinatown"], within: 30, exclude: ["siargao-island-hopping", "ayala-museum"] },
   { query: "mountain", include: ["mount-pulag-kabayan"], within: 3, exclude: ["national-museum-of-natural-history"] },
   { query: "beach", include: ["white-beach-boracay"], within: 3, every: (slug) => place(slug).category !== "Food" },
   // Vibe plus place.
