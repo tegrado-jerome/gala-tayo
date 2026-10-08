@@ -9,14 +9,6 @@
    "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451180107"
   },
   {
-   "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-2-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-2-v3-card.webp",
-   "author": "bortescristian",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451959866"
-  },
-  {
    "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-3-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-3-v3-card.webp",
    "author": "bortescristian",
@@ -25,20 +17,28 @@
    "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451977182"
   },
   {
+   "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-3-v5-card.webp",
+   "author": "Andrei Nelepets",
+   "license": "© Andrei Nelepets, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/140802106@N06/26855359225/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-2-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-2-v3-card.webp",
+   "author": "bortescristian",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451959866"
+  },
+  {
    "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-4-v3.webp",
    "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-4-v3-card.webp",
    "author": "LimpingFrog Productions",
    "license": "CC BY-SA 2.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
    "sourceUrl": "https://www.flickr.com/photos/110112536@N05/41988587350"
-  },
-  {
-   "url": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/aguinid-falls-samboan/hd/aguinid-falls-samboan-5-v3-card.webp",
-   "author": "bortescristian",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/79653482@N00/4451952576"
   }
  ],
  "alicia-panoramic-park": [
@@ -343,12 +343,44 @@
  ],
  "art-in-island": [
   {
-   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-1-v3-card.webp",
-   "author": "Ralff Nestor Nacor",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Art_in_Island,_Cubao,_Q.C.,_Jun_2026.jpg"
+   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-1-v5-card.webp",
+   "author": "@artinisland",
+   "license": "© @artinisland, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.instagram.com/artinisland/p/DbFGeNxkkzd/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-2-v5-card.webp",
+   "author": "@artinisland",
+   "license": "© @artinisland, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.instagram.com/artinisland/p/DVkav9RiJ_M/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-3-v5-card.webp",
+   "author": "@artinisland",
+   "license": "© @artinisland, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.instagram.com/artinisland/p/DVcsOaGkzWM/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-4-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-4-v5-card.webp",
+   "author": "@artinisland",
+   "license": "© @artinisland, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.instagram.com/artinisland/p/DaCoKMHk6L6/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-5-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/art-in-island/hd/art-in-island-5-v5-card.webp",
+   "author": "@artinisland",
+   "license": "© @artinisland, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.instagram.com/artinisland/p/DaPBxzLFEGx/"
   }
  ],
  "ayala-museum": [
@@ -379,28 +411,36 @@
  ],
  "ayala-triangle-gardens": [
   {
+   "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-1-v5-card.webp",
+   "author": "Hariboneagle927",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ayala_Triangle_Gardens_2017_stores.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-2-v5-card.webp",
+   "author": "Bobbet21",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nelson_Field_aka_Ayala_Triangle_Makati.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-3-v5-card.webp",
+   "author": "Elmer B. Domingo",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ayala_Triangle_Gardens.JPG"
+  },
+  {
    "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-1-v2.webp",
    "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-1-v2-card.webp",
    "author": "P1898",
    "license": "CC BY 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ayala_Triangle_from_Blackbird_at_the_Nielson_Tower_2026-05-24_Art_13.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-2-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-2-v2-card.webp",
-   "author": "Robert Joshua Busalla",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/45315260@N08/31006014327"
-  },
-  {
-   "url": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-3-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/ayala-triangle-gardens/hd/ayala-triangle-gardens-3-v2-card.webp",
-   "author": "Ganmatthew",
-   "license": "CC BY 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ayala_Triangle_Gardens_Plaza.jpg"
   }
  ],
  "baclayon-church": [
@@ -497,12 +537,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baguio_city_Night_Market_-_January_2025.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-3-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-3-v4-card.webp",
-   "author": "AveMariyuh",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baguio_City_Night_Market.jpg"
+   "url": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-3-v5-card.webp",
+   "author": "Kersho",
+   "license": "© Kersho, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/136252950@N05/23307376360/"
   },
   {
    "url": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-4-v4.webp",
@@ -511,6 +551,14 @@
    "license": "© Gen Celada, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://www.flickr.com/photos/gniv/17474745481/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-5-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/baguio-night-market/hd/baguio-night-market-5-v5-card.webp",
+   "author": "Allen Jed Borromeo",
+   "license": "© Allen Jed Borromeo, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ajborromeo/36392484963/"
   }
  ],
  "baguio-public-market": [
@@ -661,20 +709,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baluarte_de_San_Diego,_Manila,_Filipinas,_2023-08-27,_DD_62.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-3-card.webp",
-   "author": "Deng45",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baluarte_de_San_Diego,_Intramuros.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-4-card.webp",
-   "author": "Judgefloro",
+   "url": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/baluarte-de-san-diego/hd/baluarte-de-san-diego-3-v5-card.webp",
+   "author": "Johnpaulo5860",
    "license": "CC0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:9952Bonsai_Baluarte_de_San_Diego_01.jpg"
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baluarte_de_San_Diego_Intramuros,_Manila.jpg"
   }
  ],
  "baluarte-zoo-vigan": [
@@ -831,36 +871,28 @@
  ],
  "barasoain-church-malolos": [
   {
-   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-1-v3-card.webp",
-   "author": "Ramon FVelasquez",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barasoainchurch33jf.JPG"
+   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-1-v5-card.webp",
+   "author": "cestagne01",
+   "license": "© cestagne01, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/48968306@N06/27209411732/"
   },
   {
-   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-2-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-2-v3-card.webp",
-   "author": "Tagaaplaya",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Commemorative_plaques_on_the_facade_of_Barasoain_Church.webp"
+   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-2-v5-card.webp",
+   "author": "Fritz Rinaldi De Asis Bernardo, MD",
+   "license": "© Fritz Rinaldi De Asis Bernardo, MD, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/fritzrinaldimd/26732452387/"
   },
   {
-   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-3-v3-card.webp",
-   "author": "Video13",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Our_Lady_of_Mount_Carmel_Parish_Church_(Road_2_corner_Road_8,_Project_6,_Quezon_City)_05.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-4-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-4-v3-card.webp",
-   "author": "~MVI~ (warped)",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/20119750@N00/3918464996"
+   "url": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barasoain-church-malolos/hd/barasoain-church-malolos-3-v5-card.webp",
+   "author": "Richard Raba",
+   "license": "© Richard Raba, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/131256734@N04/25839548051/"
   }
  ],
  "barbaras-heritage-restaurant": [
@@ -891,12 +923,28 @@
  ],
  "barracuda-lake-coron": [
   {
-   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-1-card.webp",
-   "author": "Patrickroque01",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-1-v5-card.webp",
+   "author": "Vera Venus",
+   "license": "© Vera Venus, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barracuda_Lake_outer_rock_walls_wide_(Coron,_Palawan;_03-17-2024).jpg"
+   "sourceUrl": "https://www.flickr.com/photos/veravenusphoto/26711909064/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-2-v5-card.webp",
+   "author": "Lenka Sediva",
+   "license": "© Lenka Sediva, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/155177212@N02/36999693690/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-3-v5-card.webp",
+   "author": "Andy",
+   "license": "© Andy, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/andydyck/13086656164/"
   },
   {
    "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-2.webp",
@@ -907,20 +955,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_di_coron,_lago_barracuda,_05.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-3-card.webp",
-   "author": "Sailko",
-   "license": "CC BY 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Isola_di_coron,_lago_barracuda,_03.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-4-card.webp",
-   "author": "Patrickroque01",
+   "url": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-5-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/barracuda-lake-coron/hd/barracuda-lake-coron-5-v5-card.webp",
+   "author": "Madcel",
    "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barracuda_Lake_(Coron,_Palawan;_03-17-2024).jpg"
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barracuda_Lake_Entrance.jpg"
   }
  ],
  "basco-lighthouse-naidi-hills-basco": [
@@ -1095,12 +1135,12 @@
  ],
  "biak-na-bato-national-park-bulacan": [
   {
-   "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-1-card.webp",
-   "author": "Ramon FVelasquez",
-   "license": "CC BY-SA 3.0",
+   "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-1-v5-card.webp",
+   "author": "Richard Raba",
+   "license": "© Richard Raba, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biak-na-BatoNationalParkjf6214_02.JPG"
+   "sourceUrl": "https://www.flickr.com/photos/131256734@N04/33812180010/"
   },
   {
    "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-2.webp",
@@ -1111,12 +1151,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biak-na-Bato_National_Parkjf6166_09.JPG"
   },
   {
-   "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-3-card.webp",
-   "author": "Hazelle R. Dela Cruz",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-3-v5-card.webp",
+   "author": "Ramon FVelasquez",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biak-na-Bato_National_Park28jf.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-4-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-4-v5-card.webp",
+   "author": "Richard Raba",
+   "license": "© Richard Raba, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biak-na-Bato_National_Park_inside_08.jpg"
+   "sourceUrl": "https://www.flickr.com/photos/131256734@N04/33796667546/"
   },
   {
    "url": "https://media.galatayo.app/places/biak-na-bato-national-park-bulacan/hd/biak-na-bato-national-park-bulacan-4.webp",
@@ -1195,20 +1243,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kalesa_at_Binondo,_Manila_(January_2020).jpg"
   },
   {
+   "url": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-4-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-4-v5-card.webp",
+   "author": "Andrey Sulitskiy",
+   "license": "© Andrey Sulitskiy, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/sulitskiy/55537008853/"
+  },
+  {
    "url": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-4-v2.webp",
    "cardUrl": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-4-v2-card.webp",
    "author": "Elmer B. Domingo",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Binondo_Church,_Manila_District.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-5-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/binondo-chinatown/hd/binondo-chinatown-5-v2-card.webp",
-   "author": "Ralff Nestor Nacor",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Q._Paredes_x_Ongpin,_Binondo,_Manila,_Jun_2024.jpg"
   }
  ],
  "biri-rock-formations-biri": [
@@ -1239,36 +1287,36 @@
  ],
  "blackbird-at-the-nielson-tower": [
   {
+   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-1-v5-card.webp",
+   "author": "Blackbird Makati (blackbird.com.ph)",
+   "license": "© Blackbird Makati (blackbird.com.ph), used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.blackbird.com.ph/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-2-v5-card.webp",
+   "author": "Blackbird Makati (blackbird.com.ph)",
+   "license": "© Blackbird Makati (blackbird.com.ph), used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.blackbird.com.ph/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-3-v5-card.webp",
+   "author": "Blackbird Makati (blackbird.com.ph)",
+   "license": "© Blackbird Makati (blackbird.com.ph), used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.blackbird.com.ph/"
+  },
+  {
    "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-1.webp",
    "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-1-card.webp",
    "author": "P1898",
    "license": "CC BY 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fa%C3%A7ade_Blackbird_at_the_Nielson_Tower_2026-05-24_Art_Deco_09.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-2-card.webp",
-   "author": "P1898",
-   "license": "CC BY 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blackbird_at_the_Nielson_Tower_2026-05-24_Nielson_Field_09.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-3-card.webp",
-   "author": "P1898",
-   "license": "CC BY 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fa%C3%A7ade_Blackbird_at_the_Nielson_Tower_2026-05-24_Art_Deco_04.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/blackbird-at-the-nielson-tower/hd/blackbird-at-the-nielson-tower-4-card.webp",
-   "author": "P1898",
-   "license": "CC BY 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blackbird_at_the_Nielson_Tower_2026-05-24_Nielson_Field_02.jpg"
   }
  ],
  "blue-lagoon-pagudpud": [
@@ -1989,14 +2037,6 @@
  ],
  "campuestohan-highland-resort": [
   {
-   "url": "https://media.galatayo.app/places/campuestohan-highland-resort/hd/campuestohan-highland-resort-1-v4.webp",
-   "cardUrl": "https://media.galatayo.app/places/campuestohan-highland-resort/hd/campuestohan-highland-resort-1-v4-card.webp",
-   "author": "Prince John Magallon Oñasa",
-   "license": "© Prince John Magallon Oñasa, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.flickr.com/photos/152701745@N07/32772936484/"
-  },
-  {
    "url": "https://media.galatayo.app/places/campuestohan-highland-resort/hd/campuestohan-highland-resort-2-v4.webp",
    "cardUrl": "https://media.galatayo.app/places/campuestohan-highland-resort/hd/campuestohan-highland-resort-2-v4-card.webp",
    "author": "Bien Orellana Bacarra Jr",
@@ -2631,12 +2671,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dahican_Beach_Mati_Davao_Oriental.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v3-card.webp",
-   "author": "Zedergy",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Morning_waves.jpg"
+   "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v5-card.webp",
+   "author": "WILSON ETRATA",
+   "license": "© WILSON ETRATA, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/wilsonetrata/4247321589/"
   },
   {
    "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-3-v3.webp",
@@ -2647,20 +2687,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Overlooking_Mount_Hamiguitan_and_Dahican_beach.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-4-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-4-v3-card.webp",
-   "author": "Patrickroque01",
+   "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v3.webp",
+   "cardUrl": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-2-v3-card.webp",
+   "author": "Zedergy",
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dahican_Beach_(Mati,_Davao_Oriental;_04-20-2024).jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/dahican-beach-mati/hd/dahican-beach-mati-5-v3-card.webp",
-   "author": "Patrickroque01",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dahican_Beach_waves_3_(Mati,_Davao_Oriental;_04-20-2024).jpg"
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Morning_waves.jpg"
   }
  ],
  "dahilayan-adventure-park": [
@@ -3001,12 +3033,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Eden_Nature_Park_panorama.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-2-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-2-v3-card.webp",
-   "author": "Lynneth_Omandac",
-   "license": "CC BY 2.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-   "sourceUrl": "https://www.flickr.com/photos/14403730@N00/4480716809"
+   "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-2-v5-card.webp",
+   "author": "Julia Sumangil",
+   "license": "© Julia Sumangil, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/julesnene/33320664042/"
   },
   {
    "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-3-v3.webp",
@@ -3017,20 +3049,12 @@
    "sourceUrl": "https://www.flickr.com/photos/11249521@N00/4915385104"
   },
   {
-   "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-4-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-4-v3-card.webp",
-   "author": "Gary Lee Todd, Ph.D",
-   "license": "CC0 1.0",
-   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-   "sourceUrl": "https://www.flickr.com/photos/101561334@N08/10605608836"
-  },
-  {
-   "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-5-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-5-v3-card.webp",
-   "author": "Gary Lee Todd, Ph.D",
-   "license": "CC0 1.0",
-   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-   "sourceUrl": "https://www.flickr.com/photos/101561334@N08/10605577155"
+   "url": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-4-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/eden-nature-park-davao/hd/eden-nature-park-davao-4-v5-card.webp",
+   "author": "Joanna Christina Lizares Co",
+   "license": "© Joanna Christina Lizares Co, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/joannalizares/3293506783/"
   }
  ],
  "el-nido-tour-a-lagoons": [
@@ -3085,28 +3109,20 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_from_Matinloc_Shrine,_El_Nido,_Palawan.jpg"
   },
   {
+   "url": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-2-v5-card.webp",
+   "author": "El Nido Boutique",
+   "license": "© El Nido Boutique, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/128306647@N06/20861584903/"
+  },
+  {
    "url": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-2-v2.webp",
    "cardUrl": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-2-v2-card.webp",
    "author": "Say Bernardo",
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Matinloc_Shrine,_El_Nido,_Palawan_by_Say_Bernardo.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-3-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-3-v2-card.webp",
-   "author": "Vyacheslav Argenberg",
-   "license": "CC BY 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Limestone_island_in_Bacuit_Bay,_El_Nido,_Palawan,_Philippines.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-4-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/el-nido-tour-c-hidden-beaches/hd/el-nido-tour-c-hidden-beaches-4-v2-card.webp",
-   "author": "Philip Nalangan",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:El_Nido_Palawan_4.jpg"
   }
  ],
  "forest-camp-valencia": [
@@ -3255,12 +3271,12 @@
    "sourceUrl": "https://www.flickr.com/photos/26444212@N06/16261396822"
   },
   {
-   "url": "https://media.galatayo.app/places/fortune-island-nasugbu/hd/fortune-island-nasugbu-3-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/fortune-island-nasugbu/hd/fortune-island-nasugbu-3-v2-card.webp",
-   "author": "P199",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/fortune-island-nasugbu/hd/fortune-island-nasugbu-3-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/fortune-island-nasugbu/hd/fortune-island-nasugbu-3-v5-card.webp",
+   "author": "Kim james Adona",
+   "license": "© Kim james Adona, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fortune_Island.JPG"
+   "sourceUrl": "https://www.flickr.com/photos/98951466@N05/14388839498/"
   }
  ],
  "gallery-by-chele": [
@@ -3343,12 +3359,20 @@
  ],
  "good-shepherd-convent-baguio": [
   {
-   "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-1-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-1-v3-card.webp",
-   "author": "Irvin Parco Sto. Tomas",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Good_Shepherd_Baguio_City.JPG"
+   "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-1-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-1-v5-card.webp",
+   "author": "Ron",
+   "license": "© Ron, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ronrag/31188579102/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-2-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-2-v5-card.webp",
+   "author": "Ron",
+   "license": "© Ron, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ronrag/31188504632/"
   },
   {
    "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-2-v3.webp",
@@ -3359,12 +3383,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Good_Shepherd,_Shepherd%27s_Garden.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-3-v3.webp",
-   "cardUrl": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-3-v3-card.webp",
-   "author": "Irvin Parco Sto. Tomas",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Good_Shepherd_statue_Baguio_City.JPG"
+   "url": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-4-v5.webp",
+   "cardUrl": "https://media.galatayo.app/places/good-shepherd-convent-baguio/hd/good-shepherd-convent-baguio-4-v5-card.webp",
+   "author": "michael reyes",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/mrphotovideo/14224658548/"
   }
  ],
  "greenbelt-park": [
