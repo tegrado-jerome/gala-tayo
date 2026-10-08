@@ -36,5 +36,12 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "ncap",
+    "traffic": 2000,
+    "date": "2026-10-08",
+    "intents": [],
+    "areaSlug": "manila"
   }
 ]
