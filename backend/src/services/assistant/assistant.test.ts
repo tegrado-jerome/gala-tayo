@@ -159,9 +159,9 @@ describe("tools", () => {
   it("finds a dish anywhere and says when nothing mentions it", async () => {
     assert.deepEqual(queryTokens("saan masarap mag-sisig"), ["masarap", "sisig"]);
     const ledger = newLedger();
-    const sisig = (await runTool("search_places", { query: "sisig", category: "Food" }, context, ledger)) as { places: Array<{ name: string; matches_query: boolean }> };
-    assert.equal(sisig.places[0].name, "Aling Lucing's Sisig");
-    assert.equal(sisig.places[0].matches_query, true);
+    const haloHalo = (await runTool("search_places", { query: "halo-halo", category: "Food" }, context, ledger)) as { places: Array<{ name: string; matches_query: boolean }> };
+    assert.equal(haloHalo.places[0].name, "Halo-Halo de Iloko");
+    assert.equal(haloHalo.places[0].matches_query, true);
     const none = (await runTool("search_places", { query: "xylophone", area: "Makati" }, context, newLedger())) as { note?: string };
     assert.match(none.note ?? "", /doesn't list one yet/);
   });
@@ -183,7 +183,7 @@ describe("tools", () => {
     const route = (await runTool("route_hint", { from: "fort-santiago", to: "intramuros" }, context, newLedger())) as Record<string, unknown>;
     assert.equal(route.usual_mode, "walk");
     assert.ok(!("minutes" in route));
-    assert.ok((askScore(visibleFixturePlaces.find((place) => place.name === "Aling Lucing's Sisig")!, [["sisig"]]) ?? 0) >= 10, "a name match scores highest");
+    assert.ok((askScore(visibleFixturePlaces.find((place) => place.name === "Halo-Halo de Iloko")!, [["halo-halo"]]) ?? 0) >= 10, "a name match scores highest");
   });
 
   it("plans a day with the planner rules and records weather", async () => {
