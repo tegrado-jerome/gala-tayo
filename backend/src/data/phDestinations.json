@@ -914,6 +914,46 @@
                 120.8498
               ],
               "aliases": []
+            },
+            {
+              "slug": "general-trias",
+              "name": "General Trias",
+              "type": "city",
+              "center": [
+                14.3861,
+                120.8803
+              ],
+              "aliases": [
+                "General Trias, Cavite",
+                "Gen. Trias",
+                "General Trias City"
+              ]
+            },
+            {
+              "slug": "cavite-city",
+              "name": "Cavite City",
+              "type": "city",
+              "center": [
+                14.4821,
+                120.9089
+              ],
+              "aliases": [
+                "Cavite City, Cavite",
+                "Corregidor",
+                "Corregidor Island"
+              ]
+            },
+            {
+              "slug": "kawit",
+              "name": "Kawit",
+              "type": "municipality",
+              "center": [
+                14.4443,
+                120.9035
+              ],
+              "aliases": [
+                "Kawit, Cavite"
+              ]
             }
           ]
         },
@@ -977,6 +1017,18 @@
                 121.3386
               ],
               "aliases": []
+            },
+            {
+              "slug": "pililla",
+              "name": "Pililla",
+              "type": "municipality",
+              "center": [
+                14.4812,
+                121.3076
+              ],
+              "aliases": [
+                "Pililla, Rizal"
+              ]
             }
           ]
         },
@@ -1046,6 +1098,42 @@
                 121.5074
               ],
               "aliases": []
+            },
+            {
+              "slug": "luisiana",
+              "name": "Luisiana",
+              "type": "municipality",
+              "center": [
+                14.185,
+                121.51
+              ],
+              "aliases": [
+                "Luisiana, Laguna"
+              ]
+            },
+            {
+              "slug": "siniloan",
+              "name": "Siniloan",
+              "type": "municipality",
+              "center": [
+                14.4215,
+                121.4444
+              ],
+              "aliases": [
+                "Siniloan, Laguna"
+              ]
+            },
+            {
+              "slug": "liliw",
+              "name": "Liliw",
+              "type": "municipality",
+              "center": [
+                14.1303,
+                121.4358
+              ],
+              "aliases": [
+                "Liliw, Laguna"
+              ]
             }
           ]
         },
@@ -1137,6 +1225,18 @@
                 120.9248
               ],
               "aliases": []
+            },
+            {
+              "slug": "calatagan",
+              "name": "Calatagan",
+              "type": "municipality",
+              "center": [
+                13.833,
+                120.6326
+              ],
+              "aliases": [
+                "Calatagan, Batangas"
+              ]
             }
           ]
         },
@@ -1165,6 +1265,60 @@
                 121.591
               ],
               "aliases": []
+            },
+            {
+              "slug": "mauban",
+              "name": "Mauban",
+              "type": "municipality",
+              "center": [
+                14.1901,
+                121.7315
+              ],
+              "aliases": [
+                "Mauban, Quezon",
+                "Cagbalete"
+              ]
+            },
+            {
+              "slug": "padre-burgos-quezon",
+              "name": "Padre Burgos, Quezon",
+              "type": "municipality",
+              "center": [
+                13.9159,
+                121.815
+              ],
+              "aliases": [
+                "Padre Burgos Quezon",
+                "Padre Burgos (Quezon)",
+                "Borawan"
+              ]
+            },
+            {
+              "slug": "san-andres-quezon",
+              "name": "San Andres, Quezon",
+              "type": "municipality",
+              "center": [
+                13.3231,
+                122.676
+              ],
+              "aliases": [
+                "San Andres Quezon",
+                "San Andres (Quezon)",
+                "Alibijaban"
+              ]
+            },
+            {
+              "slug": "jomalig",
+              "name": "Jomalig",
+              "type": "municipality",
+              "center": [
+                14.6959,
+                122.3307
+              ],
+              "aliases": [
+                "Jomalig, Quezon",
+                "Jomalig Island"
+              ]
             }
           ]
         }
@@ -1245,6 +1399,19 @@
                 119.88
               ],
               "aliases": []
+            },
+            {
+              "slug": "balabac",
+              "name": "Balabac",
+              "type": "municipality",
+              "center": [
+                7.9865,
+                117.0647
+              ],
+              "aliases": [
+                "Balabac, Palawan",
+                "Balabac Island"
+              ]
             }
           ]
         },
@@ -1298,6 +1465,85 @@
                 "San Jose (Romblon)",
                 "Carabao Island",
                 "Hambil"
+              ]
+            },
+            {
+              "slug": "romblon-town",
+              "name": "Romblon Town",
+              "type": "municipality",
+              "center": [
+                12.5771,
+                122.2694
+              ],
+              "aliases": [
+                "Romblon, Romblon",
+                "Romblon Island",
+                "Romblon (town)"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "occidental-mindoro",
+          "name": "Occidental Mindoro",
+          "cities": [
+            {
+              "slug": "sablayan",
+              "name": "Sablayan",
+              "type": "municipality",
+              "center": [
+                12.847,
+                120.7799
+              ],
+              "aliases": [
+                "Sablayan, Occidental Mindoro",
+                "Apo Reef"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "marinduque",
+          "name": "Marinduque",
+          "cities": [
+            {
+              "slug": "santa-cruz-marinduque",
+              "name": "Santa Cruz, Marinduque",
+              "type": "municipality",
+              "center": [
+                13.4764,
+                122.0279
+              ],
+              "aliases": [
+                "Santa Cruz Marinduque",
+                "Santa Cruz (Marinduque)",
+                "Maniwaya",
+                "Maniwaya Island"
+              ]
+            },
+            {
+              "slug": "torrijos",
+              "name": "Torrijos",
+              "type": "municipality",
+              "center": [
+                13.3204,
+                122.086
+              ],
+              "aliases": [
+                "Torrijos, Marinduque"
+              ]
+            },
+            {
+              "slug": "mogpog",
+              "name": "Mogpog",
+              "type": "municipality",
+              "center": [
+                13.4736,
+                121.8608
+              ],
+              "aliases": [
+                "Mogpog, Marinduque",
+                "Balanacan"
               ]
             }
           ]
@@ -1382,6 +1628,31 @@
               "aliases": [
                 "Donsol, Sorsogon"
               ]
+            },
+            {
+              "slug": "matnog",
+              "name": "Matnog",
+              "type": "municipality",
+              "center": [
+                12.5855,
+                124.0848
+              ],
+              "aliases": [
+                "Matnog, Sorsogon"
+              ]
+            },
+            {
+              "slug": "bulusan",
+              "name": "Bulusan",
+              "type": "municipality",
+              "center": [
+                12.7517,
+                124.1352
+              ],
+              "aliases": [
+                "Bulusan, Sorsogon",
+                "Bulusan Lake"
+              ]
             }
           ]
         },
@@ -1408,6 +1679,20 @@
                 123.8955
               ],
               "aliases": []
+            },
+            {
+              "slug": "naga-camarines-sur",
+              "name": "Naga City",
+              "type": "city",
+              "center": [
+                13.624,
+                123.185
+              ],
+              "aliases": [
+                "Naga",
+                "Naga, Camarines Sur",
+                "Naga City, Camarines Sur"
+              ]
             }
           ]
         },
@@ -1426,6 +1711,87 @@
               "aliases": [
                 "Pandan Catanduanes",
                 "Pandan (Catanduanes)"
+              ]
+            },
+            {
+              "slug": "baras-catanduanes",
+              "name": "Baras, Catanduanes",
+              "type": "municipality",
+              "center": [
+                13.6591,
+                124.3705
+              ],
+              "aliases": [
+                "Baras Catanduanes",
+                "Baras (Catanduanes)",
+                "Puraran",
+                "Binurong Point"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "masbate",
+          "name": "Masbate",
+          "cities": [
+            {
+              "slug": "masbate-city",
+              "name": "Masbate City",
+              "type": "city",
+              "center": [
+                12.3711,
+                123.6239
+              ],
+              "aliases": [
+                "Masbate City, Masbate"
+              ]
+            },
+            {
+              "slug": "monreal-masbate",
+              "name": "Monreal",
+              "type": "municipality",
+              "center": [
+                12.6441,
+                123.6638
+              ],
+              "aliases": [
+                "Monreal, Masbate",
+                "Ticao Island",
+                "Ticao"
+              ]
+            },
+            {
+              "slug": "san-pascual-masbate",
+              "name": "San Pascual, Masbate",
+              "type": "municipality",
+              "center": [
+                13.1281,
+                122.9776
+              ],
+              "aliases": [
+                "San Pascual Masbate",
+                "San Pascual (Masbate)",
+                "Burias Island",
+                "Burias"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "camarines-norte",
+          "name": "Camarines Norte",
+          "cities": [
+            {
+              "slug": "daet",
+              "name": "Daet",
+              "type": "municipality",
+              "center": [
+                14.1123,
+                122.9557
+              ],
+              "aliases": [
+                "Daet, Camarines Norte",
+                "Bagasbas"
               ]
             }
           ]
