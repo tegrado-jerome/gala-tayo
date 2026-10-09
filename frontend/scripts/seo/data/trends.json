@@ -43,5 +43,12 @@
     "date": "2026-10-08",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "arraignment",
+    "traffic": 100,
+    "date": "2026-10-09",
+    "intents": [],
+    "areaSlug": "quezon-city"
   }
 ]
