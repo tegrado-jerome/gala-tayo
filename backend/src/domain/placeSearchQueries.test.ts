@@ -129,8 +129,12 @@ describe("query understanding", () => {
 
   it("never answers a dish with a place that only mentions it, and says so with the top food trips instead", () => {
     const nacpan = place("nacpan-beach-el-nido");
+    const haloHaloSpot = "halo-halo-de-iloko-san-fernando-la-union";
     const snackBeach = { ...nacpan, description: `${nacpan.description ?? ""} Cool off with halo-halo from the stalls by the shore.` };
-    const places = visibleFixturePlaces.map((entry) => (entry.slug === nacpan.slug ? snackBeach : entry));
+    const withSpot = visibleFixturePlaces.map((entry) => (entry.slug === nacpan.slug ? snackBeach : entry));
+    // A real halo-halo spot answers the dish; the beach that only mentions it never does.
+    assert.deepEqual(rankPlaces(withSpot, "halo-halo").map(({ place: entry }) => entry.slug), [haloHaloSpot]);
+    const places = withSpot.filter((entry) => entry.slug !== haloHaloSpot);
     assert.deepEqual(rankPlaces(places, "halo-halo"), []);
     const { ranked, note } = searchPlacesInArea(places, "halo-halo");
     assert.equal(note, "No halo-halo spots on GalaTayo yet. Here are the top food trips instead.");
