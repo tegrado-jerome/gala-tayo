@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { describeListShare, parseSharedListQuery } from "./shareList";
+import { describeListShare, listShareUrl, parseSharedListQuery } from "./shareList";
 import { renderSharePage } from "./sharePlan";
 
 describe("parseSharedListQuery", () => {
@@ -44,5 +44,14 @@ describe("describeListShare", () => {
     const html = renderSharePage(preview);
     assert.ok(!html.includes("<script>\"x\""));
     assert.ok(html.includes("&lt;script&gt;"));
+  });
+});
+
+describe("listShareUrl", () => {
+  it("points at go.galatayo.app and drops the share channel", () => {
+    assert.equal(
+      listShareUrl("https://api.example/api/share/lists?n=Rainy+day&p=a,b&by=maria&ref=gc"),
+      "https://go.galatayo.app/l?n=Rainy+day&p=a%2Cb&by=maria"
+    );
   });
 });

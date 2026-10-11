@@ -6,6 +6,8 @@ import { getPlanById, getPlanItems, isActive, isUuid } from "./galaPlans";
 
 const DEFAULT_SITE_URL = "https://galatayo.app";
 const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/images/og/galatayo-og.jpg`;
+/** Invite links live on our own short domain; infra/cloudflare/share-worker proxies them to these pages. */
+export const SHARE_ORIGIN = "https://go.galatayo.app";
 
 export type PlanSharePreview = {
   title: string;
@@ -132,7 +134,7 @@ export async function getPlanSharePage(request: HttpRequest, context: Invocation
       description: plan.description,
       stops: items.map((item) => ({ slug: item.places?.slug ?? null, city: item.places?.city ?? null, storageKey: item.places?.storage_key ?? null })),
       planUrl: planUrlWithRef(`${siteUrl}/gala-plans/${plan.id}`, request.url),
-      shareUrl: request.url.split("?")[0],
+      shareUrl: `${SHARE_ORIGIN}/p/${plan.id}`,
     });
     const refresh = !isPreviewBot(request.headers.get("user-agent"));
     return { status: 200, headers: { ...HTML_HEADERS, "Cache-Control": "public, max-age=300", Vary: "User-Agent" }, body: renderSharePage(preview, { refresh }) };

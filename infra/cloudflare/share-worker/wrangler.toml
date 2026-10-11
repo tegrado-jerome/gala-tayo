@@ -1,0 +1,8 @@
+# Short share links on our own domain (go.galatayo.app). Deploy from this folder: npx wrangler deploy
+# The custom domain creates its own DNS record. Undo: npx wrangler delete galatayo-share
+name = "galatayo-share"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "go.galatayo.app", custom_domain = true }]
