@@ -833,5 +833,47 @@
       }
     ],
     "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "food-trip-in-makati",
+    "label": "Food Trip in Makati",
+    "areaSlug": "makati",
+    "goodFor": "food-trip",
+    "keywords": [
+      "food trip in makati",
+      "food trip in poblacion makati",
+      "best food trip in makati",
+      "cheap food trip in makati",
+      "night food trip in makati"
+    ],
+    "addedAt": "2026-10-11"
+  },
+  {
+    "slug": "food-trip-in-metro-manila",
+    "label": "Food Trip in Metro Manila",
+    "areaSlug": "metro-manila",
+    "goodFor": "food-trip",
+    "keywords": [
+      "food trip in metro manila",
+      "best food trip in metro manila",
+      "late night food trip in metro manila",
+      "food trip outside metro manila",
+      "food in metro manila"
+    ],
+    "addedAt": "2026-10-11"
+  },
+  {
+    "slug": "date-spots-in-manila",
+    "label": "Date Spots in Manila",
+    "areaSlug": "manila",
+    "goodFor": "date",
+    "keywords": [
+      "date spots in manila",
+      "date spots in manila reddit",
+      "date spots in manila city",
+      "date ideas in manila",
+      "date activities in manila"
+    ],
+    "addedAt": "2026-10-11"
   }
 ]

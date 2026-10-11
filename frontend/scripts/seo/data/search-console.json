@@ -1,20 +1,122 @@
 {
   "range": {
-    "startDate": "2026-09-05",
-    "endDate": "2026-10-03"
+    "startDate": "2026-09-11",
+    "endDate": "2026-10-09"
   },
   "queries": [
     {
       "query": "gala tayo",
-      "clicks": 1,
-      "impressions": 26,
-      "position": 8.153846153846153
+      "clicks": 2,
+      "impressions": 22,
+      "position": 7.136363636363637
     },
     {
-      "query": "gabriela silang monument makati",
+      "query": "art in island quezon city",
       "clicks": 0,
       "impressions": 1,
-      "position": 9
+      "position": 31
+    },
+    {
+      "query": "badian canyoneering",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 57.5
+    },
+    {
+      "query": "banawe philippines",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 86
+    },
+    {
+      "query": "barkada food",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 6
+    },
+    {
+      "query": "batad banaue rice terraces",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 73
+    },
+    {
+      "query": "bell church baguio entrance fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 69
+    },
+    {
+      "query": "blackbird makati",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 27.5
+    },
+    {
+      "query": "blackbird restaurant reservations",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 49
+    },
+    {
+      "query": "breakthrough iloilo menu prices",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 48
+    },
+    {
+      "query": "calle crisologo",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 52
+    },
+    {
+      "query": "calle crisologo vigan city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 50
+    },
+    {
+      "query": "canyoneering badian",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 83
+    },
+    {
+      "query": "central luzon places",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 70
+    },
+    {
+      "query": "chinese temple baguio",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 35
+    },
+    {
+      "query": "event venue puerto princesa",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 43.666666666666664
+    },
+    {
+      "query": "fong wei wu menu",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 27
+    },
+    {
+      "query": "gala marikina",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 8
+    },
+    {
+      "query": "gala spots near me",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 3
     },
     {
       "query": "galayo",
@@ -23,10 +125,58 @@
       "position": 55
     },
     {
-      "query": "historical places in mandaluyong",
+      "query": "hard rock cafe s maison",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 92
+    },
+    {
+      "query": "hollywood terraces sumulong hwy antipolo 1870 rizal",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 49
+    },
+    {
+      "query": "house of lechon",
       "clicks": 0,
       "impressions": 1,
-      "position": 1
+      "position": 98
+    },
+    {
+      "query": "house of lechon reservation",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 38
+    },
+    {
+      "query": "lualhati park",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 60
+    },
+    {
+      "query": "lualhati park coron",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 57
+    },
+    {
+      "query": "mall manila philippines",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 37
+    },
+    {
+      "query": "manila date",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 62.5
+    },
+    {
+      "query": "marikina museum",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 77
     },
     {
       "query": "market place kalentong",
@@ -35,22 +185,344 @@
       "position": 9
     },
     {
-      "query": "met live metro park photo studio philippines",
-      "clicks": 0,
-      "impressions": 1,
-      "position": 11
-    },
-    {
       "query": "mitsukoshi bgc",
       "clicks": 0,
       "impressions": 1,
       "position": 13
     },
     {
+      "query": "moalboal sardine run",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 55
+    },
+    {
+      "query": "mt tapyas steps",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 55
+    },
+    {
+      "query": "newport performing arts theater parking",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 12
+    },
+    {
       "query": "performing arts manila",
       "clicks": 0,
       "impressions": 2,
       "position": 62.5
+    },
+    {
+      "query": "restaurant quezon city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 86
+    },
+    {
+      "query": "sardine run moalboal",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 84
+    },
+    {
+      "query": "siglo tagaytay",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 70.5
+    },
+    {
+      "query": "temple of leah",
+      "clicks": 0,
+      "impressions": 10,
+      "position": 66
+    },
+    {
+      "query": "temple of leah cebu",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 46
+    },
+    {
+      "query": "the ruins talisay",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 68
+    },
+    {
+      "query": "tutuban center",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 63
+    },
+    {
+      "query": "what time does simala open",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 43
+    }
+  ],
+  "guides": [
+    {
+      "slug": "date-places-in-metro-manila",
+      "goodFor": "date",
+      "impressions": 2,
+      "clicks": 0
+    },
+    {
+      "slug": "restaurants-in-quezon-city",
+      "category": "food",
+      "impressions": 1,
+      "clicks": 0
+    },
+    {
+      "slug": "barkada-hangouts-in-makati",
+      "goodFor": "barkada",
+      "impressions": 1,
+      "clicks": 0
+    },
+    {
+      "slug": "best-cafes-in-makati",
+      "category": "cafe",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "museums-in-manila",
+      "category": "museum",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "parks-in-pasig",
+      "category": "park",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "date-spots-in-bgc",
+      "goodFor": "date",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "family-friendly-places-in-quezon-city",
+      "goodFor": "family",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "study-cafes-in-manila",
+      "goodFor": "study",
+      "category": "cafe",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "chill-spots-in-taguig",
+      "goodFor": "chill",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "kainan-sa-bgc",
+      "category": "food",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "tambayan-sa-makati",
+      "goodFor": "chill",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "saan-mag-date-sa-qc",
+      "goodFor": "date",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-makati",
+      "category": "activity",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "study-cafes-in-metro-manila",
+      "goodFor": "study",
+      "category": "cafe",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "nightlife-in-makati",
+      "category": "nightlife",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "heritage-sites-in-manila",
+      "category": "heritage",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "cheap-eats-in-manila",
+      "category": "food",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "family-outing-in-manila",
+      "goodFor": "family",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "restaurants-in-metro-manila",
+      "category": "food",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-metro-manila",
+      "category": "activity",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "cafes-in-metro-manila",
+      "category": "cafe",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "museums-in-metro-manila",
+      "category": "museum",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-baguio",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "where-to-eat-in-baguio",
+      "category": "food",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-cebu-city",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-el-nido",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-boracay",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-tagaytay",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-siargao",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-coron",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-vigan",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-sagada",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "indoor-activities-in-metro-manila",
+      "goodFor": "rainy-day",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "date-ideas-in-makati",
+      "goodFor": "date",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "weekend-getaways-from-manila",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-bohol",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-palawan",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-la-union",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-batangas",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "instagrammable-spots-in-metro-manila",
+      "goodFor": "photo-spot",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-cebu",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-ilocos-norte",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "things-to-do-in-batanes",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "where-to-eat-in-makati",
+      "category": "food",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "pasyalan-sa-rizal",
+      "impressions": 0,
+      "clicks": 0
     }
   ]
 }
