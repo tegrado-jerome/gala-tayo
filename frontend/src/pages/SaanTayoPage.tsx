@@ -6,6 +6,7 @@ import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { MoonStars } from '@phosphor-icons/react/dist/csr/MoonStars'
 import { NavigationArrow } from '@phosphor-icons/react/dist/csr/NavigationArrow'
 import { PaperPlaneTilt } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
@@ -401,7 +402,7 @@ export default function SaanTayoPage() {
   const weatherSpot = scope.kind === 'near' ? scope.origin : areaCenter(scope.slug)
   const forecast = useForecast(weatherSpot ? { lat: weatherSpot[0], lng: weatherSpot[1] } : null)
   const mood = useMemo(
-    () => (forecast.forecast ? weatherMood(forecast.forecast.current, nextHours(forecast.forecast.hours, manilaHourKey(new Date()), 6)) : { rainy: false, line: '' }),
+    () => (forecast.forecast ? weatherMood(forecast.forecast.current, nextHours(forecast.forecast.hours, manilaHourKey(new Date()), 6)) : { rainy: false, night: false, line: '' }),
     [forecast.forecast],
   )
   const pool = useMemo(() => buildPool(areaPlaces, { vibe, rainy: mood.rainy }), [areaPlaces, vibe, mood.rainy])
@@ -611,7 +612,7 @@ export default function SaanTayoPage() {
               </div>
               {mood.line ? (
                 <p className={cx('st-wx', mood.rainy && 'is-rain')}>
-                  {mood.rainy ? <CloudRain weight="fill" aria-hidden="true" /> : <Sun weight="fill" aria-hidden="true" />}
+                  {mood.rainy ? <CloudRain weight="fill" aria-hidden="true" /> : mood.night ? <MoonStars weight="fill" aria-hidden="true" /> : <Sun weight="fill" aria-hidden="true" />}
                   {mood.line}
                 </p>
               ) : null}

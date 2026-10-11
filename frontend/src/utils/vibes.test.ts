@@ -58,6 +58,31 @@ test('rainy day takes museums, rainy-day tags, indoor food and aquariums, not fa
   assert.equal(fitsVibe(falls, 'rainy-day'), false)
 })
 
+test('food trip is food destinations, never a beach or island hop tagged for its seafood lunch', () => {
+  assert.equal(fitsVibe(place('Alona Beach', 'Activity', ['Barkada Hangout', 'Nightlife', 'Food Trip']), 'food-trip'), false)
+  assert.equal(fitsVibe(place('Islas de Gigantes', 'Activity', ['Adventure', 'Nature Escape', 'Food Trip']), 'food-trip'), false)
+  assert.equal(fitsVibe(place('Guimaras Island Hopping (Alubihod Beach)', 'Activity', ['Nature Escape', 'Food Trip']), 'food-trip'), false)
+  assert.equal(fitsVibe(place('Loboc River Cruise', 'Activity', ['Family Trip', 'Food Trip', 'Nature Escape']), 'food-trip'), false)
+  // Food towns and streets people drive to for the food stay.
+  assert.equal(fitsVibe(place('Binondo Chinatown', 'Heritage', ['Food Trip', 'Photo Walk']), 'food-trip'), true)
+  assert.equal(fitsVibe(place('Lucban Town and Pahiyas Streets', 'Heritage', ['Food Trip', 'History Trip']), 'food-trip'), true)
+})
+
+test('rainy day puts indoor sights first and fine dining last, and skips open-air districts and markets', () => {
+  const tasting = place('Toyo Eatery', 'Food', ['Date Night', 'Fine Dining'])
+  const pricey = { ...place('Celera', 'Food', ['Casual Date']), budgetMin: 5000 }
+  const unpriced = { ...place('Inato', 'Food', ['Casual Date']), budgetMin: null }
+  const pie = { ...place('Sagada Lemon Pie House', 'Cafe', ['Food Trip', 'Rainy Day']), budgetMin: 100 }
+  const ordered = filterByVibe([tasting, pricey, pie, unpriced, museum, aquarium], 'rainy-day')
+  assert.deepEqual(ordered, [museum, aquarium, pie, tasting, pricey, unpriced])
+  assert.equal(fitsVibe(place('Poblacion Makati (Bar District)', 'Nightlife', ['Nightlife']), 'rainy-day'), false)
+  assert.equal(fitsVibe(place('Baguio City Public Market', 'Food', ['Food Trip']), 'rainy-day'), false)
+})
+
+test('a hillside wind farm is a view', () => {
+  assert.equal(fitsVibe(place('Pililla Wind Farm', 'Park', ['Photo Walk']), 'views'), true)
+})
+
 test('filterByVibe keeps the given (best-first) order', () => {
   assert.deepEqual(filterByVibe([museum, falls, aquarium, sisig], 'rainy-day'), [museum, aquarium, sisig])
 })

@@ -218,6 +218,22 @@ const TERM_SYNONYMS: Record<string, string[]> = {
   pasalubong: ["pasalubong"],
 };
 
+// Dishes and food words ("halo-halo", "lechon", "ramen"): a place serves one only if its own name or tags say so,
+// never because a beach's description mentions a snack stall.
+const DISH_WORDS = new Set(
+  (
+    "halo lechon sisig adobo sinigang bulalo lomi pancit batchoy kare inasal longganisa tapa tapsilog silog balut bibingka puto " +
+    "kakanin ensaymada empanada taho turon laing kinilaw ulam pulutan merienda seafood crab crabs lobster shrimp prawn prawns oyster " +
+    "oysters ramen sushi pizza burger burgers pasta steak samgyup samgyupsal bbq barbecue chicken wings dessert desserts cake cakes " +
+    "ice cream gelato milktea milk tea boba donut donuts bread pastry pastries brunch breakfast lunch dinner buffet mango ube buko"
+  ).split(" ")
+);
+
+/** Every word is a dish or food word ("halo halo", "milk tea"), so a description-only mention doesn't count. */
+export function isDishQuery(terms: string[][]): boolean {
+  return terms.length > 0 && terms.every(([word]) => DISH_WORDS.has(word));
+}
+
 // Words that say nothing about what to find ("saan", "best") or are read elsewhere (budget numbers, days).
 const STOP_WORDS = new Set(
   (
@@ -275,7 +291,8 @@ function typoBudget(length: number) {
 }
 
 const VIBE_PHRASES = VIBES.flatMap((vibe) => vibe.phrases.map((phrase) => ({ phrase: foldText(phrase), id: vibe.id }))).sort((a, b) => b.phrase.length - a.phrase.length);
-const KNOWN_QUERY_WORDS = new Set([...STOP_WORDS, ...BROWSE_PHRASES.flatMap((phrase) => phrase.split(" ")), ...VIBE_PHRASES.flatMap((entry) => entry.phrase.split(" ")), ...Object.keys(TERM_SYNONYMS)]);
+// Dish words are known too, so "ramen" is never "fixed" to a place name a letter away.
+const KNOWN_QUERY_WORDS = new Set([...STOP_WORDS, ...BROWSE_PHRASES.flatMap((phrase) => phrase.split(" ")), ...VIBE_PHRASES.flatMap((entry) => entry.phrase.split(" ")), ...Object.keys(TERM_SYNONYMS), ...DISH_WORDS]);
 
 const vocabularyCache = new WeakMap<NormalizedPlace[], Set<string>>();
 

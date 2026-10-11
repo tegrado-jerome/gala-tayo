@@ -3,7 +3,7 @@ import { FINAL_PLACE_CATEGORIES } from "./places";
 import { DESTINATIONS, getDestinationNameKeys, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 import galaScores from "../data/galaScores.json";
 import goodForTags from "../data/goodForTags.json";
-import { FIELD_WEIGHT, foldText, parseQueryIntent, termField, vibeMatches, vibeScore, type VibeId } from "./queryIntent";
+import { FIELD_WEIGHT, foldText, isDishQuery, parseQueryIntent, termField, vibeMatches, vibeScore, type VibeId } from "./queryIntent";
 
 export type PlaceSearchFilters = {
   category?: string | null;
@@ -395,7 +395,7 @@ function detectNear(normalizedQuery: string, places: NormalizedPlace[]) {
  * Ranks places for a search. Vibe words ("date", "libre", "talon", "kape") must fit the place's own tags,
  * category or price; every other word must appear in the place's name, tags, area or search terms.
  * A word found only in a long description counts as a match only when nothing matches better, for a
- * one-word search ("fireflies"), so a beach that mentions halo-halo never outranks the halo-halo place.
+ * one-word search ("fireflies"), and never for a dish ("halo-halo"): a beach that mentions halo-halo is not a halo-halo place.
  * Outing words ("pasyalan", "things to do") ask for the best places; "near <city>" ranks by distance from it.
  * Equal matches go to the more gala-worthy place.
  */
@@ -439,7 +439,7 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
   });
 
   const strong = ranked.filter((entry) => !entry.descriptionOnly);
-  let kept = strong.length > 0 || terms.length > 1 || intent.vibes.length > 0 ? strong : ranked;
+  let kept = strong.length > 0 || terms.length > 1 || intent.vibes.length > 0 || isDishQuery(terms) ? strong : ranked;
   for (const vibe of intent.vibes.filter((id) => NARROW_VIBES.has(id))) {
     const clear = kept.filter((entry) => vibeScore(entry.place, vibe) === 2);
     if (clear.length >= NARROW_MIN) kept = clear;
@@ -465,9 +465,20 @@ const VIBE_LABEL: Partial<Record<VibeId, string>> = {
   free: "free places", indoor: "indoor places", heritage: "heritage sites",
 };
 
+/** The words asked for, as one phrase: Tagalog doubled words read whole ("halo halo" is "halo-halo"). */
+function askedPhrase(words: string[]): string {
+  const phrase: string[] = [];
+  for (const word of words) {
+    if (phrase.at(-1) === word) phrase[phrase.length - 1] = `${word}-${word}`;
+    else phrase.push(word);
+  }
+  return phrase.join(" ");
+}
+
 /**
- * A search that never dead-ends in a named place: when nothing there fits ("cafe tagaytay"), the area's own
- * best places come back with a note saying so plainly. Searches without a place stay empty, honestly.
+ * A search that never dead-ends: when nothing in a named place fits ("cafe tagaytay"), the area's own best
+ * places come back with a note saying so plainly; a dish no place lists ("halo-halo") gets the top food trips
+ * with the same kind of note. Other searches without a place stay empty, honestly.
  */
 export function searchPlacesInArea(places: NormalizedPlace[], query: string, filters: PlaceSearchFilters = {}): { ranked: RankedPlace[]; note: string | null } {
   const ranked = rankPlaces(places, query, filters);
@@ -479,14 +490,17 @@ export function searchPlacesInArea(places: NormalizedPlace[], query: string, fil
   const city = explicitCity ?? detectCityFromQuery(normalizedQuery);
   const province = explicitCity ? null : detectProvince(normalizedQuery, city);
   const area = province ?? city;
-  if (!area) return { ranked, note: null };
+  const where = locationWords([city, province]);
+  const terms = intent.terms.filter(([word]) => !where.has(word));
+  const termPhrase = askedPhrase(terms.map(([word]) => word));
+  if (!area) {
+    if (intent.vibes.length > 0 || !isDishQuery(terms)) return { ranked, note: null };
+    const food = rankPlaces(places, "food", filters);
+    return food.length > 0 ? { ranked: food, note: `No ${termPhrase} spots on GalaTayo yet. Here are the top food trips instead.` } : { ranked, note: null };
+  }
   const fallback = rankPlaces(places, "", { ...filters, city: province ? null : city })
     .filter(({ place }) => !province || resolveDestination(place.city, place.area)?.provinceName === province);
   if (fallback.length === 0) return { ranked, note: null };
-  const where = locationWords([city, province]);
-  const asked = [
-    ...intent.vibes.map((vibe) => VIBE_LABEL[vibe] ?? vibe),
-    ...intent.terms.map(([word]) => word).filter((word) => !where.has(word)),
-  ].join(" and ") || "that";
+  const asked = [...intent.vibes.map((vibe) => VIBE_LABEL[vibe] ?? vibe), termPhrase].filter(Boolean).join(" and ") || "that";
   return { ranked: fallback, note: `No ${asked} in ${area} on GalaTayo yet. Here are ${area}'s top picks instead.` };
 }

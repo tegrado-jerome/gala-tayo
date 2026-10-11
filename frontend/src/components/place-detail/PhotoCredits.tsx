@@ -20,7 +20,7 @@ function sourceName(sourceUrl: string) {
 /** Author, licence/source and a takedown route for every photo on the page, credited or not. */
 function PhotoCredits({ photos, otherPhotos, onReport }: { photos: PlaceGalleryPhoto[]; otherPhotos: string[]; onReport: () => void }) {
   return (
-    <details id={PHOTO_CREDITS_ID} className="group mt-8 scroll-mt-24 text-[13px] text-[var(--ink-3)]">
+    <details id={PHOTO_CREDITS_ID} className="group scroll-mt-24 text-[13px] text-[var(--ink-3)]">
       <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-semibold text-[var(--ink-2)] underline underline-offset-2 [&::-webkit-details-marker]:hidden">
         Photo credits and removal ({photos.length + otherPhotos.length})
       </summary>

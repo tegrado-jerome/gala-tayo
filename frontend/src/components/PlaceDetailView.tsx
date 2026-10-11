@@ -2555,35 +2555,37 @@ function PlaceDetailView({
             </nav>
           ) : null}
 
-          {credibleSources.length ? (
-            <p className="pd-sources g-xs g-mut">
-              Facts from{' '}
-              {credibleSources.map((url, index) => (
-                <span key={url}>
-                  {index > 0 ? ' · ' : ''}
-                  <a href={url} target="_blank" rel="noopener noreferrer nofollow">
-                    {sourceLabel(url)}
-                  </a>
-                </span>
-              ))}
+          <footer className="pd-fine">
+            {credibleSources.length ? (
+              <p className="pd-sources g-xs g-mut">
+                Facts from{' '}
+                {credibleSources.map((url, index) => (
+                  <span key={url}>
+                    {index > 0 ? ' · ' : ''}
+                    <a href={url} target="_blank" rel="noopener noreferrer nofollow">
+                      {sourceLabel(url)}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            ) : null}
+
+            <p className="g-xs g-mut">
+              Prices, hours and access can change, and weather can close a spot fast. Check the official page and PAGASA or PHIVOLCS advisories before you go. GalaTayo is not affiliated with this place.{' '}
+              <InternalLink href="/disclaimer" className="underline underline-offset-2">
+                Disclaimer
+              </InternalLink>
             </p>
-          ) : null}
 
-          <p className="g-xs g-mut mt-6">
-            Prices, hours and access can change, and weather can close a spot fast. Check the official page and PAGASA or PHIVOLCS advisories before you go. GalaTayo is not affiliated with this place.{' '}
-            <InternalLink href="/disclaimer" className="underline underline-offset-2">
-              Disclaimer
-            </InternalLink>
-          </p>
+            {galleryPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} otherPhotos={uncreditedPhotos} onReport={handleOpenPhotoConcern} /> : null}
 
-          {galleryPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} otherPhotos={uncreditedPhotos} onReport={handleOpenPhotoConcern} /> : null}
-
-          <div className="mt-6 border-t border-[var(--line)] pt-2">
-            <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
-              <Flag weight="light" aria-hidden="true" />
-              Report a concern
-            </Button>
-          </div>
+            <div className="border-t border-[var(--line)] pt-2">
+              <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
+                <Flag weight="light" aria-hidden="true" />
+                Report a concern
+              </Button>
+            </div>
+          </footer>
         </div>
 
         <aside className="g-only-desk pd-aside" aria-label="Plan this place">

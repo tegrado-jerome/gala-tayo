@@ -75,7 +75,7 @@
 
 /* ---------- Sections ---------- */
 .pd-sec { margin-top: var(--sec-gap); }
-.pd-sec.is-first { margin-top: 28px; }
+.pd-sec.is-first { margin-top: var(--sec-gap); }
 .pd-sec-title { margin: 0 0 10px; font: 600 21px/1.2 var(--font-display); letter-spacing: -0.01em; }
 .pd-prose { max-width: 680px; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
 .pd-more, .pd-ask { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: 700 14px/1 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -191,5 +191,6 @@
 .pd-dyk .g-kicker svg { width: 16px; height: 16px; color: var(--tara-ink); }
 .pd-dyk-fact { margin-top: 8px; font: 500 16px/1.5 var(--font-display); color: var(--ink); }
 .pd-dyk-fact + .pd-dyk-fact { padding-top: 10px; border-top: 1px solid var(--line); }
-.pd-sources { margin-top: 20px; }
+/* Fine print under the last section: sources, disclaimer, photo credits and the report link, one section gap below the page. */
+.pd-fine { display: flex; flex-direction: column; gap: 16px; margin-top: var(--sec-gap); }
 .pd-sources a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
