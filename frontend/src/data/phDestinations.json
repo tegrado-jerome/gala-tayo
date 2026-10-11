@@ -308,6 +308,18 @@
               "aliases": [
                 "Itogon, Benguet"
               ]
+            },
+            {
+              "slug": "kapangan",
+              "name": "Kapangan",
+              "type": "municipality",
+              "center": [
+                16.5761,
+                120.6055
+              ],
+              "aliases": [
+                "Kapangan, Benguet"
+              ]
             }
           ]
         },
@@ -630,6 +642,19 @@
                 120.4489
               ],
               "aliases": []
+            },
+            {
+              "slug": "luna-la-union",
+              "name": "Luna, La Union",
+              "type": "municipality",
+              "center": [
+                16.853,
+                120.3776
+              ],
+              "aliases": [
+                "Luna La Union",
+                "Luna (La Union)"
+              ]
             }
           ]
         },
@@ -716,6 +741,31 @@
               "aliases": [
                 "Sison, Pangasinan"
               ]
+            },
+            {
+              "slug": "agno",
+              "name": "Agno",
+              "type": "municipality",
+              "center": [
+                16.1157,
+                119.799
+              ],
+              "aliases": [
+                "Agno, Pangasinan"
+              ]
+            },
+            {
+              "slug": "burgos-pangasinan",
+              "name": "Burgos, Pangasinan",
+              "type": "municipality",
+              "center": [
+                16.0594,
+                119.8649
+              ],
+              "aliases": [
+                "Burgos Pangasinan",
+                "Burgos (Pangasinan)"
+              ]
             }
           ]
         }
@@ -769,6 +819,18 @@
               ],
               "aliases": [
                 "Sabtang, Batanes"
+              ]
+            },
+            {
+              "slug": "mahatao",
+              "name": "Mahatao",
+              "type": "municipality",
+              "center": [
+                20.4165,
+                121.9484
+              ],
+              "aliases": [
+                "Mahatao, Batanes"
               ]
             }
           ]
@@ -888,6 +950,19 @@
                 "Mabalacat, Pampanga",
                 "Mabalacat City"
               ]
+            },
+            {
+              "slug": "guagua",
+              "name": "Guagua",
+              "type": "municipality",
+              "center": [
+                14.9654,
+                120.6336
+              ],
+              "aliases": [
+                "Guagua, Pampanga",
+                "Betis"
+              ]
             }
           ]
         },
@@ -988,6 +1063,32 @@
                 121.0851
               ],
               "aliases": []
+            },
+            {
+              "slug": "norzagaray",
+              "name": "Norzagaray",
+              "type": "municipality",
+              "center": [
+                14.9056,
+                121.0423
+              ],
+              "aliases": [
+                "Norzagaray, Bulacan"
+              ]
+            },
+            {
+              "slug": "dona-remedios-trinidad",
+              "name": "Doña Remedios Trinidad",
+              "type": "municipality",
+              "center": [
+                14.9706,
+                121.0648
+              ],
+              "aliases": [
+                "Dona Remedios Trinidad",
+                "DRT",
+                "DRT Bulacan"
+              ]
             }
           ]
         },
@@ -1029,6 +1130,18 @@
               ],
               "aliases": [
                 "Casiguran, Aurora"
+              ]
+            },
+            {
+              "slug": "maria-aurora",
+              "name": "Maria Aurora",
+              "type": "municipality",
+              "center": [
+                15.7983,
+                121.4723
+              ],
+              "aliases": [
+                "Maria Aurora, Aurora"
               ]
             }
           ]
@@ -2707,6 +2820,18 @@
               "aliases": [
                 "Cordova, Cebu"
               ]
+            },
+            {
+              "slug": "alcoy",
+              "name": "Alcoy",
+              "type": "municipality",
+              "center": [
+                9.7087,
+                123.5074
+              ],
+              "aliases": [
+                "Alcoy, Cebu"
+              ]
             }
           ]
         },
@@ -3182,6 +3307,19 @@
                 "Davao"
               ],
               "featured": true
+            },
+            {
+              "slug": "digos",
+              "name": "Digos",
+              "type": "city",
+              "center": [
+                6.7441,
+                125.3555
+              ],
+              "aliases": [
+                "Digos City",
+                "Digos, Davao del Sur"
+              ]
             }
           ]
         },
