@@ -1214,6 +1214,43 @@
               "aliases": [
                 "Kawit, Cavite"
               ]
+            },
+            {
+              "slug": "ternate",
+              "name": "Ternate",
+              "type": "municipality",
+              "center": [
+                14.2862,
+                120.716
+              ],
+              "aliases": [
+                "Ternate, Cavite"
+              ]
+            },
+            {
+              "slug": "maragondon",
+              "name": "Maragondon",
+              "type": "municipality",
+              "center": [
+                14.2741,
+                120.7349
+              ],
+              "aliases": [
+                "Maragondon, Cavite"
+              ]
+            },
+            {
+              "slug": "magallanes-cavite",
+              "name": "Magallanes, Cavite",
+              "type": "municipality",
+              "center": [
+                14.1875,
+                120.7573
+              ],
+              "aliases": [
+                "Magallanes Cavite",
+                "Magallanes (Cavite)"
+              ]
             }
           ]
         },
@@ -1394,6 +1431,31 @@
               "aliases": [
                 "Liliw, Laguna"
               ]
+            },
+            {
+              "slug": "alaminos-laguna",
+              "name": "Alaminos, Laguna",
+              "type": "municipality",
+              "center": [
+                14.065,
+                121.2464
+              ],
+              "aliases": [
+                "Alaminos Laguna",
+                "Alaminos (Laguna)"
+              ]
+            },
+            {
+              "slug": "cavinti",
+              "name": "Cavinti",
+              "type": "municipality",
+              "center": [
+                14.2454,
+                121.507
+              ],
+              "aliases": [
+                "Cavinti, Laguna"
+              ]
             }
           ]
         },
@@ -1497,6 +1559,18 @@
               "aliases": [
                 "Calatagan, Batangas"
               ]
+            },
+            {
+              "slug": "cuenca",
+              "name": "Cuenca",
+              "type": "municipality",
+              "center": [
+                13.9007,
+                121.0501
+              ],
+              "aliases": [
+                "Cuenca, Batangas"
+              ]
             }
           ]
         },
@@ -1578,6 +1652,31 @@
               "aliases": [
                 "Jomalig, Quezon",
                 "Jomalig Island"
+              ]
+            },
+            {
+              "slug": "infanta-quezon",
+              "name": "Infanta, Quezon",
+              "type": "municipality",
+              "center": [
+                14.7465,
+                121.6491
+              ],
+              "aliases": [
+                "Infanta Quezon",
+                "Infanta (Quezon)"
+              ]
+            },
+            {
+              "slug": "tiaong",
+              "name": "Tiaong",
+              "type": "municipality",
+              "center": [
+                13.9597,
+                121.3223
+              ],
+              "aliases": [
+                "Tiaong, Quezon"
               ]
             }
           ]
@@ -1689,6 +1788,18 @@
               ],
               "aliases": [
                 "Puerto Galera, Oriental Mindoro"
+              ]
+            },
+            {
+              "slug": "baco",
+              "name": "Baco",
+              "type": "municipality",
+              "center": [
+                13.3581,
+                121.0963
+              ],
+              "aliases": [
+                "Baco, Oriental Mindoro"
               ]
             }
           ]
@@ -1870,6 +1981,30 @@
                 123.6712
               ],
               "aliases": []
+            },
+            {
+              "slug": "jovellar",
+              "name": "Jovellar",
+              "type": "municipality",
+              "center": [
+                13.0693,
+                123.6003
+              ],
+              "aliases": [
+                "Jovellar, Albay"
+              ]
+            },
+            {
+              "slug": "pio-duran",
+              "name": "Pio Duran",
+              "type": "municipality",
+              "center": [
+                13.0297,
+                123.4431
+              ],
+              "aliases": [
+                "Pio Duran, Albay"
+              ]
             }
           ]
         },
@@ -1952,6 +2087,18 @@
                 "Naga",
                 "Naga, Camarines Sur",
                 "Naga City, Camarines Sur"
+              ]
+            },
+            {
+              "slug": "siruma",
+              "name": "Siruma",
+              "type": "municipality",
+              "center": [
+                14.0206,
+                123.2587
+              ],
+              "aliases": [
+                "Siruma, Camarines Sur"
               ]
             }
           ]
@@ -2195,6 +2342,18 @@
               "aliases": [
                 "Pandan Antique",
                 "Pandan (Antique)"
+              ]
+            },
+            {
+              "slug": "tibiao",
+              "name": "Tibiao",
+              "type": "municipality",
+              "center": [
+                11.2886,
+                122.0343
+              ],
+              "aliases": [
+                "Tibiao, Antique"
               ]
             }
           ]
@@ -2853,6 +3012,18 @@
                 "Limasawa, Southern Leyte",
                 "Limasawa Island"
               ]
+            },
+            {
+              "slug": "pintuyan",
+              "name": "Pintuyan",
+              "type": "municipality",
+              "center": [
+                9.9446,
+                125.2483
+              ],
+              "aliases": [
+                "Pintuyan, Southern Leyte"
+              ]
             }
           ]
         }
@@ -3137,6 +3308,24 @@
               "aliases": [
                 "San Agustin Surigao del Sur",
                 "San Agustin (Surigao del Sur)"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "dinagat-islands",
+          "name": "Dinagat Islands",
+          "cities": [
+            {
+              "slug": "libjo",
+              "name": "Libjo",
+              "type": "municipality",
+              "center": [
+                10.1942,
+                125.5316
+              ],
+              "aliases": [
+                "Libjo, Dinagat Islands"
               ]
             }
           ]
