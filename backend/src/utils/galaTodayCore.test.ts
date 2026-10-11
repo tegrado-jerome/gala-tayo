@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  FORMATS,
   FORMAT_ORDER,
   budgetPlan,
   buildEditorPrompt,
@@ -12,6 +13,8 @@ import {
   parseEditorReview,
   pesoAmounts,
   tagalogWordCount,
+  unbackedNumbers,
+  copiesFacts,
   unbackedSuperlatives,
   uniqueSlug,
   validateDraft,
@@ -45,7 +48,7 @@ const PLACES: TodayPlace[] = [
 
 const trend = (title: string, query: string, source = "Google Trends PH"): TodayTopic => ({
   kind: "trend",
-  trend: { title, query, source, url: null, traffic: 2000, demand: 4.3, link: 1, score: 4.3 } satisfies ScoredTrend,
+  trend: { title, query, source, url: null, traffic: 2000, demand: 4.3, kind: "season", score: 4.3 } satisfies ScoredTrend,
 });
 
 const base = (overrides: Partial<ValidationContext>): ValidationContext => ({
@@ -194,17 +197,23 @@ test("format captions and order rules", () => {
   const pov = validateDraft({ ...FIXTURE_TIER, picks: FIXTURE_TIER.picks }, base({ format: "pov", topic: trend("matcha", "matcha manila") }));
   assert.deepEqual(pov, { ok: false, reason: "pov meme must start with POV" });
   const evr = validateDraft(
-    { ...FIXTURE_TIER, meme: { top: "Expectation: one quick matcha walk", bottom: "Reality: 400 photos on the walls" } },
+    { ...FIXTURE_TIER, meme: { top: "Expectation: one quick matcha walk", bottom: "Reality: a whole afternoon on the walls" } },
     base({ format: "expectation-vs-reality", topic: trend("matcha", "matcha manila") })
   );
   assert.ok(evr.ok, "reason" in evr ? evr.reason : "");
+  const madeUp = validateDraft(
+    { ...FIXTURE_TIER, meme: { top: "Expectation: one quick matcha walk", bottom: "Reality: 400 photos on the walls" } },
+    base({ format: "expectation-vs-reality", topic: trend("matcha", "matcha manila") })
+  );
+  assert.deepEqual(madeUp, { ok: false, reason: "unbacked number: 400" });
   const hours = (times: string[]) =>
     validateDraft({ ...FIXTURE_TIER, picks: FIXTURE_TIER.picks.map((pick, index) => ({ ...pick, time: times[index] })) }, base({ format: "24-hours", topic: trend("matcha", "matcha manila") }));
   assert.ok(hours(["8 AM", "1:30 PM", "7 PM"]).ok);
   assert.deepEqual(hours(["8 PM", "1 PM", "7 PM"]), { ok: false, reason: "24 hours needs ordered times" });
   // Hidden gem vs the famous one: an icon first, then an underrated pick (by gala score).
+  const GEM_BODY = "The matcha trend needs a walk. Fort Santiago is famous for its walls and river views, and the art museum up in Antipolo is the friend who deserves more credit. Do both, sip slowly and let your camera roll fill up. Pick your favorite and go!";
   const gem = (first: string, second: string) =>
-    validateDraft({ ...FIXTURE_TIER, picks: [{ slug: first, why: "The famous one, and it earns it." }, { slug: second, why: "The underrated friend with great art." }] }, base({ format: "gem-vs-famous", topic: trend("matcha", "matcha manila") }));
+    validateDraft({ ...FIXTURE_TIER, body: GEM_BODY, picks: [{ slug: first, why: "The famous one, and it earns it." }, { slug: second, why: "The underrated friend with great art." }] }, base({ format: "gem-vs-famous", topic: trend("matcha", "matcha manila") }));
   assert.ok(gem("fort-santiago", "pinto-art-museum-antipolo").ok);
   assert.equal(gem("pinto-art-museum-antipolo", "fort-santiago").ok, false);
   const { icons, gems } = fameTiers(PLACES);
@@ -216,8 +225,9 @@ test("title must carry the trend's search words; slugs stay clean and whole", ()
   const context = base({ format: "tier-list", topic: trend("viral ube cheesecake", "ube cheesecake manila") });
   assert.deepEqual(validateDraft(FIXTURE_TIER, context), { ok: false, reason: "title misses the topic" });
   assert.equal(cleanSlug("500 Peso Intramuros Challenge", "x"), "500-peso-intramuros-challenge");
-  assert.equal(cleanSlug("", "Rainy Manila? Here are the coziest museum and cafe stops for the barkada"), "rainy-manila-here-are-the-coziest");
-  assert.equal(cleanSlug("way-too-long-slug-with-many-extra-words", "Guess the free Manila spot"), "guess-the-free-manila-spot");
+  assert.equal(cleanSlug("", "Rainy Manila? Here are the coziest museum and cafe stops for the barkada"), "rainy-manila-here-are-the-coziest-museum");
+  assert.equal(cleanSlug("", "Things to Do in Surigao del Norte This Weekend: Star Moments"), "things-to-do-in-surigao-del-norte");
+  assert.equal(cleanSlug("way-too-long-slug-with-many-many-extra-words-here", "Guess the free Manila spot"), "guess-the-free-manila-spot");
   assert.equal(uniqueSlug("matcha-manila-tier-list", "2026-10-06", new Set(["matcha-manila-tier-list"])), "matcha-manila-tier-list-2026-10-06");
 });
 
@@ -225,13 +235,41 @@ test("voice and safety rules reject hedges, unkind jokes, heavy Tagalog grammar 
   const context = base({ format: "tier-list", topic: trend("matcha", "matcha manila") });
   const reject = (patch: Record<string, unknown>) => validateDraft({ ...FIXTURE_TIER, ...patch }, context);
   assert.deepEqual(reject({ hook: "Check the hours first, then bring your matcha to the walls." }), { ok: false, reason: "hedge" });
+  assert.deepEqual(reject({ hook: "Matcha on the walls, rain or shine. Go make some memories!" }), { ok: false, reason: "slop words" });
+  assert.equal(reject({ hook: "Matcha on the walls, talking long after the check arrives!" }).ok, true, "a restaurant check is not a hedge");
   assert.deepEqual(reject({ hook: "Matcha walks so easy even your tanga cousin can do it." }), { ok: false, reason: "unkind or religious joke" });
   assert.deepEqual(reject({ hook: "Tara na sa Intramuros, kahit umuulan pa rin ang mga plano natin ngayon." }), { ok: false, reason: "not in English" });
   assert.deepEqual(reject({ hook: "The best matcha walk in the whole of Metro Manila today, period." }), { ok: false, reason: "unbacked claim: best" });
   assert.deepEqual(reject({ title: "Matcha in hand: the Manila stroll tier list 🍵" }), { ok: false, reason: "emoji in title or meme" });
   assert.deepEqual(reject({ hook: "Tara, barkada! Sulit matcha walk in Intramuros today." }), { ok: false, reason: "not in English" });
   assert.equal(tagalogWordCount("Gala tayo! Halo-halo after a walk in Intramuros."), 1);
+  assert.equal(tagalogWordCount("Walk past the bahay na bato.", "Old bahay na bato line the street."), 0, "words the facts use (place names) don't count");
+  assert.deepEqual(reject({ body: `${FIXTURE_TIER.body} Gala tayo!` }), { ok: false, reason: "not in English" });
+  assert.deepEqual(reject({ hook: "There's a 100% chance your matcha looks better on the walls." }), { ok: false, reason: "raw percentage" });
+  assert.deepEqual(unbackedNumbers("Sixty dioramas, 60 of them, 3 stops, 8 AM, ₱450 and 2,000 photos", "Walk past 60 handcrafted history dioramas"), ["2000"]);
   assert.deepEqual(unbackedSuperlatives("The oldest church", "Completed in 1607, it is the oldest stone church."), []);
+});
+
+test("a pick given by place name instead of slug still counts", () => {
+  const context = base({ format: "tier-list", topic: trend("matcha", "matcha manila") });
+  const byName = { ...FIXTURE_TIER, picks: FIXTURE_TIER.picks.map((pick) => (pick.slug === "intramuros" ? { ...pick, slug: "Intramuros" } : pick)) };
+  const result = validateDraft(byName, context);
+  assert.ok(result.ok, "reason" in result ? result.reason : "");
+  if (result.ok) assert.equal(result.post.picks[0].slug, "intramuros");
+  assert.deepEqual(validateDraft({ ...FIXTURE_TIER, picks: FIXTURE_TIER.picks.slice(0, 2) }, context), { ok: false, reason: "needs 3 valid picks" });
+});
+
+test("every format has gold examples", () => {
+  for (const id of FORMAT_ORDER) assert.ok(FORMATS[id].examples.length >= 2, id);
+});
+
+test("a why must be the writer's words, not a pasted fact sentence", () => {
+  const facts = "Free entry, air-con and Juan Luna's Spoliarium in person: totally worth it! The National Museum of Fine Arts sits inside the grand Old Legislative Building.";
+  assert.equal(copiesFacts("Free entry, air-con and Juan Luna's Spoliarium in person: totally worth it!", facts), true);
+  assert.equal(copiesFacts("Free entry, air-con and the Spoliarium. The flex costs nothing!", facts), false);
+  const context = base({ format: "tier-list", topic: trend("matcha", "matcha manila") });
+  const pasted = { ...FIXTURE_TIER, picks: FIXTURE_TIER.picks.map((pick) => (pick.slug === "intramuros" ? { ...pick, why: "Intramuros was founded in 1571 as the capital of Spanish Manila, ringed by thick stone walls." } : pick)) };
+  assert.deepEqual(validateDraft(pasted, context), { ok: false, reason: "copied facts" });
 });
 
 test("clock times parse for the 24-hours format", () => {
@@ -253,7 +291,10 @@ test("prompt carries the trend phrasing, format rules, budgets and fame; never r
     budget: { cap: 300 },
   });
   assert.match(system, /No politics, religion/);
-  assert.match(system, /Simple, enthusiastic English/);
+  assert.match(system, /Simple, lively English/);
+  assert.match(system, /no "gala tayo"/);
+  assert.match(user, /GOLD EXAMPLES/);
+  assert.match(user, /₱300 Challenge: Three Manila Icons/);
   assert.match(user, /QUERY: ube cheesecake manila/);
   assert.match(user, /STICKER: ₱300 Challenge/);
   assert.match(user, /fort-santiago \| Fort Santiago \| Heritage, Manila \| from ₱75 \| ICON/);
@@ -269,8 +310,17 @@ test("editor pass: publish only when every score is 8+ and safety 9+", () => {
   assert.match(system, /funny/);
   assert.match(user, /\[S\] Intramuros/);
   assert.match(user, /FACTS:\n- Intramuros/);
+  const briefed = buildEditorPrompt(result.post, PLACES, "Rain is likely today, so this is a rainy-day plan.", "Tuesday (Weekday)");
+  assert.match(briefed.user, /TOPIC: Rain is likely today/);
+  assert.match(briefed.user, /DAY: Tuesday \(Weekday\)/);
+  assert.match(briefed.system, /THE BRIEF/);
   assert.equal(parseEditorReview({ funny: 9, purpose: 8, accuracy: 9, natural: 8, safe: 10, fix: "" }).pass, true);
   assert.equal(parseEditorReview({ funny: 7, purpose: 9, accuracy: 9, natural: 9, safe: 10, fix: "Sharper punchline." }).pass, false);
   assert.equal(parseEditorReview({ funny: "9", purpose: "8", accuracy: "8", natural: "8", safe: "8" }).pass, false);
   assert.equal(parseEditorReview(null).pass, false);
+  // A claim the facts don't back fails the post even with high scores, and goes back to the writer.
+  const unbacked = parseEditorReview({ unbacked: ["Michelin-starred dinner (FACTS: listed in the MICHELIN Guide)"], funny: 9, purpose: 9, accuracy: 9, natural: 9, safe: 10, fix: "Say 'MICHELIN Guide-listed'." });
+  assert.equal(unbacked.pass, false);
+  assert.match(unbacked.fix, /^Remove or fix claims FACTS don't back: Michelin-starred dinner/);
+  assert.equal(parseEditorReview({ unbacked: [], funny: 8, purpose: 8, accuracy: 8, natural: 8, safe: 9, fix: "" }).pass, true);
 });
