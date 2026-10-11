@@ -2,20 +2,26 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   bestPhrasing,
+  chooseAngle,
   chooseRegion,
-  chooseTrend,
+  clusterAround,
   dayContext,
   describeRain,
+  distanceKm,
+  evergreenAngles,
+  isSafePostText,
   isSafeTrend,
-  linkScore,
   parseAutocomplete,
   parseGoogleTrendsRss,
   parseHourlyWeather,
   parseNewsRss,
-  pickEvergreenQuery,
   pickSignals,
   rotatePlaces,
   scoreTrends,
+  trendKind,
+  trustedTrendUrl,
+  usableTrends,
+  type AnglePlace,
   type HourlyWeather,
 } from "./galaTodaySignals";
 
@@ -26,6 +32,25 @@ test("unsafe trends are dropped; whole words only", () => {
   assert.equal(isSafeTrend("Solon asks police to identify animal abuser"), false);
   assert.equal(isSafeTrend("Warm weather this weekend"), true);
   assert.equal(isSafeTrend("Matcha latte trend"), true);
+  // Seen on Google Trends PH, Oct 2026, with an adult page as its news link.
+  assert.equal(isSafeTrend("~(@Trending)^pinay 1v5 viral video"), false);
+  assert.equal(isSafeTrend("viral video 1vs5 kambal"), false);
+  assert.equal(isSafeTrend("Naked Island hopping in Siargao"), true, "a real island name is not adult content");
+});
+
+test("post text allows everyday travel words that only mean trouble in a headline", () => {
+  assert.equal(isSafePostText("Bring a fully charged power bank and catch the fire dancers by the basketball court."), true);
+  assert.equal(isSafeTrend("Bring a fully charged power bank"), false);
+  assert.equal(isSafePostText("Where the national hero was executed, a murder mystery"), false);
+});
+
+test("trend links on the page are trusted news or Reddit pages only", () => {
+  assert.equal(trustedTrendUrl("https://news.google.com/rss/articles/abc?oc=5"), "https://news.google.com/rss/articles/abc?oc=5");
+  assert.equal(trustedTrendUrl("https://www.reddit.com/r/Philippines/comments/x"), "https://www.reddit.com/r/Philippines/comments/x");
+  assert.equal(trustedTrendUrl("https://um.mos.ru/uploads/virtual_tours/x.html?id=asian-xxx-videos"), null);
+  assert.equal(trustedTrendUrl("https://news.google.com.evil.example/a"), null);
+  assert.equal(trustedTrendUrl("http://news.google.com/a"), null);
+  assert.equal(trustedTrendUrl(null), null);
 });
 
 test("signals are safe, one per topic, and count their sources", () => {
@@ -49,55 +74,78 @@ test("RSS and autocomplete parsers read real payloads", () => {
   assert.deepEqual(parseAutocomplete("<html>"), []);
 });
 
-test("link score: food, events and travel link; weather and sports scores don't", () => {
-  assert.equal(linkScore("Ube cheesecake"), 1);
-  assert.equal(linkScore("BINI concert"), 0.9);
-  assert.equal(linkScore("el niño"), 0);
-  assert.equal(linkScore("nba score"), 0);
-  assert.equal(linkScore("nba"), 0.2);
-  assert.equal(linkScore("rainbow cake"), 1);
-  assert.equal(linkScore("carlos alcaraz"), 0.3);
-});
-
 test("phrasing comes from what people actually search", () => {
   assert.equal(bestPhrasing("Ube cheesecake", ["ube cheesecake", "ube cheesecake recipe", "ube cheesecake near me", "ube cheesecake manila"]), "ube cheesecake recipe");
   assert.equal(bestPhrasing("Dubai chocolate", ["dubai chocolate meaning", "dubai chocolate price philippines"]), "dubai chocolate price philippines");
   assert.equal(bestPhrasing("BINI", []), "bini");
 });
 
-test("trend scoring: demand × link; the best linkable trend wins over bigger sports traffic", () => {
-  // Google Trends PH on 2026-10-06 was mostly NBA; a smaller food trend should still win.
+test("only going-out trends count: our places, festivals and seasons; never unrelated viral news", () => {
+  // Trends the old picker forced into posts (Oct 2026 logs) link to nothing.
+  for (const title of ["Sassy Southern Dad reacts", "cat whisperer in Dubai", "Mercedes F1 jacket", "nba preseason schedule", "Taylor Swift deep cut"]) {
+    assert.equal(trendKind(title), null, title);
+  }
+  assert.equal(trendKind("MassKara Festival 2026 schedule"), "festival");
+  assert.equal(trendKind("long weekend november 2026"), "season");
+  assert.equal(trendKind("Intramuros night tour", true), "place");
+  assert.equal(trendKind("Baguio strawberry farm", false, true), "place", "a destination plus an outing word");
+  assert.equal(trendKind("Baguio mayor", false, true), null, "a destination in ordinary news isn't an outing");
+});
+
+test("trend scoring: demand counts only for going-out trends, which beat bigger unrelated traffic", () => {
+  // Google Trends PH on 2026-10-06 was mostly NBA; a smaller festival trend should still win.
   const signals = [
     { title: "nba", source: "Google Trends PH", url: null, traffic: 20000, sources: 1 },
     { title: "nba score", source: "Google Trends PH", url: null, traffic: 10000, sources: 1 },
-    { title: "el niño", source: "Google Trends PH", url: null, traffic: 5000, sources: 1 },
-    { title: "Dubai chocolate", source: "Google News", url: null, traffic: 0, sources: 2 },
-    { title: "carlos alcaraz", source: "Google Trends PH", url: null, traffic: 500, sources: 1 },
+    { title: "Panagbenga festival", source: "Google News", url: null, traffic: 0, sources: 2 },
+    { title: "Burnham Park boat ride", source: "Google News", url: null, traffic: 0, sources: 1 },
   ];
   const autocomplete = new Map([
-    ["dubai chocolate", ["dubai chocolate", "dubai chocolate price philippines", "dubai chocolate near me"]],
+    ["panagbenga festival", ["panagbenga festival", "panagbenga festival 2027 schedule", "panagbenga festival meaning"]],
     ["nba", ["nba", "nba schedule", "nba score"]],
   ]);
-  const scored = scoreTrends(signals, autocomplete);
-  assert.equal(scored[0].title, "Dubai chocolate");
+  const scored = scoreTrends(signals, autocomplete, { namesOurPlace: (title) => /burnham park/i.test(title), namesDestination: () => false });
+  assert.equal(scored[0].title, "Panagbenga festival");
+  assert.equal(scored[0].kind, "festival");
   assert.equal(scored[0].demand, 3);
-  assert.equal(scored[0].query, "dubai chocolate price philippines");
-  const best = chooseTrend(scored);
-  assert.equal(best?.title, "Dubai chocolate");
-  // Already used recently → nothing else links well enough → evergreen fallback (null).
-  assert.equal(chooseTrend(scored, new Set(["dubai chocolate"])), null);
+  assert.equal(scored[0].query, "panagbenga festival 2027 schedule");
+  assert.equal(scored.find((trend) => trend.title === "nba")?.score, 0);
+  assert.deepEqual(usableTrends(scored).map((trend) => trend.title), ["Panagbenga festival", "Burnham Park boat ride"]);
+  // Already used recently → only the place trend is left.
+  assert.deepEqual(usableTrends(scored, new Set(["panagbenga festival"])).map((trend) => trend.title), ["Burnham Park boat ride"]);
 });
 
-test("evergreen fallback uses the region's top autocomplete search", () => {
-  const suggestions = [
-    ["things to do in metro manila", "things to do in metro manila this weekend", "things to do in metro manila reddit", "what to do in metro manila during holy week"],
-    ["where to go in metro manila", "where to go in metro manila at night"],
-    [],
-    [],
+test("evergreen angles: the day's occasion first, then a rotation, never a recent one", () => {
+  const place = (category: string, goodFor: string[], description = ""): AnglePlace => ({ category, goodFor, description });
+  const museums = [1, 2, 3, 4].map(() => place("Museum", ["Family Trip", "Photo Walk"]));
+  const parks = [1, 2, 3, 4].map(() => place("Park", ["Casual Date", "Nature Escape"], "Stay for the sunset."));
+  const all = [...museums, ...parks];
+  const pick = (day: string, rainy: boolean, recent = new Set<string>(), seed = 0) => chooseAngle(evergreenAngles("Metro Manila", day, rainy), all, seed, recent);
+  assert.equal(pick("Weekday", true).query, "rainy day activities in Metro Manila");
+  assert.equal(pick("Friday", false).query, "date ideas in Metro Manila");
+  assert.equal(pick("Payday", false).id, "payday");
+  assert.equal(pick("Holiday: National Heroes Day", false).query, "things to do in Metro Manila this holiday");
+  assert.equal(pick("Weekend", false).query, "things to do in Metro Manila this weekend");
+  // Plain weekday: rotates through evergreen angles that have at least 4 fitting places.
+  const weekday = [0, 1, 2, 3, 4, 5].map((seed) => pick("Weekday", false, new Set(), seed).id);
+  assert.ok(weekday.every((id) => ["photo", "sunset", "family", "nature", "history", "things-to-do"].includes(id)), weekday.join());
+  assert.ok(!weekday.includes("adventure"), "no angle without enough fitting places");
+  assert.notEqual(pick("Weekday", true, new Set(["rainy day activities in metro manila"])).id, "rainy", "never the same angle as a recent post");
+});
+
+test("day-trip clusters keep picks within reach; regions can be a flight apart", () => {
+  const manila: [number, number] = [14.5995, 120.9842];
+  const makati: [number, number] = [14.5547, 121.0244];
+  const batanes: [number, number] = [20.4487, 121.9702];
+  const penablanca: [number, number] = [17.6258, 121.7856];
+  assert.ok(distanceKm(manila, makati) < 10);
+  assert.ok(distanceKm(batanes, penablanca) > 250, "Callao Cave and Batanes were once one 'Cagayan Valley' post");
+  const places = [
+    { slug: "fort", center: manila },
+    { slug: "ayala", center: makati },
+    { slug: "callao", center: penablanca },
   ];
-  assert.equal(pickEvergreenQuery("Metro Manila", suggestions), "things to do in metro manila this weekend");
-  assert.equal(pickEvergreenQuery("Metro Manila", suggestions, 1), "where to go in metro manila at night");
-  assert.equal(pickEvergreenQuery("Ilocos Region", [[], [], [], []]), "things to do in ilocos region");
+  assert.deepEqual(clusterAround(manila, places).map((place) => place.slug), ["fort", "ayala"]);
 });
 
 const hours = (values: Array<[number, number, number]>): HourlyWeather[] =>
@@ -121,7 +169,7 @@ test("weather wording: human time windows, never percentages", () => {
 test("day context, region and rotation", () => {
   assert.equal(dayContext(new Date("2026-10-15T00:00:00Z"), null), "Payday");
   assert.equal(dayContext(new Date("2026-11-01T00:00:00Z"), "All Saints' Day"), "Holiday: All Saints' Day");
-  assert.equal(dayContext(new Date("2026-10-09T00:00:00Z"), null), "Friday night");
+  assert.equal(dayContext(new Date("2026-10-09T00:00:00Z"), null), "Friday", "not \"Friday night\": writers then planned museum nights");
   assert.equal(chooseRegion(false, 5, ["calabarzon", "metro-manila"]), "metro-manila");
   assert.equal(chooseRegion(true, 1, ["calabarzon", "central-luzon", "metro-manila"]), "central-luzon");
   assert.equal(chooseRegion(false, 1, ["calabarzon", "ilocos-region", "metro-manila"], "ilocos-region"), "ilocos-region", "a trend that names a region wins");

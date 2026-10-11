@@ -10,18 +10,21 @@ export type TrendSignal = {
   traffic: number;
 };
 
+/** Why a trend is about going out: it names one of our places (or a destination plus an outing word), a festival, or a season/occasion. */
+export type TrendKind = "place" | "festival" | "season";
+
 export type ScoredTrend = TrendSignal & {
   /** How many searches back it: traffic, other sources and autocomplete presence. */
   demand: number;
-  /** 0–1: how naturally it links to going out. */
-  link: number;
+  kind: TrendKind | null;
+  /** The demand of a going-out trend; 0 for any other trend. */
   score: number;
   /** The phrasing people actually search (from autocomplete), used in the title and slug. */
   query: string;
 };
 
-/** Today's topic: a real trend, or the region's top evergreen gala search when no trend fits. */
-export type TodayTopic = { kind: "trend"; trend: ScoredTrend } | { kind: "evergreen"; query: string };
+/** Today's topic: a real going-out trend, or an evergreen angle (rainy day, weekend, date ideas…) when no trend fits. */
+export type TodayTopic = { kind: "trend"; trend: ScoredTrend } | { kind: "evergreen"; query: string; note?: string };
 
 // Trends we never joke about or tie to a day out: tragedy, crime, politics, scandal, health scares.
 const UNSAFE_WORDS = [
@@ -32,8 +35,13 @@ const UNSAFE_WORDS = [
   "casualt~", "injured", "war", "attack", "terror~", "bomb", "impeach~", "senate", "senator", "solon", "congress", "election~", "president",
   "vice president", "duterte", "marcos", "rally", "protest~", "scandal~", "controversy", "cheating", "affair", "breakup",
   "hiv", "outbreak", "virus", "dengue", "covid", "lawsuit", "court", "sued", "ban", "banned", "child abuse", "minor",
-  "lost ability", "cancer", "hospital~", "funeral", "wake", "typhoon", "bagyo", "storm signal",
+  "lost ability", "cancer", "hospital~", "funeral", "wake", "typhoon", "bagyo", "storm signal", "landslide", "flood~", "baha",
+  // Adult spam: Google Trends PH surfaced "pinay 1v5 viral video" with an "xxx" page as its news link (Oct 2026).
+  "sex", "sexy", "xxx", "porn~", "nude~", "nsfw", "onlyfans", "leak~", "viral video~", "scandal video~", "kantot~", "iyot", "jakol",
 ];
+// Everyday words in travel copy ("fully charged power bank", "fire dancers", "the sky is leaking") that only mean
+// crime or tragedy in a headline. Post text skips them; trends still don't.
+const POST_EVERYDAY_WORDS = new Set(["charged", "shot", "fire", "wake", "minor", "court", "missing", "ban", "attack", "leak~"]);
 
 // Whole words only ("war" must not match "warm"); a trailing "~" marks a stem ("evacuat~" matches "evacuation").
 export function hasWord(text: string, word: string) {
@@ -45,6 +53,25 @@ export function hasWord(text: string, word: string) {
 export function isSafeTrend(title: string): boolean {
   const lower = ` ${title.toLowerCase()} `;
   return title.trim().length >= 3 && !UNSAFE_WORDS.some((word) => hasWord(lower, word));
+}
+
+/** The same check for a written post, minus words that are everyday in travel copy. */
+export function isSafePostText(text: string): boolean {
+  const lower = ` ${text.toLowerCase()} `;
+  return !UNSAFE_WORDS.some((word) => !POST_EVERYDAY_WORDS.has(word) && hasWord(lower, word));
+}
+
+// Only news links go on the page; other trend URLs are whatever a Trends item cites, and one was adult spam.
+const TRUSTED_LINK_HOSTS = /(^|\.)(news\.google\.com|reddit\.com)$/;
+
+/** The trend's link when it is a trusted news or Reddit page, else null. */
+export function trustedTrendUrl(url: string | null): string | null {
+  try {
+    const parsed = new URL(url ?? "");
+    return parsed.protocol === "https:" && TRUSTED_LINK_HOSTS.test(parsed.hostname) ? parsed.href : null;
+  } catch {
+    return null;
+  }
 }
 
 const decode = (value: string) =>
@@ -115,23 +142,33 @@ export function pickSignals(signals: TrendSignal[], limit = 12): Array<TrendSign
   return [...byKey.values()].sort((left, right) => right.traffic - left.traffic || right.sources - left.sources).slice(0, limit);
 }
 
-// How naturally a topic turns into a day out. Weather and money news are never the angle.
-const LINK_RULES: Array<{ weight: number; words: string[] }> = [
-  { weight: 0, words: ["weather", "pagasa", "el nino", "la nina", "rain", "rainy", "raining", "ulan", "heat index", "lpa", "stock~", "peso", "exchange rate", "oil price~", "gas price~", "lotto", "result~", "score~", "standings", "tax", "sss", "philhealth", "pag ibig"] },
-  { weight: 1, words: ["food", "dessert", "cake", "cheesecake", "chocolate", "cookie~", "donut~", "croissant~", "pastry", "pastries", "bread", "boba", "drink~", "snack~", "dimsum", "dumpling~", "noodle~", "samgyup~", "korean bbq", "steak", "seafood", "mango", "cheese", "tea", "ube", "matcha", "coffee", "kape", "milk tea", "ramen", "pizza", "burger", "fried chicken", "lechon", "halo halo", "ice cream", "gelato", "bake~", "bakery", "menu", "restaurant", "cafe", "buffet", "street food", "mukbang", "sisig", "taho", "bibingka", "puto bumbong", "beach", "island", "hike", "hiking", "sunset", "travel", "trip", "vacation", "long weekend", "staycation", "road trip", "summer"] },
-  { weight: 0.9, words: ["concert", "tour", "festival", "fest", "fiesta", "parade", "fireworks", "musical", "exhibit~", "expo", "fair", "bazaar", "night market", "christmas", "pasko", "halloween", "undas", "valentine~", "date night"] },
-  { weight: 0.7, words: ["movie", "film", "premiere", "trailer", "filming", "location", "aesthetic", "photo", "outfit", "ootd", "challenge", "dance", "viral", "trend~", "meme", "tiktok"] },
-  { weight: 0.5, words: ["kdrama", "k drama", "anime", "kpop", "k pop", "album", "song", "teaser", "mv", "netflix", "series", "episode", "fandom", "fan meet", "fanmeet"] },
-  { weight: 0.2, words: ["nba", "pba", "uaap", "ncaa", "pvl", "volleyball", "basketball", "boxing", "tennis", "football", "vs", "game"] },
+// Words that make a trend about going out. Other news (sports, celebrities, viral clips, weather alerts) is never
+// forced into a post: the editor rightly scored those 2-3/10 (Oct 2026 logs: "cat whisperer in Dubai").
+const FESTIVAL_WORDS = [
+  "festival", "fiesta", "masskara", "panagbenga", "sinulog", "ati atihan", "dinagyang", "kadayawan", "pahiyas", "higantes",
+  "fireworks", "night market", "lantern~", "light show", "christmas village", "christmas lights",
+];
+const SEASON_WORDS = [
+  "long weekend", "christmas", "pasko", "new year", "halloween", "valentine~", "summer", "rainy season", "ber months",
+  "sembreak", "semestral break", "school break", "christmas break", "payday", "sweldo", "date night", "staycation",
+  "road trip", "weekend getaway", "seat sale", "piso fare",
+];
+// With a destination name these turn place news into an outing ("Baguio strawberry farm", "Cebu beaches").
+const OUTING_WORDS = [
+  "beach~", "island~", "falls", "hike", "hiking", "trail~", "sunset", "travel", "trip", "tour", "tourist~", "itinerary",
+  "food", "food trip", "food crawl", "cafe~", "restaurant~", "museum~", "park", "view~", "resort~", "lake", "river",
+  "cave~", "mountain~", "farm~", "garden~", "reopen~", "things to do", "where to go", "spots",
 ];
 
-/** 0–1. The most restrictive matching rule wins for weather/money (weight 0); otherwise the best match. */
-export function linkScore(title: string): number {
+const hasAny = (text: string, words: string[]) => words.some((word) => hasWord(text, word));
+
+/** Why a trend links to going out, or null when it doesn't. The flags say whether it names one of our places or a PH destination. */
+export function trendKind(title: string, namesOurPlace = false, namesDestination = false): TrendKind | null {
   const text = ` ${normalizeTopic(title)} `;
-  const matched = LINK_RULES.filter((rule) => rule.words.some((word) => hasWord(text, word)));
-  if (matched.some((rule) => rule.weight === 0)) return 0;
-  // Unknown topics (a name, a show) can still work as a vibe, but rarely.
-  return matched.length ? Math.max(...matched.map((rule) => rule.weight)) : 0.3;
+  if (namesOurPlace || (namesDestination && hasAny(text, OUTING_WORDS))) return "place";
+  if (hasAny(text, FESTIVAL_WORDS)) return "festival";
+  if (hasAny(text, SEASON_WORDS)) return "season";
+  return null;
 }
 
 const INTENT_WORDS = /\b(near me|where to|where can|manila|philippines|ph|price|menu|tickets?|venue|schedule|branch(es)?|recipe|location)\b/;
@@ -144,44 +181,87 @@ export function bestPhrasing(title: string, suggestions: string[]): string {
   return related.find((item) => INTENT_WORDS.test(item)) ?? base;
 }
 
+export type TrendPlaceCheck = { namesOurPlace: (title: string) => boolean; namesDestination: (title: string) => boolean };
+
 /**
- * Demand-scores each trend: Google Trends traffic (log scale), extra sources and autocomplete presence,
- * multiplied by how naturally it links to going out. Strongest first.
+ * Demand-scores each trend: Google Trends traffic (log scale), extra sources and autocomplete presence. A trend that
+ * doesn't link to going out scores 0. Strongest first.
  */
-export function scoreTrends(signals: Array<TrendSignal & { sources?: number }>, autocomplete: Map<string, string[]>): ScoredTrend[] {
+export function scoreTrends(
+  signals: Array<TrendSignal & { sources?: number }>,
+  autocomplete: Map<string, string[]>,
+  places: TrendPlaceCheck = { namesOurPlace: () => false, namesDestination: () => false }
+): ScoredTrend[] {
   return signals
     .map((signal) => {
       const suggestions = autocomplete.get(normalizeTopic(signal.title)) ?? [];
       const searched = suggestions.some((item) => normalizeTopic(item).startsWith(normalizeTopic(signal.title)));
-      const demand = (signal.traffic > 0 ? Math.log10(signal.traffic) : 1.5) + ((signal.sources ?? 1) - 1) * 0.5 + (searched ? 1 : 0);
-      const link = linkScore(signal.title);
-      return { title: signal.title, source: signal.source, url: signal.url, traffic: signal.traffic, demand: round(demand), link, score: round(demand * link), query: bestPhrasing(signal.title, suggestions) };
+      const demand = round((signal.traffic > 0 ? Math.log10(signal.traffic) : 1.5) + ((signal.sources ?? 1) - 1) * 0.5 + (searched ? 1 : 0));
+      const kind = trendKind(signal.title, places.namesOurPlace(signal.title), places.namesDestination(signal.title));
+      return { title: signal.title, source: signal.source, url: signal.url, traffic: signal.traffic, demand, kind, score: kind ? demand : 0, query: bestPhrasing(signal.title, suggestions) };
     })
     .sort((left, right) => right.score - left.score);
 }
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-/** The best trend when one links naturally enough (link ≥ 0.5 and real demand), else null. */
-export function chooseTrend(scored: ScoredTrend[], usedTitles: Set<string> = new Set(), minScore = 1.5): ScoredTrend | null {
-  return scored.find((trend) => trend.link >= 0.5 && trend.score >= minScore && !usedTitles.has(normalizeTopic(trend.title))) ?? null;
+/** Going-out trends with real demand that weren't used recently, strongest first (the caller checks each has places). */
+export function usableTrends(scored: ScoredTrend[], usedTitles: Set<string> = new Set(), minScore = 1.5): ScoredTrend[] {
+  return scored.filter((trend) => trend.kind !== null && trend.score >= minScore && !usedTitles.has(normalizeTopic(trend.title)));
 }
 
-/** Autocomplete seeds for the region's evergreen gala searches, most useful first. */
-export function evergreenSeeds(areaName: string): string[] {
-  const area = areaName.toLowerCase();
-  return [`things to do in ${area}`, `where to go in ${area}`, `${area} tourist spots`, `${area} date ideas`];
+export type AnglePlace = { category: string | null; goodFor: string[]; description: string | null };
+export type Angle = { id: string; query: string; note: string; fits: (place: AnglePlace) => boolean };
+
+const tagged = (pattern: RegExp) => (place: AnglePlace) => place.goodFor.some((tag) => pattern.test(tag));
+const INDOOR_CATEGORIES = new Set(["Museum", "Food", "Cafe", "Mall", "Nightlife"]);
+export const worksInRain = (place: AnglePlace) => INDOOR_CATEGORIES.has(place.category ?? "") || tagged(/rainy|indoor/i)(place);
+const OCCASIONS = new Set(["rainy", "holiday", "payday", "date", "weekend"]);
+
+/** Searches people really make, for days without a going-out trend: the day's occasion first, then evergreen ones. */
+export function evergreenAngles(area: string, day: string, rainy: boolean): Angle[] {
+  const anyPlace = () => true;
+  const occasions: Angle[] = [];
+  if (rainy) occasions.push({ id: "rainy", query: `rainy day activities in ${area}`, note: "Rain is likely today, so this is a rainy-day plan: every pick is indoors or works in the rain.", fits: worksInRain });
+  if (day.startsWith("Holiday: ")) occasions.push({ id: "holiday", query: `things to do in ${area} this holiday`, note: `Today is a public holiday (${day.slice(9)}): a plan for the day off. Never joke about the holiday itself.`, fits: anyPlace });
+  if (day === "Payday") occasions.push({ id: "payday", query: `payday treat ideas in ${area}`, note: "It's payday (the 15th or the last day of the month): a treat-yourself day out.", fits: anyPlace });
+  if (day === "Friday") occasions.push({ id: "date", query: `date ideas in ${area}`, note: "It's Friday: a date plan for this weekend (most picks are daytime spots).", fits: tagged(/date/i) });
+  if (day === "Weekend") occasions.push({ id: "weekend", query: `things to do in ${area} this weekend`, note: "It's the weekend: a plan for today.", fits: anyPlace });
+  return [
+    ...occasions,
+    { id: "photo", query: `${area} photo spots`, note: "Photo-dump day: spots that fill the camera roll.", fits: tagged(/photo/i) },
+    { id: "sunset", query: `sunset spots in ${area}`, note: "Sunset chasing: every pick's facts mention the sunset.", fits: (place) => /sunset/i.test(place.description ?? "") },
+    { id: "friends", query: `group day out in ${area}`, note: "A day out with your friends.", fits: tagged(/barkada|group/i) },
+    { id: "family", query: `family day out in ${area}`, note: "A family day out that works for every age.", fits: tagged(/family/i) },
+    { id: "nature", query: `nature escapes near ${area}`, note: "Fresh air: a break from screens and traffic.", fits: tagged(/nature/i) },
+    { id: "history", query: `history trip in ${area}`, note: "Stories you can walk into: history and heritage stops.", fits: (place) => tagged(/history|heritage|museum/i)(place) || ["Heritage", "Museum"].includes(place.category ?? "") },
+    { id: "adventure", query: `adventure day in ${area}`, note: "An adrenaline day.", fits: tagged(/adventure/i) },
+    { id: "things-to-do", query: `things to do in ${area}`, note: "The best of the area in one day.", fits: anyPlace },
+  ];
 }
 
-/** The top evergreen search for the region (first safe suggestion that names the area), else the first seed. */
-export function pickEvergreenQuery(areaName: string, suggestionsBySeed: string[][], seed = 0): string {
-  const seeds = evergreenSeeds(areaName);
-  const area = areaName.toLowerCase();
-  const candidates = suggestionsBySeed
-    .flatMap((list, index) => list.filter((item) => item !== seeds[index]))
-    .filter((item) => item.includes(area) && !JUNK_SUGGESTION.test(item) && isSafeTrend(item));
-  const unique = [...new Set(candidates)];
-  return unique.length ? unique[seed % Math.min(unique.length, 4)] : seeds[seed % seeds.length];
+/** Today's angle: the day's occasion when it has enough places, else a rotating evergreen one; never one used recently. */
+export function chooseAngle(angles: Angle[], places: AnglePlace[], seed: number, recentTopics: Set<string>, minPlaces = 4): Angle {
+  const usable = angles.filter((angle) => !recentTopics.has(normalizeTopic(angle.query)) && places.filter(angle.fits).length >= minPlaces);
+  const occasion = usable.find((angle) => OCCASIONS.has(angle.id));
+  if (occasion) return occasion;
+  return usable.length ? usable[seed % usable.length] : angles[angles.length - 1];
+}
+
+/** Straight-line distance in km between two [lat, lon] points. */
+export function distanceKm([lat1, lon1]: [number, number], [lat2, lon2]: [number, number]): number {
+  const rad = (value: number) => (value * Math.PI) / 180;
+  const a = Math.sin(rad(lat2 - lat1) / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lon2 - lon1) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(a));
+}
+
+// One day's picks must be a day trip apart: Metro Manila end to end is about 30 km, while a "Cagayan Valley" post
+// paired Callao Cave with Batanes islands (a flight apart) and the editor scored its accuracy 2.
+export const CLUSTER_RADIUS_KM = 30;
+
+/** The places within a day trip of `center`, in their given order. */
+export function clusterAround<T extends { center: [number, number] }>(center: [number, number], places: T[], radiusKm = CLUSTER_RADIUS_KM): T[] {
+  return places.filter((place) => distanceKm(center, place.center) <= radiusKm);
 }
 
 export type HourlyWeather = { time: string; probability: number | null; mm: number | null };
@@ -242,7 +322,7 @@ export function dayContext(date: Date, holidayName: string | null): string {
   const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
   if (holidayName) return `Holiday: ${holidayName}`;
   if (day === 15 || day === lastDay) return "Payday";
-  if (weekday === 5) return "Friday night";
+  if (weekday === 5) return "Friday";
   if (weekday === 6 || weekday === 0) return "Weekend";
   return "Weekday";
 }
