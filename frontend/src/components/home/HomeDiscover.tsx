@@ -26,7 +26,7 @@ import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../../utils/placeGalleryPh
 import { getSeoListingPage } from '../../utils/seoApi'
 import { METRO_MANILA_REGION_SLUG, getDestinationBySlug } from '../../data/destinations'
 import { MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, getLandingTargetBySlug } from '../../utils/seoLandingPages'
-import { vibeHref, type VibeId } from '../../utils/vibes'
+import { vibeHref, vibes, type VibeId } from '../../utils/vibes'
 
 // Editor's pick: the top-scored gala-worthy place. The headline is written from its own description.
 const EDITORS_PICK = { slug: 'fort-santiago', kicker: 'Editor’s pick · Intramuros', headline: 'Walls, river views and Rizal’s final prison' }
@@ -45,6 +45,8 @@ const HOME_GUIDES = [
   'restaurants-in-quezon-city',
 ]
 const FOOD_CATEGORIES = new Set(['food', 'cafe'])
+// Food has its own tab on Home, so the Things to do chips leave it out instead of repeating it.
+const THINGS_TO_DO_VIBES = vibes.filter((vibe) => vibe.id !== 'food-trip')
 // Guides outside Metro Manila, listed by name until their places have photos for a cover.
 const COUNTRY_GUIDES = SEO_LANDING_TARGETS.filter((target) => target.areaSlug && getDestinationBySlug(target.areaSlug)?.regionSlug !== METRO_MANILA_REGION_SLUG && target.areaSlug !== METRO_MANILA_REGION_SLUG)
 const RAIL_SIZE = 10
@@ -368,7 +370,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
           </>
         ) : (
           <>
-            <VibeChips active={null} getHref={(id) => vibeHref('/places', id)} showAll={false} />
+            <VibeChips active={null} getHref={(id) => vibeHref('/places', id)} available={THINGS_TO_DO_VIBES} showAll={false} />
             {/* The editor's pick is the page's LCP photo, so it sits above Gala Today, which loads later and would push it down. */}
             <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
             <GalaTodayHome />

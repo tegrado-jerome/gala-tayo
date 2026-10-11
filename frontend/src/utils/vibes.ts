@@ -7,7 +7,7 @@ import { isRainFriendly } from './saanTayo.ts'
  * so node:test can run it.
  */
 
-export type VibePlace = { name: string; category: string | null; goodFor: string[] }
+export type VibePlace = { name: string; category: string | null; goodFor: string[]; budgetMin?: number | null }
 
 export const VIBE_IDS = ['beach', 'nature', 'views', 'heritage', 'adventure', 'food-trip', 'rainy-day'] as const
 export type VibeId = (typeof VIBE_IDS)[number]
@@ -20,6 +20,8 @@ type VibeDef = {
   /** One line under the heading, tour-guide style. */
   blurb: string
   matches: (place: VibePlace) => boolean
+  /** Lower comes first; places that tie keep the list's own best-first order. */
+  rank?: (place: VibePlace) => number
 }
 
 const fold = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -31,10 +33,20 @@ const isCategory = (place: VibePlace, categories: string[]) => categories.includ
 const BEACH_WORDS = /\b(beach|beaches|cove|sandbar|islands?|isla|islas|islet|boracay)\b/
 const NOT_BEACH = ['heritage', 'museum', 'food', 'cafe', 'nightlife']
 // Somewhere up high or out in the open with a view to stop for.
-const VIEW_WORDS = /\b(views?|viewpoint|view deck|lookout|peak|hills?|in the sky|lighthouse|terraces|mount|mt|mountain|summit|sunset|windmills)\b/
+const VIEW_WORDS = /\b(views?|viewpoint|view deck|lookout|peak|hills?|in the sky|lighthouse|terraces|mount|mt|mountain|summit|sunset|windmills|wind farm)\b/
 const NOT_VIEWS = ['museum', 'food', 'cafe', 'nightlife']
 
 const isBeach = (place: VibePlace) => BEACH_WORDS.test(fold(place.name)) && !isCategory(place, NOT_BEACH)
+// A beach, island hop or river cruise tagged "Food Trip" for its seafood lunch is still a beach or nature day.
+const isFoodDestination = (place: VibePlace) =>
+  isCategory(place, ['food', 'cafe']) || (hasTag(place, ['Food Trip', 'Foodie']) && !isBeach(place) && !hasTag(place, ['Nature Escape', 'Adventure']))
+// Rainy day: indoor sights first, then easy-priced food, then fine dining, unpriced restaurants and bars last.
+const MEAL_SPLURGE_MIN = 1000
+function rainyDayRank(place: VibePlace) {
+  if (!isCategory(place, ['food', 'cafe', 'nightlife'])) return 0
+  const isSplurge = hasTag(place, ['Fine Dining']) || place.budgetMin == null || place.budgetMin >= MEAL_SPLURGE_MIN
+  return isSplurge || isCategory(place, ['nightlife']) ? 2 : 1
+}
 
 const VIBES: VibeDef[] = [
   {
@@ -78,7 +90,7 @@ const VIBES: VibeDef[] = [
     label: 'Food trip',
     title: 'Food trips',
     blurb: 'Famous eats, markets and food towns worth the drive. Come hungry!',
-    matches: (place) => isCategory(place, ['food', 'cafe']) || hasTag(place, ['Food Trip', 'Foodie']),
+    matches: isFoodDestination,
   },
   {
     id: 'rainy-day',
@@ -88,6 +100,7 @@ const VIBES: VibeDef[] = [
     // Same rain rule as Pick for me (tagged for rainy days, or an indoor kind of place with nothing outdoorsy
     // about it), plus aquariums, which are filed as activities.
     matches: (place) => isRainFriendly(place) || nameHas(place, /\b(aquarium|ocean park)\b/),
+    rank: rainyDayRank,
   },
 ]
 
@@ -106,9 +119,13 @@ export function fitsVibe(place: VibePlace, id: VibeId) {
   return VIBES.find((vibe) => vibe.id === id)?.matches(place) ?? false
 }
 
-/** Places that fit the vibe, in the order given (the compact list is already best first). */
+/** Places that fit the vibe, in the order given (the compact list is already best first), then by the vibe's own rank. */
 export function filterByVibe<T extends VibePlace>(places: T[], id: VibeId) {
-  return places.filter((place) => fitsVibe(place, id))
+  const vibe = VIBES.find((entry) => entry.id === id)
+  if (!vibe) return []
+  const matches = places.filter(vibe.matches)
+  const { rank } = vibe
+  return rank ? matches.map((place, index) => ({ place, index, tier: rank(place) })).sort((a, b) => a.tier - b.tier || a.index - b.index).map(({ place }) => place) : matches
 }
 
 /** Vibes with at least `min` places in the list, in display order: chips never open an empty list. */

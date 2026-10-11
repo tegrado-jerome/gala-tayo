@@ -127,6 +127,24 @@ describe("query understanding", () => {
     assert.deepEqual(searchPlacesInArea(visibleFixturePlaces, "xylophone").ranked, []);
   });
 
+  it("never answers a dish with a place that only mentions it, and says so with the top food trips instead", () => {
+    const nacpan = place("nacpan-beach-el-nido");
+    const snackBeach = { ...nacpan, description: `${nacpan.description ?? ""} Cool off with halo-halo from the stalls by the shore.` };
+    const places = visibleFixturePlaces.map((entry) => (entry.slug === nacpan.slug ? snackBeach : entry));
+    assert.deepEqual(rankPlaces(places, "halo-halo"), []);
+    const { ranked, note } = searchPlacesInArea(places, "halo-halo");
+    assert.equal(note, "No halo-halo spots on GalaTayo yet. Here are the top food trips instead.");
+    assert.ok(ranked.length > 0);
+    assert.ok(ranked.every(({ place: entry }) => vibeMatches(entry, "food")), "only food places stand in");
+    assert.ok(!ranked.some(({ place: entry }) => entry.slug === nacpan.slug));
+    // In a named place, the place's own picks, with the dish read whole.
+    assert.equal(searchPlacesInArea(places, "halo-halo el nido").note, "No halo-halo in El Nido on GalaTayo yet. Here are El Nido's top picks instead.");
+    // A one-word search for a thing (not a dish) still finds the place whose description has it.
+    const fireflies = { ...nacpan, description: `${nacpan.description ?? ""} At night, fireflies light up the mangroves.` };
+    const withFireflies = visibleFixturePlaces.map((entry) => (entry.slug === nacpan.slug ? fireflies : entry));
+    assert.deepEqual(rankPlaces(withFireflies, "fireflies").map(({ place: entry }) => entry.slug), [nacpan.slug]);
+  });
+
   it("never calls a district or a park rain-proof; indoor comes from the place's own data", () => {
     assert.equal(isIndoorPlace(place("poblacion-makati")), false);
     assert.equal(isIndoorPlace(place("binondo-chinatown")), false);

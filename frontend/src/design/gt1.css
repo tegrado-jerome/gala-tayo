@@ -336,7 +336,7 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-mood:hover { background: var(--fill-2); }
 .g-mood::after { content: ''; position: absolute; inset: -4px 0; }
 .g-mood > :first-child { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; object-fit: cover; overflow: hidden; }
-.g-feat { position: relative; display: block; height: 300px; margin-top: 20px; border-radius: var(--r-4); overflow: hidden; background: #222; color: #fff; text-decoration: none; }
+.g-feat { position: relative; display: block; height: 300px; margin-top: var(--sec-gap); border-radius: var(--r-4); overflow: hidden; background: #222; color: #fff; text-decoration: none; }
 @media (min-width: 768px) { .g-feat { height: 420px; } }
 .g-feat > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
 .g-feat:hover > img { transform: scale(1.02); }
@@ -378,10 +378,11 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 /* ---------- List toolbar: count, sort, List/Map ---------- */
 .g-ltool { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 .g-ltool b { color: var(--ink); font-weight: 600; }
-.g-seg { display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: var(--r-pill); background: var(--fill); }
-.g-seg button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border: 0; border-radius: var(--r-pill); background: none; color: var(--ink); font: 600 13px/1 var(--font-body); cursor: pointer; }
+/* The same height as a chip (36px outside, 32px pressed pill inside); the hit area reaches 44px. */
+.g-seg { display: inline-flex; flex-shrink: 0; height: var(--chip-h); padding: 2px; border-radius: var(--r-pill); background: var(--fill); }
+.g-seg button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 100%; padding: 0 12px; border: 0; border-radius: var(--r-pill); background: none; color: var(--ink); font: 600 var(--chip-fs)/1 var(--font-body); cursor: pointer; }
 .g-seg button svg { width: 16px; height: 16px; }
-.g-seg button::before { content: ''; position: absolute; inset: -2px 0; }
+.g-seg button::before { content: ''; position: absolute; inset: -6px 0; }
 .g-seg button[aria-pressed='true'] { background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
 .g-seg button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
 .g-page-btn { display: inline-grid; place-items: center; min-width: 40px; height: 40px; padding: 0 6px; border-radius: 50%; border: 0; background: none; color: var(--ink); font: 600 14px/1 var(--font-body); text-decoration: none; cursor: pointer; }
@@ -405,11 +406,11 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 @media (min-width: 1024px) { .g-head-in { height: 68px; padding: 0 32px; gap: 24px; } }
 .g-logo { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font: 700 20px/1 var(--font-display); letter-spacing: -0.04em; color: var(--ink); text-decoration: none; }
 .g-nav { display: none; gap: 4px; }
-/* 2.5px more top than bottom padding puts the 14px link baseline on the 20px Fraunces wordmark baseline. */
-.g-nav a { position: relative; padding: 12.5px 12px 7.5px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color var(--t) var(--ease-g); }
+/* 44px tall like every header control; 5px more top than bottom padding puts the 14px link baseline on the 20px Fraunces wordmark baseline. */
+.g-nav a { position: relative; padding: 14px 12px 9px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color var(--t) var(--ease-g); }
 .g-nav a:hover { color: var(--ink); }
 .g-nav a[aria-current='page'] { color: var(--ink); font-weight: 600; }
-.g-nav a[aria-current='page']::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: -15px; height: 2px; border-radius: 2px; background: var(--ink); }
+.g-nav a[aria-current='page']::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: -13.5px; height: 2px; border-radius: 2px; background: var(--ink); }
 .g-head-search { display: none; flex: 1 1 360px; max-width: 440px; margin-inline: auto; align-items: center; height: 44px; padding: 4px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--surface); box-shadow: var(--sh-1); transition: box-shadow var(--t) var(--ease-g); }
 .g-head-search:hover { box-shadow: var(--sh-2); }
 .g-head-search-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 12px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
@@ -420,6 +421,9 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-head-ask::before { content: ''; position: absolute; inset: -5px 0; }
 .g-head-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .g-head-right .no-underline { text-decoration: none; }
+/* One height for every control in the header row: logo, links, search pill, buttons and the avatar are all 44px. */
+.g-head-right .g-btn { height: 44px; }
+.g-head-right .g-btn-icon { width: 44px; }
 @media (min-width: 1024px) { .g-nav, .g-head-search { display: flex; } .g-head-search + .g-head-right { margin-left: 0; } }
 
 /* ---------- Shell: mobile tab bar ---------- */

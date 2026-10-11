@@ -30,12 +30,14 @@ export type Vibe = (typeof VIBES)[number]['value']
 
 const RAIN_TAGS = /rainy day|indoor/i
 const INDOOR_CATEGORIES = /^(museum|mall|cafe|food|nightlife)$/i
+// A district, street, market or town is walked outdoors whatever its venues are filed as (same rule as the API's search).
+const OPEN_AIR = /\b(district|poblacion|chinatown|street|road|market|expo|bridge|plaza|boulevard|baywalk|town|village)\b/i
 
-/** Good when it rains: tagged for rainy days or indoors, or an indoor-type category with nothing outdoorsy about it. */
+/** Good when it rains: tagged for rainy days or indoors, or a single indoor venue with nothing outdoorsy about it. */
 export function isRainFriendly(place: Pick<PickPlace, 'category' | 'name' | 'goodFor'>) {
   if (place.goodFor.some((tag) => RAIN_TAGS.test(tag))) return true
   const traits = { category: place.category, name: place.name, tags: place.goodFor.map((name) => ({ name })) }
-  return INDOOR_CATEGORIES.test(place.category?.trim() ?? '') && !isOutdoorPlace(traits)
+  return INDOOR_CATEGORIES.test(place.category?.trim() ?? '') && !OPEN_AIR.test(place.name) && !isOutdoorPlace(traits)
 }
 
 export function fitsVibe(place: Pick<PickPlace, 'goodFor' | 'budgetMin'>, vibe: Vibe) {
@@ -115,23 +117,26 @@ export function placesNear<T extends PickPlace>(places: T[], origin: [number, nu
   return (within.length >= NEAR_MIN_PLACES ? within : ranked.slice(0, NEAR_MIN_PLACES)).map((entry) => entry.place)
 }
 
-export type WeatherMood = { rainy: boolean; line: string }
+/** `night`: the sun is down, so the dry line gets a moon, not a sun. */
+export type WeatherMood = { rainy: boolean; night: boolean; line: string }
 
 /** Rain now or likely in the next hours → indoor picks with a short line; otherwise a go-ahead line. */
-export function weatherMood(current: Pick<CurrentWeather, 'code' | 'precipitation'>, nextHours: HourForecast[]): WeatherMood {
-  if (isStormCode(current.code)) return { rainy: true, line: 'Thunderstorm now, so indoor picks first!' }
-  if (current.precipitation > 0.1 || isRainCode(current.code)) return { rainy: true, line: 'Raining now, so indoor picks first!' }
-  const window = findRainWindow(nextHours)
-  if (window) return { rainy: true, line: `Rain later (${formatHour(window.start)}), so indoor picks first!` }
-  const last = nextHours.at(-1)
-  if (!last) return { rainy: false, line: '' }
+export function weatherMood(current: Pick<CurrentWeather, 'code' | 'precipitation'> & { isDay?: boolean }, nextHours: HourForecast[]): WeatherMood {
   // Hours are Manila wall-clock keys ("2026-10-07T20:00"), so the hour digits are local time.
-  const startHour = Number(nextHours[0].time.slice(11, 13))
-  if (startHour >= 18 || startHour < 5) return { rainy: false, line: 'No rain tonight. Perfect for night views and food trips!' }
+  const startHour = nextHours.length ? Number(nextHours[0].time.slice(11, 13)) : null
+  // The forecast's own day/night flag follows the real sunset; the clock is the fallback.
+  const night = current.isDay === false || (startHour !== null && (startHour >= 18 || startHour < 5))
+  if (isStormCode(current.code)) return { rainy: true, night, line: 'Thunderstorm now, so indoor picks first!' }
+  if (current.precipitation > 0.1 || isRainCode(current.code)) return { rainy: true, night, line: 'Raining now, so indoor picks first!' }
+  const window = findRainWindow(nextHours)
+  if (window) return { rainy: true, night, line: `Rain later (${formatHour(window.start)}), so indoor picks first!` }
+  const last = nextHours.at(-1)
+  if (!last || startHour === null) return { rainy: false, night, line: '' }
+  if (night) return { rainy: false, night, line: 'No rain tonight. Perfect for night views and food trips!' }
   const until = new Date(Date.parse(`${last.time}:00Z`) + 3_600_000).toISOString().slice(0, 16)
   const untilHour = Number(until.slice(11, 13))
-  if (untilHour >= 18 || untilHour < startHour) return { rainy: false, line: 'Dry till tonight. Great time to go outdoors!' }
-  return { rainy: false, line: `Dry until ${formatHour(until)}. Great time to go outdoors!` }
+  if (untilHour >= 18 || untilHour < startHour) return { rainy: false, night, line: 'Dry till tonight. Great time to go outdoors!' }
+  return { rainy: false, night, line: `Dry until ${formatHour(until)}. Great time to go outdoors!` }
 }
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/

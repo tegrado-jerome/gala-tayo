@@ -107,15 +107,25 @@ function hour(time: string, rain: number, mm: number): HourForecast {
 
 test('weather mood: rain now, rain later, or dry', () => {
   const dry = [hour('2026-10-07T13:00', 10, 0), hour('2026-10-07T14:00', 10, 0)]
-  assert.deepEqual(weatherMood({ code: 63, precipitation: 1.2 }, dry), { rainy: true, line: 'Raining now, so indoor picks first!' })
+  assert.deepEqual(weatherMood({ code: 63, precipitation: 1.2 }, dry), { rainy: true, night: false, line: 'Raining now, so indoor picks first!' })
   const later = [hour('2026-10-07T13:00', 10, 0), hour('2026-10-07T15:00', 80, 2)]
-  assert.deepEqual(weatherMood({ code: 2, precipitation: 0 }, later), { rainy: true, line: 'Rain later (3 PM), so indoor picks first!' })
-  assert.deepEqual(weatherMood({ code: 1, precipitation: 0 }, dry), { rainy: false, line: 'Dry until 3 PM. Great time to go outdoors!' })
+  assert.deepEqual(weatherMood({ code: 2, precipitation: 0 }, later), { rainy: true, night: false, line: 'Rain later (3 PM), so indoor picks first!' })
+  assert.deepEqual(weatherMood({ code: 1, precipitation: 0 }, dry), { rainy: false, night: false, line: 'Dry until 3 PM. Great time to go outdoors!' })
   assert.equal(weatherMood({ code: 95, precipitation: 0 }, dry).line, 'Thunderstorm now, so indoor picks first!')
   const evening = [hour('2026-10-07T15:00', 10, 0), hour('2026-10-07T20:00', 10, 0)]
   assert.equal(weatherMood({ code: 1, precipitation: 0 }, evening).line, 'Dry till tonight. Great time to go outdoors!')
   const night = [hour('2026-10-07T19:00', 10, 0), hour('2026-10-08T00:00', 10, 0)]
   assert.equal(weatherMood({ code: 1, precipitation: 0 }, night).line, 'No rain tonight. Perfect for night views and food trips!', 'no "go outdoors" at night')
+})
+
+test('weather mood is night after the real sunset, so the dry line gets a moon', () => {
+  const night = [hour('2026-10-07T19:00', 10, 0), hour('2026-10-08T00:00', 10, 0)]
+  assert.deepEqual(weatherMood({ code: 1, precipitation: 0, isDay: false }, night), { rainy: false, night: true, line: 'No rain tonight. Perfect for night views and food trips!' })
+  // 5:45 PM in October is after sunset: the forecast's own isDay flag wins over the 6 PM clock rule.
+  const dusk = [hour('2026-10-07T17:00', 10, 0), hour('2026-10-07T22:00', 10, 0)]
+  assert.deepEqual(weatherMood({ code: 1, precipitation: 0, isDay: false }, dusk), { rainy: false, night: true, line: 'No rain tonight. Perfect for night views and food trips!' })
+  assert.equal(weatherMood({ code: 1, precipitation: 0, isDay: true }, dusk).night, false)
+  assert.equal(weatherMood({ code: 1, precipitation: 0 }, night).night, true, 'the clock decides when the forecast has no day flag')
 })
 
 test('vote links keep up to 3 unique valid slugs', () => {
