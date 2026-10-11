@@ -296,6 +296,18 @@
                 120.8988
               ],
               "aliases": []
+            },
+            {
+              "slug": "itogon",
+              "name": "Itogon",
+              "type": "municipality",
+              "center": [
+                16.3599,
+                120.6772
+              ],
+              "aliases": [
+                "Itogon, Benguet"
+              ]
             }
           ]
         },
@@ -315,6 +327,19 @@
                 "Sagada, Mountain Province"
               ],
               "featured": true
+            },
+            {
+              "slug": "bontoc",
+              "name": "Bontoc",
+              "type": "municipality",
+              "center": [
+                17.0905,
+                120.9769
+              ],
+              "aliases": [
+                "Bontoc, Mountain Province",
+                "Maligcong"
+              ]
             }
           ]
         },
@@ -334,6 +359,44 @@
                 "Banaue, Ifugao",
                 "Banaue Rice Terraces"
               ]
+            },
+            {
+              "slug": "hungduan",
+              "name": "Hungduan",
+              "type": "municipality",
+              "center": [
+                16.8388,
+                121.0058
+              ],
+              "aliases": [
+                "Hungduan, Ifugao",
+                "Hapao"
+              ]
+            },
+            {
+              "slug": "kiangan",
+              "name": "Kiangan",
+              "type": "municipality",
+              "center": [
+                16.7764,
+                121.0868
+              ],
+              "aliases": [
+                "Kiangan, Ifugao",
+                "Nagacadan"
+              ]
+            },
+            {
+              "slug": "mayoyao",
+              "name": "Mayoyao",
+              "type": "municipality",
+              "center": [
+                16.9726,
+                121.2222
+              ],
+              "aliases": [
+                "Mayoyao, Ifugao"
+              ]
             }
           ]
         },
@@ -351,6 +414,25 @@
               ],
               "aliases": [
                 "Tinglayan, Kalinga"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "apayao",
+          "name": "Apayao",
+          "cities": [
+            {
+              "slug": "calanasan",
+              "name": "Calanasan",
+              "type": "municipality",
+              "center": [
+                18.2551,
+                121.0437
+              ],
+              "aliases": [
+                "Calanasan, Apayao",
+                "Mt. Kilang"
               ]
             }
           ]
@@ -425,6 +507,19 @@
                 120.5979
               ],
               "aliases": []
+            },
+            {
+              "slug": "badoc",
+              "name": "Badoc",
+              "type": "municipality",
+              "center": [
+                17.927,
+                120.4751
+              ],
+              "aliases": [
+                "Badoc, Ilocos Norte",
+                "Badoc Island"
+              ]
             }
           ]
         },
@@ -458,6 +553,33 @@
                 120.3915
               ],
               "aliases": []
+            },
+            {
+              "slug": "quirino-ilocos-sur",
+              "name": "Quirino, Ilocos Sur",
+              "type": "municipality",
+              "center": [
+                17.1372,
+                120.6779
+              ],
+              "aliases": [
+                "Quirino Ilocos Sur",
+                "Quirino (Ilocos Sur)"
+              ]
+            },
+            {
+              "slug": "santa-maria-ilocos-sur",
+              "name": "Santa Maria, Ilocos Sur",
+              "type": "municipality",
+              "center": [
+                17.3699,
+                120.4808
+              ],
+              "aliases": [
+                "Santa Maria Ilocos Sur",
+                "Santa Maria (Ilocos Sur)",
+                "Sta. Maria, Ilocos Sur"
+              ]
             }
           ]
         },
@@ -541,6 +663,58 @@
               ],
               "aliases": [
                 "Bolinao, Pangasinan"
+              ]
+            },
+            {
+              "slug": "aguilar",
+              "name": "Aguilar",
+              "type": "municipality",
+              "center": [
+                15.889,
+                120.2384
+              ],
+              "aliases": [
+                "Aguilar, Pangasinan"
+              ]
+            },
+            {
+              "slug": "anda-pangasinan",
+              "name": "Anda, Pangasinan",
+              "type": "municipality",
+              "center": [
+                16.2896,
+                119.9496
+              ],
+              "aliases": [
+                "Anda Pangasinan",
+                "Anda (Pangasinan)",
+                "Tondol"
+              ]
+            },
+            {
+              "slug": "san-nicolas-pangasinan",
+              "name": "San Nicolas, Pangasinan",
+              "type": "municipality",
+              "center": [
+                16.0694,
+                120.762
+              ],
+              "aliases": [
+                "San Nicolas Pangasinan",
+                "San Nicolas (Pangasinan)",
+                "Malico"
+              ]
+            },
+            {
+              "slug": "sison",
+              "name": "Sison",
+              "type": "municipality",
+              "center": [
+                16.1727,
+                120.5097
+              ],
+              "aliases": [
+                "Sison, Pangasinan"
               ]
             }
           ]
@@ -630,6 +804,24 @@
               ]
             }
           ]
+        },
+        {
+          "slug": "nueva-vizcaya",
+          "name": "Nueva Vizcaya",
+          "cities": [
+            {
+              "slug": "kayapa",
+              "name": "Kayapa",
+              "type": "municipality",
+              "center": [
+                16.3581,
+                120.8872
+              ],
+              "aliases": [
+                "Kayapa, Nueva Vizcaya"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -683,6 +875,19 @@
                 120.7633
               ],
               "aliases": []
+            },
+            {
+              "slug": "mabalacat",
+              "name": "Mabalacat",
+              "type": "city",
+              "center": [
+                15.2251,
+                120.5734
+              ],
+              "aliases": [
+                "Mabalacat, Pampanga",
+                "Mabalacat City"
+              ]
             }
           ]
         },
@@ -728,6 +933,19 @@
                 "San Antonio Zambales",
                 "Pundaquit",
                 "Anawangin"
+              ]
+            },
+            {
+              "slug": "palauig",
+              "name": "Palauig",
+              "type": "municipality",
+              "center": [
+                15.4336,
+                119.9108
+              ],
+              "aliases": [
+                "Palauig, Zambales",
+                "Magalawa Island"
               ]
             }
           ]
@@ -800,6 +1018,18 @@
               "aliases": [
                 "Dipaculao, Aurora"
               ]
+            },
+            {
+              "slug": "casiguran",
+              "name": "Casiguran",
+              "type": "municipality",
+              "center": [
+                16.277,
+                122.1233
+              ],
+              "aliases": [
+                "Casiguran, Aurora"
+              ]
             }
           ]
         },
@@ -832,6 +1062,36 @@
                 120.3852
               ],
               "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "nueva-ecija",
+          "name": "Nueva Ecija",
+          "cities": [
+            {
+              "slug": "gabaldon",
+              "name": "Gabaldon",
+              "type": "municipality",
+              "center": [
+                15.4509,
+                121.3384
+              ],
+              "aliases": [
+                "Gabaldon, Nueva Ecija"
+              ]
+            },
+            {
+              "slug": "pantabangan",
+              "name": "Pantabangan",
+              "type": "municipality",
+              "center": [
+                15.8074,
+                121.1442
+              ],
+              "aliases": [
+                "Pantabangan, Nueva Ecija"
+              ]
             }
           ]
         }
