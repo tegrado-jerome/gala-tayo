@@ -50,5 +50,18 @@
     "date": "2026-10-09",
     "intents": [],
     "areaSlug": "quezon-city"
+  },
+  {
+    "title": "class suspensions walang pasok",
+    "traffic": 200,
+    "date": "2026-10-11",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]

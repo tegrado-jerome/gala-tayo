@@ -1,1 +1,125 @@
-[]
+[
+ {
+  "slug": "davao-region-weekend-tier-list",
+  "date": "2026-10-11",
+  "publishedAt": "2026-10-11T08:30:01.180Z",
+  "format": "tier-list",
+  "sticker": "Tier List",
+  "title": "Things to do in Davao Region this weekend: The official tier list",
+  "hook": "Staring down one of the rarest eagles on Earth beats another lazy Sunday at home.",
+  "body": "Sunday calls for settling the group chat debate with cold hard rankings. The Philippine Eagle Center grabs the top spot because you cannot argue with that giant crest up close. Eden Nature Park brings cool mountain air and high rides in Toril. Malagos Garden Resort finishes the lineup with cacao history and lovebirds on your fingers. Pick your stop and head out today!",
+  "meme": {
+   "top": "Staring down the Philippine eagle",
+   "bottom": "You try putting this shaggy crest in A tier"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Davao Region this weekend",
+   "query": "things to do in Davao Region this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Davao Region",
+  "leadSlug": "philippine-eagle-center-davao",
+  "picks": [
+   {
+    "slug": "philippine-eagle-center-davao",
+    "name": "Philippine Eagle Center",
+    "city": "Davao City",
+    "canonicalPath": "/places/davao-city/philippine-eagle-center-davao",
+    "why": "One of the rarest eagles on Earth with a massive shaggy crest. Instant S tier for pure royalty.",
+    "budgetMin": 150,
+    "tier": "S"
+   },
+   {
+    "slug": "eden-nature-park-davao",
+    "name": "Eden Nature Park",
+    "city": "Davao City",
+    "canonicalPath": "/places/davao-city/eden-nature-park-davao",
+    "why": "A 95-foot Skyswing over 80 hectares of pine trees. A tier because your stomach drops instantly.",
+    "budgetMin": 500,
+    "tier": "A"
+   },
+   {
+    "slug": "malagos-garden-resort",
+    "name": "Malagos Garden Resort",
+    "city": "Davao City",
+    "canonicalPath": "/places/davao-city/malagos-garden-resort",
+    "why": "The country's first chocolate museum. It only took B tier because the eagle stares harder.",
+    "budgetMin": null,
+    "tier": "B"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 8,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
+  "slug": "rainy-day-activities-in-metro-manila",
+  "date": "2026-10-11",
+  "publishedAt": "2026-10-11T07:29:44.345Z",
+  "format": "budget-challenge",
+  "sticker": "₱300 Challenge",
+  "title": "₱300 Rainy Day Activities in Metro Manila: ₱75 Spent",
+  "hook": "We took ₱300 out in the rain, spent ₱75 total, and kept ₱225 for merienda!",
+  "body": "Beat the afternoon drizzle with three grand indoor stops in Rizal Park and Intramuros! Start at the National Museum of Fine Arts to see Juan Luna's Spoliarium, then dodge the rain under the towering Tree of Life and glass dome at the National Museum of Natural History. Wrap up inside Casa Manila's grand sala. We spent just ₱75 of our ₱300 cap, leaving ₱225 untouched for warm merienda. Go today!",
+  "meme": {
+   "top": "Trying to escape the afternoon drizzle on a ₱300 budget",
+   "bottom": "Standing in front of the huge Spoliarium for zero pesos"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "rainy day activities in Metro Manila",
+   "query": "rainy day activities in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": "Light rain on and off, 4–5 PM",
+  "area": "Metro Manila",
+  "leadSlug": "national-museum-of-fine-arts",
+  "picks": [
+   {
+    "slug": "national-museum-of-fine-arts",
+    "name": "National Museum of Fine Arts",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-fine-arts",
+    "why": "Free entry, strong air-con, and Juan Luna's huge Spoliarium waiting right past the doors!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "national-museum-of-natural-history",
+    "name": "National Museum of Natural History",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-natural-history",
+    "why": "Free shelter under the towering Tree of Life and the courtyard glass dome!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "casa-manila",
+    "name": "Casa Manila",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/casa-manila",
+    "why": "Step into an 1850s-style home with capiz windows and a grand sala for only ₱75!",
+    "budgetMin": 75
+   }
+  ],
+  "budget": {
+   "cap": 300,
+   "total": 75
+  },
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ }
+]
