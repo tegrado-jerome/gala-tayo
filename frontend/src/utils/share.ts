@@ -2,7 +2,7 @@ import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
 import { getPublicSiteOrigin } from './site'
 import { getApiUrl } from './apiClient'
 import { trackShare } from './analytics'
-import { nativeShareChannel, withShareRef, type ShareChannel } from './shareRef'
+import { goListShareUrl, goPlanInviteUrl, nativeShareChannel, withShareRef, type ShareChannel } from './shareRef'
 
 type ShareLinkOptions = {
   url: string
@@ -43,19 +43,23 @@ export function buildPrivateGalaPlanShareUrl(planId: string) {
   return `${getPublicSiteOrigin()}/gala-plans/${encodeURIComponent(planId)}`
 }
 
-/**
- * The link to send for a plan: a small API page with the plan's own preview card (name, date,
- * first stop photo) that forwards to the plan. Sharing never changes who can open the plan.
- */
-export function buildGalaPlanInviteUrl(planId: string) {
-  const url = getApiUrl(`/share/plans/${encodeURIComponent(planId)}`)
+/** The local API's share page in dev, where go.galatayo.app (which reads production) can't see the data. */
+function devShareUrl(path: string) {
+  const url = getApiUrl(path)
   return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
 }
 
-/** Link for a shared Gala list: an API page with the list's preview card that forwards to `/lists/shared`. */
+/**
+ * The link to send for a plan: go.galatayo.app/p/<id> shows the plan's own preview card (name, date,
+ * first stop photo) and forwards to the plan. Sharing never changes who can open the plan.
+ */
+export function buildGalaPlanInviteUrl(planId: string) {
+  return import.meta.env.DEV ? devShareUrl(`/share/plans/${encodeURIComponent(planId)}`) : goPlanInviteUrl(planId)
+}
+
+/** Link for a shared Gala list: go.galatayo.app/l?... shows the list's preview card and forwards to `/lists/shared`. */
 export function buildGalaListShareUrl(query: string) {
-  const url = getApiUrl(`/share/lists?${query}`)
-  return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
+  return import.meta.env.DEV ? devShareUrl(`/share/lists?${query}`) : goListShareUrl(query)
 }
 
 export async function copyTextToClipboard(text: string) {

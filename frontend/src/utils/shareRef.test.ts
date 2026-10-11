@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { readShareRef, withShareRef } from './shareRef.ts'
+import { goListShareUrl, goPlanInviteUrl, readShareRef, withShareRef } from './shareRef.ts'
+
+test('invite links use go.galatayo.app and still take the share channel', () => {
+  const plan = goPlanInviteUrl('ea79990c-c1e7-4dea-97c7-162859af9bd7')
+  assert.equal(plan, 'https://go.galatayo.app/p/ea79990c-c1e7-4dea-97c7-162859af9bd7')
+  assert.equal(withShareRef(plan, 'gc'), `${plan}?ref=gc`)
+  assert.equal(withShareRef(goListShareUrl('n=Food+trip&p=a%2Cb'), 'copy'), 'https://go.galatayo.app/l?n=Food+trip&p=a%2Cb&ref=copy')
+})
 
 test('withShareRef tags the link and keeps the rest of it', () => {
   assert.equal(withShareRef('https://galatayo.app/places/manila/fort-santiago', 'gc'), 'https://galatayo.app/places/manila/fort-santiago?ref=gc')

@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getActiveNormalizedPlaces } from "../domain/places";
 import { hasCuratedPhoto, hdPhotoKey } from "../utils/hdPhotos";
 import { getConfiguredSiteUrl } from "../utils/siteUrl";
-import { isPreviewBot, renderSharePage, socialImageUrl, type PlanSharePreview } from "./sharePlan";
+import { isPreviewBot, renderSharePage, SHARE_ORIGIN, socialImageUrl, type PlanSharePreview } from "./sharePlan";
 
 const DEFAULT_SITE_URL = "https://galatayo.app";
 const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/images/og/galatayo-og.jpg`;
@@ -24,6 +24,13 @@ export function parseSharedListQuery(params: URLSearchParams): SharedListQuery |
   ).slice(0, MAX_PLACES);
   const by = (params.get("by") ?? "").replace(/[^\w.]/g, "").slice(0, 40) || null;
   return name && slugs.length > 0 ? { name, slugs, by } : null;
+}
+
+/** The go.galatayo.app link for a list, without the share channel, for og:url. */
+export function listShareUrl(requestUrl: string) {
+  const params = new URL(requestUrl).searchParams;
+  params.delete("ref");
+  return `${SHARE_ORIGIN}/l?${params}`;
 }
 
 export function describeListShare(input: {
@@ -72,7 +79,7 @@ export async function getListSharePage(request: HttpRequest, context: Invocation
     context.warn("Shared list preview could not load places:", error);
   }
 
-  const preview = describeListShare({ list, places, listUrl, shareUrl: request.url });
+  const preview = describeListShare({ list, places, listUrl, shareUrl: listShareUrl(request.url) });
   const refresh = !isPreviewBot(request.headers.get("user-agent"));
   return { status: 200, headers: { ...headers, "Cache-Control": "public, max-age=600", Vary: "User-Agent" }, body: renderSharePage(preview, { refresh }) };
 }

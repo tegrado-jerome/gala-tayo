@@ -26,3 +26,12 @@ export function readShareRef(search: string): ShareChannel | null {
 
 /** Native share sheets usually end up in a group chat; without one, the link is copied. */
 export const nativeShareChannel = (): ShareChannel => (typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? 'gc' : 'copy')
+
+// Invite links use our own short domain (infra/cloudflare/share-worker), which serves the backend's
+// preview card to chat apps and then opens the plan or list on galatayo.app.
+export const SHARE_ORIGIN = 'https://go.galatayo.app'
+
+export const goPlanInviteUrl = (planId: string) => `${SHARE_ORIGIN}/p/${encodeURIComponent(planId)}`
+
+/** `query` is an encodeSharedList() string. */
+export const goListShareUrl = (query: string) => `${SHARE_ORIGIN}/l?${query}`
