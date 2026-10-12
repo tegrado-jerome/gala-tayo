@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { countRedisCommands } from "../services/redisCacheService";
-import { checkPublicReadRateLimit, checkRedisRateLimit, countInFixedWindow, type WindowCounterStore } from "./redisRateLimit";
+import { checkEndpointRateLimit, checkPublicReadRateLimit, checkRedisRateLimit, countInFixedWindow, type WindowCounterStore } from "./redisRateLimit";
 
 /** Counts the commands a limiter sends, like Upstash bills them. */
 function fakeRedis() {
@@ -65,9 +65,36 @@ test("a key over its limit stays blocked without more Redis commands", async () 
   assert.equal((await checkRedisRateLimit(key, 2, 60, { now: Date.UTC(2026, 9, 7, 10, 1, 0), store: redis.store })).allowed, true);
 });
 
-test("without Redis the shared limit stays open", async () => {
-  const result = await checkRedisRateLimit(`no-redis:${Math.random()}`, 1, 60);
-  assert.equal(result.allowed, true);
+test("without Redis the shared limit still holds, in memory", async () => {
+  const key = `no-redis:${Math.random()}`;
+  const now = Date.UTC(2026, 9, 7, 10, 0, 5);
+  for (let i = 0; i < 3; i += 1) assert.equal((await checkRedisRateLimit(key, 3, 60, { now })).allowed, true);
+  const blocked = await checkRedisRateLimit(key, 3, 60, { now });
+  assert.equal(blocked.allowed, false);
+  assert.equal(blocked.resetAt, new Date(Date.UTC(2026, 9, 7, 10, 1, 0)).toISOString());
+  assert.equal((await checkRedisRateLimit(key, 3, 60, { now: Date.UTC(2026, 9, 7, 10, 1, 0) })).allowed, true);
+});
+
+test("when Redis errors the shared limit falls back to memory instead of opening", async () => {
+  const failing: WindowCounterStore = {
+    incr: async () => {
+      throw new Error("ERR max requests limit exceeded");
+    },
+    expire: async () => undefined,
+  };
+  const key = `redis-down:${Math.random()}`;
+  const now = Date.UTC(2026, 9, 7, 10, 0, 5);
+  for (let i = 0; i < 2; i += 1) assert.equal((await checkRedisRateLimit(key, 2, 60, { now, store: failing })).allowed, true);
+  assert.equal((await checkRedisRateLimit(key, 2, 60, { now, store: failing })).allowed, false);
+});
+
+test("endpoint limits block with 429 without Redis", async () => {
+  const endpoint = `test-strict-${Math.random()}`;
+  for (let i = 0; i < 5; i += 1) assert.equal((await checkEndpointRateLimit(fromIp("203.0.113.9"), endpoint, 5, 60)).allowed, true);
+  const blocked = await checkEndpointRateLimit(fromIp("203.0.113.9"), endpoint, 5, 60);
+  assert.equal(blocked.allowed, false);
+  assert.equal(blocked.response?.status, 429);
+  assert.equal((await checkEndpointRateLimit(fromIp("203.0.113.10"), endpoint, 5, 60)).allowed, true);
 });
 
 test("public read limit is per IP and per endpoint, in memory", async () => {

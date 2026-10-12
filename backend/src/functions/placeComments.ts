@@ -20,6 +20,11 @@ import {
   COMMENT_COLUMNS,
   REPORT_REASONS,
   type ReportReason,
+  findHoldReason,
+  queueHeldComment,
+  HELD_COMMENT_MESSAGE,
+  AUTO_HOLD_NOTE,
+  type HoldReason,
 } from "./placeCommentHelpers";
 
 export async function placeCommentsList(
@@ -83,6 +88,34 @@ export async function placeCommentsList(
   }
 }
 
+/**
+ * A held comment is saved hidden and queued for a moderator; the author still gets it back (with `held`) so the app
+ * can say it is waiting for review. If queueing fails the row is removed, so nothing sits hidden where no admin sees it.
+ */
+async function createdCommentResponse(
+  created: PlaceCommentRow,
+  holdReason: HoldReason | null,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  if (holdReason) {
+    const { error: queueError } = await queueHeldComment(created, holdReason);
+    if (queueError) {
+      context.error("Failed to queue held comment for review:", queueError);
+      const supabaseAdmin = await getSupabaseAdminClient();
+      await (supabaseAdmin.from("place_comments") as any).delete().eq("id", created.id);
+      return { status: 500, jsonBody: { message: "Failed to create comment." } };
+    }
+  }
+
+  const [enriched] = await enrichCommentsWithDisplayNames([created]);
+  return {
+    status: 201,
+    jsonBody: holdReason
+      ? { comment: { ...enriched, replies: [] }, held: true, message: HELD_COMMENT_MESSAGE }
+      : { comment: { ...enriched, replies: [] } },
+  };
+}
+
 export async function placeCommentsCreate(
   request: HttpRequest,
   context: InvocationContext
@@ -102,13 +135,14 @@ export async function placeCommentsCreate(
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
+    const holdReason = findHoldReason(comment);
     const { data: createdComment, error: createError } = await commentsTable
       .insert({
         place_id: placeId,
         user_id: user.id,
         comment,
         parent_comment_id: null,
-        status: "visible",
+        status: holdReason ? "hidden" : "visible",
       })
       .select(COMMENT_COLUMNS)
       .single();
@@ -118,11 +152,7 @@ export async function placeCommentsCreate(
       return { status: 500, jsonBody: { message: "Failed to create comment." } };
     }
 
-    const enriched = await enrichCommentsWithDisplayNames([createdComment as PlaceCommentRow]);
-    return {
-      status: 201,
-      jsonBody: { comment: { ...enriched[0], replies: [] } },
-    };
+    return createdCommentResponse(createdComment as PlaceCommentRow, holdReason, context);
   } catch (error) {
     context.error("Unexpected error in POST /api/places/{id}/comments:", error);
     return { status: 500, jsonBody: { message: "Unexpected server error." } };
@@ -176,13 +206,14 @@ export async function placeCommentRepliesCreate(
       return badRequest("Cannot reply to a deleted or hidden comment.");
     }
 
+    const holdReason = findHoldReason(comment);
     const { data: createdReply, error: createError } = await commentsTable
       .insert({
         place_id: placeId,
         user_id: user.id,
         comment,
         parent_comment_id: parentCommentId,
-        status: "visible",
+        status: holdReason ? "hidden" : "visible",
       })
       .select(COMMENT_COLUMNS)
       .single();
@@ -192,11 +223,7 @@ export async function placeCommentRepliesCreate(
       return { status: 500, jsonBody: { message: "Failed to create reply." } };
     }
 
-    const enriched = await enrichCommentsWithDisplayNames([createdReply as PlaceCommentRow]);
-    return {
-      status: 201,
-      jsonBody: { comment: { ...enriched[0], replies: [] } },
-    };
+    return createdCommentResponse(createdReply as PlaceCommentRow, holdReason, context);
   } catch (error) {
     context.error("Unexpected error in POST /api/places/{id}/comments/{commentId}/replies:", error);
     return { status: 500, jsonBody: { message: "Unexpected server error." } };
@@ -242,8 +269,9 @@ export async function placeCommentsUpdate(
       return badRequest("Cannot edit a hidden comment.");
     }
 
+    const holdReason = findHoldReason(body ?? "");
     const { data: updatedComment, error: updateError } = await commentsTable
-      .update({ comment: body, updated_at: new Date().toISOString() })
+      .update({ comment: body, updated_at: new Date().toISOString(), ...(holdReason ? { status: "hidden" } : {}) })
       .eq("id", commentId)
       .select(COMMENT_COLUMNS)
       .single();
@@ -251,6 +279,20 @@ export async function placeCommentsUpdate(
     if (updateError) {
       context.error("Failed to update place comment:", updateError);
       return { status: 500, jsonBody: { message: "Failed to update comment." } };
+    }
+
+    if (holdReason) {
+      const { error: queueError } = await queueHeldComment(updatedComment as PlaceCommentRow, holdReason);
+      if (queueError) {
+        context.error("Failed to queue edited comment for review:", queueError);
+        await commentsTable
+          .update({ comment: existingComment.comment, status: existingComment.status, updated_at: existingComment.updated_at })
+          .eq("id", commentId);
+        return { status: 500, jsonBody: { message: "Failed to update comment." } };
+      }
+
+      const [held] = await enrichCommentsWithDisplayNames([updatedComment as PlaceCommentRow]);
+      return { status: 200, jsonBody: { comment: { ...held, replies: [] }, held: true, message: HELD_COMMENT_MESSAGE } };
     }
 
     const enriched = await enrichCommentsWithDisplayNames([updatedComment as PlaceCommentRow]);
@@ -351,7 +393,7 @@ export async function placeCommentReportsCreate(
     const commentsTable = supabaseAdmin.from("place_comments") as any;
 
     const { data: targetComment, error: commentError } = await commentsTable
-      .select("id, status")
+      .select("id, status, user_id")
       .eq("id", commentId)
       .maybeSingle();
 
@@ -361,6 +403,9 @@ export async function placeCommentReportsCreate(
     }
 
     if (!targetComment) return badRequest("Comment not found.");
+
+    // Reports filed under a comment's own author are reserved for auto-holds, which a dismissal publishes.
+    if (targetComment.user_id === user.id) return badRequest("You can't report your own comment.");
 
     if (targetComment.status !== "visible") {
       return badRequest("Cannot report a deleted or hidden comment.");
@@ -427,7 +472,8 @@ export async function myCommentReportsList(
 
     return {
       status: 200,
-      jsonBody: { reports: data || [] },
+      // Auto-hold entries are filed under the comment's author, but they are not reports the author made.
+      jsonBody: { reports: ((data || []) as CommentReportRow[]).filter((report) => !report.details?.startsWith(AUTO_HOLD_NOTE)) },
     };
   } catch (error) {
     context.error("Unexpected error in GET /api/me/comment-reports:", error);
