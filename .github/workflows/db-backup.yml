@@ -1,0 +1,58 @@
+name: DB backup
+
+# Nightly encrypted dump of the prod database into the private R2 bucket galatayo-backups, through the write-only
+# infra/cloudflare/backup-sink worker. R2 drops objects after 14 days. Restore: docs/backup-restore.md
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 2:00 AM Philippine time
+  workflow_dispatch:
+  push:
+    branches: [ops/launch-ops]
+    paths: [.github/workflows/db-backup.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump, compress and encrypt
+        env:
+          DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          mkdir dump
+          # Same three files as Supabase's CLI backup guide, so its restore steps apply as written.
+          supabase db dump --db-url "$DB_URL" --role-only -f dump/roles.sql
+          supabase db dump --db-url "$DB_URL" -f dump/schema.sql
+          supabase db dump --db-url "$DB_URL" --data-only --use-copy -f dump/data.sql
+          ls -l dump
+          test -s dump/schema.sql && test -s dump/data.sql
+          umask 077
+          printf '%s' "$PASSPHRASE" > "$RUNNER_TEMP/passphrase"
+          tar -czf - -C dump . | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase-file "$RUNNER_TEMP/passphrase" -o backup.tar.gz.gpg
+          rm "$RUNNER_TEMP/passphrase"
+          ls -l backup.tar.gz.gpg
+
+      - name: Upload to R2
+        env:
+          UPLOAD_TOKEN: ${{ secrets.BACKUP_UPLOAD_TOKEN }}
+        run: |
+          set -euo pipefail
+          key="db/$(date -u +%Y-%m-%dT%H%MZ).tar.gz.gpg"
+          curl --fail-with-body --silent --show-error --retry 3 -X PUT \
+            -H "Authorization: Bearer $UPLOAD_TOKEN" --data-binary @backup.tar.gz.gpg \
+            "https://galatayo-backup-sink.tegradojeromebrent.workers.dev/$key"
