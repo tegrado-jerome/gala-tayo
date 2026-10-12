@@ -13,6 +13,7 @@ import {
   defaultStart,
   dropOffHoursFood,
   ensureRequested,
+  hasMealAt,
   isDarkOutdoor,
   orderByTimeOfDay,
   parseDeparture,
@@ -349,6 +350,13 @@ describe("parseTimeWindow", () => {
     assert.equal(parseTimeWindow("Chill day, until gabi").start, null);
     assert.deepEqual(parseTimeWindow("Date sa BGC, ₱2k"), { start: null, end: null });
   });
+
+  it("reads 'ends with dinner' as the end of a whole day, not a 5:30 PM start", () => {
+    // Launch QA round 2: this started at 5:30 PM and ended up two stops long.
+    assert.deepEqual(parseTimeWindow("Barkada day in Baguio for 4, chill, ₱1,500 each, ends with dinner"), { start: null, end: at(21) });
+    assert.deepEqual(parseTimeWindow("Baguio day trip, with dinner"), { start: null, end: null });
+    assert.equal(parseTimeWindow("Barkada night out, dinner sa BGC").start, at(17, 30));
+  });
 });
 
 describe("requiredMeal", () => {
@@ -479,6 +487,23 @@ describe("plan intent rules (QA round 2)", () => {
     assert.equal(out.picks.get("cafe"), "pastry");
     assert.equal(out.picks.get("dinner"), "qc-dinner");
     assert.deepEqual(out.missing, []);
+  });
+
+  it("sits down for dinner when a restaurant fits, and only falls back to a night market", () => {
+    const nightMarket = place({ id: "night-market", name: "Baguio Night Market", category: "Activity", city: "Makati", budget_min: 100, tags: ["night-market", "street-food"], good_for: ["Food Trip"] });
+    const dinner = place({ id: "dinner", name: "Hill Station", category: "Food", city: "Makati", budget_min: 700, best_time_to_visit: "Dinner on cold evenings" });
+    const plan = [stop("night-market", "19:00")];
+    assert.equal(ensureRequested(plan, [nightMarket, dinner], ["dinner"], { restaurantMeals: true }).picks.get("dinner"), "dinner");
+    assert.equal(ensureRequested(plan, [nightMarket, dinner], ["dinner"]).picks.get("dinner"), "night-market");
+    assert.equal(ensureRequested(plan, [nightMarket], ["dinner"], { restaurantMeals: true }).picks.get("dinner"), "night-market");
+    assert.equal(ensureRequested(plan, [nightMarket, dinner], ["dinner"], { budgetPerHead: 500, restaurantMeals: true }).picks.get("dinner"), "night-market");
+  });
+
+  it("counts a meal only when it is timed for it", () => {
+    const byId = new Map([qcDinner, pastry].map((entry) => [entry.id, entry]));
+    assert.equal(hasMealAt([stop("qc-dinner", "19:00")], byId, "dinner"), true);
+    assert.equal(hasMealAt([stop("qc-dinner", "12:00")], byId, "dinner"), false);
+    assert.equal(hasMealAt([stop("pastry", "19:00")], byId, "dinner"), false);
   });
 
   it("says what it could not find instead of faking it", () => {

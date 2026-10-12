@@ -547,6 +547,8 @@ function readClock(hourText: string, minuteText: string | undefined, suffix: str
 
 const CLOCK = String.raw`(?:alas[-\s]?)?(\d{1,2})(?:[:.](\d{2}))?\s*(a\.m\.|p\.m\.|am|pm|ng\s+umaga|ng\s+hapon|ng\s+gabi|n?g\s+tanghali)?`;
 const END_WORDS = String.raw`(?:hanggang|until|till|to|up\s+to|-|–)`;
+// How a request names the end of the day in words: "hanggang gabi", "ending at sunset", "ends with dinner".
+const END_PHRASE = String.raw`(?:hanggang|until|till|up\s+to|end(?:s|ing)?\s+(?:at|with)|finish(?:es|ing)?\s+with)`;
 
 /** Start and end of the outing, when the request says ("simula 2pm hanggang gabi", "from 10am to 4pm"). */
 export function parseTimeWindow(prompt: string): { start: number | null; end: number | null } {
@@ -572,16 +574,18 @@ export function parseTimeWindow(prompt: string): { start: number | null; end: nu
 
   const endClock = text.match(new RegExp(String.raw`\b(?:hanggang|until|till|up\s+to|end(?:ing)?\s+(?:at|by)|uwi\s+(?:ng|by)?)\s+${CLOCK}`));
   if (end === null && endClock && endClock[1]) end = readClock(endClock[1], endClock[2], endClock[3]);
-  const endPart = text.match(/\b(?:hanggang|until|till|up to|ending at|end at)\s+([a-z\s]{3,20})/);
+  const endPart = text.match(new RegExp(String.raw`\b${END_PHRASE}\s+([a-z\s]{3,20})`));
   if (end === null && endPart) end = END_PARTS.find(([pattern]) => pattern.test(endPart[1]))?.[1] ?? null;
 
   if (start === null) {
     // Day words that aren't the end of a range ("hanggang gabi") set the start.
-    const withoutEnd = text.replace(/\b(?:hanggang|until|till|up to)\s+\S+(?:\s+\S+)?/g, " ");
+    const withoutEnd = text.replace(new RegExp(String.raw`\b${END_PHRASE}\s+\S+(?:\s+\S+)?`, "g"), " ");
     start = DAY_PARTS.find(([pattern]) => pattern.test(withoutEnd))?.[1] ?? null;
     // "Museum day then dinner": the day starts with the museum, not at dinner time.
     const daytimeAsk = requestedKinds(withoutEnd).some((kind) => kind === "museum" || kind === "cafe" || kind === "lunch" || kind === "breakfast");
-    if (start === 17 * 60 + 30 && daytimeAsk) start = null;
+    // "Baguio day trip with dinner" is a whole day that includes dinner, not an evening out.
+    const wholeDayWithDinner = wantsWholeDay(withoutEnd) && !/\b(gabi|evening|night|tonight)\b/.test(withoutEnd);
+    if (start === 17 * 60 + 30 && (daytimeAsk || wholeDayWithDinner)) start = null;
   }
   if (start !== null && end !== null && end <= start) end = null;
   return { start, end };
@@ -626,6 +630,9 @@ const CATEGORY_OPENING: Record<string, { min: number; max: number }> = {
   Heritage: { min: 8 * 60, max: 17 * 60 },
 };
 
+/** A pasalubong shop (Good Shepherd) sells food but is a shopping stop, never the meal. */
+const isPasalubongShop = (place: NormalizedPlace) => place.tags.includes("pasalubong") && !place.tags.includes("restaurant");
+
 const NIGHT_VENUE = /\b(night market|night bazaar|night food market|light park|firefly)\b/i;
 
 function stopKind(place: NormalizedPlace, note: string, clock: number | null, wantsSunset: boolean): StopKind {
@@ -634,7 +641,7 @@ function stopKind(place: NormalizedPlace, note: string, clock: number | null, wa
   if (place.category === "Nightlife" || NIGHT_VENUE.test(place.name)) return "nightlife";
   if (wantsSunset && SUNSET_WORDS.test(text) && place.category !== "Food") return "sunset";
   if (SUNSET_WORDS.test(note) && place.category !== "Food") return "sunset";
-  if (place.category === "Food") {
+  if (place.category === "Food" && !isPasalubongShop(place)) {
     if (/\b(breakfast|almusal|brunch)\b/.test(note.toLowerCase())) return "breakfast";
     if (/\b(lunch|tanghalian)\b/.test(note.toLowerCase())) return "lunch";
     if (/\b(dinner|hapunan|supper)\b/.test(note.toLowerCase())) return "dinner";
@@ -982,7 +989,7 @@ export function fitsKind(place: NormalizedPlace, kind: RequestedKind) {
         (place.category === "Food" || isFoodStreet(place)) &&
         servesMeal(place, kind) &&
         !/\bbreakfast\b/i.test(place.name) &&
-        !(place.tags.includes("pasalubong") && !place.tags.includes("restaurant"))
+        !isPasalubongShop(place)
       );
   }
 }
@@ -1007,30 +1014,48 @@ export function ensureRequested(
   stops: DraftStop[],
   candidates: NormalizedPlace[],
   kinds: RequestedKind[],
-  { budgetPerHead = null, location, taken = new Set<string>() }: { budgetPerHead?: number | null; location?: LocationIntent; taken?: Set<string> } = {}
+  {
+    budgetPerHead = null,
+    location,
+    taken = new Set<string>(),
+    restaurantMeals = false,
+  }: {
+    budgetPerHead?: number | null;
+    location?: LocationIntent;
+    taken?: Set<string>;
+    /** A lunch or dinner is a restaurant when one fits; a food street or night market only stands in for none. */
+    restaurantMeals?: boolean;
+  } = {}
 ): { stops: DraftStop[]; missing: RequestedKind[]; overBudget: Set<RequestedKind>; picks: Map<RequestedKind, string> } {
   const byId = new Map(candidates.map((place) => [place.id, place]));
   let kept = stops.filter((stop) => byId.has(stop.place_id));
   const missing: RequestedKind[] = [];
   const overBudget = new Set<RequestedKind>();
   const picks = new Map<RequestedKind, string>();
+  const inArea = (place: NormalizedPlace) => (location && hasLocation(location) ? matchesLocation(place, location) : true);
 
   for (const kind of kinds) {
-    // A stop already doing another job (Binondo as lunch) can't also be the dinner.
-    const already = kept.find((stop) => !taken.has(stop.place_id) && ![...picks.values()].includes(stop.place_id) && fitsKind(byId.get(stop.place_id)!, kind));
-    if (already) {
-      picks.set(kind, already.place_id);
-      continue;
-    }
     // Only the asked-for stops count against the budget here; fitBudget trims the rest later.
     const asked = new Set(picks.values());
     const spent = kept.filter((stop) => asked.has(stop.place_id)).reduce((sum, stop) => sum + (byId.get(stop.place_id)?.budget_min ?? 0), 0);
     const left = budgetPerHead === null ? Infinity : budgetPerHead - spent;
-    const anchor = byId.get(kept.at(-1)?.place_id ?? "");
     const used = new Set(kept.map((stop) => stop.place_id));
-    const inArea = (place: NormalizedPlace) => (location && hasLocation(location) ? matchesLocation(place, location) : true);
+    const restaurantFits =
+      restaurantMeals &&
+      (kind === "lunch" || kind === "dinner") &&
+      candidates.some((place) => place.category === "Food" && fitsKind(place, kind) && !asked.has(place.id) && !taken.has(place.id) && (place.budget_min ?? 0) <= left && inArea(place));
+    // A stop already doing another job (Binondo as lunch) can't also be the dinner.
+    const already = kept.find((stop) => {
+      const place = byId.get(stop.place_id)!;
+      return !taken.has(stop.place_id) && !asked.has(stop.place_id) && fitsKind(place, kind) && (!restaurantFits || place.category === "Food");
+    });
+    if (already) {
+      picks.set(kind, already.place_id);
+      continue;
+    }
+    const anchor = byId.get(kept.at(-1)?.place_id ?? "");
     const pick = candidates
-      .filter((place) => fitsKind(place, kind) && !used.has(place.id) && (place.budget_min ?? 0) <= left)
+      .filter((place) => fitsKind(place, kind) && !used.has(place.id) && (place.budget_min ?? 0) <= left && (!restaurantFits || place.category === "Food"))
       .sort(
         (a, b) =>
           Number(inArea(b)) - Number(inArea(a)) ||
@@ -1055,6 +1080,16 @@ export function ensureRequested(
     picks.set(kind, pick.id);
   }
   return { stops: kept, missing, overBudget, picks };
+}
+
+/** True when a stop that can be the meal is timed for it (a dinner from about 5 PM, not a food street at noon). */
+export function hasMealAt(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, meal: "lunch" | "dinner") {
+  const { min, max } = WINDOWS[meal];
+  return stops.some((stop) => {
+    const place = placesById.get(stop.place_id);
+    const clock = parseClock(stop.time);
+    return place !== undefined && clock !== null && clock >= min - 30 && clock <= max + 30 && fitsKind(place, meal);
+  });
 }
 
 /** Makes sure a plan that needs a meal has a real one (a Food place that serves it), never a cafe. */

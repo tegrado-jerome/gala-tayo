@@ -22,6 +22,14 @@
 .t-card-hook { margin-top: 6px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
 .t-card-places { width: 100%; margin-top: 12px; overflow: hidden; font: 600 13px/1.3 var(--font-body); text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 
+/* Home, desktop: one row like the home's other cards, photo beside the text instead of a full-width 16:10 photo. */
+@media (min-width: 1024px) {
+  .t-home .t-card { flex-direction: row; }
+  .t-home .t-card-photo { flex: 0 0 min(44%, 480px); aspect-ratio: 16 / 9; }
+  .t-home .t-card-text { justify-content: center; padding: 24px 28px; }
+  .t-home .t-card-title { font-size: 24px; }
+}
+
 .t-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 768px) { .t-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
