@@ -175,21 +175,18 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
           </Button>
         </div>
 
-        <p className="t-note g-xs g-mut">
-          {post.topic.kind === 'trend' ? (
-            <>
-              Inspired by what's trending: {post.topic.url ? (
+        {post.topic.kind === 'trend' ? (
+          <p className="t-note g-xs g-mut">
+            Inspired by what's trending: {post.topic.url ? (
                 <a href={post.topic.url} target="_blank" rel="noopener noreferrer nofollow">
                   {post.topic.title}
                 </a>
               ) : (
                 post.topic.title
               )}
-              {post.topic.source ? ` (${post.topic.source})` : ''}.{' '}
-            </>
-          ) : null}
-          Written with AI, checked by an AI editor and our rules, from our own place pages. Every pick is a real top place on GalaTayo; prices are starting budgets from each place's page and can change, so check before you go.
-        </p>
+            {post.topic.source ? ` (${post.topic.source})` : ''}.
+          </p>
+        ) : null}
       </article>
 
       {more.length > 0 ? (
