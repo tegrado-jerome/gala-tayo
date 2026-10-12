@@ -3,12 +3,24 @@ import { createRoot } from 'react-dom/client'
 import { IconContext } from '@phosphor-icons/react/dist/lib/context'
 import './index.css'
 import App from './App.tsx'
+import { installErrorReporting } from './utils/errorReporting'
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // A newer deploy's worker has taken over: move this tab onto that build so it never asks for files
+  // the deploy removed. A tab in the background reloads now; one in use waits for its next navigation.
+  const pageBuild = document.querySelector('meta[name="galatayo-build"]')?.getAttribute('content')
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type !== 'sw-activated' || !pageBuild || event.data.build === pageBuild) return
+    if (document.visibilityState === 'hidden') window.location.reload()
+    else window.addEventListener('popstate', () => window.location.reload(), { once: true })
   })
+  // Prerendered pages start the app after the load event (public/boot.js), so a load listener alone never fires there.
+  const registerWorker = () => navigator.serviceWorker.register('/sw.js').catch(() => {})
+  if (document.readyState === 'complete') registerWorker()
+  else window.addEventListener('load', registerWorker)
 }
+
+installErrorReporting()
 
 const BOOT_TIMEOUT_MS = 5000
 

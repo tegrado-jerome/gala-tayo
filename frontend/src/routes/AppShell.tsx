@@ -103,10 +103,11 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
               {shouldApplyGenericNoindex ? (
                 <SeoHead title={routeTitle} canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
+              <a href="#main" className="g-skip">Skip to content</a>
               {shouldShowSiteHeader(pathname) ? <SiteHeader pathname={pathname} /> : null}
               <RouteErrorBoundary key={pathname}>
                 <Suspense fallback={<PageShellSkeleton />}>
-                  <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
+                  <div id="main" tabIndex={-1} className={`flex ${appShellHeightClass} flex-col outline-none`}>{children}</div>
                 </Suspense>
               </RouteErrorBoundary>
               {showLogoutTransition ? (

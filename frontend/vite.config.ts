@@ -24,11 +24,33 @@ function notFoundPage(): Plugin {
   }
 }
 
+// One id per build, written into the HTML (<meta name="galatayo-build">) and dist/sw.js, so a tab can tell
+// when the service worker in charge belongs to a newer deploy than the page it is showing. It stays out of
+// the JS bundle so unchanged chunks keep their hashes, and their year-long cache, across rebuilds.
+const buildId = Date.now().toString(36)
+
+function stampServiceWorker(): Plugin {
+  let outDir = 'dist'
+  return {
+    name: 'galatayo-stamp-service-worker',
+    apply: 'build',
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir)
+    },
+    transformIndexHtml() {
+      return [{ tag: 'meta', attrs: { name: 'galatayo-build', content: buildId }, injectTo: 'head' }]
+    },
+    async closeBundle() {
+      const file = path.join(outDir, 'sw.js')
+      await writeFile(file, (await readFile(file, 'utf8')).replace('__BUILD_ID__', buildId))
+    },
+  }
+}
+
 // Routes are lazy-loaded, so admin, AI map and Leaflet code split into their own chunks on their own.
 // Forcing them into named chunks pulled shared modules in with them and made every page download them.
 export default defineConfig({
-  plugins: [react(), tailwindcss(), notFoundPage()],
-  build: {
+  plugins: [react(), tailwindcss(), notFoundPage(), stampServiceWorker()],  build: {
     rollupOptions: {
       output: {
         manualChunks(id) {

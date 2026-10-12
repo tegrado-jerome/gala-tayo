@@ -131,6 +131,7 @@ function PlacesIndexPage() {
         title={`Cities and Places to Visit in the Philippines | ${BRAND_NAME}`}
         description={`${PRODUCT_NAME} lets you browse Metro Manila cities and destinations around the Philippines, with local place pages and city-based trip ideas in one directory.`}
         canonicalPath="/places"
+        image={{ url: '/og/places.jpg', alt: 'Places to visit around the Philippines', width: 1200, height: 630 }}
         jsonLd={jsonLd}
       />
 

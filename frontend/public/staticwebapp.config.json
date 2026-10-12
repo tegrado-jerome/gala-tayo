@@ -358,35 +358,51 @@
     },
     {
       "route": "/images/*",
-      "cacheControl": "public, max-age=31536000, immutable"
+      "headers": {
+        "Cache-Control": "public, max-age=604800"
+      }
     },
     {
       "route": "/assets/*",
-      "cacheControl": "public, max-age=31536000, immutable"
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     },
     {
       "route": "/fonts/*",
-      "cacheControl": "public, max-age=31536000, immutable"
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     },
     {
       "route": "/og/*",
-      "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
+      "headers": {
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
+      }
     },
     {
       "route": "/data/place-listings/*",
-      "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
+      "headers": {
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
+      }
     },
     {
       "route": "/index.html",
-      "cacheControl": "no-cache, no-store, must-revalidate"
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      }
     },
     {
       "route": "/sw.js",
-      "cacheControl": "no-cache, no-store, must-revalidate"
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      }
     },
     {
       "route": "/",
-      "cacheControl": "no-cache, no-store, must-revalidate"
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      }
     },
     {
       "route": "/home",
@@ -527,19 +543,19 @@
     },
     {
       "route": "/gala-plan",
-      "rewrite": "/app-shell.html"
+      "rewrite": "/plans-shell.html"
     },
     {
       "route": "/gala-plan/*",
-      "rewrite": "/app-shell.html"
+      "rewrite": "/plans-shell.html"
     },
     {
       "route": "/gala-plans",
-      "rewrite": "/app-shell.html"
+      "rewrite": "/plans-shell.html"
     },
     {
       "route": "/gala-plans/*",
-      "rewrite": "/app-shell.html"
+      "rewrite": "/plans-shell.html"
     },
     {
       "route": "/submit-place",
@@ -570,6 +586,9 @@
       "rewrite": "/app-shell.html"
     }
   ],
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  },
   "responseOverrides": {
     "404": {
       "rewrite": "/not-found.html"

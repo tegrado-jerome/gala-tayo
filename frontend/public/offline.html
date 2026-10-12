@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en-PH">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>You're offline | GalaTayo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=5" />
+    <!-- The service worker serves this page when there is no connection, so it needs nothing from the network. -->
+    <style>
+      @font-face { font-family: 'DM Sans'; font-weight: 100 1000; font-display: swap; src: url(/fonts/dm-sans-latin.woff2) format('woff2'); }
+      @font-face { font-family: 'Fraunces'; font-weight: 100 900; font-display: swap; src: url(/fonts/fraunces-latin.woff2) format('woff2'); }
+      :root { color-scheme: light dark; --paper: #ffffff; --ink: #111111; --ink-2: #595959; --line: #e8e8e8; --on-ink: #ffffff; }
+      @media (prefers-color-scheme: dark) { :root { --paper: #111111; --ink: #f5f5f5; --ink-2: #bdbdbd; --line: #2c2c2c; --on-ink: #111111; } }
+      * { box-sizing: border-box; margin: 0; }
+      body { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--paper); color: var(--ink); font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      main { width: 100%; max-width: 420px; padding: 32px 20px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; }
+      .brand { display: inline-flex; align-items: center; gap: 10px; font: 600 22px/1 'Fraunces', Georgia, serif; letter-spacing: -0.02em; }
+      h1 { margin-top: 24px; font: 600 26px/1.1 'Fraunces', Georgia, serif; letter-spacing: -0.01em; text-wrap: balance; }
+      p { margin-top: 8px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+      a.btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; margin-top: 20px; padding: 0 20px; border-radius: 999px; background: var(--ink); color: var(--on-ink); font-size: 15px; font-weight: 600; line-height: 1; text-decoration: none; }
+      a.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <span class="brand">
+        <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#F6F1E7"/><path d="M10 38a22 22 0 0 1 44 0" fill="none" stroke="#00553A" stroke-width="6.5" stroke-linecap="round"/><path d="M19.5 38a12.5 12.5 0 0 1 25 0" fill="none" stroke="#111111" stroke-width="6.5" stroke-linecap="round"/><path d="M27 38a5 5 0 0 1 10 0Z" fill="#34E0A1"/><path d="M8 47c5-3.5 10 3.5 16 0s10-3.5 16 0 10 3.5 16 0" fill="none" stroke="#34E0A1" stroke-width="4.5" stroke-linecap="round"/></svg>
+        galatayo
+      </span>
+      <h1>You're offline</h1>
+      <p>Check your connection, then try again. Pages you opened recently still work without signal.</p>
+      <a class="btn" href="">Try again</a>
+    </main>
+  </body>
+</html>

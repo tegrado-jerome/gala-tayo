@@ -1,29 +1,16 @@
 import { useMemo, useState } from 'react'
-import { SmileyAngry as Angry } from '@phosphor-icons/react/dist/csr/SmileyAngry'
-import { SmileySad as Frown } from '@phosphor-icons/react/dist/csr/SmileySad'
-import { SmileyWink as Laugh } from '@phosphor-icons/react/dist/csr/SmileyWink'
-import { SmileyMeh as Meh } from '@phosphor-icons/react/dist/csr/SmileyMeh'
-import { Smiley as Smile } from '@phosphor-icons/react/dist/csr/Smiley'
 import { ChatCircleText } from '@phosphor-icons/react/dist/csr/ChatCircleText'
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import GoogleSignInButton from '../components/GoogleSignInButton'
-import { Button, Page, Panel } from '../components/ui'
+import HoneypotField from '../components/HoneypotField'
+import RatingPicker from '../components/RatingPicker'
+import { Button, Page } from '../components/ui'
 import '../design/misc.css'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
-import { getPublicSiteUrl } from '../utils/site'
 import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 const COMMENT_MAX_LENGTH = 500
-
-const ratingOptions = [
-  { value: 1, label: 'Very bad', Icon: Angry },
-  { value: 2, label: 'Bad', Icon: Frown },
-  { value: 3, label: 'Okay', Icon: Meh },
-  { value: 4, label: 'Good', Icon: Smile },
-  { value: 5, label: 'Excellent', Icon: Laugh },
-]
 
 function parseJsonResponse(text: string): { message?: string } {
   if (!text.trim()) {
@@ -44,15 +31,11 @@ function FeedbackPage() {
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [website, setWebsite] = useState('')
 
   const remainingCount = useMemo(() => COMMENT_MAX_LENGTH - comment.length, [comment.length])
 
   const handleSubmit = async () => {
-    if (!session?.access_token) {
-      setErrorMessage('Please sign in before submitting feedback.')
-      return
-    }
-
     if (rating < 1 || rating > 5) {
       setErrorMessage('Please choose your overall experience.')
       setStatusMessage('')
@@ -68,13 +51,15 @@ function FeedbackPage() {
 
       const response = await fetch(getApiUrl('/feedback'), {
         method: 'POST',
+        // Guests can send feedback too; signed-in feedback is linked to the account.
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           rating,
           comment: cleanComment || null,
+          website,
         }),
       })
 
@@ -109,37 +94,11 @@ function FeedbackPage() {
       {isSessionLoading ? <InlineSkeleton className="mt-6" /> : null}
 
 
-      {!isSessionLoading && !session?.user ? (
-        <Panel className="mt-6">
-          <h2 className="g-h3">Sign in to send feedback</h2>
-          <p className="g-sm g-mut mt-1">Feedback is connected to your account so we can keep submissions useful.</p>
-          <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/feedback')} />
-        </Panel>
-      ) : null}
-
-      {!isSessionLoading && session?.user ? (
+      {!isSessionLoading ? (
         <section id="feedback-form" className="mt-6 scroll-mt-6">
           <div className="grid gap-7">
-            <fieldset>
-              <legend className="g-h3">How was your experience?</legend>
-              <div className="m-rate mt-3">
-                {ratingOptions.map(({ value, label, Icon }) => {
-                  const isSelected = rating === value
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setRating(value)}
-                      aria-pressed={isSelected}
-                      aria-label={`Rate ${label}`}
-                    >
-                      <Icon weight={isSelected ? 'fill' : 'light'} aria-hidden="true" />
-                      <span>{label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </fieldset>
+            <RatingPicker legend="How was your experience?" value={rating} onChange={setRating} />
+            <HoneypotField value={website} onChange={setWebsite} />
 
             <div className="g-field">
               <label htmlFor="feedback-comment">Tell us more</label>

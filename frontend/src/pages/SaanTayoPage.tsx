@@ -27,6 +27,7 @@ import { resizedMediaUrl } from '../data/r2Config'
 import '../design/misc.css'
 import '../design/saan.css'
 import { useForecast } from '../hooks/useWeather'
+import { trackSaanTayoUsed } from '../utils/analytics'
 import { loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
 import type { PlaceExtras } from '../utils/placeExtras'
 import {
@@ -470,6 +471,7 @@ export default function SaanTayoPage() {
     }
     const next = deal(pool.places, seen.current)
     next.forEach((place) => seen.current.add(place.slug))
+    trackSaanTayoUsed({ pickCount: next.length })
     if (!instant) await preloadPhotos(next)
     if (token !== run.current) return
     setPicks(next)
@@ -590,6 +592,7 @@ export default function SaanTayoPage() {
         title="Pick for Me: Random Places to Go Near You | GalaTayo"
         description="Your group can't decide? Tap Pick for me for 3 top places near you, rain-smart from the live forecast. Send them to your group chat and let everyone vote. Free, no sign-up."
         canonicalPath="/saan-tayo"
+        image={{ url: '/og/saan-tayo.jpg', alt: 'Pick for me on GalaTayo', width: 1200, height: 630 }}
         jsonLd={jsonLd}
       />
 

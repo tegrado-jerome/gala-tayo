@@ -112,6 +112,7 @@ function GuidesIndexPage() {
         title={`Travel Guides: Where to Go Around the Philippines | ${BRAND_NAME}`}
         description={`${guides.length} ${BRAND_NAME} guides to date ideas, weekend getaways, food trips and things to do, each with budgets per head and real place details.`}
         canonicalPath="/guides"
+        image={{ url: '/og/guides.jpg', alt: 'GalaTayo travel guides around the Philippines', width: 1200, height: 630 }}
         jsonLd={isLoading ? null : jsonLd}
       />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides' }]} />

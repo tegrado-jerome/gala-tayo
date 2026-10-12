@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { LinkSimple } from '@phosphor-icons/react/dist/csr/LinkSimple'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
@@ -9,7 +10,7 @@ import { formatPeso, formatPostDate, leadPick, useGalaToday, type GalaTodayPick,
 import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../utils/seo'
 import { todayListJsonLd, todayPostTitle } from '../utils/todaySeo'
-import { trackShare } from '../utils/analytics'
+import { trackGalaTodayOpen, trackShare } from '../utils/analytics'
 import { nativeShareChannel, withShareRef } from '../utils/shareRef'
 
 function shareLink(post: GalaTodayPost) {
@@ -110,7 +111,13 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
 
   return (
     <Page narrow>
-      <SeoHead title={todayPostTitle(post.title)} description={post.hook} canonicalPath={`/today/${post.slug}`} jsonLd={jsonLd} />
+      <SeoHead
+        title={todayPostTitle(post.title)}
+        description={post.hook}
+        canonicalPath={`/today/${post.slug}`}
+        image={{ url: `/og/today/${encodeURIComponent(post.slug)}.jpg`, alt: post.title, width: 1200, height: 630 }}
+        jsonLd={jsonLd}
+      />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan', href: '/today' }, { label: formatPostDate(post.date) }]} />
 
       <article className="t-post">
@@ -202,6 +209,10 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
 function GalaTodayPage({ slug }: { slug?: string }) {
   const posts = useGalaToday()
 
+  useEffect(() => {
+    trackGalaTodayOpen({ postSlug: slug ?? null })
+  }, [slug])
+
   if (posts === null) {
     return (
       <Page narrow>
@@ -232,6 +243,7 @@ function GalaTodayPage({ slug }: { slug?: string }) {
         title="Today's Plan: What's Trending, Turned Into Trips | GalaTayo"
         description="Every day, what the Philippines is searching and sharing, turned into a fun plan: budget challenges, tier lists and guess the place, with real top places."
         canonicalPath="/today"
+        image={{ url: '/og/today.jpg', alt: "Today's Plan on GalaTayo", width: 1200, height: 630 }}
         robots={posts.length === 0 ? 'noindex,follow' : undefined}
         jsonLd={posts.length > 0 ? todayListJsonLd(posts, getSiteOrigin()) : null}
       />

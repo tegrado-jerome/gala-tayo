@@ -1250,6 +1250,9 @@ function PlaceDetailView({
     return token
   }
 
+  const announceHeldComment = (message?: string) =>
+    showSystemMessage({ title: 'Waiting for review', description: message || 'Our team checks it before it shows.' })
+
   const handleSubmitComment = async () => {
     if (isCommentSubmitting) {
       return
@@ -1307,7 +1310,7 @@ function PlaceDetailView({
         }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment; held?: boolean }>(responseText)
 
       if (!response.ok) {
         throw new Error(result?.message || 'Unable to post comment.')
@@ -1327,6 +1330,7 @@ function PlaceDetailView({
           local_error_message: null,
         }),
       )
+      if (result?.held) announceHeldComment(result.message)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to post comment.'
       setComments((currentComments) =>
@@ -1371,7 +1375,7 @@ function PlaceDetailView({
         }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment; held?: boolean }>(responseText)
 
       if (!response.ok || !result?.comment) {
         throw new Error(result?.message || 'Unable to post comment.')
@@ -1387,6 +1391,7 @@ function PlaceDetailView({
           local_error_message: null,
         }),
       )
+      if (result?.held) announceHeldComment(result.message)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to post comment.'
       setComments((currentComments) =>
@@ -1434,7 +1439,7 @@ function PlaceDetailView({
         }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment; held?: boolean }>(responseText)
 
       if (!response.ok) {
         throw new Error(result?.message || 'Unable to post reply.')
@@ -1456,10 +1461,8 @@ function PlaceDetailView({
       )
       setReplyBody('')
       setReplyingToCommentId(null)
-      showSystemMessage({
-        title: 'Reply Posted!',
-        description: 'Your reply is now live.',
-      })
+      if (result?.held) announceHeldComment(result.message)
+      else showSystemMessage({ title: 'Reply Posted!', description: 'Your reply is now live.' })
     } catch (error) {
       setCommentError(error instanceof Error ? error.message : 'Unable to post reply.')
     } finally {
@@ -1493,7 +1496,7 @@ function PlaceDetailView({
         body: JSON.stringify({ body }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment; held?: boolean }>(responseText)
 
       if (!response.ok) {
         throw new Error(result?.message || 'Unable to update comment.')
@@ -1516,6 +1519,7 @@ function PlaceDetailView({
       )
       setEditingCommentId(null)
       setEditCommentBody('')
+      if (result?.held) announceHeldComment(result.message)
     } catch (error) {
       setCommentError(error instanceof Error ? error.message : 'Unable to update comment.')
     } finally {
@@ -1805,6 +1809,7 @@ function PlaceDetailView({
     const isMutating = mutatingCommentId === comment.id
     const isPending = comment.local_post_state === 'pending'
     const isFailed = comment.local_post_state === 'failed'
+    const isHeld = comment.status === 'hidden'
     const isMenuOpen = !isDeleted && openCommentMenuId === comment.id
     const displayName =
       cleanString(comment.member_display_name) ||
@@ -1879,6 +1884,7 @@ function PlaceDetailView({
                   Posting
                 </Tag>
               ) : null}
+              {isHeld ? <Tag tone="warn" title="Only you can see this until our team checks it">Waiting for review</Tag> : null}
             </div>
             <p className="g-xs g-mut mt-0.5">
               {formatReviewDate(comment.updated_at || comment.created_at)}
@@ -2106,7 +2112,7 @@ function PlaceDetailView({
   ]
   const reviewWords = reviewHighlights(
     comments
-      .filter((comment) => !isCommentDeleted(comment) && !comment.local_post_state && !TEAM_COMMENT_PREFIX.test(comment.comment))
+      .filter((comment) => comment.status === 'visible' && !comment.deleted_at && !comment.local_post_state && !TEAM_COMMENT_PREFIX.test(comment.comment))
       .map((comment) => comment.comment),
   )
 

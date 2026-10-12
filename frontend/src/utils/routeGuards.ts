@@ -9,7 +9,6 @@ export function isProtectedAccountPath(pathname: string) {
   // /favorites is open to guests: it shows their device lists with a sign-up nudge, not a wall.
   const isExactProtectedPath = [
     '/passport',
-    '/feedback',
     '/gala-plan',
     '/gala-plan/new',
     '/gala-plan/liked',

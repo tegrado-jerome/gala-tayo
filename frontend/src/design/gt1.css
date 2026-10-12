@@ -198,6 +198,15 @@ body {
 .g-btn-icon.g-btn-sm { width: 36px; }
 /* 36px icon buttons keep a 44x44 tap area. */
 .g-btn-icon.g-btn-sm::before { inset: -4px; }
+
+/* Keyboard users land here first; it stays off screen until focused. */
+.g-skip {
+  position: fixed; top: 8px; left: 16px; z-index: 9000;
+  display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: var(--r-pill);
+  background: var(--ink); color: var(--on-ink); font: 600 15px/1 var(--font-body); text-decoration: none;
+  transform: translateY(-150%);
+}
+.g-skip:focus { transform: none; outline: 2px solid var(--ink); outline-offset: 3px; }
 .g-btn:disabled, .g-btn[aria-disabled='true'] { opacity: 0.4; cursor: not-allowed; transform: none; }
 .g-btn[data-loading='true'] { color: transparent; position: relative; pointer-events: none; }
 .g-btn[data-loading='true']::after {

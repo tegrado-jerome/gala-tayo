@@ -38,6 +38,7 @@ const ProfileSearchPage = lazy(() => import('../pages/ProfileSearchPage'))
 const PublicGalaPlanPage = lazy(() => import('../pages/PublicGalaPlanPage'))
 const LegalPage = lazy(() => import('../pages/LegalPage'))
 const AboutPage = lazy(() => import('../pages/AboutPage'))
+const ContactPage = lazy(() => import('../pages/ContactPage'))
 const SaanTayoPage = lazy(() => import('../pages/SaanTayoPage'))
 const GalaTayoMeaningPage = lazy(() => import('../pages/GalaTayoMeaningPage'))
 const LongWeekendsPage = lazy(() => import('../pages/LongWeekendsPage'))
@@ -366,10 +367,9 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
     case 'history':
       return <HistoryPage />
     case 'feedback':
-      if (!session) {
-        return <LoginPage />
-      }
       return <FeedbackPage />
+    case 'contact':
+      return <ContactPage />
     case 'gala-plans-list':
       if (!session) {
         return <LoginPage />

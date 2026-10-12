@@ -46,6 +46,23 @@ function cardHtml({ fonts, title, kicker, footnote, photoUrl }) {
 </div></body></html>`
 }
 
+/**
+ * Saves a place photo as a plain 1200x630 JPG for link previews: some apps (Viber, older Messenger
+ * builds, many scrapers) show no preview for WebP. Throws when the photo does not load.
+ */
+export async function renderPhotoCard(page, photoUrl, outputPath) {
+  await page.setViewportSize({ width: 1200, height: 630 })
+  await page.setContent(`<!doctype html><html><body style="margin:0;width:1200px;height:630px;overflow:hidden;background:#111">
+    <img src="${escapeHtml(photoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></body></html>`, { waitUntil: 'load', timeout: 30000 })
+  const loaded = await page.evaluate(() => {
+    const photo = document.querySelector('img')
+    return photo.complete && photo.naturalWidth > 0
+  })
+  if (!loaded) throw new Error(`photo did not load: ${photoUrl}`)
+  await mkdir(path.dirname(outputPath), { recursive: true })
+  await page.screenshot({ path: outputPath, type: 'jpeg', quality: 82 })
+}
+
 /** Renders one card with an open Playwright page and writes it to `outputPath`. */
 export async function renderPreviewCard(page, card, outputPath) {
   await page.setViewportSize({ width: 1200, height: 630 })

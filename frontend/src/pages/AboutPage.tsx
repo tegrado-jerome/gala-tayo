@@ -139,6 +139,15 @@ function AboutPage() {
           </div>
         </section>
 
+        <h2 className="g-h2 mt-12">Get in touch</h2>
+        <p className="m-prose mt-3 max-w-[65ch]">
+          Spotted a wrong detail, know a place we missed, or want to work with us?{' '}
+          <InternalLink href="/contact" className="underline underline-offset-[3px]">
+            Message the GalaTayo team
+          </InternalLink>
+          .
+        </p>
+
         <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--line-2)] pt-8">
           <Button variant="tara" size="lg" href="/places">
             Browse places
