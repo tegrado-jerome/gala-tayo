@@ -10,6 +10,7 @@ on:
   push:
     branches: [ops/launch-ops]
     paths: [.github/workflows/db-backup.yml]
+# TEMP push trigger above, removed before merge
 
 permissions:
   contents: read
@@ -23,21 +24,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - name: Install pg_dump 17 (matches the server)
+        run: |
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
 
       - name: Dump, compress and encrypt
         env:
+          # backup_reader: login role with pg_read_all_data and BYPASSRLS only, via the session pooler.
           DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           set -euo pipefail
+          bin=/usr/lib/postgresql/17/bin
           mkdir dump
-          # Same three files as Supabase's CLI backup guide, so its restore steps apply as written.
-          supabase db dump --db-url "$DB_URL" --role-only -f dump/roles.sql
-          supabase db dump --db-url "$DB_URL" -f dump/schema.sql
-          supabase db dump --db-url "$DB_URL" --data-only --use-copy -f dump/data.sql
+          # Our schema (tables, RLS policies, grants, functions). auth and storage tables come with every Supabase
+          # project, so for those only the rows are kept, plus our own triggers on auth.users.
+          $bin/pg_dump "$DB_URL" --schema-only --schema=public -f dump/schema.sql
+          $bin/psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -o dump/auth-triggers.sql \
+            -c "select pg_get_triggerdef(oid) || ';' from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal"
+          $bin/pg_dump "$DB_URL" --data-only --schema=public --schema=auth --schema=storage \
+            --exclude-table=auth.schema_migrations --exclude-table=storage.migrations -f dump/data.sql
           ls -l dump
           test -s dump/schema.sql && test -s dump/data.sql
           umask 077
