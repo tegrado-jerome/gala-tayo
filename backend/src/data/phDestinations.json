@@ -655,6 +655,19 @@
                 "Luna La Union",
                 "Luna (La Union)"
               ]
+            },
+            {
+              "slug": "balaoan",
+              "name": "Balaoan",
+              "type": "municipality",
+              "center": [
+                16.8222,
+                120.4026
+              ],
+              "aliases": [
+                "Balaoan, La Union",
+                "Balaoan La Union"
+              ]
             }
           ]
         },
@@ -1406,6 +1419,20 @@
               "aliases": [
                 "Magallanes Cavite",
                 "Magallanes (Cavite)"
+              ]
+            },
+            {
+              "slug": "mendez",
+              "name": "Mendez",
+              "type": "municipality",
+              "center": [
+                14.1296,
+                120.9053
+              ],
+              "aliases": [
+                "Mendez, Cavite",
+                "Mendez-Nuñez",
+                "Mendez Nunez"
               ]
             }
           ]
@@ -2516,6 +2543,20 @@
               "aliases": [
                 "San Joaquin Iloilo",
                 "San Joaquin (Iloilo)"
+              ]
+            },
+            {
+              "slug": "concepcion-iloilo",
+              "name": "Concepcion, Iloilo",
+              "type": "municipality",
+              "center": [
+                11.2148,
+                123.1091
+              ],
+              "aliases": [
+                "Concepcion Iloilo",
+                "Concepcion (Iloilo)",
+                "Concepcion Islands"
               ]
             }
           ]
