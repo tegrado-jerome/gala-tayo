@@ -39,6 +39,8 @@ describe("plan share preview", () => {
     assert.match(html, /<meta http-equiv="refresh" content="0; url=https:\/\/galatayo.app\/gala-plans\/abc">/);
     assert.match(html, /og:url" content="https:\/\/api.example\/api\/share\/plans\/abc"/);
     assert.match(html, /name="robots" content="noindex"/);
+    // HD photos are 1600x1200, so a fixed 1200x630 claim would be wrong.
+    assert.doesNotMatch(html, /og:image:(width|height)/);
   });
 
   it("leaves the refresh out for link-preview crawlers", () => {

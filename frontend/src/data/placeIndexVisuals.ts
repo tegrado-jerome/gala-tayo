@@ -5,26 +5,16 @@ import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 
 const categoryOverviewRepresentativeSlug = 'national-museum-of-natural-history'
 
+// Live places with HD card photos only: a hidden place's photo 404s and shows a spot the city page no longer lists.
+// Cities without one fall back to their first place's photo on the Places page.
 const cityRepresentativePlaceSlugs: Record<string, string> = {
-  caloocan: 'caloocan-city-peoples-park',
-  'las-pinas': 'sm-southmall',
-  makati: 'glorietta',
-  malabon: 'malabon-zoo-aquarium-and-botanical-garden',
-  mandaluyong: 'shangri-la-plaza',
+  'las-pinas': 'st-joseph-parish-bamboo-organ-church',
+  makati: 'ayala-triangle-gardens',
   manila: 'intramuros',
-  marikina: 'kapitan-moy-cultural-center',
-  muntinlupa: 'festival-mall-alabang',
-  navotas: 'navotas-citywalk-and-amphitheater',
-  paranaque: 'okada-manila',
-  pasay: 'sm-mall-of-asia',
-  pasig: 'ace-water-spa-pasig',
-  'pasig-city': 'ace-water-spa-pasig',
-  pateros: 'inapuyan-resto-grill-pateros',
+  paranaque: 'the-fountain-at-okada-manila',
+  pasay: 'star-city',
   'quezon-city': 'art-in-island',
-  'san-juan': 'greenhills-mall-greenhills-shopping-center',
-  taguig: 'bonifacio-high-street',
-  valenzuela: 'museo-valenzuela',
-  'valenzuela-city': 'museo-valenzuela',
+  taguig: 'the-mind-museum',
 }
 
 const categoryRepresentativePlaceSlugs: Record<string, string> = {

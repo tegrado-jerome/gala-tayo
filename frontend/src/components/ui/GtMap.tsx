@@ -89,6 +89,10 @@ export default function GtMap({
             position={[point.lat, point.lng]}
             icon={pinIcon(point)}
             zIndexOffset={point.active ? 500 : 0}
+            // Only tappable pins are buttons; Leaflet otherwise makes every pin a nameless tab stop.
+            interactive={Boolean(point.onClick)}
+            keyboard={Boolean(point.onClick)}
+            title={point.onClick ? point.label : undefined}
             eventHandlers={point.onClick ? { click: point.onClick } : undefined}
           />
         ))}

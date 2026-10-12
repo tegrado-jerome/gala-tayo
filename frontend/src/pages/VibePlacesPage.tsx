@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
 import VibeChips from '../components/discover/VibeChips'
-import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
+import PlaceCard, { getPlaceCardImageUrl, withLiveDetail } from '../components/PlaceCard'
 import { ListToolbar, ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Masonry, Page, cx } from '../components/ui'
@@ -132,8 +132,7 @@ function VibePlacesPage({ vibe, search = '', navigationSource = 'push' }: VibePl
   useEffect(() => {
     const criticalImageUrls = places
       .slice(0, 4)
-      .map((place) => placeDetailsBySlug[place.slug]?.thumbnailUrl?.trim() || placeDetailsBySlug[place.slug]?.imageUrl?.trim() || null)
-      .filter((imageUrl): imageUrl is string => Boolean(imageUrl))
+      .map((place) => getPlaceCardImageUrl(withLiveDetail({ ...mapSeoPlaceToCard(place), imageUrl: null, curatedImageUrls: [] }, placeDetailsBySlug[place.slug])))
     preloadListingImageUrls(criticalImageUrls)
   }, [places, placeDetailsBySlug])
 

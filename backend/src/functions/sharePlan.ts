@@ -52,7 +52,8 @@ export function describePlanShare(input: {
     count > 0 ? `${count} ${count === 1 ? "stop" : "stops"}` : null,
     mostCommon(input.stops.map((stop) => stop.city)),
   ].filter(Boolean);
-  // The full HD photo crops best to 1200x630; places without one use their own photo.
+  // The full HD photo (1600x1200) crops well to a 1.91:1 card; places without one use their own photo.
+  // No og:image:width/height: photos differ in size, and wrong values skew the first preview.
   const photo = input.stops.map((stop) => hdPhotoKey(stop.slug, "full") ?? stop.storageKey).find(Boolean);
   return {
     title: input.title.trim() || "Gala plan",
@@ -82,8 +83,6 @@ export function renderSharePage(preview: PlanSharePreview, { refresh = true }: {
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 <meta property="og:url" content="${escapeHtml(preview.shareUrl)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">

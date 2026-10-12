@@ -474,7 +474,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   )
 
   const closeMenu = () => setMenu(null)
-  const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1">{value}</span> : null)
+  // The hidden separator keeps screen readers from reading "Itinerary2".
+  const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1"><span className="sr-only">, </span>{value}</span> : null)
   const tabs: Array<{ value: Tab; label: ReactNode }> = [
     { value: 'itinerary', label: <>Itinerary{count(stops.length)}</> },
     ...(readyBarkada

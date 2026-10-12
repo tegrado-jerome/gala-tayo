@@ -6,6 +6,7 @@ import { categoryIcons } from './discover/placeIcons'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+import { resizedMediaUrl } from '../data/r2Config'
 import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
@@ -151,6 +152,12 @@ function getImageCandidates(place: PlaceCardData) {
     if (url && !unique.includes(url)) unique.push(url)
     return unique
   }, [])
+}
+
+/** The photo a card shows first, at card size, so listings preload the file the card really requests. */
+export function getPlaceCardImageUrl(place: PlaceCardData) {
+  const first = getImageCandidates(place)[0]
+  return first ? resizedMediaUrl(first, 'card') : null
 }
 
 const categoryIconAliases: Array<[RegExp, PhosphorIcon]> = [

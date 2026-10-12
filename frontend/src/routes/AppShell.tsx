@@ -19,6 +19,7 @@ import type { CurrentUserResponse } from '../utils/profileApi'
 import type { AdminMfaStatus } from '../utils/adminMfa'
 import { getAppShellState } from './appShellState'
 import { getLabelForPath } from '../utils/routes'
+import { RouteErrorBoundary } from './RouteErrorBoundary'
 
 const FloatingChat = lazy(() => import('../components/FloatingChat'))
 
@@ -103,9 +104,11 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 <SeoHead title={routeTitle} canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
               {shouldShowSiteHeader(pathname) ? <SiteHeader pathname={pathname} /> : null}
-              <Suspense fallback={<PageShellSkeleton />}>
-                <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
-              </Suspense>
+              <RouteErrorBoundary key={pathname}>
+                <Suspense fallback={<PageShellSkeleton />}>
+                  <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
+                </Suspense>
+              </RouteErrorBoundary>
               {showLogoutTransition ? (
                 <div
                   className={`fixed inset-0 z-[8000] grid place-items-center bg-[color-mix(in_srgb,var(--paper)_86%,transparent)] px-4 backdrop-blur-sm transition-opacity duration-200 ${isLogoutTransitionExiting ? 'opacity-0' : 'animate-[g-fade_200ms_ease-out] opacity-100'}`}
