@@ -1,5 +1,66 @@
 [
  {
+  "slug": "metro-manila-in-one-day",
+  "date": "2026-10-12",
+  "publishedAt": "2026-10-11T22:30:01.930Z",
+  "format": "24-hours",
+  "sticker": "24 Hours in Metro Manila",
+  "title": "One Day Plan: Great things to do in Metro Manila",
+  "hook": "Sixty tiny worlds before noon, 250 science exhibits by afternoon, and a 1937 airport tower for dinner!",
+  "body": "Start your morning at Ayala Museum studying sixty detailed dioramas inside Greenbelt. By afternoon, cross to The Mind Museum in BGC to press buttons across five interactive galleries and outsmart the passing shower. Cap the night at Blackbird inside the 1937 Nielson Tower, dining where Manila's first commercial airport once operated. The group chat has no excuses today, so step outside!",
+  "meme": {
+   "top": "10 AM: Just quickly scanning sixty dioramas",
+   "bottom": "12 PM: Still inspecting every tiny painted face"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila",
+   "query": "things to do in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 5–7 PM",
+  "area": "Metro Manila",
+  "leadSlug": "the-mind-museum",
+  "picks": [
+   {
+    "slug": "ayala-museum",
+    "name": "Ayala Museum",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/ayala-museum",
+    "why": "Sixty tiny worlds showing national history. Time travel inside Greenbelt!",
+    "budgetMin": 450,
+    "time": "10 AM"
+   },
+   {
+    "slug": "the-mind-museum",
+    "name": "The Mind Museum",
+    "city": "Taguig",
+    "canonicalPath": "/places/taguig/the-mind-museum",
+    "why": "Over 250 interactive exhibits across five galleries. Dodge the afternoon rain with science!",
+    "budgetMin": 625,
+    "time": "2 PM"
+   },
+   {
+    "slug": "blackbird-at-the-nielson-tower",
+    "name": "Blackbird at the Nielson Tower",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/blackbird-at-the-nielson-tower",
+    "why": "Dinner inside the Art Deco 1937 airport control tower. Boarding call, but make it dinner!",
+    "budgetMin": 1500,
+    "time": "7 PM"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "davao-region-weekend-tier-list",
   "date": "2026-10-11",
   "publishedAt": "2026-10-11T08:30:01.180Z",

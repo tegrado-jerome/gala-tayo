@@ -63,5 +63,18 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "philippine area of responsibility",
+    "traffic": 200,
+    "date": "2026-10-12",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
