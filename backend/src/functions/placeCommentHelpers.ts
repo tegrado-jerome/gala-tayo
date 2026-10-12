@@ -75,6 +75,8 @@ export type AdminCommentReportRow = {
   id: string;
   comment_id: string;
   status: ReportStatus;
+  reported_by: string;
+  details: string | null;
 };
 
 export type CommentAuthorProfileRow = {
@@ -100,6 +102,64 @@ export function getCommentId(request: HttpRequest): string | null {
 export function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, "");
 }
+
+export type HoldReason = "link" | "phone" | "email";
+
+const EMAIL_PATTERN = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/i;
+const LINK_PATTERN = /\bhttps?:\/\/|\bwww\.|\b[a-z0-9-]+\.(?:com|net|org|ph|io|co|me|ly|gl|gg|app|xyz|info|biz|shop|site|online|link)\b/i;
+const PHONE_PATTERNS = [
+  /(?<!\d)(?:\+?63|0)[\s.-]?9\d{2}[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)/, // PH mobile: 0917 123 4567, +63 917 123 4567
+  /(?<!\d)\(?0\d{1,2}\)?[\s.-]?[2-8]\d{3}[\s.-]?\d{4}(?!\d)/, // landline with area code: (02) 8123 4567
+  /\+\d(?:[\s.-]?\d){7,}/, // any international number
+];
+
+/** Why a comment should wait for a moderator before it shows: links, phone numbers and emails are the usual spam and doxxing vectors. */
+export function findHoldReason(text: string): HoldReason | null {
+  if (EMAIL_PATTERN.test(text)) return "email";
+  if (LINK_PATTERN.test(text)) return "link";
+  if (PHONE_PATTERNS.some((pattern) => pattern.test(text))) return "phone";
+  return null;
+}
+
+export const AUTO_HOLD_NOTE = "Auto-held for review";
+
+const HOLD_DETAILS: Record<HoldReason, string> = {
+  link: `${AUTO_HOLD_NOTE}: contains a link.`,
+  phone: `${AUTO_HOLD_NOTE}: contains a phone number.`,
+  email: `${AUTO_HOLD_NOTE}: contains an email address.`,
+};
+
+/**
+ * Queues a held (hidden) comment in the existing report queue as a pending report filed under its author, since
+ * reported_by must be a user. Dismissing that report releases the comment; taking action keeps it hidden.
+ */
+export async function queueHeldComment(
+  comment: Pick<PlaceCommentRow, "id" | "user_id">,
+  reason: HoldReason
+): Promise<{ error: unknown }> {
+  const supabaseAdmin = await getSupabaseAdminClient();
+  const now = new Date().toISOString();
+  const { error } = await (supabaseAdmin.from("place_comment_reports") as any).upsert(
+    {
+      comment_id: comment.id,
+      reported_by: comment.user_id,
+      reason: reason === "link" ? "spam" : "personal_info",
+      details: HOLD_DETAILS[reason],
+      status: "pending",
+      resolved_by: null,
+      resolved_at: null,
+      updated_at: now,
+    },
+    { onConflict: "comment_id,reported_by" }
+  );
+  return { error };
+}
+
+export function isAutoHoldReport(report: { reported_by: string; details: string | null }, commentAuthorId: string): boolean {
+  return report.reported_by === commentAuthorId && Boolean(report.details?.startsWith(AUTO_HOLD_NOTE));
+}
+
+export const HELD_COMMENT_MESSAGE = "Thanks! Tips with links, phone numbers or emails are checked by our team before they show.";
 
 export async function readCleanBody(request: HttpRequest): Promise<{ body?: string; response?: HttpResponseInit }> {
   let payload: CommentRequestBody;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildCommentTree, type PlaceCommentRow } from "./placeCommentHelpers";
+import { AUTO_HOLD_NOTE, buildCommentTree, findHoldReason, isAutoHoldReport, type PlaceCommentRow } from "./placeCommentHelpers";
 
 function row(id: string, overrides: Partial<PlaceCommentRow> = {}): PlaceCommentRow {
   return {
@@ -41,5 +41,51 @@ describe("buildCommentTree", () => {
     ]);
     assert.deepEqual(tree.map((comment) => comment.id), ["b"]);
     assert.equal(tree[0].replies.length, 0);
+  });
+});
+
+describe("findHoldReason", () => {
+  it("holds links, bare domains and short links", () => {
+    for (const text of [
+      "Book here https://example.com/promo",
+      "Visit www.example.ph for rates",
+      "DM sa fb.me/someshop",
+      "promo sa bit.ly/abc123",
+      "Join t.me/cheaptours",
+      "check mysite.com",
+    ]) {
+      assert.equal(findHoldReason(text), "link", text);
+    }
+  });
+
+  it("holds Philippine mobile, landline and international numbers", () => {
+    for (const text of ["Text 09171234567", "call 0917 123 4567", "+63 917-123-4567", "Tawag kayo (02) 8123 4567", "WhatsApp +1 415 555 0100"]) {
+      assert.equal(findHoldReason(text), "phone", text);
+    }
+  });
+
+  it("holds email addresses", () => {
+    assert.equal(findHoldReason("email me at juan.dela.cruz@gmail.com"), "email");
+  });
+
+  it("lets ordinary tips through: prices, times, years and abbreviations", () => {
+    for (const text of [
+      "Entrance is P150, parking P50. Open 8:00-17:00.",
+      "Went here 2023-2024, sobrang ganda! Mt. Pulag next.",
+      "Budget ₱1,500 - ₱2,000 per head, 3-4 hrs drive from Manila.",
+      "Sta. Rosa exit then 15 mins. Best at 5:30 PM for sunset.",
+      "Ang ganda.Sobrang lamig.Balik kami next year",
+    ]) {
+      assert.equal(findHoldReason(text), null, text);
+    }
+  });
+});
+
+describe("isAutoHoldReport", () => {
+  it("is true only for the auto-hold note filed under the comment's own author", () => {
+    assert.equal(isAutoHoldReport({ reported_by: "u1", details: `${AUTO_HOLD_NOTE}: contains a link.` }, "u1"), true);
+    assert.equal(isAutoHoldReport({ reported_by: "u2", details: `${AUTO_HOLD_NOTE}: contains a link.` }, "u1"), false);
+    assert.equal(isAutoHoldReport({ reported_by: "u1", details: "spammy" }, "u1"), false);
+    assert.equal(isAutoHoldReport({ reported_by: "u1", details: null }, "u1"), false);
   });
 });

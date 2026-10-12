@@ -14,20 +14,34 @@ export type WindowCounterStore = {
   expire: (key: string, seconds: number) => Promise<unknown>;
 };
 
+function memoryCounterStore(cache: MemoryCache): WindowCounterStore {
+  return {
+    incr: async (key) => {
+      const count = (cache.get<number>(key) ?? 0) + 1;
+      cache.set(key, count, 24 * 60 * 60);
+      return count;
+    },
+    expire: async (key, seconds) => {
+      const count = cache.get<number>(key);
+      if (count !== undefined) cache.set(key, count, seconds);
+    },
+  };
+}
+
 /** Per-instance counters: public reads use these instead of Redis, and Redis keys over their limit are remembered here. */
 const localCounters = new MemoryCache(5000);
+export const localCounterStore = memoryCounterStore(localCounters);
 
-export const localCounterStore: WindowCounterStore = {
-  incr: async (key) => {
-    const count = (localCounters.get<number>(key) ?? 0) + 1;
-    localCounters.set(key, count, 24 * 60 * 60);
-    return count;
-  },
-  expire: async (key, seconds) => {
-    const count = localCounters.get<number>(key);
-    if (count !== undefined) localCounters.set(key, count, seconds);
-  },
-};
+/**
+ * Shared limits fall back to these per-instance counters while Redis is missing or failing, so auth, email and AI
+ * limits still hold (fail closed, per SECURITY.md). Kept apart from the public-read counters so read traffic can't
+ * evict them; each instance counts on its own, so the effective limit is the limit times the running instances.
+ */
+const fallbackCounterStore = memoryCounterStore(new MemoryCache(20_000));
+
+/** After a Redis error, skip Redis for a minute instead of paying a failed round trip on every request. */
+const REDIS_RETRY_AFTER_MS = 60_000;
+let redisDownUntil = 0;
 
 /**
  * Fixed-window counter: one INCR per request, plus an EXPIRE only on the window's first request. The key holds
@@ -57,10 +71,6 @@ export async function countInFixedWindow(
   };
 }
 
-function openResult(maxRequests: number, windowSeconds: number): RateLimitResult {
-  return { allowed: true, remaining: maxRequests, limit: maxRequests, resetAt: new Date(Date.now() + windowSeconds * 1000).toISOString() };
-}
-
 export async function checkRedisRateLimit(
   key: string,
   maxRequests: number,
@@ -75,23 +85,24 @@ export async function checkRedisRateLimit(
     return { allowed: false, remaining: 0, limit: maxRequests, resetAt: blockedUntil };
   }
 
-  const counterStore = store ?? (await getRedisClient());
+  const redis = store ?? (now < redisDownUntil ? null : await getRedisClient());
+  let result: RateLimitResult | null = null;
 
-  if (!counterStore) {
-    return openResult(maxRequests, windowSeconds);
-  }
-
-  try {
-    const result = await countInFixedWindow(counterStore, key, maxRequests, windowSeconds, now);
-
-    if (!result.allowed) {
-      localCounters.set(blockedKey, result.resetAt, Math.max((Date.parse(result.resetAt) - now) / 1000, 1));
+  if (redis) {
+    try {
+      result = await countInFixedWindow(redis, key, maxRequests, windowSeconds, now);
+    } catch {
+      if (!store) redisDownUntil = now + REDIS_RETRY_AFTER_MS;
     }
-
-    return result;
-  } catch {
-    return openResult(maxRequests, windowSeconds);
   }
+
+  result ??= await countInFixedWindow(fallbackCounterStore, key, maxRequests, windowSeconds, now);
+
+  if (!result.allowed) {
+    localCounters.set(blockedKey, result.resetAt, Math.max((Date.parse(result.resetAt) - now) / 1000, 1));
+  }
+
+  return result;
 }
 
 export { getClientIp };
@@ -104,7 +115,7 @@ const TOO_MANY_REQUESTS = {
   },
 };
 
-/** Shared limit across all instances (Redis). Use for writes, auth and AI, where the limit protects something. */
+/** Shared limit across all instances (Redis, or per instance while Redis is down). Use for writes, auth and AI, where the limit protects something. */
 export async function checkEndpointRateLimit(
   request: { headers: { get: (name: string) => string | null } },
   endpointName: string,

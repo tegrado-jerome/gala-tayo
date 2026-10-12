@@ -10,6 +10,8 @@ import {
   type ReportPlaceRow,
   type CommentAuthorProfileRow,
   type AdminCommentReportRow,
+  AUTO_HOLD_NOTE,
+  isAutoHoldReport,
 } from "../placeCommentHelpers";
 
 const UUID_PATTERN =
@@ -17,6 +19,32 @@ const UUID_PATTERN =
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value.trim());
+}
+
+/** Dismissing an auto-hold report means the moderator found the held comment fine, so it is published. False only on a failed write. */
+async function releaseAutoHeldComment(report: AdminCommentReportRow, now: string, context: InvocationContext): Promise<boolean> {
+  if (!report.details?.startsWith(AUTO_HOLD_NOTE)) return true;
+
+  const supabaseAdmin = await getSupabaseAdminClient();
+  const commentsTable = supabaseAdmin.from("place_comments") as any;
+  const { data: comment, error: lookupError } = await commentsTable
+    .select("id, user_id, status, deleted_at")
+    .eq("id", report.comment_id)
+    .maybeSingle();
+
+  if (lookupError) {
+    context.error("Failed to load held comment for release:", lookupError);
+    return false;
+  }
+
+  if (!comment || comment.status !== "hidden" || comment.deleted_at || !isAutoHoldReport(report, comment.user_id)) return true;
+
+  const { error: releaseError } = await commentsTable.update({ status: "visible", updated_at: now }).eq("id", comment.id);
+  if (releaseError) {
+    context.error("Failed to release held comment:", releaseError);
+    return false;
+  }
+  return true;
 }
 
 export async function adminCommentReportModerate(
@@ -42,7 +70,7 @@ export async function adminCommentReportModerate(
     const supabaseAdmin = await getSupabaseAdminClient();
     const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
     const { data: reportData, error: reportLookupError } = await reportsTable
-      .select("id, comment_id, status")
+      .select("id, comment_id, status, reported_by, details")
       .eq("id", reportId)
       .maybeSingle();
 
@@ -69,6 +97,9 @@ export async function adminCommentReportModerate(
         context.error("Failed to dismiss comment report:", dismissError);
         return { status: 500, jsonBody: { message: "Failed to dismiss report." } };
       }
+
+      const released = await releaseAutoHeldComment(report, resolvedAt, context);
+      if (!released) return { status: 500, jsonBody: { message: "Report dismissed, but failed to publish the held comment." } };
 
       return { status: 200, jsonBody: { ok: true, message: "Report dismissed.", report: updatedReportData } };
     }
