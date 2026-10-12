@@ -10,7 +10,6 @@ on:
   push:
     branches: [ops/launch-ops]
     paths: [.github/workflows/db-backup.yml]
-# TEMP push trigger above, removed before merge
 
 permissions:
   contents: read
@@ -42,7 +41,7 @@ jobs:
           # Our schema (tables, RLS policies, grants, functions). auth and storage tables come with every Supabase
           # project, so for those only the rows are kept, plus our own triggers on auth.users.
           $bin/pg_dump "$DB_URL" --schema-only --schema=public -f dump/schema.sql
-          $bin/psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -o dump/auth-triggers.sql \
+          $bin/psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -o dump/auth-triggers.sql -c "set search_path = ''" \
             -c "select pg_get_triggerdef(oid) || ';' from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal"
           $bin/pg_dump "$DB_URL" --data-only --schema=public --schema=auth --schema=storage \
             --exclude-table=auth.schema_migrations --exclude-table=storage.migrations -f dump/data.sql
