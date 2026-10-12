@@ -11,13 +11,19 @@
           document.documentElement.dataset.initialRoute = 'welcome';
           window.__galatayoWelcomeStart = Date.now();
           window.__galatayoWelcomeStartUsed = false;
+          // A saved session (hasStoredSession in supabase.ts) gets its own Home here: show the splash, not the guest page.
+          try {
+            if (Object.keys(localStorage).concat(Object.keys(sessionStorage)).some(function (key) { return /^sb-.+-auth-token$/.test(key); })) {
+              document.documentElement.dataset.signedIn = 'true';
+            }
+          } catch (error) {}
         } else {
           document.documentElement.dataset.suppressLoader = 'true';
         }
         // Home's LCP is the editor's pick photo (EDITORS_PICK in HomeDiscover.tsx); start it before the app bundle runs.
         // A prerendered page already has the <img> in its HTML, so only the bare app shell needs this.
         // heroPreload.test.ts keeps the URL in step with the photo the page really shows.
-        if ((p === '/' || p === '/home') && !document.documentElement.hasAttribute('data-prerendered')) {
+        if (p === '/' && !document.documentElement.hasAttribute('data-prerendered')) {
           var hero = 'https://media.galatayo.app/places/fort-santiago/hd/fort-santiago-1-v2.webp';
           var link = document.createElement('link');
           link.rel = 'preload';
@@ -106,6 +112,10 @@
       html[data-suppress-loader] .critical-app-loader,
       html[data-prerendered] .critical-app-loader {
         display: none !important;
+      }
+
+      html[data-prerendered][data-signed-in] .critical-app-loader {
+        display: grid !important;
       }
 
       .critical-app-loader.is-hidden {

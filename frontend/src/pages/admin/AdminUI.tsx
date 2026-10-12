@@ -73,7 +73,7 @@ export function AdminShell({
           ))}
         </nav>
         <div className="ga-side-foot">
-          <button type="button" onClick={() => navigateToPath('/home')} className="ga-nav-item">
+          <button type="button" onClick={() => navigateToPath('/')} className="ga-nav-item">
             <ArrowUpRight aria-hidden="true" />
             View public site
           </button>
@@ -136,7 +136,7 @@ export function AdminAccessRequired({ message }: { message: string }) {
         <h1 className="g-h2">Admin access required</h1>
         <p className="g-sm g-mut mt-2">{message}</p>
         <div className="mt-5 flex justify-center">
-          <Button variant="line" onClick={() => navigateToPath('/home')}>
+          <Button variant="line" onClick={() => navigateToPath('/')}>
             Go home
           </Button>
         </div>

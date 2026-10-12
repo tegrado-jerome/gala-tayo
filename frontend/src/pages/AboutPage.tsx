@@ -80,7 +80,7 @@ function AboutPage() {
         canonicalPath="/about"
         jsonLd={jsonLd}
       />
-      <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      <MinimalBackNav to="/" label="Home" preferHistory={false} />
 
       <article className="mt-2">
         <header className="m-art-head">

@@ -109,13 +109,8 @@ function App() {
 
     if (redirectTarget) {
       navigateToPath(redirectTarget)
-      return
     }
-
-    if (session && hasResolvedInitialAuth && pathname === '/' && !showLogoutTransition) {
-      replaceWithPath(`/home${search}`)
-    }
-  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, search, session, showLogoutTransition])
+  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, search, session])
 
   useEffect(() => {
     if (!legacyAdminRedirectPath) {

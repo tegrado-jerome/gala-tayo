@@ -69,6 +69,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
+/** A saved session is on this device (supabase-js's default key), so `/` can wait for it instead of showing the landing page. */
+export function hasStoredSession() {
+  try {
+    return Boolean(authStorage.getItem(`sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`))
+  } catch {
+    return false
+  }
+}
+
 export async function getSupabaseSession() {
   const {
     data: { session },

@@ -34,8 +34,7 @@ type AreaLike = {
 }
 
 const exactLabels: Record<string, string> = {
-  '/': 'Welcome',
-  '/home': 'Home',
+  '/': 'Home',
   '/search': 'Search',
   '/places': 'Places',
   '/login': 'Log in',
@@ -306,10 +305,6 @@ export function getCanonicalSubmitPlacePath(pathname: string): '/submit-place' |
     return '/submit-place'
   }
 
-  return null
-}
-
-export function getCanonicalHomePath(_pathname: string): '/' | null {
   return null
 }
 

@@ -61,7 +61,7 @@ function AdminDashboard({ session }: { session: Session }) {
       <section>
         <h2 className="g-h3">Quick links</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="line" size="sm" onClick={() => navigateToPath('/home')}>
+          <Button variant="line" size="sm" onClick={() => navigateToPath('/')}>
             View public site
             <ArrowUpRight aria-hidden="true" />
           </Button>

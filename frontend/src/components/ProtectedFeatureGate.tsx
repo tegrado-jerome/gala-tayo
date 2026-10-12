@@ -21,7 +21,7 @@ function getAuthVariant(pathname: string): GuestAuthVariant {
 
 function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
   const authVariant = getAuthVariant(pathname)
-  const leaveGate = () => navigateToPath('/home')
+  const leaveGate = () => navigateToPath('/')
 
   return (
     <>

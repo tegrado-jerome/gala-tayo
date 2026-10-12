@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import HomeDiscover from '../components/home/HomeDiscover'
 import NextGalaCard from '../components/home/NextGalaCard'
@@ -24,6 +24,11 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     }),
     [],
   )
+
+  // index.html's splash on `/` waits for whichever home renders there, this one or the landing page.
+  useEffect(() => {
+    window.__galatayoSetWelcomeReady?.()
+  }, [])
 
   return (
     <Page>

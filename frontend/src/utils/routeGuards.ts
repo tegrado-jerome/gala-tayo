@@ -85,9 +85,10 @@ export function shouldShowSiteHeader(pathname: string) {
   return !isAdminPath(pathname) && !siteHeaderHiddenPaths.some((path) => isPath(pathname, path))
 }
 
-export function shouldShowMobileBottomNav(pathname: string) {
+export function shouldShowMobileBottomNav(pathname: string, isSignedIn: boolean) {
+  // The guest landing page has no tab bar; the signed-in Home at the same URL does.
   if (isPath(pathname, '/') || pathname === '') {
-    return false
+    return isSignedIn
   }
 
   if (isSharedPlanPath(pathname)) {

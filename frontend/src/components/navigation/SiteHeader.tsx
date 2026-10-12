@@ -40,13 +40,13 @@ function SiteHeader({ pathname }: { pathname: string }) {
   const { currentUser, currentProfile, session, isGuest } = useAppUser()
   const isMinimal = MINIMAL_PATHS.some((path) => isPath(pathname, path))
   // Search and Home have their own big search box, so the header one would be a duplicate there.
-  const showSearch = !isPath(pathname, '/search') && pathname !== '/' && !isPath(pathname, '/home')
+  const showSearch = !isPath(pathname, '/search') && pathname !== '/'
   const showChat = !NO_CHAT_PATHS.some((path) => isPath(pathname, path))
 
   return (
     <header className="g-head">
       <div className="g-head-in">
-        <InternalLink href={session ? '/home' : '/'} ariaLabel="GalaTayo home">
+        <InternalLink href="/" ariaLabel="GalaTayo home">
           <BrandLogo />
         </InternalLink>
 
@@ -54,8 +54,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
           <>
             <nav aria-label="Primary" className="g-nav">
               {primaryNav.map((item) => (
-                // Guests' Home is the indexable landing page; /home is the signed-in app home.
-                <InternalLink key={item.href} href={item.href === '/home' && !session ? '/' : item.href} aria-current={item.matches(pathname) ? 'page' : undefined}>
+                <InternalLink key={item.href} href={item.href} aria-current={item.matches(pathname) ? 'page' : undefined}>
                   {item.label}
                 </InternalLink>
               ))}

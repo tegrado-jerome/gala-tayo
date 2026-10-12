@@ -49,7 +49,7 @@ function MinimalBackNav({
       return
     }
 
-    navigateToPath('/home')
+    navigateToPath('/')
   }
 
   return (

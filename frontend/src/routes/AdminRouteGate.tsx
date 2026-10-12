@@ -22,7 +22,7 @@ function AdminAccessDenied({ message = 'Your account does not have admin access.
         <h1 className="g-h2 mt-4">Admin access required</h1>
         <p className="g-sm g-mut mt-2">{message}</p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button onClick={() => navigateToPath('/home')}>Go home</Button>
+          <Button onClick={() => navigateToPath('/')}>Go home</Button>
           <Button variant="line" onClick={() => void handleAdminSignIn()}>
             Admin sign in
           </Button>

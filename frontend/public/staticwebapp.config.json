@@ -390,7 +390,8 @@
     },
     {
       "route": "/home",
-      "rewrite": "/app-shell.html"
+      "redirect": "/",
+      "statusCode": 301
     },
     {
       "route": "/search",

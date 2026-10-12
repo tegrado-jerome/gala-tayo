@@ -65,7 +65,7 @@ const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'
 function ChatbotRouteRedirect({ initialQuestion }: { initialQuestion: string }) {
   useEffect(() => {
     openFloatingChat(initialQuestion)
-    replaceWithPath('/home')
+    replaceWithPath('/')
   }, [initialQuestion])
 
   return null
@@ -118,7 +118,7 @@ function OnboardingAccessGate({
       })
       .catch(() => {
         if (isMounted) {
-          replaceWithPath('/home')
+          replaceWithPath('/')
         }
       })
 
@@ -407,7 +407,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return (
         <>
           <SeoHead title="Not Found | GalaTayo" robots="noindex,follow" />
-          <NotFoundPage onGoHome={() => navigateToPath('/home')} onBrowsePlaces={() => navigateToPath('/places')} />
+          <NotFoundPage onGoHome={() => navigateToPath('/')} onBrowsePlaces={() => navigateToPath('/places')} />
         </>
       )
   }
@@ -419,7 +419,7 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     (inputs.navigationSource === 'push' || inputs.navigationSource === 'replace') &&
     (
       inputs.pathname === '/mfa/verify' ||
-      inputs.pathname === '/home' ||
+      inputs.pathname === '/' ||
       (inputs.pathname === '/onboarding' && inputs.hasSignupOnboardingAccess)
     )
 

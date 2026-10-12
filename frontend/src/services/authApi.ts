@@ -3,6 +3,7 @@ import { supabase } from '../supabase'
 import { apiFetch, getApiUrl } from '../utils/apiClient'
 import { getPublicSiteOrigin } from '../utils/site'
 import { decodeReturnPath, encodeReturnPath } from '../utils/authReturnPath'
+import { toHomePath } from '../utils/homePath'
 import {
   LOGOUT_TRANSITION_DURATION_MS,
   endLogoutTransition,
@@ -404,7 +405,7 @@ export async function updateAccountPassword(password: string) {
 }
 
 export async function getPostAuthRedirect(_session: Session, search: string = window.location.search): Promise<AuthRedirectTarget> {
-  const path = getReturnPath(search) ?? '/home'
+  const path = getReturnPath(search) ?? '/'
   clearAuthReturnPath()
   return path
 }
@@ -414,7 +415,8 @@ export function sanitizeNextPath(value: string | null | undefined) {
     return null
   }
 
-  const normalizedValue = value.trim()
+  // A legacy next=/home means Home, which is the default anyway.
+  const normalizedValue = toHomePath(value.trim())
 
   if (!normalizedValue.startsWith('/')) {
     return null
@@ -474,5 +476,5 @@ export function buildOnboardingPath(nextPath?: string | null) {
 export function resolvePostOnboardingPath(search: string = window.location.search) {
   const next = getReturnPath(search)
   clearAuthReturnPath()
-  return next && !next.startsWith('/onboarding') ? next : '/home'
+  return next && !next.startsWith('/onboarding') ? next : '/'
 }

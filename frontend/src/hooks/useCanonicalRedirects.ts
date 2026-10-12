@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
+import { toHomePath } from '../utils/homePath'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import {
   getCanonicalAskAiPath,
   getCanonicalAuthPath,
   getCanonicalCategoryPath,
   getCanonicalForgotPasswordPath,
-  getCanonicalHomePath,
   getCanonicalMemberPath,
   getCanonicalPromptBuilderPath,
   getCanonicalPublicGalaPlanPath,
@@ -16,7 +16,6 @@ import {
 const canonicalRedirects = [
   { getPath: getCanonicalAuthPath, useReplace: false },
   { getPath: getCanonicalSettingsPath, useReplace: false },
-  { getPath: getCanonicalHomePath, useReplace: true },
   { getPath: getCanonicalForgotPasswordPath, useReplace: true },
   { getPath: getCanonicalResetPasswordPath, useReplace: true },
   { getPath: getCanonicalAskAiPath, useReplace: true },
@@ -38,6 +37,15 @@ export function useCanonicalRedirects(pathname: string) {
         }
         return
       }
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    // The host 301s /home to / but drops the query; this keeps it when the app itself opens /home.
+    const homePath = toHomePath(pathname)
+
+    if (homePath !== pathname) {
+      replaceWithPath(`${homePath}${window.location.search}`)
     }
   }, [pathname])
 
