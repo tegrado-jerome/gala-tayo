@@ -76,5 +76,18 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "philippine weather forecast",
+    "traffic": 200,
+    "date": "2026-10-12",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
