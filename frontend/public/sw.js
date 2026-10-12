@@ -8,7 +8,9 @@ const MEDIA_DOMAIN = 'media.galatayo.app'
 const IMAGE_EXT = /\.(webp|jpg|jpeg|png|gif|svg|avif)(\?.*)?$/i
 const MAX_MEDIA_CACHE_ENTRIES = 50
 const MAX_PAGE_CACHE_ENTRIES = 30
-const OFFLINE_URL = '/offline.html'
+// The host serves public/offline.html at /offline (and 301s the .html path), so cache the final URL: a
+// redirected response can't answer a navigation.
+const OFFLINE_URL = '/offline'
 
 const PRECACHE_ASSETS = [
   OFFLINE_URL,
