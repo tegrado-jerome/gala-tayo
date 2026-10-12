@@ -79,7 +79,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
   isLogoutTransitionExiting: boolean
   children: ReactNode
 }) {
-  const { showMobileBottomNav, shouldApplyGenericNoindex } = getAppShellState(pathname, search)
+  const { showMobileBottomNav, shouldApplyGenericNoindex } = getAppShellState(pathname, search, Boolean(session))
   const routeLabel = getLabelForPath(pathname)
   const routeTitle = routeLabel ? `${routeLabel} | GalaTayo` : 'GalaTayo'
   const appShellHeightClass = pathname.startsWith('/ask-ai')

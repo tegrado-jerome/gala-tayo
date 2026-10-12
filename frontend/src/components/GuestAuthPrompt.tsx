@@ -405,7 +405,7 @@ function GuestAuthPromptCard({ variant, className }: { variant: GuestAuthVariant
   const titleId = useId()
   return (
     <Panel as="section" aria-labelledby={titleId} className={cx('mx-auto w-full max-w-[480px] !rounded-[var(--r-4)] !p-5 shadow-[var(--sh-2)]', className)}>
-      <GuestAuthPromptBody variant={variant} titleId={titleId} onLater={() => navigateToPath('/home')} />
+      <GuestAuthPromptBody variant={variant} titleId={titleId} onLater={() => navigateToPath('/')} />
     </Panel>
   )
 }

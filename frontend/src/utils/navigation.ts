@@ -67,7 +67,7 @@ function useBackNavigation() {
     if (state.previousPath || state.hasHistory) {
       window.history.back()
     } else {
-      window.location.href = '/home'
+      window.location.href = '/'
     }
   }, [state.hasHistory, state.previousPath])
 
@@ -174,7 +174,7 @@ function navigateToPlace(slug: string) {
   navigateToPath(`/places/${encodeURIComponent(slug)}`)
 }
 
-function navigateBackWithFallback(fallbackPath = '/home') {
+function navigateBackWithFallback(fallbackPath = '/') {
   if (typeof window === 'undefined') {
     return
   }

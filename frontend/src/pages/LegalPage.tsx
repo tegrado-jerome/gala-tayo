@@ -69,7 +69,7 @@ function LegalPage({ type }: { type: LegalPageType }) {
   return (
     <Page narrow>
       <SeoHead title={doc.seoTitle} description={doc.seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
-      <Breadcrumb showBack backTo="/home" preferHistory className="mb-4" items={[{ label: 'Home', href: '/' }, { label }]} />
+      <Breadcrumb showBack backTo="/" preferHistory className="mb-4" items={[{ label: 'Home', href: '/' }, { label }]} />
 
       <article className="m-legal">
         <header className="m-art-head border-0 pb-0">

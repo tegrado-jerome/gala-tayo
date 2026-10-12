@@ -4,7 +4,6 @@ import { Compass } from '@phosphor-icons/react/dist/csr/Compass'
 import { House } from '@phosphor-icons/react/dist/csr/House'
 import { Stamp } from '@phosphor-icons/react/dist/csr/Stamp'
 import { User } from '@phosphor-icons/react/dist/csr/User'
-import { isPath } from '../../utils/routes'
 
 export type NavItem = {
   label: string
@@ -16,7 +15,7 @@ export type NavItem = {
 const startsWithAny = (pathname: string, prefixes: string[]) =>
   prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
-const home: NavItem = { label: 'Home', href: '/home', icon: House, matches: (p) => isPath(p, '/home') || p === '/' }
+const home: NavItem = { label: 'Home', href: '/', icon: House, matches: (p) => p === '/' }
 const explore: NavItem = { label: 'Explore', href: '/search', icon: Compass, matches: (p) => startsWithAny(p, ['/search', '/places', '/ask-ai']) }
 const plans: NavItem = { label: 'Plans', href: '/gala-plans', icon: CalendarBlank, matches: (p) => startsWithAny(p, ['/gala-plans', '/gala-plan', '/plan-with-ai']) }
 const me: NavItem = {

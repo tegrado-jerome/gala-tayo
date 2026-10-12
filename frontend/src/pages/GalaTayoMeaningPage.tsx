@@ -69,7 +69,7 @@ function GalaTayoMeaningPage() {
   return (
     <Page narrow>
       <SeoHead title={TITLE} description={DESCRIPTION} canonicalPath={PATH} openGraphType="article" jsonLd={jsonLd} />
-      <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      <MinimalBackNav to="/" label="Home" preferHistory={false} />
 
       <article className="mt-2">
         <header className="m-art-head">

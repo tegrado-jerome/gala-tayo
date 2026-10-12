@@ -38,7 +38,7 @@ async function preloadAuthTargetPath(path: string) {
     return
   }
 
-  if (path === '/home' || path.startsWith('/home?')) {
+  if (path === '/' || path.startsWith('/?')) {
     await import('./HomePage')
     return
   }
@@ -291,7 +291,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       const mfaStatus = await getUserMfaStatus(session)
       if (mfaStatus.needsMfa) {
         const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
-        const mfaVerifyPath = postAuthRedirect !== '/home'
+        const mfaVerifyPath = postAuthRedirect !== '/'
           ? `/mfa/verify?next=${encodeURIComponent(postAuthRedirect)}`
           : '/mfa/verify'
         await preloadAuthTargetPath(mfaVerifyPath)

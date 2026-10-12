@@ -2,8 +2,8 @@ import { shouldShowMobileBottomNav, getNoindexForPath } from '../utils/routeGuar
 import { legalPages } from '../data/legalPages'
 import { parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath } from '../utils/routes'
 
-export function getAppShellState(pathname: string, search: string) {
-  const showMobileBottomNav = shouldShowMobileBottomNav(pathname)
+export function getAppShellState(pathname: string, search: string, isSignedIn: boolean) {
+  const showMobileBottomNav = shouldShowMobileBottomNav(pathname, isSignedIn)
   const isAreaQueryVariant = Boolean(parseAreaPagePath(pathname) && search)
   const shouldApplyGenericNoindex =
     (getNoindexForPath(pathname) || isAreaQueryVariant) &&

@@ -34,7 +34,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
 
   const nextPath = useMemo(() => {
     if (nextPathProp) return nextPathProp
-    return getRequestedNextPath() ?? '/home'
+    return getRequestedNextPath() ?? '/'
   }, [nextPathProp])
 
   const code = digits.join('')

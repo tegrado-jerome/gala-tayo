@@ -5,6 +5,7 @@ import type { UserMfaStatus } from '../utils/userMfa'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminPath } from '../utils/adminRoutes'
 import { isAccountOnlyPath, isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
 import { isAnonymousSession } from '../utils/guestSession'
+import { hasStoredSession } from '../supabase'
 import { isPath } from '../utils/routes'
 import { parseVibe, type VibeId } from '../utils/vibes'
 import { readPlanWithAiParams } from '../utils/planWithAiLink'
@@ -211,12 +212,11 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     return { kind: 'protected-feature-gate' }
   }
 
-  if (pathname === '/' || pathname === '') {
-    return { kind: 'root-entry' }
-  }
-
-  if (isPath(pathname, '/home')) {
-    return { kind: 'home' }
+  // `/` is the only home URL: the indexable landing page for guests, the personal Home once signed in.
+  // A returning user waits on the loader (behind index.html's splash) instead of mounting the landing page.
+  if (pathname === '/' || pathname === '' || isPath(pathname, '/home')) {
+    if (session) return { kind: 'home' }
+    return !hasResolvedInitialAuth && hasStoredSession() ? { kind: 'initial-auth-loader' } : { kind: 'root-entry' }
   }
 
   if (isPath(pathname, '/search')) {

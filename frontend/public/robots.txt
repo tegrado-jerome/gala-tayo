@@ -15,9 +15,10 @@ User-agent: Google-Extended
 User-agent: Applebot
 User-agent: Applebot-Extended
 Allow: /
-# Only private and admin screens are blocked. Public app screens (/home, /search, /login, /signup,
+# Only private and admin screens are blocked. Public app screens (/search, /login, /signup,
 # /ask-ai, /gala-plans, /passport, /feedback, /profile, /u/...) stay crawlable so search engines can
 # read their noindex tag and drop them; a robots block would hide that tag and keep linked URLs indexed.
+# /home 301s to /, the one home URL for guests and signed-in users.
 Disallow: /admin
 Disallow: /auth/
 Disallow: /mfa/

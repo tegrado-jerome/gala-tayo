@@ -290,7 +290,7 @@ function ReportsPage() {
 
   return (
     <Page narrow>
-      <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      <MinimalBackNav to="/" label="Home" preferHistory={false} />
       <header className="m-art-head mt-2">
         <span className="m-art-ic" aria-hidden="true">
           <Flag weight="duotone" />

@@ -19,6 +19,11 @@ const BOOT_TIMEOUT_MS = 5000
 function getAppContainer() {
   const prerendered = document.getElementById('root')!
   if (!prerendered.firstElementChild) return prerendered
+  // A signed-in visit to `/` sits behind index.html's splash until its own Home is ready; the guest copy is not needed.
+  if (document.documentElement.hasAttribute('data-signed-in')) {
+    prerendered.replaceChildren()
+    return prerendered
+  }
 
   const app = document.createElement('div')
   app.className = 'app-booting'

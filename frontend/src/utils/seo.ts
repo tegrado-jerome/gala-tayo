@@ -140,7 +140,7 @@ function getConfiguredVerificationTags() {
 function applySeo(config: SeoConfig) {
   const title = config.title?.trim() || DEFAULT_TITLE
   const description = fitDescription(config.description?.trim() || DEFAULT_DESCRIPTION)
-  // App-only routes (/home, /search, /login...) stay noindex with a self canonical, whichever SeoHead applies last.
+  // App-only routes (/search, /login...) stay noindex with a self canonical, whichever SeoHead applies last.
   const isAppOnlyRoute = getNoindexForPath(window.location.pathname)
   const canonicalUrl = getCanonicalUrl((!isAppOnlyRoute && config.canonicalPath) || window.location.pathname)
   const robots = isAppOnlyRoute ? 'noindex,follow' : config.robots?.trim() || 'index,follow'
