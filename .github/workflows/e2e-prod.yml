@@ -1,0 +1,50 @@
+name: E2E smoke (prod)
+
+on:
+  schedule:
+    - cron: "0 21 * * *" # 5:00 AM Philippine time, after the 4:00 AM site build
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-prod
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: e2e
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps --only-shell chromium
+
+      - name: Run smoke tests against galatayo.app
+        working-directory: e2e
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          E2E_QA_EMAIL: ${{ secrets.E2E_QA_EMAIL }}
+          E2E_QA_PASSWORD: ${{ secrets.E2E_QA_PASSWORD }}
+        run: npx playwright test
+
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces
+          path: |
+            e2e/test-results
+            e2e/playwright-report
+          retention-days: 14
