@@ -1,5 +1,8 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { BookOpenText } from '@phosphor-icons/react/dist/csr/BookOpenText'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
+import { NavigationArrow } from '@phosphor-icons/react/dist/csr/NavigationArrow'
 import { List } from '@phosphor-icons/react/dist/csr/List'
 import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { ArrowCounterClockwise as RotateCcw } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise'
@@ -14,6 +17,7 @@ import { Button, Chip, Chips, Empty, Masonry, Row, Skeleton, cx } from '../../ui
 import { openFloatingChat } from '../../../utils/floatingChat'
 import { SEARCH_RESULTS_PER_PAGE, type BackendSearchStatus, type MobileResultsViewMode } from '../homeHelpers'
 import type { SearchBudgetValue } from '../../../utils/searchParams'
+import type { SearchShortcut } from '../../../utils/searchAssist'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 const QUICK_CITY_IDS = ['baguio', 'cebu-city', 'makati']
@@ -214,6 +218,62 @@ function QuickFilterChips({
   )
 }
 
+type SearchSort = 'best' | 'cheapest' | 'nearest'
+const SORT_LABELS: Record<SearchSort, string> = { best: 'Best match', cheapest: 'Cheapest', nearest: 'Nearest' }
+
+/** Near me, open now and the sort order, one tap each (Google Maps style). Location is asked for only on a tap. */
+function ResultControls({
+  sort,
+  openNow,
+  nearMe,
+  locating,
+  onSortChange,
+  onOpenNowChange,
+  onNearMeChange,
+  className,
+}: {
+  sort: SearchSort
+  openNow: boolean
+  nearMe: boolean
+  locating: boolean
+  onSortChange: (sort: SearchSort) => void
+  onOpenNowChange: (on: boolean) => void
+  onNearMeChange: (on: boolean) => void
+  className?: string
+}) {
+  return (
+    <Chips className={className} role="group" aria-label="Sort and narrow results">
+      <Chip on={nearMe} onClick={() => onNearMeChange(!nearMe)} disabled={locating}>
+        <NavigationArrow aria-hidden="true" />
+        {locating ? 'Finding you...' : 'Near me'}
+      </Chip>
+      <Chip on={openNow} onClick={() => onOpenNowChange(!openNow)}>
+        <Clock aria-hidden="true" />
+        Open now
+      </Chip>
+      {(Object.keys(SORT_LABELS) as SearchSort[]).map((value) => (
+        <Chip key={value} on={sort === value} onClick={() => onSortChange(value)}>
+          {SORT_LABELS[value]}
+        </Chip>
+      ))}
+    </Chips>
+  )
+}
+
+/** Our guides and Saan tayo for searches that ask for a plan ("manila one day", "weekend trip from manila"). */
+function SearchShortcuts({ shortcuts, className }: { shortcuts: SearchShortcut[]; className?: string }) {
+  if (shortcuts.length === 0) return null
+  return (
+    <nav aria-label="Guides for this search" className={cx('grid gap-2 sm:grid-cols-2', className)}>
+      {shortcuts.map((shortcut) => (
+        <Row key={shortcut.href} href={shortcut.href} action={<BookOpenText aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--ink-2)]" />}>
+          <div className="g-h3">{shortcut.label}</div>
+          <div className="g-sm g-mut">{shortcut.sub}</div>
+        </Row>
+      ))}
+    </nav>
+  )
+}
 
 function MasonrySkeleton({ count = 8, desktopColumns }: { count?: number; desktopColumns?: 2 | 3 }) {
   return (
@@ -319,6 +379,7 @@ function SearchResults({
   subheading,
   selectedPlaceId,
   isPageLoading,
+  sortLabel = 'Best match',
   mobileView,
   onMobileViewChange,
   onSelectPlace,
@@ -334,6 +395,7 @@ function SearchResults({
   subheading: string
   selectedPlaceId: string | null
   isPageLoading: boolean
+  sortLabel?: string
   mobileView: MobileResultsViewMode
   onMobileViewChange: (view: MobileResultsViewMode) => void
   onSelectPlace: (placeId: string) => void
@@ -350,7 +412,7 @@ function SearchResults({
       <h1 className="g-h1 mt-6">{heading}</h1>
       <ListToolbar
         count={subheading}
-        sort={isDesktop ? 'Best match' : undefined}
+        sort={isDesktop ? sortLabel : undefined}
         view={isDesktop ? undefined : mobileView}
         onViewChange={isDesktop ? undefined : onMobileViewChange}
       />
@@ -413,6 +475,8 @@ function SearchEmptyState({
   error,
   askAiQuestion,
   onSearchAgain,
+  ideas = [],
+  onIdea,
 }: {
   hasSearched: boolean
   status?: BackendSearchStatus | null
@@ -420,6 +484,9 @@ function SearchEmptyState({
   error?: string | null
   askAiQuestion?: string
   onSearchAgain?: () => void
+  /** Searches that do find places, offered when this one found none. */
+  ideas?: string[]
+  onIdea?: (query: string) => void
 }) {
   const askAi = askAiQuestion ? <AskAiButton question={askAiQuestion} /> : null
 
@@ -455,7 +522,7 @@ function SearchEmptyState({
       ? 'We do not cover that area yet. Try another city.'
       : status === 'empty_query'
         ? 'Try a place, city or vibe.'
-        : 'Try another city or budget, or let AI find it for you.')
+        : 'Nothing on GalaTayo matches that yet. Try one of these, or let AI find it for you.')
   const actionLabel = status === 'no_results' || status === 'empty_query' ? 'Back to search' : 'Search again'
 
   return (
@@ -464,13 +531,24 @@ function SearchEmptyState({
       title={title}
       description={description}
       action={
-        <div className="flex flex-wrap justify-center gap-2">
-          {askAi}
-          {onSearchAgain ? (
-            <Button variant="line" onClick={onSearchAgain}>
-              {actionLabel}
-            </Button>
+        <div className="flex flex-col items-center gap-4">
+          {ideas.length > 0 && onIdea ? (
+            <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Try instead">
+              {ideas.map((idea) => (
+                <Chip key={idea} onClick={() => onIdea(idea)}>
+                  {idea}
+                </Chip>
+              ))}
+            </div>
           ) : null}
+          <div className="flex flex-wrap justify-center gap-2">
+            {askAi}
+            {onSearchAgain ? (
+              <Button variant="line" onClick={onSearchAgain}>
+                {actionLabel}
+              </Button>
+            ) : null}
+          </div>
         </div>
       }
     />
@@ -482,11 +560,13 @@ export {
   ListToolbar,
   MasonrySkeleton,
   QuickFilterChips,
+  ResultControls,
   SearchEmptyState,
   SearchFilterPanel,
   SearchPageBreadcrumb,
   SearchPagination,
   SearchResults,
   SearchResultsSkeleton,
+  SearchShortcuts,
 }
-export type { FilterOption }
+export type { FilterOption, SearchSort }
