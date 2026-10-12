@@ -33,7 +33,7 @@ const isCategory = (place: VibePlace, categories: string[]) => categories.includ
 const BEACH_WORDS = /\b(beach|beaches|cove|sandbar|islands?|isla|islas|islet|boracay)\b/
 const NOT_BEACH = ['heritage', 'museum', 'food', 'cafe', 'nightlife']
 // Somewhere up high or out in the open with a view to stop for.
-const VIEW_WORDS = /\b(views?|viewpoint|view deck|lookout|peak|hills?|in the sky|lighthouse|terraces|mount|mt|mountain|summit|sunset|windmills|wind farm)\b/
+const VIEW_WORDS = /\b(views?|viewpoint|view deck|sky ?deck|lookout|peak|hills?|in the sky|lighthouse|terraces|mount|mt|mountain|summit|sunset|windmills|wind farm)\b/
 const NOT_VIEWS = ['museum', 'food', 'cafe', 'nightlife']
 
 const isBeach = (place: VibePlace) => BEACH_WORDS.test(fold(place.name)) && !isCategory(place, NOT_BEACH)

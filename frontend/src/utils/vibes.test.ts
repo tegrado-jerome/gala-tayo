@@ -36,6 +36,7 @@ test('nature leaves beaches to the beach vibe', () => {
 test('views come from the name, and never from a cafe that says view', () => {
   assert.equal(fitsVibe(peak, 'views'), true)
   assert.equal(fitsVibe(place("People's Park in the Sky", 'Park'), 'views'), true)
+  assert.equal(fitsVibe(place('NUSTAR Skydeck', 'Activity'), 'views'), true)
   assert.equal(fitsVibe(place('Sky Ranch Tagaytay', 'Activity'), 'views'), false)
   assert.equal(fitsVibe(viewCafe, 'views'), false)
 })

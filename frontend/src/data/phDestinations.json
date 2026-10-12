@@ -897,6 +897,24 @@
               ]
             }
           ]
+        },
+        {
+          "slug": "quirino",
+          "name": "Quirino",
+          "cities": [
+            {
+              "slug": "nagtipunan",
+              "name": "Nagtipunan",
+              "type": "municipality",
+              "center": [
+                16.2178,
+                121.6054
+              ],
+              "aliases": [
+                "Nagtipunan, Quirino"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -2558,6 +2576,19 @@
               "aliases": [
                 "Tibiao, Antique"
               ]
+            },
+            {
+              "slug": "libertad-antique",
+              "name": "Libertad, Antique",
+              "type": "municipality",
+              "center": [
+                11.7694,
+                121.9188
+              ],
+              "aliases": [
+                "Libertad Antique",
+                "Libertad (Antique)"
+              ]
             }
           ]
         }
@@ -3423,6 +3454,24 @@
               "aliases": [
                 "Iligan, Lanao del Norte",
                 "Iligan City"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "misamis-occidental",
+          "name": "Misamis Occidental",
+          "cities": [
+            {
+              "slug": "sinacaban",
+              "name": "Sinacaban",
+              "type": "municipality",
+              "center": [
+                8.2852,
+                123.8428
+              ],
+              "aliases": [
+                "Sinacaban, Misamis Occidental"
               ]
             }
           ]
