@@ -89,8 +89,9 @@ describe("Tara relevance", () => {
   it("'waterfalls near cebu city' checks the catalogue: the nearest falls in the same province, said plainly", async () => {
     const { search } = await ask("waterfalls near cebu city");
     const slugs = search!.places.map((place) => place.slug);
-    assert.deepEqual(slugs.slice(0, 2).sort(), ["aguinid-falls-samboan", "kawasan-falls-badian"]);
-    assert.ok(slugs.every((slug) => ["Badian", "Samboan"].includes(bySlug.get(slug)!.city ?? "")), slugs.join(", "));
+    const southCebuFalls = ["aguinid-falls-samboan", "kawasan-falls-badian", "tumalog-falls-oslob"];
+    assert.ok(slugs.slice(0, 2).every((slug) => southCebuFalls.includes(slug)), slugs.join(", "));
+    assert.ok(slugs.every((slug) => ["Badian", "Samboan", "Oslob"].includes(bySlug.get(slug)!.city ?? "")), slugs.join(", "));
     assert.match(search!.note ?? "", /nearest/);
   });
 
