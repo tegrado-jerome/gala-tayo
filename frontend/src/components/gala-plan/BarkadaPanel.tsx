@@ -120,7 +120,7 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
         </span>
       </div>
       {error ? <p role="alert" className="g-hint is-error mt-2">{error}</p> : null}
-      {!session ? <p className="g-hint mt-2">Sign in to RSVP and vote.</p> : null}
+      {!session ? <p className="g-hint mt-2">No account needed: tap a reply and add your name.</p> : null}
     </Panel>
   )
 }
@@ -144,8 +144,10 @@ export function MembersList({ barkada }: { barkada: ReadyBarkada }) {
   )
 }
 
+const DEFAULT_POLL_QUESTION = 'Where should we eat?'
+
 function PollComposer({ plan, session, onChange }: Omit<BarkadaProps, 'barkada'>) {
-  const [question, setQuestion] = useState('Where should we eat?')
+  const [question, setQuestion] = useState(DEFAULT_POLL_QUESTION)
   const [options, setOptions] = useState(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -170,6 +172,7 @@ function PollComposer({ plan, session, onChange }: Omit<BarkadaProps, 'barkada'>
           session,
         ),
       )
+      setQuestion(DEFAULT_POLL_QUESTION)
       setOptions(['', ''])
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Could not create the poll.')
@@ -315,7 +318,7 @@ export function PollsPanel({ plan, barkada, session, onChange, onPlanChange }: B
       ))}
       {isOwner ? <PollComposer plan={plan} session={session} onChange={onChange} /> : null}
       {error ? <p role="alert" className="g-hint is-error">{error}</p> : null}
-      {!session ? <p className="g-hint">Sign in to RSVP and vote.</p> : null}
+      {!session ? <p className="g-hint">No account needed: tap an option and add your name.</p> : null}
     </div>
   )
 }

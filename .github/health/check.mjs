@@ -4,7 +4,6 @@ import { chromium } from "playwright";
 
 const SITE = "https://galatayo.app";
 const API = "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api";
-const MEDIA_IMAGE = "https://media.galatayo.app/places/glorietta/glorietta-1.webp";
 const SCOPE_REJECTION = "does not align with the purpose of GalaTayo";
 
 async function timedFetch(url, options = {}) {
@@ -33,8 +32,12 @@ const checks = {
   },
 
   // Fails when the media.galatayo.app DNS record or R2 custom domain is missing.
+  // Takes a photo the home page links today, so re-versioned photo keys don't break it.
   async "Place photos (R2 media domain)"() {
-    const { response } = await timedFetch(MEDIA_IMAGE);
+    const html = await (await timedFetch(SITE)).response.text();
+    const image = html.match(/https:\/\/media\.galatayo\.app\/[^"' )]+\.webp/)?.[0];
+    if (!image) throw new Error("no media.galatayo.app photo on the home page");
+    const { response } = await timedFetch(image);
     const type = response.headers.get("content-type") ?? "";
     if (!response.ok || !type.startsWith("image/")) {
       throw new Error(`HTTP ${response.status} ${type}`);

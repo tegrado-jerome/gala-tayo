@@ -614,10 +614,11 @@ function PlaceDetailView({
   const credibleSources = (extras.sources ?? []).filter((url) => !/wiki(pedia|voyage)\.org/i.test(url))
   useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
+  // Own uploads wait for the manifest too: in the prerendered grid they'd take an HD photo's tile (often an old, deleted file).
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
     getPlaceLeadPhoto(cleanString(place.slug) || null),
     ...hdPhotos.map((photo) => photo.url),
-    ...(placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name)),
+    ...(hdGallery === null ? [] : placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name)),
   ])
   const creditedPhotoUrls = new Set(hdPhotos.map((photo) => photo.url))
   const leadCredit = hdPhotos.find((photo) => photo.url === galleryPhotos[0])?.author ?? null

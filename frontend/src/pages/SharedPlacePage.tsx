@@ -264,6 +264,8 @@ export default function SharedPlacePage({
     }
   }
 
+  const shareImageUrl = getPlaceLeadPhoto(place.slug) || place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || null
+
   const placeJsonLd =
     place && areaMeta && canonicalPath
       ? {
@@ -290,15 +292,14 @@ export default function SharedPlacePage({
                 addressRegion: getDestinationBySlug(areaMeta.slug)?.provinceName,
                 addressCountry: 'PH',
               },
-              image: place.imageUrl || place.curatedImageUrls?.[0] || undefined,
+              // Same photo as og:image: the stored image_url is often an old, deleted file.
+              image: shareImageUrl ? socialImageUrl(shareImageUrl) : undefined,
               ...buildPlaceSchemaExtras(place),
             },
             ...(buildPlaceFaqSchema(place) ? [buildPlaceFaqSchema(place)!] : []),
           ],
         }
       : null
-
-  const shareImageUrl = place ? getPlaceLeadPhoto(place.slug) || place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || null : null
 
   return (
     <>
