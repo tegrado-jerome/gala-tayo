@@ -7,9 +7,6 @@ on:
   schedule:
     - cron: "0 18 * * *" # 2:00 AM Philippine time
   workflow_dispatch:
-  push:
-    branches: [ops/launch-ops]
-    paths: [.github/workflows/db-backup.yml]
 
 permissions:
   contents: read
