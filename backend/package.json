@@ -42,6 +42,6 @@
     "azure-functions-core-tools": "^4.x",
     "rimraf": "^6.1.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.0.0"
+    "typescript": "^7.0.2"
   }
 }
