@@ -38,7 +38,7 @@ export function PageShell({
 
 const SIZE_CLASSES = {
   narrow: 'w-full max-w-[760px]',
-  default: 'w-full max-w-[1240px]',
+  default: 'w-full max-w-[var(--page-max)]',
   wide: 'w-full max-w-[1440px]',
   full: 'w-full max-w-none',
 } as const
@@ -65,7 +65,7 @@ export function PageContainer({
       className={cn(
         'mx-auto',
         SIZE_CLASSES[size],
-        bleed ? 'px-0' : 'px-4 lg:px-8',
+        bleed ? 'px-0' : 'px-[var(--page-px)]',
         className,
       )}
     >

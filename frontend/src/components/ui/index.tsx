@@ -239,7 +239,7 @@ export function PlaceCard({ href, title, imageUrl, media, icon: FallbackIcon = M
         ) : null}
         {duration || price ? (
           <span className="g-pc-line">
-            {duration}
+            {duration ? <span className="g-pc-dur">{duration}</span> : null}
             {duration && price ? <span aria-hidden="true">·</span> : null}
             {price ? <b className="g-pc-fee">{price}</b> : null}
           </span>
@@ -352,7 +352,7 @@ export function KeyValue({ items }: { items: Array<{ label: ReactNode; value: Re
   )
 }
 
-/** Listing grid of big photo cards: one column on phones, two on tablets, `desktopColumns` from 1024px. */
+/** Listing grid of big photo cards: 1/2/3/4 columns at 0/600/900/1200px; `desktopColumns={2}` (beside a map) stops at two. */
 export function Masonry({ desktopColumns = 3, className, ...rest }: HTMLAttributes<HTMLDivElement> & { desktopColumns?: 2 | 3 }) {
   return <div className={cx('g-lgrid', desktopColumns === 2 && 'is-2', className)} {...rest} />
 }

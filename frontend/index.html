@@ -29,7 +29,7 @@
           link.rel = 'preload';
           link.as = 'image';
           link.setAttribute('imagesrcset', hero.replace(/\.webp$/, '-card.webp') + ' 800w, ' + hero + ' 1600w');
-          link.setAttribute('imagesizes', '(min-width: 1240px) 1176px, calc(100vw - 32px)');
+          link.setAttribute('imagesizes', '(min-width: 1440px) 1280px, (min-width: 1240px) 1176px, calc(100vw - 32px)');
           link.setAttribute('fetchpriority', 'high');
           document.head.appendChild(link);
         }

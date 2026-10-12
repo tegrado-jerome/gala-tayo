@@ -124,10 +124,10 @@ input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset
 .me-wl-s { display: block; font-size: 13px; color: var(--ink-2); }
 
 /* ---------- Passport (Polarsteps header: map, avatar, stat columns) ---------- */
-.me-pp-map { position: relative; margin-inline: -16px; }
+.me-pp-map { position: relative; margin-inline: calc(-1 * var(--page-px)); }
 .me-pp-map .g-map { height: clamp(220px, 34vh, 300px); border: 0; border-radius: 0; }
 @media (min-width: 1024px) { .me-pp-map { margin-inline: 0; } .me-pp-map .g-map { height: 340px; border-radius: var(--r-4); } }
-.me-pp-sheet { position: relative; z-index: 2; margin: -28px -16px 0; padding: 0 16px; background: var(--paper); border-radius: var(--r-4) var(--r-4) 0 0; }
+.me-pp-sheet { position: relative; z-index: 2; margin: -28px calc(-1 * var(--page-px)) 0; padding: 0 var(--page-px); background: var(--paper); border-radius: var(--r-4) var(--r-4) 0 0; }
 @media (min-width: 1024px) { .me-pp-sheet { margin: -48px 32px 0; padding: 0 28px 4px; border-radius: var(--r-4); box-shadow: var(--sh-2); } }
 .me-pp-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .me-pp-head > :first-child { margin-top: -44px; box-shadow: 0 0 0 4px var(--paper); border-radius: 50%; }

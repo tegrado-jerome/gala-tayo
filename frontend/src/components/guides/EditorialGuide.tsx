@@ -171,7 +171,7 @@ export default function EditorialGuide({ target, article }: { target: SeoLanding
               <img
                 src={resizedMediaUrl(heroImage, 'hero')}
                 srcSet={heroSrcSet(heroImage)}
-                sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
+                sizes="(min-width: 1440px) 1280px, (min-width: 1240px) 1176px, calc(100vw - 32px)"
                 alt={heroPlace.name}
                 fetchPriority="high"
                 decoding="async"

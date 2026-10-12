@@ -97,7 +97,7 @@ function ContactPage() {
   ]
 
   return (
-    <Page narrow>
+    <Page narrow className="lg:max-w-[1080px]">
       <SeoHead title={TITLE} description={DESCRIPTION} canonicalPath="/contact" jsonLd={jsonLd} />
       <MinimalBackNav to="/" label="Home" preferHistory={false} />
 
@@ -127,6 +127,7 @@ function ContactPage() {
         </p>
       ) : null}
 
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-12">
       <form className="mt-6 grid gap-7" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <div className="g-field">
           <label htmlFor="contact-topic">What's it about?</label>
@@ -194,7 +195,7 @@ function ContactPage() {
         </Button>
       </form>
 
-      <section className="m-prose mt-10 max-w-[65ch]" aria-labelledby="contact-other">
+      <section className="m-prose mt-10 max-w-[65ch] lg:sticky lg:top-24 lg:mt-6 lg:rounded-[var(--r-3)] lg:bg-[var(--fill)] lg:p-6" aria-labelledby="contact-other">
         <h2 id="contact-other" className="g-h2">
           Other ways to reach us
         </h2>
@@ -214,6 +215,7 @@ function ContactPage() {
           .
         </p>
       </section>
+      </div>
       <LegalFooter />
     </Page>
   )

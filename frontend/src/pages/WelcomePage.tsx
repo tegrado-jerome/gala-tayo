@@ -37,6 +37,8 @@ function Step({ n, title, body, art }: { n: number; title: string; body: string;
 }
 
 const KNOWN_EMPTY_CITIES = new Set(['caloocan', 'malabon', 'muntinlupa', 'navotas', 'pateros', 'valenzuela'])
+const NOT_GALA_GUIDE_CATEGORIES = new Set(['cafe', 'food', 'nightlife'])
+const NOT_GALA_GUIDE_GOOD_FOR = new Set(['food-trip', 'study'])
 
 function WelcomePage({ navigationSource = 'push' }: { navigationSource?: NavigationSource }) {
   // City chips skip cities without a gala-worthy place (known empty ones first, exact counts once loaded).
@@ -54,7 +56,8 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
     }
   }, [])
 
-  // Popular guides: only guides with enough gala-worthy places (same rule as /guides), never cinema or hotel lists.
+  // Popular guides: only guides with enough gala-worthy places (same rule as /guides), never cinema or hotel lists,
+  // and only places to go: no cafe, restaurant, nightlife, food-trip or study-spot lists.
   const [guideTotals, setGuideTotals] = useState<Record<string, number> | null>(null)
   useEffect(() => {
     const controller = new AbortController()
@@ -64,7 +67,12 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
       .catch(() => undefined)
     return () => controller.abort()
   }, [])
-  const popularGuides = SEO_LANDING_TARGETS.filter((target) => !guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
+  const popularGuides = SEO_LANDING_TARGETS.filter(
+    (target) =>
+      !NOT_GALA_GUIDE_CATEGORIES.has(target.category ?? '') &&
+      !NOT_GALA_GUIDE_GOOD_FOR.has(target.goodFor ?? '') &&
+      (!guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES),
+  )
 
 
   useEffect(() => {
@@ -147,14 +155,14 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
           </summary>
           <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-            <div className="flex flex-col gap-2">
+            <div className="flex max-w-[65ch] flex-col gap-2">
             <p>
               Gala Tayo (written GalaTayo) is a free place discovery app for the best places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
               the whole idea: find a place, invite friends and go!
             </p>
             <p>
-              Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes, and common
-              questions. You can browse by city or category, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
+              Every place page lists the city, vibe, budget range, best time to visit, who it suits, commute and parking notes, and common
+              questions. You can browse by city or vibe, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
             </p>
             <p>
               {BRAND_NAME} is built in the Philippines for people planning dates, hangouts with friends, family outings and solo days out, from Metro

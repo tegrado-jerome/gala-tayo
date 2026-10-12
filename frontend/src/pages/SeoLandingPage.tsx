@@ -292,7 +292,7 @@ function ListingGuide({ slug }: { slug: string }) {
               <img
                 src={resizedMediaUrl(heroPlace.imageUrl, 'hero')}
                 srcSet={heroSrcSet(heroPlace.imageUrl)}
-                sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
+                sizes="(min-width: 1440px) 1280px, (min-width: 1240px) 1176px, calc(100vw - 32px)"
                 alt={heroPlace.name}
                 fetchPriority="high"
                 decoding="async"

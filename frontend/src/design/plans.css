@@ -2,7 +2,7 @@
 
 /* ---------- Trip card (plans list) ---------- */
 .g-trip { display: block; min-width: 0; color: inherit; text-decoration: none; }
-.g-trip-cover { position: relative; display: grid; aspect-ratio: 3 / 2; border-radius: var(--r-3); overflow: hidden; background: var(--fill); }
+.g-trip-cover { position: relative; display: grid; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--fill); }
 .g-trip-cover.is-wide { aspect-ratio: 16 / 9; }
 .g-trip-cover > img, .g-trip-cover > span { width: 100%; height: 100%; min-height: 0; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
 .g-trip-cover > .g-trip-blank { display: grid; place-items: center; background: var(--fill); color: var(--ink-3); }
@@ -21,7 +21,7 @@
 @media (min-width: 1024px) { .g-trips { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 24px; } }
 
 /* ---------- Plan cover header: photo with the plan name over it ---------- */
-.g-plan-cover { position: relative; height: 320px; margin-inline: -16px; overflow: hidden; background: var(--fill); }
+.g-plan-cover { position: relative; height: 320px; margin-inline: calc(-1 * var(--page-px)); overflow: hidden; background: var(--fill); }
 .g-plan-cover .g-trip-cover { height: 100%; aspect-ratio: auto; border-radius: 0; }
 .g-plan-cover.has-photo::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(rgba(0, 0, 0, 0.38), transparent 32%, transparent 45%, rgba(0, 0, 0, 0.72)); }
 .g-plan-cover-text { position: absolute; left: 16px; right: 16px; bottom: 18px; z-index: 2; color: var(--ink); }

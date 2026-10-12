@@ -31,7 +31,10 @@
 }
 
 .t-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-@media (min-width: 768px) { .t-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 600px) { .t-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* The /today feed uses the full page: 3 across from 1024px, 4 from 1440px. */
+@media (min-width: 1024px) { .t-list.is-wide { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+@media (min-width: 1440px) { .t-list.is-wide { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* Post page. */
 .t-post { min-width: 0; }
@@ -50,7 +53,7 @@
 .t-lead { margin-top: 20px; font: 600 19px/1.45 var(--font-body); }
 .t-weather { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--fill); font-size: 14px; line-height: 1.4; color: var(--ink-2); }
 .t-weather svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
-.t-body { margin-top: 12px; font-size: 16px; line-height: 1.65; color: var(--ink-2); }
+.t-body { max-width: 40rem; margin-top: 12px; font-size: 16px; line-height: 1.65; color: var(--ink-2); }
 .t-panel { margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--fill); }
 .t-panel-big { font: 600 30px/1.1 var(--font-display); letter-spacing: -0.02em; color: var(--tara-ink); }
 .t-panel-big span { font: 600 16px/1 var(--font-body); color: var(--ink-2); }
@@ -67,7 +70,7 @@
 @media (min-width: 768px) { .t-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
 .t-flag { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: #111; color: #fff; font: 800 12px/1.2 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; }
 .t-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-.t-note { margin-top: 20px; }
+.t-note { max-width: 70ch; margin-top: 20px; }
 .t-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .t-picks .g-pc-meta { display: -webkit-box; white-space: normal; font-size: 14px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .t-post > .t-kicker { display: flex; width: 100%; }

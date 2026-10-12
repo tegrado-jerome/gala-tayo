@@ -2324,7 +2324,7 @@ function PlaceDetailView({
         }
       />
 
-      <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
+      <div className="md:mt-6 md:grid md:grid-cols-[minmax(0,1fr)_280px] md:items-start md:gap-8 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-16">
         <div className="min-w-0">
           <header className="pd-head">
             <nav aria-label="Breadcrumb">
@@ -2610,7 +2610,7 @@ function PlaceDetailView({
           </footer>
         </div>
 
-        <aside className="g-only-desk pd-aside" aria-label="Plan this place">
+        <aside className="pd-aside max-md:hidden" aria-label="Plan this place">
           <div className="pd-aside-card">
             {priceSummary ? <p className="pd-aside-price">{priceSummary}</p> : null}
             {feeValue && !barPriceValue ? <p className="pd-aside-price"><b>{feeValue}</b></p> : null}
@@ -2630,7 +2630,7 @@ function PlaceDetailView({
         </aside>
       </div>
 
-      <div className="pd-bar lg:hidden">
+      <div className="pd-bar md:hidden">
         <div className="pd-bar-in">
           <div className="pd-bar-price">
             {priceSummary ? <p>{priceSummary}</p> : null}
