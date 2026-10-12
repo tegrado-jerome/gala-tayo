@@ -7,6 +7,7 @@ import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle'
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
+import EditorialGuide from '../components/guides/EditorialGuide'
 import { ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Page, Row, SectionHead } from '../components/ui'
@@ -39,12 +40,12 @@ function GuideLinks({ heading, targets }: { heading: string; targets: SeoLanding
   )
 }
 
-export default function SeoLandingPage({
-  slug,
-}: {
-  slug: string
-  navigationSource?: 'push' | 'replace' | 'pop'
-}) {
+export default function SeoLandingPage({ slug }: { slug: string; navigationSource?: 'push' | 'replace' | 'pop' }) {
+  const target = getLandingTargetBySlug(slug)
+  return target?.article ? <EditorialGuide target={target} article={target.article} /> : <ListingGuide slug={slug} />
+}
+
+function ListingGuide({ slug }: { slug: string }) {
   const listingGuestAuth = useGuestAuthPrompt()
   const target = useMemo(() => getLandingTargetBySlug(slug), [slug])
   const metadata = useMemo(() => (target ? buildLandingMetadata(target) : null), [target])

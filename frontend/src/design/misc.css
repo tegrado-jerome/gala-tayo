@@ -194,3 +194,15 @@
 .m-guide-card:hover .m-guide-photo img { transform: scale(1.03); }
 @media (prefers-reduced-motion: reduce) { .m-guide-photo img { transition: none; } .m-guide-card:hover .m-guide-photo img { transform: none; } }
 }
+/* Written guides: readable measure, serif section titles from .g-h2, numbered sources. */
+.m-prose { max-width: 42rem; margin-top: 28px; font-size: 16px; line-height: 1.7; color: var(--ink); }
+.m-prose section + section { margin-top: 32px; }
+.m-prose h2 { margin-bottom: 10px; }
+.m-prose p { margin: 0 0 14px; }
+.m-prose ul, .m-prose ol { margin: 0 0 14px; padding-left: 22px; }
+.m-prose li { margin-bottom: 6px; }
+.m-prose a { color: var(--sea); text-decoration: underline; text-underline-offset: 3px; }
+.m-prose strong { font-weight: 600; }
+.m-sources { margin: 12px 0 0; padding-left: 22px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.m-sources li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.m-sources a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

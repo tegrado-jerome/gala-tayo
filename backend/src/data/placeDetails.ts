@@ -18,6 +18,7 @@ import {
 import { PUBLIC_PLACE_COLUMNS, normalizeFaqs } from "../domain/places";
 import { fetchAllRows } from "../utils/fetchAllRows";
 import { parseOpeningHours, type OpeningHours } from "../utils/openingHours";
+import { parseTravelInfo, type TravelInfo } from "../utils/travelInfo";
 
 export type DetailCategoryMeta = {
   id: string;
@@ -76,6 +77,7 @@ export type PlaceDetail = {
   entranceFee: string;
   openHours: string;
   opening_hours: OpeningHours | null;
+  travel_info: TravelInfo | null;
   website: string;
   latitude: number;
   longitude: number;
@@ -344,6 +346,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     entranceFee: budgetNote ?? "Not specified",
     openHours: "Not available",
     opening_hours: parseOpeningHours(row.opening_hours),
+    travel_info: parseTravelInfo(row.travel_info),
     website: websiteUrl,
     latitude,
     longitude,
@@ -450,7 +453,8 @@ function getLinkedTags(row: Record<string, unknown>): DetailTagMeta[] {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const PLACE_DETAIL_COLUMNS = PUBLIC_PLACE_COLUMNS;
+// Only the detail page needs the visitor essentials, so the list query stays lean.
+const PLACE_DETAIL_COLUMNS = `${PUBLIC_PLACE_COLUMNS},travel_info`;
 // Review and photo changes clear these keys; instances also keep a copy in memory for 2 minutes.
 const PLACE_DETAIL_CACHE_TTL_SECONDS = 60 * 60;
 const PLACE_DETAIL_MEMORY_TTL_SECONDS = 2 * 60;

@@ -24,6 +24,13 @@ type SeoLandingTarget = {
   /** Questions people search for this topic, answered from facts on the page. Shown before the standard ones. */
   faqs?: Array<{ question: string; answer: string }>
   addedAt?: string
+  /** A written guide instead of a ranked list: markdown sections, the visible places it links, and its sources. */
+  article?: {
+    updated: string
+    places: string[]
+    sections: Array<{ heading: string; body: string }>
+    sources: Array<{ title: string; url: string }>
+  }
 }
 
 type SeoLandingMetadata = {

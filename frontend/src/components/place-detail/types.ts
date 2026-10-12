@@ -1,11 +1,13 @@
 import type { PlaceCardData } from '../PlaceCard'
 import type { OpeningHours } from '../../utils/openingHours'
+import type { TravelInfo } from '../../utils/travelInfo'
 
 export type PlaceDetailViewProps = {
   place: (PlaceCardData & {
     id: string
     slug: string
     opening_hours?: OpeningHours | null
+    travel_info?: TravelInfo | null
   }) | null
   areaBreadcrumb?: {
     areaSlug: string

@@ -13,6 +13,7 @@ type GuideTarget = {
   areaSlug?: string | null;
   category?: string | null;
   goodFor?: string | null;
+  article?: { places: string[] };
 };
 
 type ListingTarget = {
@@ -102,11 +103,13 @@ async function writeCompactPlaces(places: SeoPlaceSummary[]) {
 
 async function main() {
   const guides = JSON.parse(await readFile(GUIDES_FILE, "utf8")) as GuideTarget[];
+  // Written guides link hand-picked places instead of a filtered listing.
+  const listGuides = guides.filter((guide) => !guide.article);
   const places = await getSeoPlaceSummaries();
   const areas = getListingAreaSlugs(places);
   const targets: ListingTarget[] = [
     ...areas.map((areaSlug) => ({ areaSlug, category: null, goodFor: null, pageSize: AREA_PAGE_SIZE })),
-    ...guides.map((target) => ({
+    ...listGuides.map((target) => ({
       areaSlug: target.areaSlug ?? null,
       category: target.category ?? null,
       goodFor: target.goodFor ?? null,
@@ -129,7 +132,12 @@ async function main() {
   }
 
   // The guides index shows each guide's place count and lead place without loading every listing.
+  const placesBySlug = new Map(places.map((place) => [place.slug, place]));
   const guideSummaries = guides.map((guide) => {
+    if (guide.article) {
+      const linked = guide.article.places.map((slug) => placesBySlug.get(slug)).filter((place): place is SeoPlaceSummary => Boolean(place));
+      return { slug: guide.slug, total: linked.length, topPlaces: linked.slice(0, 5).map((place) => ({ slug: place.slug, name: place.name, imageUrl: place.imageUrl })) };
+    }
     const firstPage = firstPages.get(getListingPath({ areaSlug: guide.areaSlug ?? null, category: guide.category ?? null, goodFor: guide.goodFor ?? null, pageSize: AREA_PAGE_SIZE }, 1));
     const topPlaces = (firstPage?.items ?? []).slice(0, 5).map((place) => ({ slug: place.slug, name: place.name, imageUrl: place.imageUrl }));
     return { slug: guide.slug, total: firstPage?.total ?? 0, topPlaces };
