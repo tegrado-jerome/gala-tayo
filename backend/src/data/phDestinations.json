@@ -832,6 +832,19 @@
               "aliases": [
                 "Mahatao, Batanes"
               ]
+            },
+            {
+              "slug": "itbayat",
+              "name": "Itbayat",
+              "type": "municipality",
+              "center": [
+                20.7878,
+                121.8415
+              ],
+              "aliases": [
+                "Itbayat, Batanes",
+                "Itbayat Island"
+              ]
             }
           ]
         },
@@ -962,6 +975,18 @@
               "aliases": [
                 "Guagua, Pampanga",
                 "Betis"
+              ]
+            },
+            {
+              "slug": "porac",
+              "name": "Porac",
+              "type": "municipality",
+              "center": [
+                15.0726,
+                120.543
+              ],
+              "aliases": [
+                "Porac, Pampanga"
               ]
             }
           ]
@@ -1439,6 +1464,20 @@
               "aliases": [
                 "Pililla, Rizal"
               ]
+            },
+            {
+              "slug": "rodriguez",
+              "name": "Rodriguez",
+              "type": "municipality",
+              "center": [
+                14.7325,
+                121.1453
+              ],
+              "aliases": [
+                "Montalban",
+                "Rodriguez, Rizal",
+                "Montalban, Rizal"
+              ]
             }
           ]
         },
@@ -1884,6 +1923,19 @@
                 "Balabac, Palawan",
                 "Balabac Island"
               ]
+            },
+            {
+              "slug": "linapacan",
+              "name": "Linapacan",
+              "type": "municipality",
+              "center": [
+                11.4912,
+                119.868
+              ],
+              "aliases": [
+                "Linapacan, Palawan",
+                "Araw Beach"
+              ]
             }
           ]
         },
@@ -2028,6 +2080,19 @@
               "aliases": [
                 "Mogpog, Marinduque",
                 "Balanacan"
+              ]
+            },
+            {
+              "slug": "gasan",
+              "name": "Gasan",
+              "type": "municipality",
+              "center": [
+                13.3242,
+                121.8467
+              ],
+              "aliases": [
+                "Gasan, Marinduque",
+                "Tres Reyes"
               ]
             }
           ]
@@ -2247,6 +2312,19 @@
                 "Puraran",
                 "Binurong Point"
               ]
+            },
+            {
+              "slug": "bato-catanduanes",
+              "name": "Bato, Catanduanes",
+              "type": "municipality",
+              "center": [
+                13.608,
+                124.2978
+              ],
+              "aliases": [
+                "Bato Catanduanes",
+                "Bato (Catanduanes)"
+              ]
             }
           ]
         },
@@ -2355,6 +2433,18 @@
                 121.8774
               ],
               "aliases": []
+            },
+            {
+              "slug": "kalibo",
+              "name": "Kalibo",
+              "type": "municipality",
+              "center": [
+                11.7089,
+                122.364
+              ],
+              "aliases": [
+                "Kalibo, Aklan"
+              ]
             }
           ]
         },
@@ -2538,6 +2628,19 @@
                 123.1427
               ],
               "aliases": []
+            },
+            {
+              "slug": "sagay",
+              "name": "Sagay",
+              "type": "city",
+              "center": [
+                10.8961,
+                123.4155
+              ],
+              "aliases": [
+                "Sagay City",
+                "Sagay, Negros Occidental"
+              ]
             }
           ]
         },
@@ -2844,6 +2947,18 @@
               "aliases": [
                 "Alegria Cebu",
                 "Alegria (Cebu)"
+              ]
+            },
+            {
+              "slug": "balamban",
+              "name": "Balamban",
+              "type": "municipality",
+              "center": [
+                10.5048,
+                123.7131
+              ],
+              "aliases": [
+                "Balamban, Cebu"
               ]
             }
           ]
@@ -3496,6 +3611,24 @@
               ],
               "aliases": [
                 "Libjo, Dinagat Islands"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "agusan-del-sur",
+          "name": "Agusan del Sur",
+          "cities": [
+            {
+              "slug": "prosperidad",
+              "name": "Prosperidad",
+              "type": "municipality",
+              "center": [
+                8.6024,
+                125.9116
+              ],
+              "aliases": [
+                "Prosperidad, Agusan del Sur"
               ]
             }
           ]

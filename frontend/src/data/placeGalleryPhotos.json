@@ -921,6 +921,40 @@
    "sourceUrl": "https://www.youtube.com/watch?v=_19PPW2hJwU"
   }
  ],
+ "bakhawan-eco-park-kalibo": [
+  {
+   "url": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-1-v1-card.webp",
+   "author": "Alexey Komarov",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bakhawan_Eco-Park_-_panoramio_(1).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-2-v1-card.webp",
+   "author": "Paolobon140",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mangroves_and_channel_at_Bakhawan_Eco-park_and_Research_Centre.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-3-v1-card.webp",
+   "author": "Alexey Komarov",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bakhawan_Eco-Park_-_panoramio_(3)_(cropped).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-4-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/bakhawan-eco-park-kalibo/hd/bakhawan-eco-park-kalibo-4-v1-card.webp",
+   "author": "Alexey Komarov",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bakhawan_Eco-Park_-_panoramio_(2).jpg"
+  }
+ ],
  "balabac-island-hopping": [
   {
    "url": "https://media.galatayo.app/places/balabac-island-hopping/hd/balabac-island-hopping-1-v5.webp",
@@ -1457,6 +1491,16 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Batad_Rice_Terraces_Hike.jpg"
+  }
+ ],
+ "bega-falls-prosperidad": [
+  {
+   "url": "https://media.galatayo.app/places/bega-falls-prosperidad/hd/bega-falls-prosperidad-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/bega-falls-prosperidad/hd/bega-falls-prosperidad-1-v1-card.webp",
+   "author": "@detouristahq",
+   "license": "© @detouristahq, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@detouristahq/video/7360274558844210438"
   }
  ],
  "bell-church-la-trinidad": [
@@ -2477,6 +2521,32 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Apo_Whang-od%27s_house_in_Buscalan,_Tinglayan,_Kalinga.jpg"
+  }
+ ],
+ "buwakan-ni-alejandra-balamban": [
+  {
+   "url": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-1-v1-card.webp",
+   "author": "Akosimaxxx",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gardeners_of_Alejandra.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-2-v1-card.webp",
+   "author": "Akosimaxxx",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Beauty_and_Greens.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/buwakan-ni-alejandra-balamban/hd/buwakan-ni-alejandra-balamban-3-v1-card.webp",
+   "author": "Akosimaxxx",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hydrangea_Caretakers.jpg"
   }
  ],
  "cabongaoan-beach-burgos": [
@@ -5659,6 +5729,32 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Islas_de_Gigantes_3.jpg"
   }
  ],
+ "itbayat-island-batanes": [
+  {
+   "url": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-1-v1-card.webp",
+   "author": "AndromedaGaelsalengua",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ma%C3%B9yun_Cliff_Itbayat,_Batanes_,_Philippines.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-2-v1-card.webp",
+   "author": "CharMel Creations",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Port_Tachimos,_Itbayat.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/itbayat-island-batanes/hd/itbayat-island-batanes-3-v1-card.webp",
+   "author": "Glenn.manalo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rapang_Cliff_-_Itbayat_Batanes_1.jpg"
+  }
+ ],
  "jomalig-island-salibungot-beach-jomalig": [
   {
    "url": "https://media.galatayo.app/places/jomalig-island-salibungot-beach-jomalig/hd/jomalig-island-salibungot-beach-jomalig-1.webp",
@@ -6605,6 +6701,24 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Limasawa_island_-_panoramio.jpg"
+  }
+ ],
+ "linapacan-islands-palawan": [
+  {
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v1-card.webp",
+   "author": "@ionatravels",
+   "license": "© @ionatravels, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@ionatravels/video/7476098804937297154"
+  },
+  {
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v1-card.webp",
+   "author": "@ionatravels",
+   "license": "© @ionatravels, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@ionatravels/video/7476098804937297154"
   }
  ],
  "lio-beach-el-nido": [
@@ -7605,6 +7719,16 @@
    "license": "© Lui Tan, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://www.flickr.com/photos/142944323@N05/34192421356/"
+  }
+ ],
+ "maribina-falls-bato-catanduanes": [
+  {
+   "url": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v1-card.webp",
+   "author": "Marky Ramone Go, Nomadic Experiences",
+   "license": "© Marky Ramone Go, Nomadic Experiences, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.nomadicexperiences.com/2025/04/how-catanduanes-earned-its-place-among.html"
   }
  ],
  "marikina-river-park": [
@@ -11485,6 +11609,24 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sunken_Cemetery,_Camiguin_Island.jpg"
   }
  ],
+ "suyac-island-mangrove-eco-park-sagay": [
+  {
+   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v1-card.webp",
+   "author": "Marky Ramone Go, Nomadic Experiences",
+   "license": "© Marky Ramone Go, Nomadic Experiences, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.nomadicexperiences.com/2025/09/how-sagay-city-and-isabela-de-basilan.html"
+  },
+  {
+   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v1-card.webp",
+   "author": "Claire Algarme, First Time Travels",
+   "license": "© Claire Algarme, First Time Travels, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://firsttimetravels.com/carbin-reef-suyac-island-sagay-city/"
+  }
+ ],
  "svd-laudato-si-farm-tagaytay": [
   {
    "url": "https://media.galatayo.app/places/svd-laudato-si-farm-tagaytay/hd/svd-laudato-si-farm-tagaytay-1-v5.webp",
@@ -12321,6 +12463,40 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sierra_Madre_-_Sun_rise.jpg"
   }
  ],
+ "tres-reyes-islands-gasan": [
+  {
+   "url": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-1-v1-card.webp",
+   "author": "@arshielife",
+   "license": "© @arshielife, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@arshielife/video/7220018692464151835"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-2-v1-card.webp",
+   "author": "@arshielife",
+   "license": "© @arshielife, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@arshielife/video/7220018692464151835"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-3-v1-card.webp",
+   "author": "@arshielife",
+   "license": "© @arshielife, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@arshielife/video/7220018692464151835"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-4-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tres-reyes-islands-gasan/hd/tres-reyes-islands-gasan-4-v1-card.webp",
+   "author": "@arshielife",
+   "license": "© @arshielife, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tiktok.com/@arshielife/video/7220018692464151835"
+  }
+ ],
  "tumalog-falls-oslob": [
   {
    "url": "https://media.galatayo.app/places/tumalog-falls-oslob/hd/tumalog-falls-oslob-1-v2.webp",
@@ -12353,6 +12529,40 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tumalog_Falls_in_Oslob,_Cebu_08.jpg"
+  }
+ ],
+ "tutulari-avatar-gorge-porac": [
+  {
+   "url": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-1-v1-card.webp",
+   "author": "Tanaw Explorer",
+   "license": "© Tanaw Explorer, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tanawexplorer.com/tutulari-avatar-gorge/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-2-v1-card.webp",
+   "author": "Kelly Austria, Out of Town Blog",
+   "license": "© Kelly Austria, Out of Town Blog, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://outoftownblog.com/step-into-pandora-what-to-expect-at-tutulari-avatar-gorge/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-3-v1-card.webp",
+   "author": "Kelly Austria, Out of Town Blog",
+   "license": "© Kelly Austria, Out of Town Blog, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://outoftownblog.com/step-into-pandora-what-to-expect-at-tutulari-avatar-gorge/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-4-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/tutulari-avatar-gorge-porac/hd/tutulari-avatar-gorge-porac-4-v1-card.webp",
+   "author": "Tanaw Explorer",
+   "license": "© Tanaw Explorer, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tanawexplorer.com/tutulari-avatar-gorge/"
   }
  ],
  "twin-lagoon-coron": [
@@ -12635,6 +12845,48 @@
    "license": "© Villa Escudero Plantations and Resort, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://villaescudero.com/"
+  }
+ ],
+ "wawa-dam-mt-pamitinan-rodriguez": [
+  {
+   "url": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-1-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-1-v1-card.webp",
+   "author": "Emman Asuncion Foronda",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pamitinan_Protected_Landscape_Paradise.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-2-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-2-v1-card.webp",
+   "author": "Deng45",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wawa_Dam_(Montalban_Dam).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-3-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-3-v1-card.webp",
+   "author": "Cid Jacobo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pamitinan_Protected_Landscape_Boulders_of_the_Legend_of_Bernardo_Carpio.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-4-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-4-v1-card.webp",
+   "author": "Arius1998",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Upper_Marikina_River_Basin_Protected_Landscape_Top_View_from_Wawa_Dam.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-5-v1.webp",
+   "cardUrl": "https://media.galatayo.app/places/wawa-dam-mt-pamitinan-rodriguez/hd/wawa-dam-mt-pamitinan-rodriguez-5-v1-card.webp",
+   "author": "Ramon FVelasquez",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:WawaDamjf6015_02.JPG"
   }
  ],
  "white-beach-boracay": [
