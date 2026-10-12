@@ -22,6 +22,7 @@ export type SearchRequestBody = {
   radiusKm?: unknown;
   strictPlaceSearch?: unknown;
   sort?: unknown;
+  open_now?: unknown;
   tags?: unknown;
   price_level?: unknown;
   max_budget?: unknown;
@@ -80,6 +81,10 @@ export type SearchResponsePayload = {
   searchMode: "broad-discovery" | "supabase";
   searchStatus: SearchResponseStatus;
   searchFeedbackMessage: string | null;
+  /** The query as read when a typo was fixed, for "Showing results for ...". */
+  didYouMean: string | null;
+  /** The query said "near me" but no location was sent: the app offers its location button. */
+  needsLocation: boolean;
   page: number;
   limit: number;
   totalCount: number;

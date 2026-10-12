@@ -217,10 +217,10 @@ export function queryTokens(query: string) {
 }
 
 const GALA_SCORES: Record<string, number> = galaScores;
-
-// Vibes that only rank: a view or a sunset is a plus. Every other vibe must fit: a beach ask shows beaches,
+// Vibes that only rank: a view, a sunset or "night" (it says when) is a plus. Every other vibe must fit: a beach ask shows beaches,
+// Vibes that only rank: a view, a sunset or a night out ("saturday night" says when) is a plus. Every other vibe must fit: a beach ask shows beaches,
 // a "kainan" ask shows eateries, "with kids" never shows a bar.
-const RANKING_VIBES = new Set<VibeId>(["view", "sunset"]);
+const RANKING_VIBES = new Set<VibeId>(["view", "sunset", "night"]);
 // Time-of-day and filler words in chat asks that say when, not what.
 const ASK_FILLER = new Set(
   // Where the asker comes from ("visiting from Japan") is about them, not the place.

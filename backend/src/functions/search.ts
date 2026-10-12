@@ -139,12 +139,14 @@ function buildSearchResponseCacheKey(args: {
 }
 
 function buildSearchResponsePayload(args: {
-  searchMode: "broad-discovery" | "supabase"; searchStatus: SearchResponseStatus; searchFeedbackMessage: string | null; page: number; limit: number; totalCount: number; totalPages: number; places: SearchPlaceResult[];
+  searchMode: "broad-discovery" | "supabase"; searchStatus: SearchResponseStatus; searchFeedbackMessage: string | null; didYouMean: string | null; needsLocation: boolean; page: number; limit: number; totalCount: number; totalPages: number; places: SearchPlaceResult[];
 }): SearchResponsePayload {
   return {
     searchMode: args.searchMode,
     searchStatus: args.searchStatus,
     searchFeedbackMessage: args.searchFeedbackMessage,
+    didYouMean: args.didYouMean,
+    needsLocation: args.needsLocation,
     page: args.page, limit: args.limit,
     totalCount: args.totalCount, totalPages: args.totalPages,
     places: args.places,
@@ -191,12 +193,18 @@ function logSearchAnalyticsEvent(context: InvocationContext, { searchId, status,
   context.log("search.analytics", { searchId, status, query, areaId, categoryId, goodForId, budget, totalCount: totalCount ?? null, unsupportedLocations: unsupportedLocations ?? [] });
 }
 
+export type SearchSort = "best" | "cheapest" | "nearest";
+
+export function getSearchSort(value: unknown): SearchSort {
+  return value === "cheapest" || value === "nearest" ? value : "best";
+}
+
 export async function findSearchPlaces({
-  normalizedQuery, nearbySearch, explicitFilters,
+  normalizedQuery, nearbySearch, explicitFilters, sort = "best", openNow = false,
 }: {
-  normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters;
-}): Promise<{ places: SearchPlaceResult[]; note: string | null }> {
-  const { ranked, note } = searchPlacesInArea(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters);
+  normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters; sort?: SearchSort; openNow?: boolean;
+}): Promise<{ places: SearchPlaceResult[]; note: string | null; didYouMean: string | null; needsLocation: boolean }> {
+  const { ranked, note, didYouMean, nearMe } = searchPlacesInArea(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters, { openNow });
   const rankedRows = ranked
     .map(({ place, score }, rank) => {
       const row = place as unknown as PlaceRow;
@@ -207,8 +215,14 @@ export async function findSearchPlaces({
     ? rankedRows.some(({ distanceKm }) => distanceKm !== null && distanceKm <= nearbySearch.radiusKm)
     : false;
 
+  // Unpriced places go last when sorting by price; the search's own order breaks ties.
+  const price = (row: PlaceRow) => (typeof row.budget_min === "number" ? row.budget_min : Infinity);
   const places = rankedRows
     .sort((left, right) => {
+      if (sort === "cheapest" && price(left.row) !== price(right.row)) return price(left.row) - price(right.row);
+      if (sort === "nearest" && nearbySearch && left.distanceKm !== right.distanceKm) {
+        return (left.distanceKm ?? Infinity) - (right.distanceKm ?? Infinity);
+      }
       if (nearbySearch && hasNearbyMatches) {
         const leftIsNearby = left.distanceKm !== null && left.distanceKm <= nearbySearch.radiusKm;
         const rightIsNearby = right.distanceKm !== null && right.distanceKm <= nearbySearch.radiusKm;
@@ -229,7 +243,7 @@ export async function findSearchPlaces({
     .map(({ row, distanceKm, score }) =>
       mapPlaceRowToSearchResult(row, { normalizedQuery, categoryIds: [], distanceKm, score })
     );
-  return { places, note };
+  return { places, note, didYouMean, needsLocation: nearMe && !nearbySearch };
 }
 
 export async function search(
@@ -269,8 +283,11 @@ export async function search(
     const effectiveAreaId = areaId;
     const effectiveGoodFor = goodForId;
     const effectiveBudget = budget;
-    const cacheKey = generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, effectiveGoodFor, effectiveBudget);
-    const canUseSharedCache = !nearbySearch;
+    const sort = getSearchSort(body.sort);
+    const openNow = body.open_now === true;
+    const cacheKey = `${generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, effectiveGoodFor, effectiveBudget)}:sort:${sort}`;
+    // "Open now" changes by the minute, so those answers are never reused.
+    const canUseSharedCache = !nearbySearch && !openNow && !/\b(open|bukas)\b/.test(normalizedQuery);
     const responseCacheKey = buildSearchResponseCacheKey({ baseKey: cacheKey, page, limit });
     const userContext = await resolveUserContext(request);
     const userType = userContext.userType;
@@ -292,7 +309,7 @@ export async function search(
         await storeSearchContext({ searchContext, userContext, cacheKey: responseCacheKey, context });
         return {
           status: 200,
-          jsonBody: { message: "Search processed successfully.", searchId, userType, cacheHit: true, cacheKey: responseCacheKey, searchMode: cachedPayload.searchMode, searchStatus: cachedPayload.searchStatus, searchFeedbackMessage: cachedPayload.searchFeedbackMessage, searchContext, page: cachedPayload.page, limit: cachedPayload.limit, totalCount: cachedPayload.totalCount, totalPages: cachedPayload.totalPages, places: cachedPayload.places, result: cachedPayload.result },
+          jsonBody: { message: "Search processed successfully.", searchId, userType, cacheHit: true, cacheKey: responseCacheKey, searchMode: cachedPayload.searchMode, searchStatus: cachedPayload.searchStatus, searchFeedbackMessage: cachedPayload.searchFeedbackMessage, didYouMean: cachedPayload.didYouMean, needsLocation: cachedPayload.needsLocation, searchContext, page: cachedPayload.page, limit: cachedPayload.limit, totalCount: cachedPayload.totalCount, totalPages: cachedPayload.totalPages, places: cachedPayload.places, result: cachedPayload.result },
         };
       }
     }
@@ -317,9 +334,11 @@ export async function search(
       };
     }
 
-    const { places, note: areaNote } = await findSearchPlaces({
+    const { places, note: areaNote, didYouMean, needsLocation } = await findSearchPlaces({
       normalizedQuery,
       nearbySearch,
+      sort,
+      openNow,
       explicitFilters: {
         category: effectiveCategoryId,
         city: effectiveAreaId,
@@ -345,6 +364,8 @@ export async function search(
       searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
       searchStatus,
       searchFeedbackMessage,
+      didYouMean,
+      needsLocation,
       page: safePage,
       limit,
       totalCount,
@@ -369,7 +390,7 @@ export async function search(
 
     return {
       status: 200,
-      jsonBody: { message: "Search processed successfully.", searchId, userType, cacheHit: false, cacheKey: responseCacheKey, searchMode: responsePayload.searchMode, searchStatus: responsePayload.searchStatus, searchFeedbackMessage: responsePayload.searchFeedbackMessage, searchContext, page: responsePayload.page, limit: responsePayload.limit, totalCount: responsePayload.totalCount, totalPages: responsePayload.totalPages, places: responsePayload.places, result: responsePayload.result },
+      jsonBody: { message: "Search processed successfully.", searchId, userType, cacheHit: false, cacheKey: responseCacheKey, searchMode: responsePayload.searchMode, searchStatus: responsePayload.searchStatus, searchFeedbackMessage: responsePayload.searchFeedbackMessage, didYouMean: responsePayload.didYouMean, needsLocation: responsePayload.needsLocation, searchContext, page: responsePayload.page, limit: responsePayload.limit, totalCount: responsePayload.totalCount, totalPages: responsePayload.totalPages, places: responsePayload.places, result: responsePayload.result },
     };
   } catch (error) {
     context.error(error);
