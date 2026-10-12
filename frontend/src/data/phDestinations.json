@@ -2832,6 +2832,19 @@
               "aliases": [
                 "Alcoy, Cebu"
               ]
+            },
+            {
+              "slug": "alegria-cebu",
+              "name": "Alegria, Cebu",
+              "type": "municipality",
+              "center": [
+                9.7294,
+                123.3397
+              ],
+              "aliases": [
+                "Alegria Cebu",
+                "Alegria (Cebu)"
+              ]
             }
           ]
         },
@@ -3148,6 +3161,25 @@
               ],
               "aliases": [
                 "Pintuyan, Southern Leyte"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "eastern-samar",
+          "name": "Eastern Samar",
+          "cities": [
+            {
+              "slug": "guiuan",
+              "name": "Guiuan",
+              "type": "municipality",
+              "center": [
+                11.0307,
+                125.7237
+              ],
+              "aliases": [
+                "Guiuan, Eastern Samar",
+                "Calicoan"
               ]
             }
           ]
