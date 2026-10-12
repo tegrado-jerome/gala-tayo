@@ -8623,6 +8623,32 @@
    "sourceUrl": "https://www.flickr.com/photos/eduardodavidpardo/26467643397/"
   }
  ],
+ "mount-luho-boracay": [
+  {
+   "url": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-1-v13-card.webp",
+   "author": "Jean_Paul",
+   "license": "© Jean_Paul, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/paulandjeansphotos/26139882947/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-2-v13-card.webp",
+   "author": "Rick Saint John",
+   "license": "© Rick Saint John, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/wowphilippinestravelagency/9986900823/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-luho-boracay/hd/mount-luho-boracay-3-v13-card.webp",
+   "author": "light917",
+   "license": "© light917, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/light917/14913046748/"
+  }
+ ],
  "mount-makiling-los-banos": [
   {
    "url": "https://media.galatayo.app/places/mount-makiling-los-banos/hd/mount-makiling-los-banos-2-v3.webp",
@@ -8733,6 +8759,100 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Twilight_before_sunrise_on_Mt._Pulag.jpg"
+  }
+ ],
+ "mount-samat-shrine-bataan": [
+  {
+   "url": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-1-v13-card.webp",
+   "author": "Chiebibo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_Samat_Cross.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-2-v13-card.webp",
+   "author": "Ranieljosecastaneda",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt._Samat_Cross_National_Shrine_of_Bataan.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-3-v13-card.webp",
+   "author": "Kleervyu",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt_Samat_National_Shrine,_Pilar,_Bataan.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-samat-shrine-bataan/hd/mount-samat-shrine-bataan-4-v13-card.webp",
+   "author": "Ranieljosecastaneda",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Shrine_of_Valor_Mt._Samat.jpg"
+  }
+ ],
+ "mount-tapulao-zambales": [
+  {
+   "url": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-1-v13-card.webp",
+   "author": "Firth m",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_Tapulao_pine_forest_campsite.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-2-v13-card.webp",
+   "author": "Firth m",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sunrise_near_Mount_Tapulao.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-tapulao-zambales/hd/mount-tapulao-zambales-3-v13-card.webp",
+   "author": "Jpcabarles",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt._Tapulao_3.jpg"
+  }
+ ],
+ "mount-ulap-itogon": [
+  {
+   "url": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-1-v13-card.webp",
+   "author": "Ian B. Alvarez",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt_Ulap_Sunrise_-_Itogon,_Benguet.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-2-v13-card.webp",
+   "author": "Kalithecat00",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:One_of_Mt._Ulap%27s_peaks.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-3-v13-card.webp",
+   "author": "Ian B. Alvarez",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt_Ulap_2_-_Itogon,_Benguet.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/mount-ulap-itogon/hd/mount-ulap-itogon-4-v13-card.webp",
+   "author": "Jpcabarles",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mt._Ulap_3.jpg"
   }
  ],
  "mt-camisong-forest-park-itogon": [
@@ -9281,6 +9401,40 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ogtong_Cave_Natural_Pool,_Santa_Fe,_Bantayan_Island,_Cebu.jpg"
   }
  ],
+ "oh-my-gulay-baguio": [
+  {
+   "url": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-1-v13-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Oh_My_Gulay_Artists_Cafe,_Baguio,_Feb_2025_(4).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-2-v13-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Oh_My_Gulay_Artists_Cafe,_Baguio,_Feb_2025_(3).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-3-v13-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Oh_My_Gulay_Artists_Cafe,_Baguio,_Feb_2025_(6).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/oh-my-gulay-baguio/hd/oh-my-gulay-baguio-4-v13-card.webp",
+   "author": "Ralff Nestor Nacor",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Oh_My_Gulay_Artists_Cafe,_Baguio,_Feb_2025_(5).jpg"
+  }
+ ],
  "okada-manila": [
   {
    "author": "梅津拓哉",
@@ -9289,6 +9443,32 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Okada_manila.jpg",
    "url": "https://media.galatayo.app/places/okada-manila/hd/okada-manila-1.webp",
    "cardUrl": "https://media.galatayo.app/places/okada-manila/hd/okada-manila-1-card.webp"
+  }
+ ],
+ "old-enchanted-balete-tree-siquijor": [
+  {
+   "url": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-1-v13-card.webp",
+   "author": "Remar Lapastora",
+   "license": "© Remar Lapastora, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/118169647@N03/15114130422/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-2-v13-card.webp",
+   "author": "Morrell Vincent Mag-usara",
+   "license": "© Morrell Vincent Mag-usara, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/123822783@N08/17055034361/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/old-enchanted-balete-tree-siquijor/hd/old-enchanted-balete-tree-siquijor-3-v13-card.webp",
+   "author": "Andy Nelson",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/andynelson/9498368699/"
   }
  ],
  "once-islas-zamboanga": [
@@ -9683,37 +9863,55 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Window_St_Agustin_Church_of_Paoay._Philippines._(52574508079).jpg"
   }
  ],
+ "paoay-sand-dunes-ilocos-norte": [
+  {
+   "url": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-1-v13-card.webp",
+   "author": "Emman Asuncion Foronda",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paoay_Ilocos_Norte_Sand_Dunes_%E2%80%93_Old_%26_New.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-2-v13-card.webp",
+   "author": "EMMAN A. FORONDA",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paoay_Ilocos_Norte_Sand_Dunes.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paoay-sand-dunes-ilocos-norte/hd/paoay-sand-dunes-ilocos-norte-3-v13-card.webp",
+   "author": "Rollymagpayo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paoay_Sand_Dunes_Sunset.jpg"
+  }
+ ],
  "paseo-del-mar-zamboanga": [
   {
-   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-1-card.webp",
-   "author": "MGM",
-   "license": "Public domain",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paseo_del_Mar_overlooking_the_Santa_Cruz_Islands.JPG"
-  },
-  {
-   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-2-card.webp",
+   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-1-v13-card.webp",
    "author": "Wowzamboangacity",
    "license": "CC BY 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paseo_del_Mar_y_el_Balangay_Expedition_2010.JPG"
-  },
-  {
-   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-3-card.webp",
-   "author": "Wowzamboangacity",
-   "license": "CC BY 3.0",
-   "licenseUrl": null,
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paseo_del_Mar-_Zamboanga_City.JPG"
   },
   {
-   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-4-card.webp",
+   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-2-v13-card.webp",
+   "author": "Wowzamboangacity",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paseo_del_Mar_y_el_Balangay_Expedition_2010.JPG"
+  },
+  {
+   "url": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/paseo-del-mar-zamboanga/hd/paseo-del-mar-zamboanga-3-v13-card.webp",
    "author": "Ralff Nestor Nacor",
    "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paseo_del_Mar,_Zamboanga_City,_Mar_2026_(1).jpg"
   }
  ],
@@ -9751,6 +9949,32 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pasig_River_Esplanade_Night.jpg"
   }
  ],
+ "patapat-viaduct-pagudpud": [
+  {
+   "url": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-1-v13-card.webp",
+   "author": "billy jo lagazo photography",
+   "license": "© billy jo lagazo photography, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/billyjo29/4734894183/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-2-v13-card.webp",
+   "author": "Lian Fernandez",
+   "license": "© Lian Fernandez, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/lianskiebutskidootsie/6094186212/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/patapat-viaduct-pagudpud/hd/patapat-viaduct-pagudpud-3-v13-card.webp",
+   "author": "Julie Dyogi",
+   "license": "© Julie Dyogi, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/juliedyogi/4901382332/"
+  }
+ ],
  "patar-beach-bolinao": [
   {
    "url": "https://media.galatayo.app/places/patar-beach-bolinao/hd/patar-beach-bolinao-1.webp",
@@ -9779,12 +10003,36 @@
  ],
  "peoples-park-davao": [
   {
-   "url": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-1-card.webp",
-   "author": "Robert Ryan U. Ong",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:People%27s_Park,_Davao_City,_Philippines_(1_May_2010).jpg"
+   "url": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-1-v13-card.webp",
+   "author": "Herbertkikoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Davao_City_People%27s_Park_04.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-2-v13-card.webp",
+   "author": "Herbertkikoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Davao_City_People%27s_Park_05.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-3-v13-card.webp",
+   "author": "Herbertkikoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Davao_City_People%27s_Park_03.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/peoples-park-davao/hd/peoples-park-davao-4-v13-card.webp",
+   "author": "Herbertkikoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Davao_People%27s_Park_3.jpg"
   }
  ],
  "peoples-park-in-the-sky-tagaytay": [
@@ -10123,44 +10371,28 @@
  ],
  "plaza-burgos-empanada-vigan": [
   {
-   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-1.webp",
-   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-1-card.webp",
-   "author": "Jessartcam",
+   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-1-v13-card.webp",
+   "author": "Ralff Nestor Nacor",
    "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Empanada_de_Vigan.jpg"
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Plaza_Padre_Jose_Burgos,_Vigan,_Ilocos_Sur,_Apr_2026.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-2-card.webp",
+   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-2-v13-card.webp",
    "author": "CharMel Creations",
-   "license": "CC0 1.0",
-   "licenseUrl": null,
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Preparation_of_Ilocos_Empanada.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-3-v13-card.webp",
+   "author": "CharMel Creations",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Authentic_Empanada.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-3.webp",
-   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-3-card.webp",
-   "author": "CharMel Creations",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ilocos_empanada.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-4.webp",
-   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-4-card.webp",
-   "author": "Lokalpedia",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ilocos_Empanada_in_Batac,_Ilocos_Norte.jpg"
-  },
-  {
-   "url": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-5.webp",
-   "cardUrl": "https://media.galatayo.app/places/plaza-burgos-empanada-vigan/hd/plaza-burgos-empanada-vigan-5-card.webp",
-   "author": "CharMel Creations",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Empanada_de_ilocos.jpg"
   }
  ],
  "plaza-salcedo-vigan": [
@@ -10187,6 +10419,32 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vigan_Dancing_Fountains.jpg"
+  }
+ ],
+ "plaza-san-luis-complex": [
+  {
+   "url": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-1-v13-card.webp",
+   "author": "CNEcija12345",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Plaza_San_Luis_Complex_CNE.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-2-v13-card.webp",
+   "author": "Judgefloro",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:02363jfManila_Intramuros_Streets_Buildings_Churches_Landmarksfvf_06.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/plaza-san-luis-complex/hd/plaza-san-luis-complex-3-v13-card.webp",
+   "author": "Judgefloro",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:02363jfManila_Intramuros_Streets_Buildings_Churches_Landmarksfvf_01.jpg"
   }
  ],
  "poblacion-makati": [
@@ -10607,28 +10865,36 @@
  ],
  "rizal-boulevard-dumaguete": [
   {
-   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-1-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-1-v2-card.webp",
-   "author": "Iampjanz",
-   "license": "CC BY-SA 4.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Monument_of_Dr._Jose_Rizal_in_Dumaguete_City_08.jpg"
+   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-1-v13-card.webp",
+   "author": "Bram de Jong",
+   "license": "© Bram de Jong, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/bramdejong-fotografie/52979811902/"
   },
   {
-   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-2-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-2-v2-card.webp",
-   "author": "Iampjanz",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-2-v13-card.webp",
+   "author": "ayran",
+   "license": "© ayran, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Panilongon_10.jpg"
+   "sourceUrl": "https://www.flickr.com/photos/cappuccinoko/5053963174/"
   },
   {
-   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-3-v2.webp",
-   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-3-v2-card.webp",
-   "author": "Iampjanz",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-3-v13-card.webp",
+   "author": "danniepolley",
+   "license": "© danniepolley, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Monument_of_Dr._Jose_Rizal_in_Dumaguete_City_09.jpg"
+   "sourceUrl": "https://www.flickr.com/photos/danniepolley/53441591299/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/rizal-boulevard-dumaguete/hd/rizal-boulevard-dumaguete-4-v13-card.webp",
+   "author": "Ipe2000",
+   "license": "© Ipe2000, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/35147594@N03/3994847720/"
   }
  ],
  "rizal-park-luneta-park": [
@@ -10663,6 +10929,40 @@
    "license": "CC BY 4.0",
    "licenseUrl": null,
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rizal_Monument_(Manila,_2024).jpg"
+  }
+ ],
+ "roxas-boulevard-promenade-light-park": [
+  {
+   "url": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-1-v13-card.webp",
+   "author": "Rolandave Bola",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:%22Sunset_Boulevard%22_Roxas_Blvd.,_Manila_Philippines_10_23_14_-_Flickr.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-2-v13-card.webp",
+   "author": "Cary Reyes",
+   "license": "© Cary Reyes, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/shutteraddict/5700114356/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-3-v13-card.webp",
+   "author": "David Madrid",
+   "license": "© David Madrid, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/manilahobo/13443317935/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/roxas-boulevard-promenade-light-park/hd/roxas-boulevard-promenade-light-park-4-v13-card.webp",
+   "author": "Mariá Concepcíon",
+   "license": "© Mariá Concepcíon, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/maria_concepcion/5539769967/"
   }
  ],
  "roxas-night-market-davao": [
@@ -10723,6 +11023,32 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sabang_Beach_Baler_Philippines_(143823675).jpeg"
+  }
+ ],
+ "sabang-beach-puerto-galera": [
+  {
+   "url": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-1-v13-card.webp",
+   "author": "Alexander Hatley",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/alexander_burakov/11218885936/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-2-v13-card.webp",
+   "author": "Andrea Albini",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Puerto_Galera_-_Sabang_beach_-_panoramio_(5).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sabang-beach-puerto-galera/hd/sabang-beach-puerto-galera-3-v13-card.webp",
+   "author": "Andrea Albini",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Puerto_Galera_-_Sabang_beach_-_panoramio_(6).jpg"
   }
  ],
  "sablayan-zipline-presing-park-sablayan": [
@@ -11287,6 +11613,22 @@
  ],
  "siete-pecados-coron": [
   {
+   "url": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-1-v13-card.webp",
+   "author": "eazytraveler",
+   "license": "© eazytraveler, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/eazy360/4944029284/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-2-v13-card.webp",
+   "author": "Belle Llido",
+   "license": "© Belle Llido, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/naughtybelshots/26820796917/"
+  },
+  {
    "url": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-1.webp",
    "cardUrl": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-1-card.webp",
    "author": "Firth m",
@@ -11295,12 +11637,12 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Siete_Pecados.jpg"
   },
   {
-   "url": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-2.webp",
-   "cardUrl": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-2-card.webp",
-   "author": "Firth m",
-   "license": "CC BY-SA 4.0",
+   "url": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/siete-pecados-coron/hd/siete-pecados-coron-4-v13-card.webp",
+   "author": "Rey Torres",
+   "license": "© Rey Torres, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fish_and_coral.jpg"
+   "sourceUrl": "https://www.flickr.com/photos/emorey/5470848706/"
   }
  ],
  "simala-shrine-sibonga": [
@@ -11669,6 +12011,40 @@
    "sourceUrl": "https://www.flickr.com/photos/11249521@N00/2577047120"
   }
  ],
+ "space-time-cube": [
+  {
+   "url": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-1-v13-card.webp",
+   "author": "SM Supermalls, via Tatler Asia",
+   "license": "© SM Supermalls, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tatlerasia.com/lifestyle/travel/look-everything-to-see-inside-the-new-space-time-cube-at-s-maison"
+  },
+  {
+   "url": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-2-v13-card.webp",
+   "author": "SM Supermalls, via Tatler Asia",
+   "license": "© SM Supermalls, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tatlerasia.com/lifestyle/travel/look-everything-to-see-inside-the-new-space-time-cube-at-s-maison"
+  },
+  {
+   "url": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-3-v13-card.webp",
+   "author": "SM Supermalls, via Tatler Asia",
+   "license": "© SM Supermalls, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tatlerasia.com/lifestyle/travel/look-everything-to-see-inside-the-new-space-time-cube-at-s-maison"
+  },
+  {
+   "url": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/space-time-cube/hd/space-time-cube-4-v13-card.webp",
+   "author": "SM Supermalls, via Tatler Asia",
+   "license": "© SM Supermalls, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.tatlerasia.com/lifestyle/travel/look-everything-to-see-inside-the-new-space-time-cube-at-s-maison"
+  }
+ ],
  "st-joseph-parish-bamboo-organ-church": [
   {
    "url": "https://media.galatayo.app/places/st-joseph-parish-bamboo-organ-church/hd/st-joseph-parish-bamboo-organ-church-1-v5.webp",
@@ -11797,6 +12173,32 @@
    "sourceUrl": "https://www.flickr.com/photos/68549141@N05/10277013996/"
   }
  ],
+ "sugbo-mercado-cebu": [
+  {
+   "url": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-1-v13-card.webp",
+   "author": "Khymoe",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sugbo_Mercado_Food_Court.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-2-v13-card.webp",
+   "author": "Wide Awake!",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sugbo_Mercado_Garden_Bloc_in_Cebu_IT_Park_(2025-04-06).jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sugbo-mercado-cebu/hd/sugbo-mercado-cebu-3-v13-card.webp",
+   "author": "Wide Awake!",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Osaka_Shinsekat_at_the_Sugbo_Mercado_Garden_Bloc_(2025-04-06).jpg"
+  }
+ ],
  "sumaguing-cave-sagada": [
   {
    "url": "https://media.galatayo.app/places/sumaguing-cave-sagada/hd/sumaguing-cave-sagada-1-v4.webp",
@@ -11863,6 +12265,40 @@
    "license": "© Colloid Farl, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://www.flickr.com/photos/colloidfarl/3302686071/"
+  }
+ ],
+ "sumlang-lake-camalig": [
+  {
+   "url": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-1-v13-card.webp",
+   "author": "Seanaleta",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Majesty.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-2-v13-card.webp",
+   "author": "Eric Augustus Tingatinga",
+   "license": "© Eric Augustus Tingatinga, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/eat1ng/44547525360/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-3-v13-card.webp",
+   "author": "Ronnel Loreno",
+   "license": "© Ronnel Loreno, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/ronlo_images/14395574572/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/sumlang-lake-camalig/hd/sumlang-lake-camalig-4-v13-card.webp",
+   "author": "MarvinBikolano",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Volcano_Mayon_at_Sumlang_Lake.jpg"
   }
  ],
  "sunken-cemetery-camiguin": [
@@ -12271,6 +12707,40 @@
    "license": "© @hungrybyaheros, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://www.tiktok.com/@hungrybyaheros/video/7596199188057132295"
+  }
+ ],
+ "taraw-cliff-canopy-walk-el-nido": [
+  {
+   "url": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-1-v13-card.webp",
+   "author": "Grigory Makarov",
+   "license": "© Grigory Makarov, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/gmakarov/8489262941/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-2-v13-card.webp",
+   "author": "cheuleng",
+   "license": "© cheuleng, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/cheuleng/5569863143/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-3-v13-card.webp",
+   "author": "Micluna",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cadlao_Island_view_from_Canopy_Walk.jpg"
+  },
+  {
+   "url": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-4-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/taraw-cliff-canopy-walk-el-nido/hd/taraw-cliff-canopy-walk-el-nido-4-v13-card.webp",
+   "author": "Klaus Stiefel",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/pacificklaus/27270157332/"
   }
  ],
  "tayabas-heritage-town": [
@@ -13203,6 +13673,32 @@
    "license": "© Villa Escudero Plantations and Resort, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://villaescudero.com/"
+  }
+ ],
+ "virgin-island-bantayan": [
+  {
+   "url": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-1-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-1-v13-card.webp",
+   "author": "wetoy",
+   "license": "© wetoy, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/49794527@N00/8856613166/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-2-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-2-v13-card.webp",
+   "author": "Nico Lacson",
+   "license": "© Nico Lacson, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/nicolas_lacson/3888952164/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-3-v13.webp",
+   "cardUrl": "https://media.galatayo.app/places/virgin-island-bantayan/hd/virgin-island-bantayan-3-v13-card.webp",
+   "author": "redjie123",
+   "license": "© redjie123, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/26864073@N07/8611570393/"
   }
  ],
  "virgin-island-panglao": [
