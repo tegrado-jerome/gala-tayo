@@ -5823,6 +5823,32 @@
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jones_Bridge,_Manila,_May_2025.jpg"
   }
  ],
+ "jovellar-underground-river": [
+  {
+   "url": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-1-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-1-v8-card.webp",
+   "author": "Niklas Bahn, HOME of TRAVEL",
+   "license": "© Niklas Bahn, HOME of TRAVEL, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://homeoftravel.de/jovellar-underground-river-philippinen-lohnt-es-sich/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-2-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-2-v8-card.webp",
+   "author": "Niklas Bahn, HOME of TRAVEL",
+   "license": "© Niklas Bahn, HOME of TRAVEL, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://homeoftravel.de/jovellar-underground-river-philippinen-lohnt-es-sich/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-3-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/jovellar-underground-river/hd/jovellar-underground-river-3-v8-card.webp",
+   "author": "Niklas Bahn, HOME of TRAVEL",
+   "license": "© Niklas Bahn, HOME of TRAVEL, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://homeoftravel.de/jovellar-underground-river-philippinen-lohnt-es-sich/"
+  }
+ ],
  "kalanggaman-island-palompon": [
   {
    "url": "https://media.galatayo.app/places/kalanggaman-island-palompon/hd/kalanggaman-island-palompon-1-v2.webp",
@@ -6705,20 +6731,44 @@
  ],
  "linapacan-islands-palawan": [
   {
-   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v1.webp",
-   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v1-card.webp",
-   "author": "@ionatravels",
-   "license": "© @ionatravels, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.tiktok.com/@ionatravels/video/7476098804937297154"
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-1-v8-card.webp",
+   "author": "Sebastian Pichler",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/TxNSjhbJ0VU"
   },
   {
-   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v1.webp",
-   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v1-card.webp",
-   "author": "@ionatravels",
-   "license": "© @ionatravels, used with credit",
-   "licenseUrl": null,
-   "sourceUrl": "https://www.tiktok.com/@ionatravels/video/7476098804937297154"
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-2-v8-card.webp",
+   "author": "Sebastian Pichler",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/tp0Bm4emz2M"
+  },
+  {
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-3-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-3-v8-card.webp",
+   "author": "Bernd Dittrich",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/PUAbmmeHYeE"
+  },
+  {
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-4-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-4-v8-card.webp",
+   "author": "Sebastian Pichler",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/8KFiSU-fbow"
+  },
+  {
+   "url": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-5-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/linapacan-islands-palawan/hd/linapacan-islands-palawan-5-v8-card.webp",
+   "author": "Bernd Dittrich",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/FZflfSE_pDc"
   }
  ],
  "lio-beach-el-nido": [
@@ -7723,12 +7773,28 @@
  ],
  "maribina-falls-bato-catanduanes": [
   {
-   "url": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v1.webp",
-   "cardUrl": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v1-card.webp",
+   "url": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-1-v8-card.webp",
    "author": "Marky Ramone Go, Nomadic Experiences",
    "license": "© Marky Ramone Go, Nomadic Experiences, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://www.nomadicexperiences.com/2025/04/how-catanduanes-earned-its-place-among.html"
+  },
+  {
+   "url": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-2-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-2-v8-card.webp",
+   "author": "Brian Haagen",
+   "license": "© Brian Haagen, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/194908364@N07/55191461562/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-3-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/maribina-falls-bato-catanduanes/hd/maribina-falls-bato-catanduanes-3-v8-card.webp",
+   "author": "Oliver Bautista",
+   "license": "© Oliver Bautista, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.flickr.com/photos/oliverbautista/3447824904/"
   }
  ],
  "marikina-river-park": [
@@ -11611,20 +11677,28 @@
  ],
  "suyac-island-mangrove-eco-park-sagay": [
   {
-   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v1.webp",
-   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v1-card.webp",
-   "author": "Marky Ramone Go, Nomadic Experiences",
-   "license": "© Marky Ramone Go, Nomadic Experiences, used with credit",
+   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-1-v8-card.webp",
+   "author": "Bem Cortez, Negros Season of Culture",
+   "license": "© Bem Cortez, Negros Season of Culture, used with credit",
    "licenseUrl": null,
-   "sourceUrl": "https://www.nomadicexperiences.com/2025/09/how-sagay-city-and-isabela-de-basilan.html"
+   "sourceUrl": "https://www.negrosseasonofculture.com/2023/06/sagays-marine-legacy.html"
   },
   {
-   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v1.webp",
-   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v1-card.webp",
+   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-2-v8-card.webp",
    "author": "Claire Algarme, First Time Travels",
    "license": "© Claire Algarme, First Time Travels, used with credit",
    "licenseUrl": null,
    "sourceUrl": "https://firsttimetravels.com/carbin-reef-suyac-island-sagay-city/"
+  },
+  {
+   "url": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-3-v8.webp",
+   "cardUrl": "https://media.galatayo.app/places/suyac-island-mangrove-eco-park-sagay/hd/suyac-island-mangrove-eco-park-sagay-3-v8-card.webp",
+   "author": "Marky Ramone Go, Nomadic Experiences",
+   "license": "© Marky Ramone Go, Nomadic Experiences, used with credit",
+   "licenseUrl": null,
+   "sourceUrl": "https://www.nomadicexperiences.com/2025/09/how-sagay-city-and-isabela-de-basilan.html"
   }
  ],
  "svd-laudato-si-farm-tagaytay": [
