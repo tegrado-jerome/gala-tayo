@@ -1462,17 +1462,17 @@
  },
  "bounty-beach-malapascua": {
   "didYouKnow": [
-   "Monad Shoal is one of the rare places where thresher sharks show up almost every morning, drawn by cleaning stations where small wrasses pick off their parasites.",
+   "Malapascua is one of the rare places where thresher sharks show up almost every morning, drawn by cleaning stations where small wrasses pick off their parasites. Most dives now go to Kimud Shoal; Monad Shoal has been less reliable since 2022.",
    "There are no cars on Malapascua, and Bounty Beach is the island's only developed strip of sand."
   ],
   "whatToDo": [
-   "Do the dawn thresher shark dive at Monad Shoal (certified divers)",
+   "Do the dawn thresher shark dive at Kimud or Monad Shoal (certified divers)",
    "Swim and snorkel off Bounty Beach",
    "Walk the island's paths to quieter northern beaches",
    "Watch the sunset by the lighthouse"
   ],
   "safetyTips": [
-   "Monad Shoal sits around 27 m deep, beyond a basic Open Water level, so dive within your certification with a licensed center",
+   "Monad Shoal sits around 27 m deep and Kimud is shallower; either way, dive within your certification with a licensed center",
    "Wear a life vest on boat transfers; boats may drop you in shallow water near the beach"
   ],
   "sources": [
@@ -4773,7 +4773,7 @@
  },
  "malapascua-thresher-shark-dive": {
   "whatToDo": [
-   "Do the sunrise thresher shark dive at Monad Shoal",
+   "Do the sunrise thresher shark dive at Kimud Shoal",
    "Take an Open Water or Advanced course on the island",
    "Add dives at Gato Island and other nearby sites",
    "Relax on Malapascua's white beaches between dives"
