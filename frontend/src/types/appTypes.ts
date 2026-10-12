@@ -1,5 +1,6 @@
 import type { PlaceCardData } from '../components/PlaceCard'
 import type { CurrentUserResponse } from '../utils/profileApi'
+import type { OpeningHours } from '../utils/openingHours'
 
 export type PlaceDetail = {
   id: string
@@ -30,6 +31,7 @@ export type PlaceDetail = {
   budget_min?: number | null
   price_level?: number | null
   google_maps_url?: string | null
+  opening_hours?: OpeningHours | null
   category: string
   latitude: number | string
   longitude: number | string
@@ -48,6 +50,7 @@ export type PlaceDetailCardData = PlaceCardData & {
   id: string
   slug: string
   isGalaWorthy?: boolean
+  opening_hours?: OpeningHours | null
 }
 
 export type AppResumeCache = {

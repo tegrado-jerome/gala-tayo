@@ -4,6 +4,7 @@ import { isMealStopRow } from "../domain/queryIntent";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
 import { hasCuratedPhoto, placePhotoKey } from "../utils/hdPhotos";
+import { parseOpeningHours } from "../utils/openingHours";
 import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 import { ensureGuestProfile } from "./profileHelpers";
 
@@ -47,6 +48,7 @@ type PlaceRow = {
   storage_key?: string | null;
   tags?: string[] | null;
   good_for?: string[] | null;
+  opening_hours?: unknown;
 };
 
 type ItemRow = {
@@ -66,7 +68,7 @@ type ItemRow = {
 const PLAN_COLUMNS =
   "id, user_id, title, slug, description, visibility, status, published_at, created_at, updated_at, hearts_count";
 const ITEM_COLUMNS =
-  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, area, address, budget_min, latitude, longitude, tags, good_for)";
+  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, area, address, budget_min, latitude, longitude, tags, good_for, opening_hours)";
 const PREVIEW_ITEM_COLUMNS = "id, plan_id, place_id, day_number, sort_order, places(id, name, slug, city, area, category)";
 const PLAN_VISIBILITIES = new Set<PlanVisibility>(["private", "public"]);
 const ACTIVE_STATUS = "active";
@@ -183,6 +185,7 @@ function mapPlace(place: PlaceRow | null | undefined, fallbackPlaceId: string) {
     latitude: toNullableNumber(place?.latitude),
     longitude: toNullableNumber(place?.longitude),
     image_url: place?.storage_key ? buildImageUrl(place.storage_key) : null,
+    opening_hours: parseOpeningHours(place?.opening_hours),
   };
 }
 

@@ -2,6 +2,7 @@ import { ArrowDown } from '@phosphor-icons/react/dist/csr/ArrowDown'
 import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp'
 import { Car } from '@phosphor-icons/react/dist/csr/Car'
 import { PersonSimpleWalk } from '@phosphor-icons/react/dist/csr/PersonSimpleWalk'
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import InternalLink from '../InternalLink'
 import PlaceImage from '../discover/PlaceImage'
@@ -9,6 +10,8 @@ import { Button } from '../ui'
 import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import type { GalaPlanPlace } from '../../utils/galaPlansApi'
 import { estimateLeg, formatPeso, stopCost, type TravelLeg } from '../../utils/galaPlanTrip'
+import { closedStopNote } from '../../utils/openingHours'
+import { parseClockLabel } from '../../utils/planStops'
 import { getCanonicalPlacePath } from '../../utils/routes'
 import { resolveAreaMeta } from '../../utils/seo'
 import '../../design/plans.css'
@@ -19,6 +22,8 @@ export type TimelineStop = {
   minutes: number | null
   note: string | null
   place: GalaPlanPlace
+  /** The stop's day (YYYY-MM-DD), to warn when the place is closed at its time. */
+  date?: string | null
 }
 
 type PlanTimelineProps = {
@@ -65,6 +70,8 @@ function PlanTimeline({ stops, onMove, onRemove, animate = false, mealCost }: Pl
         const placeHref = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
         const meta = [stop.place.area || stop.place.city, stopPrice(stop.place, mealCost)].filter(Boolean)
         const images = getPlacePhotoCandidates(stop.place.slug, stop.place.image_url)
+        const start = stop.date ? parseClockLabel(stop.time) : null
+        const closedNote = stop.date && start !== null ? closedStopNote(stop.place.opening_hours, stop.date, start) : null
 
         return (
           <li
@@ -89,6 +96,12 @@ function PlanTimeline({ stops, onMove, onRemove, animate = false, mealCost }: Pl
                   {stop.place.name}
                 </InternalLink>
                 {meta.length > 0 ? <p className="pl-day-meta">{meta.join(' · ')}</p> : null}
+                {closedNote ? (
+                  <p className="pl-day-closed">
+                    <Warning weight="fill" aria-hidden="true" />
+                    {closedNote}
+                  </p>
+                ) : null}
                 {stop.note ? <p className="pl-day-note line-clamp-3">{stop.note}</p> : null}
               </div>
               {onMove || onRemove ? (

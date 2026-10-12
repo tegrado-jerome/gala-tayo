@@ -17,6 +17,7 @@ import {
 } from "../services/redisCacheService";
 import { PUBLIC_PLACE_COLUMNS, normalizeFaqs } from "../domain/places";
 import { fetchAllRows } from "../utils/fetchAllRows";
+import { parseOpeningHours, type OpeningHours } from "../utils/openingHours";
 
 export type DetailCategoryMeta = {
   id: string;
@@ -74,6 +75,7 @@ export type PlaceDetail = {
   category: string;
   entranceFee: string;
   openHours: string;
+  opening_hours: OpeningHours | null;
   website: string;
   latitude: number;
   longitude: number;
@@ -341,6 +343,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     category: getNullableString(row.category) ?? "Place",
     entranceFee: budgetNote ?? "Not specified",
     openHours: "Not available",
+    opening_hours: parseOpeningHours(row.opening_hours),
     website: websiteUrl,
     latitude,
     longitude,
