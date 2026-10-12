@@ -1,5 +1,6 @@
 // go.galatayo.app: short invite links on our own domain. /p/<plan id> and /l?n=..&p=.. are the backend's
-// share pages (preview card for chat apps, then straight on to galatayo.app); everything else is a 404.
+// share pages (preview card for chat apps, then straight on to galatayo.app); the bare root goes to the site,
+// everything else is a 404.
 const API = "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Same list as isPreviewBot in backend/src/functions/sharePlan.ts: bots get the card without the redirect.
@@ -20,6 +21,7 @@ export default {
   async fetch(request, env, ctx) {
     if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
     const url = new URL(request.url);
+    if (url.pathname === "/") return Response.redirect("https://galatayo.app/", 301);
     const target = backendUrl(url);
     if (!target) return notFound();
 

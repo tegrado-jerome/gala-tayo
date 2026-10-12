@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { backendUrl } from "./index.js";
+import worker, { backendUrl } from "./index.js";
 
 const API = "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api";
 const at = (path) => backendUrl(new URL(`https://go.galatayo.app${path}`));
@@ -19,5 +19,13 @@ test("list links keep their query", () => {
 test("anything else is not a share link", () => {
   for (const path of ["/", "/p/", "/p/not-a-uuid", `/p/${id}/x`, "/api/health", "/lists", "/favicon.ico", `/p/..%2F${id}`]) {
     assert.equal(at(path), null, path);
+  }
+});
+
+test("the bare root sends people to the site", async () => {
+  for (const path of ["/", "/?ref=x"]) {
+    const res = await worker.fetch(new Request(`https://go.galatayo.app${path}`), {}, {});
+    assert.equal(res.status, 301, path);
+    assert.equal(res.headers.get("location"), "https://galatayo.app/", path);
   }
 });

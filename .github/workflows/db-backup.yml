@@ -1,0 +1,62 @@
+name: DB backup
+
+# Nightly encrypted dump of the prod database into the private R2 bucket galatayo-backups, through the write-only
+# infra/cloudflare/backup-sink worker. R2 drops objects after 14 days. Restore: docs/backup-restore.md
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 2:00 AM Philippine time
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install pg_dump 17 (matches the server)
+        run: |
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump, compress and encrypt
+        env:
+          # backup_reader: login role with pg_read_all_data and BYPASSRLS only, via the session pooler.
+          DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          bin=/usr/lib/postgresql/17/bin
+          mkdir dump
+          # Our schema (tables, RLS policies, grants, functions). auth and storage tables come with every Supabase
+          # project, so for those only the rows are kept, plus our own triggers on auth.users.
+          $bin/pg_dump "$DB_URL" --schema-only --schema=public -f dump/schema.sql
+          $bin/psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -o dump/auth-triggers.sql -c "set search_path = ''" \
+            -c "select pg_get_triggerdef(oid) || ';' from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal"
+          $bin/pg_dump "$DB_URL" --data-only --schema=public --schema=auth --schema=storage \
+            --exclude-table=auth.schema_migrations --exclude-table=storage.migrations -f dump/data.sql
+          ls -l dump
+          test -s dump/schema.sql && test -s dump/data.sql
+          umask 077
+          printf '%s' "$PASSPHRASE" > "$RUNNER_TEMP/passphrase"
+          tar -czf - -C dump . | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase-file "$RUNNER_TEMP/passphrase" -o backup.tar.gz.gpg
+          rm "$RUNNER_TEMP/passphrase"
+          ls -l backup.tar.gz.gpg
+
+      - name: Upload to R2
+        env:
+          UPLOAD_TOKEN: ${{ secrets.BACKUP_UPLOAD_TOKEN }}
+        run: |
+          set -euo pipefail
+          key="db/$(date -u +%Y-%m-%dT%H%MZ).tar.gz.gpg"
+          curl --fail-with-body --silent --show-error --retry 3 -X PUT \
+            -H "Authorization: Bearer $UPLOAD_TOKEN" --data-binary @backup.tar.gz.gpg \
+            "https://galatayo-backup-sink.tegradojeromebrent.workers.dev/$key"

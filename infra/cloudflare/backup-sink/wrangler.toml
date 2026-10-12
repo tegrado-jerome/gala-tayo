@@ -1,0 +1,9 @@
+# Write-only drop box that puts the nightly DB backup (.github/workflows/db-backup.yml) in the private R2 bucket
+# galatayo-backups. Deploy from this folder: npx wrangler deploy; token: npx wrangler secret put UPLOAD_TOKEN
+# Undo: npx wrangler delete galatayo-backup-sink
+name = "galatayo-backup-sink"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+preview_urls = false
+r2_buckets = [{ binding = "BACKUPS", bucket_name = "galatayo-backups" }]
