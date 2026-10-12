@@ -361,7 +361,7 @@ HARD LIMITS (break one and the post is thrown away)
 - When WEATHER is given, every pick must work in that weather. Light rain jokes are fine (the umbrella, the cancelled beach plan); never floods, storms or disasters.
 
 THE POST
-- TOPIC is the hook and QUERY is what people search. The title states the plan and the payoff, contains the QUERY words once, naturally, and stays under 70 characters. Don't repeat the QUERY in the meme or hook; they talk like people.
+- TOPIC is the hook and QUERY is what people search. The title states the plan and the payoff, contains the QUERY words once, naturally, and stays under 55 characters (search results cut titles near 60). Don't repeat the QUERY in the meme or hook; they talk like people.
 - Times of day and days must fit each place's facts and DAY (no "until midnight" unless the facts say it; a place best on weekends isn't tonight's pick on a Tuesday).
 - If a place's facts don't mention the topic, never claim it has it: link by vibe ("same energy", "your post-festival cooldown").
 - FORMAT decides the shape (FORMAT RULES). Commit to it; it is the joke engine. GOLD EXAMPLES show the bar: match their energy and specificity with today's places, never copy their lines.
@@ -422,6 +422,8 @@ export type ValidationContext = {
 
 export type ValidationResult = { ok: true; post: GalaTodayPost } | { ok: false; reason: string };
 
+// Search results cut titles near 60 characters; the page title adds " | Today's Plan" only when it still fits.
+const MAX_TITLE_LENGTH = 60;
 const TIER_ORDER: Tier[] = ["S", "A", "B"];
 
 /** Turns the model's JSON into a post, or explains why it can't be published. */
@@ -446,7 +448,7 @@ export function validateDraft(raw: Record<string, unknown>, context: ValidationC
     .filter((pick): pick is { place: TodayPlace; why: string; tier: string; time: string } => Boolean(pick.place && pick.why))
     .filter((pick, index, all) => all.findIndex((other) => other.place.slug === pick.place.slug) === index);
 
-  if (title.length < 10 || title.length > 80) return { ok: false, reason: "title length" };
+  if (title.length < 10 || title.length > MAX_TITLE_LENGTH) return { ok: false, reason: "title length" };
   if (hook.length < 10 || hook.length > 140) return { ok: false, reason: "hook length" };
   const words = body.split(" ").length;
   if (words < 30 || words > 120) return { ok: false, reason: "body length" };

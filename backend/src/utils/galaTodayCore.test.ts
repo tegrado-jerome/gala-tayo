@@ -241,6 +241,8 @@ test("voice and safety rules reject hedges, unkind jokes, heavy Tagalog grammar 
   assert.deepEqual(reject({ hook: "Tara na sa Intramuros, kahit umuulan pa rin ang mga plano natin ngayon." }), { ok: false, reason: "not in English" });
   assert.deepEqual(reject({ hook: "The best matcha walk in the whole of Metro Manila today, period." }), { ok: false, reason: "unbacked claim: best" });
   assert.deepEqual(reject({ title: "Matcha in hand: the Manila stroll tier list 🍵" }), { ok: false, reason: "emoji in title or meme" });
+  // Launch QA round 2: an 80-character title went out and search results cut it.
+  assert.deepEqual(reject({ title: "Matcha in hand this weekend: the official Manila stroll tier list" }), { ok: false, reason: "title length" });
   assert.deepEqual(reject({ hook: "Tara, barkada! Sulit matcha walk in Intramuros today." }), { ok: false, reason: "not in English" });
   assert.equal(tagalogWordCount("Gala tayo! Halo-halo after a walk in Intramuros."), 1);
   assert.equal(tagalogWordCount("Walk past the bahay na bato.", "Old bahay na bato line the street."), 0, "words the facts use (place names) don't count");

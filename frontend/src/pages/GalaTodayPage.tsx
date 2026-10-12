@@ -8,6 +8,7 @@ import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, SectionHead } from '
 import { formatPeso, formatPostDate, leadPick, useGalaToday, type GalaTodayPick, type GalaTodayPost } from '../utils/galaToday'
 import { getPlaceCardPhoto, getPlaceLeadPhoto } from '../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../utils/seo'
+import { todayListJsonLd, todayPostTitle } from '../utils/todaySeo'
 import { trackShare } from '../utils/analytics'
 import { nativeShareChannel, withShareRef } from '../utils/shareRef'
 
@@ -109,7 +110,7 @@ function PostView({ post, more }: { post: GalaTodayPost; more: GalaTodayPost[] }
 
   return (
     <Page narrow>
-      <SeoHead title={`${post.title} | Today's Plan`} description={post.hook.slice(0, 155)} canonicalPath={`/today/${post.slug}`} jsonLd={jsonLd} />
+      <SeoHead title={todayPostTitle(post.title)} description={post.hook} canonicalPath={`/today/${post.slug}`} jsonLd={jsonLd} />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan', href: '/today' }, { label: formatPostDate(post.date) }]} />
 
       <article className="t-post">
@@ -229,9 +230,10 @@ function GalaTodayPage({ slug }: { slug?: string }) {
     <Page narrow>
       <SeoHead
         title="Today's Plan: What's Trending, Turned Into Trips | GalaTayo"
-        description="Every day, what the Philippines is searching and sharing, turned into a fun plan: budget challenges, tier lists, guess the place and more, with real top places."
+        description="Every day, what the Philippines is searching and sharing, turned into a fun plan: budget challenges, tier lists and guess the place, with real top places."
         canonicalPath="/today"
         robots={posts.length === 0 ? 'noindex,follow' : undefined}
+        jsonLd={posts.length > 0 ? todayListJsonLd(posts, getSiteOrigin()) : null}
       />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan' }]} />
       <header className="mt-5">

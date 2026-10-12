@@ -40,7 +40,7 @@ export function GalaTodayHome() {
   const latest = posts?.[0]
   if (!latest) return null
   return (
-    <section className="min-w-0 mt-2" aria-label="Today's Plan">
+    <section className="t-home min-w-0 mt-2" aria-label="Today's Plan">
       <GalaTodayCard post={latest} headingLevel="h2" />
     </section>
   )

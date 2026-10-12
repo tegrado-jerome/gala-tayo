@@ -6,8 +6,8 @@ import { getSiteOrigin } from '../utils/seo'
 import '../design/misc.css'
 
 const PATH = '/gala-tayo-meaning'
-const TITLE = '"Gala Tayo" Meaning: What It Means in English | GalaTayo'
-const DESCRIPTION = '"Gala tayo" is Filipino for "let\'s go out!" or "let\'s hang out!". What each word means, how Filipinos use it in group chats, and how GalaTayo got its name.'
+const TITLE = 'Gala Tayo Meaning: What It Means in English | GalaTayo'
+const DESCRIPTION = '"Gala tayo" is Filipino for "let\'s go out!" What each word means, how Filipinos use it in group chats, and how GalaTayo got its name.'
 
 const EXAMPLES: Array<{ tl: string; en: string }> = [
   { tl: 'Gala tayo mamaya!', en: "Let's go out later!" },

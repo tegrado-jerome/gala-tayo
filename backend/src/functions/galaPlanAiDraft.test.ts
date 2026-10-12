@@ -44,6 +44,43 @@ describe("thin areas", () => {
   });
 });
 
+describe("day plans with dinner", () => {
+  // Launch QA round 2: "Barkada day in Baguio ... ends with dinner" gave 5:30-9:05 PM, two stops and no dinner.
+  // The live night market lists no opening hour (the fixture snapshot still says 9 PM).
+  const livePlaces = visibleFixturePlaces.map((entry) => (entry.slug === "baguio-night-market" ? { ...entry, best_time_to_visit: "Early in the night; weekdays are less crowded." } : entry));
+  const planLive = async (prompt: string) => {
+    const outcome = await buildPlanDraft({ prompt, places: livePlaces, requestedDate: "2099-10-10", requestId: "test", model: async () => null, loadImages: async () => new Map() });
+    assert.ok(outcome.ok);
+    return outcome.body as unknown as Body;
+  };
+
+  for (const prompt of ["Barkada day in Baguio for 4, chill, ₱1,500 each, ends with dinner", "Baguio day trip, with dinner"]) {
+    it(`"${prompt}" runs a day and ends with a dinner stop`, async () => {
+      const body = await planLive(prompt);
+      const slugs = body.stops.map((stop) => `${stop.time} ${stop.place.slug}`).join(", ");
+      assert.ok(body.stops.length >= 3, slugs);
+      assert.ok(minutes(body.stops[0].time) <= 12 * 60, slugs);
+      const dinner = body.stops.find((stop) => isMeal(stop, "dinner") && minutes(stop.time) >= 17 * 60 + 30);
+      assert.ok(dinner, slugs);
+      assert.equal(body.stops.at(-1), dinner, slugs);
+    });
+  }
+
+  it("says so when no dinner fits instead of ending without one", async () => {
+    // The fixture's night market opens at 9 PM, when an "ends with dinner" day is over.
+    const body = await plan("Barkada day in Baguio for 4, chill, ₱1,500 each, ends with dinner");
+    const dinner = body.stops.some((stop) => isMeal(stop, "dinner") && minutes(stop.time) >= 17 * 60 + 30);
+    assert.ok(dinner || body.notes.some((note) => /dinner/.test(note)), body.notes.join(" | "));
+    assert.ok(body.stops.length >= 3);
+  });
+
+  it("never times a pasalubong shop as the dinner", async () => {
+    const body = await planLive("Barkada day in Baguio for 4, chill, ₱1,500 each, ends with dinner");
+    const shop = body.stops.find((stop) => stop.place.slug === "good-shepherd-convent-baguio");
+    assert.ok(!shop || minutes(shop.time) < 17 * 60, shop?.time);
+  });
+});
+
 describe("meals and cost", () => {
   it("a Binondo food crawl eats in Binondo and never sends dinner across the metro", async () => {
     // QA round 4: the old "dinner" here was Celera, a ₱5,000 tasting menu in Makati. Manila has no other dinner

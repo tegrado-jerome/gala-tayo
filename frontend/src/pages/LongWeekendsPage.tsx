@@ -9,7 +9,7 @@ import '../design/misc.css'
 
 const YEAR = 2027
 const PATH = '/long-weekends-2027-philippines'
-const TITLE = 'Long Weekends 2027 Philippines: Dates Set by Law + Where to Go | GalaTayo'
+const TITLE = 'Long Weekends 2027 Philippines + Where to Go | GalaTayo'
 const DESCRIPTION =
   'The 2027 Philippine long weekends you can already plan, using only holiday dates fixed by law, plus where to go on each one. Proclamation dates marked.'
 

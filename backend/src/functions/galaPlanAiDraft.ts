@@ -26,6 +26,7 @@ import {
   formatClock12,
   formatDuration,
   getPlanSunset,
+  hasMealAt,
   isDarkOutdoor,
   hasLocation,
   keepStopsNearby,
@@ -47,6 +48,7 @@ import {
   resolvePlanDate,
   scheduleStops,
   selectCandidates,
+  statedOpening,
   tightenRoute,
   topUpStops,
   typicalMealCost,
@@ -250,7 +252,9 @@ export async function buildPlanDraft({
   if (wholeDay && !kinds.includes("lunch")) kinds.push("lunch");
   // "Lunch hanggang gabi" runs through dinner time: it needs dinner as well as lunch.
   if (constraints.end !== null && constraints.end >= 19 * 60 && kinds.includes("lunch") && !kinds.includes("dinner")) kinds.push("dinner");
-  const requested = ensureRequested(inHours, pool, kinds, { budgetPerHead: constraints.budgetPerHead, location });
+  // A food crawl eats at its food streets; any other plan sits down for its lunch or dinner when it can.
+  const restaurantMeals = !FOOD_TRIP.test(prompt);
+  const requested = ensureRequested(inHours, pool, kinds, { budgetPerHead: constraints.budgetPerHead, location, restaurantMeals });
   const centre = planCentre(requested.stops.map((stop) => candidatesById.get(stop.place_id)));
   if (requested.missing.length > 0 && centre) {
     // Nothing in the area does an asked-for job: take the closest place that does, and say so.
@@ -264,6 +268,7 @@ export async function buildPlanDraft({
     const outsideFill = ensureRequested(requested.stops, [...requested.stops.map((stop) => candidatesById.get(stop.place_id)!), ...nearbyOutside], requested.missing, {
       budgetPerHead: constraints.budgetPerHead === null ? null : constraints.budgetPerHead - pickedCost,
       taken: new Set(requested.picks.values()),
+      restaurantMeals,
     });
     for (const place of nearbyOutside) {
       if (![...outsideFill.picks.values()].includes(place.id)) continue;
@@ -377,6 +382,29 @@ export async function buildPlanDraft({
     if (topped.length > stopsInOrder.length) {
       const retimed = retime(topped);
       stopsInOrder = retimed.filter((stop) => keep().has(stop.place_id) || !isDarkOutdoor(candidatesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, sunsetMinutes));
+    }
+  }
+  // The rules above can drop or move an asked-for meal (a dinner timed past the end, a lunch at 5 PM): put a real
+  // one back at its time, or say why there is none.
+  const planEnd = endTarget ?? 23 * 60;
+  for (const meal of ["lunch", "dinner"] as const) {
+    if (!kinds.includes(meal) || requested.missing.includes(meal) || hasMealAt(stopsInOrder, candidatesById, meal)) continue;
+    const opensInTime = pool.filter((place) => (statedOpening(place) ?? 0) <= planEnd - 60);
+    const refill = ensureRequested(stopsInOrder, opensInTime, [meal], {
+      budgetPerHead: budget === null ? null : budget - perHead(stopsInOrder) + mealCost,
+      location,
+      taken: new Set(stopsInOrder.map((stop) => stop.place_id)),
+      restaurantMeals,
+    });
+    const id = refill.picks.get(meal);
+    if (id) scheduleOptions.meals.set(id, meal);
+    const retimed = id ? retime(refill.stops) : [];
+    if (id && hasMealAt(retimed, candidatesById, meal)) {
+      stopsInOrder = retimed;
+      requested.picks.set(meal, id);
+    } else {
+      if (id) scheduleOptions.meals.delete(id);
+      requested.missing.push(meal);
     }
   }
   const missingPinned = pinned.filter((place) => !stopsInOrder.some((stop) => stop.place_id === place.id));
