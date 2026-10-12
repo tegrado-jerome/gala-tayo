@@ -230,8 +230,10 @@ function buildHtml(shellHtml, { head, body }) {
     html = html.replace(pattern, '')
   }
 
+  // Vite's preload helper links lazy CSS by absolute URL (import.meta.resolve), i.e. localhost here.
+  // Make it root-relative, or the live page requests localhost and first paints without that CSS.
   // The shell already links its own stylesheet; add only the route's extra ones.
-  const tags = head.filter((tag) => !tag.startsWith('<link') || !html.includes(tag.match(/href="([^"]+)"/)?.[1] ?? tag))
+  const tags = head.map((tag) => tag.replaceAll(`href="${localOrigin}/`, 'href="/')).filter((tag) => !tag.startsWith('<link') || !html.includes(tag.match(/href="([^"]+)"/)?.[1] ?? tag))
   // Marks a finished page: index.html hides the welcome splash and main.tsx keeps this HTML on screen until the app is ready.
   html = html.replace('<html lang="en-PH">', '<html lang="en-PH" data-prerendered>')
   // The finished HTML paints without JavaScript, so public/boot.js starts the app after first paint.
