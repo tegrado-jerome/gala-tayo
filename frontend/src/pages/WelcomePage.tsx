@@ -146,7 +146,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             About GalaTayo
             <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="mt-2 grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
             <div className="flex flex-col gap-2">
             <p>
               Gala Tayo (written GalaTayo) is a free place discovery app for the best places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
@@ -168,7 +168,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
 
             <div>
           <h3 className="font-semibold text-[var(--ink)]">Browse Metro Manila by city</h3>
-          <ul className="g-chips mt-2">
+          <ul className="g-chips mt-2 flex-wrap">
             {cityAreas.map((area) => (
               <li key={area.slug}>
                 <InternalLink href={`/places/${area.slug}`} className="g-chip">
