@@ -9,6 +9,7 @@ import goodForTags from "../data/goodForTags.json";
 import galaScores from "../data/galaScores.json";
 import { hasCuratedPhoto } from "./hdPhotos";
 import { DESTINATIONS, getDestinationBySlug, getLocationNamesForAreaSlug, getRegionBySlug, resolveDestination } from "./phDestinations";
+import { fetchAllRows } from "./fetchAllRows";
 
 type PlaceRow = Record<string, unknown>;
 
@@ -309,15 +310,16 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
   }
 
   const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("places") as any)
-    .select(SEO_PLACE_SELECT)
-    .eq("status", "active")
-    .order("name", { ascending: true, nullsFirst: false })
-    .limit(1000);
-
-  if (error) {
+  const data = await fetchAllRows<Record<string, unknown>>((from, to) =>
+    (supabase.from("places") as any)
+      .select(SEO_PLACE_SELECT)
+      .eq("status", "active")
+      .order("name", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(from, to),
+  ).catch(() => {
     throw new Error("Failed to load places for SEO.");
-  }
+  });
 
   const placeRows = ((data ?? []) as PlaceRow[]).filter((row) => isPublicPlace(row) && isGalaWorthySlug(cleanString(row.slug)));
   const placeIds = placeRows
