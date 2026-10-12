@@ -185,7 +185,9 @@ async function getStaticSeoListingPage({
         Accept: 'application/json',
       },
       signal,
-      cache: 'force-cache',
+      // Revalidate every time (a cheap 304): a cached page from before a rebuild showed "3 places" on a
+      // city whose tile, read from the fresher places-compact.json, said 8.
+      cache: 'no-cache',
     })
 
     if (!response.ok || !(response.headers.get('content-type') || '').includes('application/json')) {

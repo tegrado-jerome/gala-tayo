@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getRedisClient } from "../services/redisCacheService";
 import { clearActivePlacesCache } from "../domain/places";
-import { clearSeoPlaceSummariesCache, SEO_LISTING_PAGE_CACHE_PREFIX } from "../utils/seoPlaces";
+import { clearSeoPlaceSummariesCache } from "../utils/seoPlaces";
 
 const ADMIN_KEY_ENV_VAR = "GALATAYO_ADMIN_KEY";
 
@@ -28,8 +28,8 @@ async function cacheClear(request: HttpRequest, context: InvocationContext): Pro
     await clearSeoPlaceSummariesCache();
     clearedKeys.push("SEO place summaries (via clearSeoPlaceSummariesCache)");
 
-    // Search answers are cached in memory only now; "search:*" also sweeps keys left from before.
-    for (const pattern of ["search:*", `${SEO_LISTING_PAGE_CACHE_PREFIX}:*`]) {
+    // Search answers and listing pages are no longer cached in Redis; these patterns sweep keys left from before.
+    for (const pattern of ["search:*", "seo:listings:*"]) {
       let cursor: string | number = "0";
       do {
         const [nextCursor, keys] = await client.scan(cursor, { match: pattern, count: 500 });

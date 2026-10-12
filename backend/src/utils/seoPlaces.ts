@@ -8,7 +8,7 @@ import { createBaseSlug } from "./slug";
 import goodForTags from "../data/goodForTags.json";
 import galaScores from "../data/galaScores.json";
 import { hasCuratedPhoto } from "./hdPhotos";
-import { DESTINATIONS, getDestinationBySlug, getLocationNamesForAreaSlug, getRegionBySlug, resolveDestination } from "./phDestinations";
+import { DESTINATIONS, getDestinationBySlug, getRegionBySlug, resolveDestination } from "./phDestinations";
 import { fetchAllRows } from "./fetchAllRows";
 
 type PlaceRow = Record<string, unknown>;
@@ -60,27 +60,11 @@ type SeoPlaceSummaryOptions = {
 };
 
 const SEO_PLACE_SELECT = PUBLIC_PLACE_COLUMNS;
-const SEO_LISTING_PLACE_SELECT = [
-  "id",
-  "name",
-  "slug",
-  "category",
-  "address",
-  "city",
-  "area",
-  "description",
-  "good_for",
-  "budget_min",
-  "status",
-  "updated_at",
-].join(",");
 const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
 const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v4";
 // SEO data changes about daily (cache clear empties Redis); instances also keep a copy in memory for 10 minutes.
 const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 60;
-export const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v5";
-const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 60;
 const SEO_MEMORY_TTL_SECONDS = 60 * 10;
 
 // Gala-worthy scores (0-100) from the place scoring; unscored places rank after scored ones.
@@ -126,42 +110,12 @@ function cleanStringArray(value: unknown): string[] {
     : [];
 }
 
-function sanitizeCachePart(value: string | null | undefined): string {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "all";
-}
-
 function getCategoryLabel(categoryId: string | null): string | null {
   if (!categoryId || categoryId === "all") {
     return null;
   }
 
   return CATEGORIES.find((category) => category.id === categoryId)?.name ?? categoryId;
-}
-
-function getAreaNamesForQuery(areaSlug: string | null): string[] {
-  if (!areaSlug) {
-    return [];
-  }
-
-  const names = getLocationNamesForAreaSlug(areaSlug);
-  return names.length > 0 ? names : [areaSlug];
-}
-
-function escapePostgrestString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-}
-
-function buildLocationOrFilter(areaNames: string[]): string | null {
-  if (areaNames.length === 0) {
-    return null;
-  }
-
-  const values = areaNames.map((value) => `"${escapePostgrestString(value)}"`).join(",");
-  return `city.in.(${values}),area.in.(${values})`;
 }
 
 // Guide slugs map to the tag labels editors use on places (for example "date" covers "Casual Date" and "Date Night").
@@ -171,21 +125,22 @@ function getGoodForTags(goodFor: string) {
   return GOOD_FOR_TAGS[goodFor] ?? [goodFor];
 }
 
-function buildSeoListingPageCacheKey(args: {
-  areaSlug: string | null;
-  category: string | null;
-  goodFor: string | null;
-  page: number;
-  pageSize: number;
-}) {
-  return [
-    SEO_LISTING_PAGE_CACHE_PREFIX,
-    `area:${sanitizeCachePart(args.areaSlug)}`,
-    `category:${sanitizeCachePart(args.category)}`,
-    `goodFor:${sanitizeCachePart(args.goodFor)}`,
-    `page:${args.page}`,
-    `pageSize:${args.pageSize}`,
-  ].join(":");
+/**
+ * The one rule for which listed places an area covers: a region's towns, or the one city, matched on the
+ * place's resolved area slug. Home tiles, city chips, area pages, guides and the sitemap all count this way.
+ */
+export function filterListingPlaces<T extends Pick<SeoPlaceSummary, "areaSlug" | "category" | "goodFor">>(
+  places: T[],
+  { areaSlug, categoryLabel = null, goodForTags = null }: { areaSlug: string | null; categoryLabel?: string | null; goodForTags?: string[] | null },
+): T[] {
+  const region = areaSlug ? getRegionBySlug(areaSlug) : null;
+  const areaSlugs = areaSlug ? new Set(region ? region.destinations.map((destination) => destination.slug) : [areaSlug]) : null;
+
+  return places.filter((place) =>
+    (!areaSlugs || areaSlugs.has(place.areaSlug)) &&
+    (!categoryLabel || place.category === categoryLabel) &&
+    (!goodForTags || place.goodFor.some((tag) => goodForTags.includes(tag)))
+  );
 }
 
 export function resolveAreaSlug(city: string | null, area: string | null): { slug: string; name: string } {
@@ -421,10 +376,8 @@ export async function getSeoAreaPage(areaSlug: string): Promise<SeoAreaPage | nu
     return null;
   }
 
-  const allPlaces = await getSeoPlaceSummaries();
   const region = getRegionBySlug(normalizedAreaSlug);
-  const regionSlugs = new Set(region?.destinations.map((destination) => destination.slug) ?? []);
-  const places = allPlaces.filter((place) => (region ? regionSlugs.has(place.areaSlug) : place.areaSlug === normalizedAreaSlug));
+  const places = filterListingPlaces(await getSeoPlaceSummaries(), { areaSlug: normalizedAreaSlug });
   const areaName = getDestinationBySlug(normalizedAreaSlug)?.name ?? region?.name ?? (places[0] ? resolveAreaSlug(places[0].city, places[0].area).name : null);
 
   if (!areaName) {
@@ -456,87 +409,24 @@ export async function getSeoListingPage({
   pageSize: number;
 }): Promise<SeoListingPage> {
   const normalizedAreaSlug = cleanString(areaSlug)?.toLowerCase() ?? null;
-  const normalizedCategory = cleanString(category)?.toLowerCase() ?? null;
   const normalizedGoodFor = cleanString(goodFor)?.toLowerCase() ?? null;
   const safePageSize = Math.min(Math.max(Math.floor(pageSize), 1), 50);
-  const safeRequestedPage = Math.max(Math.floor(page), 1);
-  const cacheKey = buildSeoListingPageCacheKey({
+  const matches = filterListingPlaces(await getSeoPlaceSummaries(), {
     areaSlug: normalizedAreaSlug,
-    category: normalizedCategory,
-    goodFor: normalizedGoodFor,
-    page: safeRequestedPage,
-    pageSize: safePageSize,
+    categoryLabel: getCategoryLabel(cleanString(category)?.toLowerCase() ?? null),
+    goodForTags: normalizedGoodFor ? getGoodForTags(normalizedGoodFor) : null,
   });
-  const cachedPage = await getJsonCacheValue<SeoListingPage>(cacheKey, { memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
-  if (cachedPage) {
-    return cachedPage;
-  }
 
-  const supabase = await getSupabaseAdminClient();
-  const categoryLabel = getCategoryLabel(normalizedCategory);
-  const locationOrFilter = buildLocationOrFilter(getAreaNamesForQuery(normalizedAreaSlug));
-
-  // Hidden (not gala-worthy) places are filtered in code: a `slug not in (...)` list makes the
-  // request URL too long once location filters are added, which broke the static listing build.
-  const buildListingQuery = (columns: string) => {
-    let query = (supabase.from("places") as any).select(columns).eq("status", "active");
-
-    if (categoryLabel) {
-      query = query.eq("category", categoryLabel);
-    }
-
-    if (locationOrFilter) {
-      query = query.or(locationOrFilter);
-    }
-
-    if (normalizedGoodFor) {
-      query = query.overlaps("good_for", getGoodForTags(normalizedGoodFor));
-    }
-
-    return query;
-  };
-
-  const idResult = await buildListingQuery("id, slug, name").order("name", { ascending: true, nullsFirst: false }).limit(2000);
-  if (idResult.error) {
-    throw new Error("Failed to load listing places.");
-  }
-  const visibleRows = ((idResult.data ?? []) as Array<{ id: string; slug: string | null; name: string | null }>).filter((row) => isGalaWorthySlug(row.slug));
-  // Order the whole result before paging, so every page follows the same photo-first, best-first order.
-  const photoLookup = await getApprovedImageLookup(visibleRows.map((row) => String(row.id)));
-  const visibleIds = visibleRows
-    .map((row) => ({ ...row, hasPhoto: photoLookup.has(String(row.id)) || hasCuratedPhoto(row.slug) }))
-    .sort(compareListingOrder)
-    .map((row) => String(row.id));
-
-  const total = visibleIds.length;
+  const total = matches.length;
   const totalPages = Math.max(1, Math.ceil(total / safePageSize));
-  const safePage = Math.min(safeRequestedPage, totalPages);
+  const safePage = Math.min(Math.max(Math.floor(page), 1), totalPages);
   const startIndex = (safePage - 1) * safePageSize;
-  const pageIds = visibleIds.slice(startIndex, startIndex + safePageSize);
-  const { data, error } = pageIds.length
-    ? await (supabase.from("places") as any).select(SEO_LISTING_PLACE_SELECT).in("id", pageIds)
-    : { data: [], error: null };
 
-  if (error) {
-    throw new Error("Failed to load listing places.");
-  }
-
-  const pageOrder = new Map(pageIds.map((id, index) => [id, index]));
-  const placeRows = ((data ?? []) as PlaceRow[])
-    .filter(isPublicPlace)
-    .sort((left, right) => (pageOrder.get(String(left.id)) ?? 0) - (pageOrder.get(String(right.id)) ?? 0));
-  const items = placeRows
-    .map((row) => mapPlaceRowToSeoSummary(row, photoLookup.get(String(row.id)) ?? null))
-    .filter((place): place is SeoPlaceSummary => Boolean(place));
-
-  const payload = {
-    items,
+  return {
+    items: matches.slice(startIndex, startIndex + safePageSize),
     total,
     page: safePage,
     pageSize: safePageSize,
     totalPages,
   };
-
-  await setJsonCacheValue(cacheKey, payload, { ttlSeconds: SEO_LISTING_PAGE_CACHE_TTL_SECONDS, memoryTtlSeconds: SEO_MEMORY_TTL_SECONDS });
-  return payload;
 }
