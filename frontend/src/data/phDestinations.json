@@ -1653,6 +1653,18 @@
               "aliases": [
                 "Cavinti, Laguna"
               ]
+            },
+            {
+              "slug": "paete",
+              "name": "Paete",
+              "type": "municipality",
+              "center": [
+                14.3641,
+                121.4816
+              ],
+              "aliases": [
+                "Paete, Laguna"
+              ]
             }
           ]
         },
@@ -1767,6 +1779,18 @@
               ],
               "aliases": [
                 "Cuenca, Batangas"
+              ]
+            },
+            {
+              "slug": "lobo",
+              "name": "Lobo",
+              "type": "municipality",
+              "center": [
+                13.6475,
+                121.2102
+              ],
+              "aliases": [
+                "Lobo, Batangas"
               ]
             }
           ]
