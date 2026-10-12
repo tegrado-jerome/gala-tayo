@@ -2546,8 +2546,8 @@ function PlaceDetailView({
               FAQ
             </h2>
             <div className="pd-faq">
-              {faqItems.map((item) => (
-                <details key={item.question}>
+              {faqItems.map((item, index) => (
+                <details key={item.question} open={index === 0}>
                   <summary>
                     <h3>{item.question}</h3>
                     <Plus weight="light" aria-hidden="true" />
