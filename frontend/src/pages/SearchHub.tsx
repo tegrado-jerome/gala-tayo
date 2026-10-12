@@ -10,7 +10,9 @@ import {
   trackSearchResultSelected,
   trackSearchSubmitted,
 } from '../utils/analytics'
-import type { SearchGoodForValue } from '../utils/searchParams'
+import { buildSearchPath, type SearchGoodForValue } from '../utils/searchParams'
+import { SEARCH_IDEAS, readSearchLocation, requestSearchLocation, saveSearchLocation, searchShortcuts, type UserLocation } from '../utils/searchAssist'
+import seoGuides from '../data/seoGuides.json'
 
 import {
   type BackendCategory,
@@ -49,14 +51,33 @@ import {
 import SearchSuggest from '../components/home/search/SearchSuggest'
 import {
   QuickFilterChips,
+  ResultControls,
   SearchEmptyState,
   SearchFilterPanel,
   SearchPageBreadcrumb,
   SearchResults,
   SearchResultsSkeleton,
+  SearchShortcuts,
+  type SearchSort,
 } from '../components/home/search/SearchComponents'
 
 type SearchApiPlace = BackendSearchPlace & { budget_min?: number | string | null }
+
+// "Near me" ranks places within this radius first (the API's own cap).
+const NEAR_ME_RADIUS_KM = 50
+const SORT_LABELS: Record<SearchSort, string> = { best: 'Best match', cheapest: 'Cheapest first', nearest: 'Nearest first' }
+
+type SearchRequestState = {
+  rawQuery: string
+  category: string | null
+  area: string | null
+  goodFor: SearchGoodForValue | null
+  budget: BudgetValue | null
+  page: number
+  sort: SearchSort
+  openNow: boolean
+  location: UserLocation | null
+}
 
 function toFiniteNumber(value: number | string | null | undefined) {
   if (value == null || value === '') return null
@@ -119,6 +140,14 @@ function SearchHub({
   const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [rainSafeOnly, setRainSafeOnly] = useState(false)
+  const [sort, setSort] = useState<SearchSort>('best')
+  const [openNow, setOpenNow] = useState(false)
+  // Only set after the searcher taps "Near me" (here or in the search box) this visit.
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(() => readSearchLocation())
+  const [locating, setLocating] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [didYouMean, setDidYouMean] = useState<string | null>(null)
+  const [needsLocation, setNeedsLocation] = useState(false)
   const hasRestoredInitialScrollRef = useRef(false)
   const searchRequestVersion = useRef(0)
   const searchRequestStartTimeRef = useRef(0)
@@ -179,16 +208,7 @@ function SearchHub({
 
     submitResultFilterChange(nextState)
   }
-  const submitResultFilterChange = (
-    nextState: Partial<{
-      rawQuery: string
-      category: string | null
-      area: string | null
-      goodFor: SearchGoodForValue | null
-      budget: BudgetValue | null
-      page: number
-    }>
-  ) => {
+  const submitResultFilterChange = (nextState: Partial<SearchRequestState>) => {
     const mergedState = {
       rawQuery,
       category: selectedCategory,
@@ -328,17 +348,11 @@ function SearchHub({
     void handleSearch({ page: nextPage })
   }
 
-  const handleSearch = async (
-    nextState?: Partial<{
-      rawQuery: string
-      category: string | null
-      area: string | null
-      goodFor: SearchGoodForValue | null
-      budget: BudgetValue | null
-      page: number
-    }>,
-  ) => {
+  const handleSearch = async (nextState?: Partial<SearchRequestState>) => {
     const nextRawQuery = normalizeSearchText(nextState?.rawQuery !== undefined ? nextState.rawQuery : rawQuery)
+    const nextSort = nextState?.sort ?? sort
+    const nextOpenNow = nextState?.openNow ?? openNow
+    const nextLocation = nextState?.location !== undefined ? nextState.location : userLocation
     const nextCategory = nextState?.category !== undefined ? nextState.category : selectedCategory
     const nextArea = nextState?.area !== undefined ? nextState.area : selectedArea
     const nextGoodFor = nextState?.goodFor !== undefined ? nextState.goodFor : selectedGoodFor
@@ -387,6 +401,9 @@ function SearchHub({
       query: nextRawQuery,
       page: nextPage,
       limit: SEARCH_RESULTS_PER_PAGE,
+      sort: nextSort,
+      open_now: nextOpenNow,
+      ...(nextLocation ? { userLocation: nextLocation, radiusKm: NEAR_ME_RADIUS_KM } : {}),
       filters: {
         category: nextCategory,
         city: nextArea,
@@ -422,8 +439,12 @@ function SearchHub({
       setSearchError(null)
       setSearchStatus(null)
       setSearchFeedbackMessage(null)
+      setDidYouMean(null)
+      setNeedsLocation(false)
       setPromptLogin(false)
       setActiveSearchLabel(nextSearchLabel)
+      setSort(nextSort)
+      setOpenNow(nextOpenNow)
 
       const response = await fetch(getApiUrl('/search'), {
         method: 'POST',
@@ -437,6 +458,8 @@ function SearchHub({
         searchId?: string
         searchStatus?: BackendSearchStatus
         searchFeedbackMessage?: string | null
+        didYouMean?: string | null
+        needsLocation?: boolean
         promptLogin?: boolean
         page?: number
         limit?: number
@@ -476,6 +499,8 @@ function SearchHub({
       setSearchId(data.searchId ?? null)
       setSearchStatus(data.searchStatus ?? null)
       setSearchFeedbackMessage(data.searchFeedbackMessage ?? null)
+      setDidYouMean(data.didYouMean ?? null)
+      setNeedsLocation(Boolean(data.needsLocation) && !nextLocation)
       const backendPlaces = data.places ?? data.result?.places ?? []
       const responsePage = data.page ?? data.result?.page ?? nextPage
       const responseTotalCount = data.totalCount ?? data.result?.totalCount ?? backendPlaces.length
@@ -673,6 +698,37 @@ function SearchHub({
     return () => controller.abort()
   }, [])
 
+  // Asks for the location only here, after a tap; turning "Near me" off forgets it.
+  const changeNearMe = async (on: boolean, nextSort: SearchSort = sort) => {
+    setLocationError(null)
+    if (!on) {
+      saveSearchLocation(null)
+      setUserLocation(null)
+      void handleSearch({ location: null, sort: nextSort === 'nearest' ? 'best' : nextSort })
+      return
+    }
+    setLocating(true)
+    try {
+      const location = await requestSearchLocation()
+      saveSearchLocation(location)
+      setUserLocation(location)
+      void handleSearch({ location, sort: nextSort })
+    } catch (error) {
+      setLocationError(error instanceof Error ? error.message : 'Could not find your location.')
+    } finally {
+      setLocating(false)
+    }
+  }
+  const changeSort = (nextSort: SearchSort) => {
+    if (nextSort === 'nearest' && !userLocation) {
+      void changeNearMe(true, 'nearest')
+      return
+    }
+    void handleSearch({ sort: nextSort })
+  }
+  const shortcuts = useMemo(() => searchShortcuts(lastSearchQuery, seoGuides), [lastSearchQuery])
+  const searchIdea = (query: string) => navigateToPath(buildSearchPath({ q: query, page: 1 }))
+
   const closePromptBuilder = () => {
     setIsPromptBuilderOpen(false)
     if (initialPromptBuilderOpen) {
@@ -714,6 +770,37 @@ function SearchHub({
         onClearGoodFor={() => clearFilterChip('good_for')}
         rainSafe={hasRainData ? { on: rainSafeOnly, onToggle: () => setRainSafeOnly((value) => !value) } : undefined}
       />
+      {hasSearched ? (
+        <ResultControls
+          className="mt-2"
+          sort={sort}
+          openNow={openNow}
+          nearMe={Boolean(userLocation)}
+          locating={locating}
+          onSortChange={changeSort}
+          onOpenNowChange={(on) => void handleSearch({ openNow: on })}
+          onNearMeChange={(on) => void changeNearMe(on)}
+        />
+      ) : null}
+      {locationError ? (
+        <p className="g-hint mt-2" role="status">
+          {locationError}
+        </p>
+      ) : null}
+      {didYouMean && !shouldShowSearchLoadingState ? (
+        <p className="g-sm g-mut mt-3" role="status">
+          Showing results for <b className="text-[var(--ink)]">{didYouMean}</b>
+        </p>
+      ) : null}
+      {needsLocation && !userLocation && !shouldShowSearchLoadingState ? (
+        <p className="g-sm g-mut mt-3 flex flex-wrap items-center gap-2" role="status">
+          Want these sorted by distance?
+          <Button variant="text" onClick={() => void changeNearMe(true)} disabled={locating}>
+            Use my location
+          </Button>
+        </p>
+      ) : null}
+      {!shouldShowSearchLoadingState ? <SearchShortcuts shortcuts={shortcuts} className="mt-4" /> : null}
 
       {shouldShowSearchLoadingState ? (
         <SearchResultsSkeleton />
@@ -734,6 +821,7 @@ function SearchHub({
               subheading={[searchResultSummary.subheading || 'in GalaTayo', rainSafeOnly && hasRainData ? '· rain-safe on this page' : ''].filter(Boolean).join(' ')}
               selectedPlaceId={selectedPlaceId}
               isPageLoading={isPageLoading}
+              sortLabel={SORT_LABELS[sort]}
               mobileView={mobileResultsView}
               onMobileViewChange={setMobileResultsView}
               onSelectPlace={handleMapPlaceSelect}
@@ -758,10 +846,12 @@ function SearchHub({
         <SearchEmptyState
           hasSearched={hasSearched}
           status={searchStatus}
-          message={searchFeedbackMessage}
+          message={openNow ? 'None of the places with posted hours is open right now. Turn off Open now to see everything.' : searchFeedbackMessage}
           error={searchError}
           askAiQuestion={searchLabel ? `Find me ${searchLabel}` : 'Help me find a great spot in Metro Manila'}
           onSearchAgain={handleSearchAgain}
+          ideas={openNow ? [] : SEARCH_IDEAS.filter((idea) => idea !== lastSearchQuery.toLowerCase()).slice(0, 4)}
+          onIdea={searchIdea}
         />
       )}
 
