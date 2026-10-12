@@ -155,9 +155,11 @@ locs.filter((loc) => !pageLocs.has(loc)).forEach((loc) => errors.push(`sitemap: 
 const disallowed = [...(await readFile(path.join(dist, 'robots.txt'), 'utf8')).matchAll(/^Disallow:\s*(\S+)/gm)].map((match) => match[1])
 const isBlocked = (pathname) => disallowed.some((rule) => (rule.endsWith('$') ? pathname === rule.slice(0, -1) : pathname.startsWith(rule)))
 locs.filter((loc) => isBlocked(new URL(loc).pathname)).forEach((loc) => errors.push(`sitemap: ${loc} is blocked by robots.txt`))
-// app-shell.html answers app screens and 404s, never an indexable page, so it must say noindex without JavaScript.
-const shell = await readFile(path.join(dist, 'app-shell.html'), 'utf8').catch(() => '')
-if (!/<meta name="robots" content="noindex/.test(shell)) errors.push('app-shell.html: raw HTML is not noindex')
+// The shells answer app screens and 404s, never an indexable page, so they must say noindex without JavaScript.
+for (const shellFile of ['app-shell.html', 'plans-shell.html']) {
+  const shell = await readFile(path.join(dist, shellFile), 'utf8').catch(() => '')
+  if (!/<meta name="robots" content="noindex/.test(shell)) errors.push(`${shellFile}: raw HTML is not noindex`)
+}
 const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
 for (const guide of guides) {
   const loc = `${siteOrigin}/guides/${guide.slug}`

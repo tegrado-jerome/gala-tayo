@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
 import { getApiUrl } from './apiClient'
+import { trackAiDraft, trackPlanCreated } from './analytics'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
 import type { OpeningHours } from './openingHours'
 import { getAskAiRequestHeaders } from './askAiIdentity'
@@ -142,7 +143,9 @@ export async function createGalaPlan(
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return readJson<{ plan: GalaPlanDetail }>(response)
+  const created = await readJson<{ plan: GalaPlanDetail }>(response)
+  trackPlanCreated({ stopCount: payload.items?.length ?? 0 })
+  return created
 }
 
 export async function getGalaPlan(planId: string, session?: Session | null) {
@@ -320,5 +323,6 @@ export async function draftGalaPlanWithAi(prompt: string, session?: Session | nu
     throw new GalaPlanAiError(data.message || 'Plan with AI failed. Try again.', response.status, data.code)
   }
 
+  trackAiDraft({ stopCount: data.draft.stops.length, fromPlaces: places.length > 0 })
   return { draft: data.draft, usage: data.usage ?? null }
 }

@@ -169,6 +169,7 @@ function VibePlacesPage({ vibe, search = '', navigationSource = 'push' }: VibePl
         description={`${blurb} The top ${title.toLowerCase()} around the Philippines, best first, with budgets and the best time to go.`}
         canonicalPath="/places"
         robots="noindex,follow"
+        image={{ url: '/og/places.jpg', alt: `${title} around the Philippines`, width: 1200, height: 630 }}
       />
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Places', href: '/places' }, { label }]} />

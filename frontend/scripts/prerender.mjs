@@ -7,7 +7,7 @@ import { readFile, writeFile, mkdir, copyFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
-import { renderPreviewCard } from './seo/og-card.mjs'
+import { renderPhotoCard, renderPreviewCard } from './seo/og-card.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
@@ -87,7 +87,7 @@ async function readFrontendPaths() {
   const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
   // Gala Today posts are committed daily into src/data/galaToday.json by the SEO daily workflow.
   const todayPosts = JSON.parse(await readFile(path.join(root, 'src/data/galaToday.json'), 'utf8'))
-  return ['/saan-tayo', '/gala-tayo-meaning', '/cookies', '/copyright', '/disclaimer', '/long-weekends-2027-philippines', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
+  return ['/saan-tayo', '/gala-tayo-meaning', '/contact', '/cookies', '/copyright', '/disclaimer', '/long-weekends-2027-philippines', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`), '/today', ...todayPosts.map((post) => `/today/${post.slug}`)]
 }
 
 // Hidden places and cities with no places yet open by link but stay out of the sitemap. They are
@@ -249,16 +249,19 @@ function buildHtml(shellHtml, { head, body }) {
 
 const defaultOgImage = `${siteOrigin}/images/og/galatayo-og.jpg`
 
-const cardKickers = { guides: 'GalaTayo guide', places: 'GalaTayo · Places' }
+// Keyed by the first segment after /og/: /og/guides/<slug>.jpg is one guide, /og/guides.jpg the index.
+const cardKickers = { guides: 'GalaTayo guide', places: 'GalaTayo · Places', today: "GalaTayo · Today's Plan", 'saan-tayo': 'GalaTayo · Pick for me' }
 
 /** Saves a page's preview card; if drawing fails, the page's tags point back to the default image. */
 async function writePreviewCard(cardPage, imagePath, result) {
-  const kind = imagePath.split('/')[2]
+  const [, , section, item] = imagePath.split('/')
+  const kind = section.replace(/\.jpg$/, '')
+  const isGuide = kind === 'guides' && Boolean(item)
   try {
     await renderPreviewCard(cardPage, {
       fontDir: path.join(dist, 'fonts'),
       title: result.card.title,
-      kicker: [cardKickers[kind] ?? 'GalaTayo', kind === 'guides' ? result.card.area : ''].filter(Boolean).join(' · '),
+      kicker: kind === 'guides' && !isGuide ? 'GalaTayo guides' : [cardKickers[kind] ?? 'GalaTayo', isGuide ? result.card.area : ''].filter(Boolean).join(' · '),
       footnote: result.card.count && !result.card.count.startsWith('0 ') ? `${result.card.count} · budget per head` : 'Budget per head on every pick',
       photoUrl: result.card.photoUrl,
     }, path.join(dist, decodeURIComponent(imagePath)))
@@ -267,6 +270,51 @@ async function writePreviewCard(cardPage, imagePath, result) {
     console.warn(`  preview card failed for ${imagePath}: ${error.message.split('\n')[0]}`)
     return result.head.map((tag) => tag.replaceAll(`${siteOrigin}${imagePath}`, defaultOgImage))
   }
+}
+
+// Place pages share their hero photo, which is stored as WebP; link previews get a JPG copy of it.
+async function writePlacePhotoCard(cardPage, routePath, result) {
+  const photoUrl = result.head.join('\n').match(/property="og:image" content="(https:\/\/[^"]+\.webp)"/)?.[1]
+  if (!photoUrl) return result.head
+  const imagePath = `/og${routePath}.jpg`
+  try {
+    await renderPhotoCard(cardPage, photoUrl, path.join(dist, decodeURIComponent(imagePath)))
+  } catch (error) {
+    console.warn(`  photo card failed for ${routePath}: ${error.message.split('\n')[0]}`)
+    return result.head
+  }
+  const head = result.head
+    .filter((tag) => !/property="og:image:(width|height)"/.test(tag))
+    .map((tag) => tag.replaceAll(`content="${photoUrl}"`, `content="${siteOrigin}${imagePath}"`))
+  const imageTag = head.findIndex((tag) => tag.includes('property="og:image"'))
+  head.splice(imageTag + 1, 0, '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">')
+  return head
+}
+
+// App-only plan screens are not prerendered, so link previews read the shell; give them a plans card.
+// staticwebapp.config.json serves /gala-plan(s) from plans-shell.html, so it is written even if the card fails.
+async function writePlansShell(cardPage) {
+  let imageUrl = `${siteOrigin}/og/plans.jpg`
+  try {
+    await renderPreviewCard(cardPage, {
+      fontDir: path.join(dist, 'fonts'),
+      title: 'Plan the gala with your barkada',
+      kicker: 'GalaTayo · Plans',
+      footnote: 'RSVPs, votes and budget per head',
+      photoUrl: null,
+    }, path.join(dist, 'og', 'plans.jpg'))
+  } catch (error) {
+    console.warn(`  plans card failed: ${error.message.split('\n')[0]}`)
+    imageUrl = defaultOgImage
+  }
+  const title = 'Gala plans on GalaTayo'
+  const description = 'Plan the day with your barkada: stops, RSVPs, votes and the budget per head.'
+  const shell = (await readFile(path.join(dist, 'app-shell.html'), 'utf8'))
+    .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]*/g, `$1${title}`)
+    .replace(/(<meta (?:property="og:description"|name="twitter:description") content=")[^"]*/g, `$1${description}`)
+    .replace(/(<meta (?:property="og:image"|name="twitter:image") content=")[^"]*/g, `$1${imageUrl}`)
+    .replace(/(<meta property="og:image:alt" content=")[^"]*/, `$1${title}`)
+  await writeFile(path.join(dist, 'plans-shell.html'), shell)
 }
 
 function buildLlmsTxt(pages) {
@@ -308,7 +356,7 @@ function buildLlmsTxt(pages) {
     ...section('Guides', (routePath) => routePath.startsWith('/guides') || routePath.startsWith('/long-weekends')),
     ...section("Today's Plan (daily trend picks)", (routePath) => routePath.startsWith('/today')),
     ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath)),
-    ...section('About', (routePath) => ['/about', '/gala-tayo-meaning', '/privacy', '/terms', '/cookies', '/copyright', '/disclaimer'].includes(routePath)),
+    ...section('About', (routePath) => ['/about', '/contact', '/gala-tayo-meaning', '/privacy', '/terms', '/cookies', '/copyright', '/disclaimer'].includes(routePath)),
   ].join('\n')
 }
 
@@ -372,6 +420,8 @@ async function main() {
         const cardPath = result.head.join('\n').match(new RegExp(`property="og:image" content="${siteOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/og/[^"]+\\.jpg)"`))?.[1]
         if (cardPath) {
           result.head = await writePreviewCard(cardPage, cardPath, result)
+        } else if (/^\/places\/[^/]+\/[^/]+$/.test(job.routePath)) {
+          result.head = await writePlacePhotoCard(cardPage, job.routePath, result)
         }
         // Noindex pages are still written so crawlers see the noindex tag without running JavaScript.
         const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')
@@ -399,6 +449,8 @@ async function main() {
   }
 
   await Promise.all(Array.from({ length: concurrency }, worker))
+  const plansPage = await context.newPage()
+  await writePlansShell(plansPage)
   await browser.close()
   server.close()
 

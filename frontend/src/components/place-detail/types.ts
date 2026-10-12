@@ -43,7 +43,8 @@ export type PlaceComment = {
   member_avatar_url?: string | null
   parent_comment_id: string | null
   comment: string
-  status: 'visible' | 'deleted'
+  // "hidden" comes back only to the author, for a tip held for review (links, phone numbers, emails).
+  status: 'visible' | 'deleted' | 'hidden'
   created_at: string
   updated_at: string
   deleted_at: string | null

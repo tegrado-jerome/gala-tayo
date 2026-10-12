@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react'
 import { Button, Empty, Page } from '../components/ui'
+import { reportException } from '../utils/errorReporting'
 
 type Props = { children: ReactNode }
 type State = { failed: boolean }
@@ -14,6 +15,10 @@ export class RouteErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(): State {
     return { failed: true }
+  }
+
+  componentDidCatch(error: unknown) {
+    reportException(error)
   }
 
   render() {

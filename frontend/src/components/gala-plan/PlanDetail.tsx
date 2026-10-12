@@ -44,7 +44,7 @@ import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildGalaPlanInviteUrl } from '../../utils/share'
 import { bestDate, formatDateChoice, inviteMessage, joinNames, lockedDate, replyNames, splitPolls } from '../../utils/barkadaVotes'
-import { trackShare } from '../../utils/analytics'
+import { trackInviteShared, trackShare } from '../../utils/analytics'
 import { withShareRef } from '../../utils/shareRef'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
@@ -375,6 +375,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     try {
       await navigator.clipboard.writeText(`${invitation} ${withShareRef(shareUrl, 'copy')}`)
       trackShare({ channel: 'copy', contentType: 'plan', itemId: plan.id })
+      trackInviteShared({ method: 'copy' })
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -394,6 +395,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       return
     }
     trackShare({ channel: 'invite', contentType: 'plan', itemId: plan.id })
+    trackInviteShared({ method: 'invite' })
     setNotice('Invite sent! Now wait for their replies.')
   }
 

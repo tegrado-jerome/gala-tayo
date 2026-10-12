@@ -203,8 +203,9 @@ async function trackPageView({ pathname }: PageViewParams): Promise<void> {
   lastPageViewSignature = signature
 }
 
+// GA4's recommended event name. The typed query is left out on purpose: people search names and numbers.
 function trackSearchSubmitted({ resultCount, page = null, filterCount = null }: SearchSubmittedParams) {
-  trackEvent('search_submitted', {
+  trackEvent('search', {
     result_count: resultCount,
     page: page ?? undefined,
     filter_count: filterCount ?? undefined,
@@ -228,9 +229,34 @@ function trackPlaceViewed({ placeSlug, areaSlug, category }: PlaceViewedParams) 
 }
 
 function trackFavoriteAdded({ placeSlug }: FavoriteAddedParams) {
-  trackEvent('favorite_added', {
+  trackEvent('place_save', {
     place_slug: placeSlug ?? undefined,
   })
+}
+
+// Group-plan funnel: created -> invite shared -> RSVPs. Counts and choices only, never names or text.
+function trackPlanCreated({ stopCount }: { stopCount: number }) {
+  trackEvent('plan_created', { stop_count: stopCount })
+}
+
+function trackInviteShared({ method }: { method: ShareChannel }) {
+  trackEvent('invite_shared', { method })
+}
+
+function trackRsvp({ response, asGuest }: { response: 'going' | 'maybe' | 'no'; asGuest: boolean }) {
+  trackEvent('rsvp', { response, as_guest: asGuest })
+}
+
+function trackAiDraft({ stopCount, fromPlaces }: { stopCount: number; fromPlaces: boolean }) {
+  trackEvent('ai_draft', { stop_count: stopCount, from_places: fromPlaces })
+}
+
+function trackSaanTayoUsed({ pickCount }: { pickCount: number }) {
+  trackEvent('saan_tayo_used', { pick_count: pickCount })
+}
+
+function trackGalaTodayOpen({ postSlug }: { postSlug: string | null }) {
+  trackEvent('gala_today_open', { post_slug: postSlug ?? undefined })
 }
 
 function trackPlaceShared({ placeSlug }: PlaceSharedParams) {
@@ -298,10 +324,13 @@ export {
   disableAnalytics,
   initializeAnalytics,
   reinitializeAnalytics,
+  trackAiDraft,
   trackAskAiChatbotUsed,
   trackAskAiMapsUsed,
   trackEvent,
   trackFavoriteAdded,
+  trackGalaTodayOpen,
+  trackInviteShared,
   trackLoginCompleted,
   trackOnboardingCompleted,
   trackPageView,
@@ -309,6 +338,9 @@ export {
   trackPlaceShared,
   trackPlaceSubmissionCompleted,
   trackPlaceViewed,
+  trackPlanCreated,
+  trackRsvp,
+  trackSaanTayoUsed,
   trackSearchResultSelected,
   trackSearchSubmitted,
   trackShare,

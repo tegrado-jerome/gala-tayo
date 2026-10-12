@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { getApiUrl } from './apiClient'
+import { trackRsvp } from './analytics'
 import type { GalaPlanOwner } from './galaPlansApi'
 
 export type GalaPlanRsvp = 'going' | 'maybe' | 'no'
@@ -49,8 +50,10 @@ export function getGalaPlanBarkada(planId: string, session?: Session | null) {
   return request(`${planPath(planId)}/barkada`, session)
 }
 
-export function setGalaPlanRsvp(planId: string, rsvp: GalaPlanRsvp, session?: Session | null) {
-  return request(`${planPath(planId)}/rsvp`, session, { method: 'PUT', body: JSON.stringify({ rsvp }) })
+export async function setGalaPlanRsvp(planId: string, rsvp: GalaPlanRsvp, session?: Session | null) {
+  const barkada = await request(`${planPath(planId)}/rsvp`, session, { method: 'PUT', body: JSON.stringify({ rsvp }) })
+  trackRsvp({ response: rsvp, asGuest: session?.user?.is_anonymous === true })
+  return barkada
 }
 
 export function setGalaPlanMemberPaid(planId: string, userId: string, paid: boolean, session?: Session | null) {

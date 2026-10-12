@@ -79,6 +79,7 @@ export type RouteDescriptor =
   | { kind: 'reset-password' }
   | { kind: 'forgot-password' }
   | { kind: 'about' }
+  | { kind: 'contact' }
   | { kind: 'saan-tayo' }
   | { kind: 'gala-tayo-meaning' }
   | { kind: 'long-weekends' }
@@ -307,6 +308,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (isPath(pathname, '/about')) {
     return { kind: 'about' }
+  }
+
+  if (isPath(pathname, '/contact')) {
+    return { kind: 'contact' }
   }
 
   if (isPath(pathname, '/saan-tayo')) {
