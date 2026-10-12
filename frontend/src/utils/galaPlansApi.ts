@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
 import { getApiUrl } from './apiClient'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
+import type { OpeningHours } from './openingHours'
 import { getAskAiRequestHeaders } from './askAiIdentity'
 import { parseGalaPlanDescription } from './planDescription'
 
@@ -77,6 +78,7 @@ export type GalaPlanDetail = GalaPlanSummary & {
       latitude: number | null
       longitude: number | null
       image_url?: string | null
+      opening_hours?: OpeningHours | null
     }
   }>
 }

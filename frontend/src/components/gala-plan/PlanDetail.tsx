@@ -243,6 +243,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       .catch(() => setNotice('Could not save your RSVP. Tap it again.'))
   }, [canReplayRsvp, planId, session])
 
+  const planDateInfo = parseGalaPlanDescription(plan?.description)
+  const planIsoDate = planDateInfo.dateMode === 'date' ? planDateInfo.date || null : null
   const stops = useMemo<TimelineStop[]>(
     () =>
       (plan?.items ?? []).map((item) => ({
@@ -251,8 +253,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         minutes: item.estimated_minutes,
         note: item.notes,
         place: item.place,
+        // Hours are checked on the plan's date; later days of a multi-day plan aren't dated.
+        date: item.day_number > 1 ? null : planIsoDate,
       })),
-    [plan],
+    [plan, planIsoDate],
   )
 
   if (error) {

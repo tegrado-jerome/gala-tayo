@@ -76,6 +76,7 @@ import PlaceShareSheet, { type PlaceShareView } from './share/PlaceShareSheet'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { buildPriceBadgeLabel } from '../utils/priceBadge'
+import PlaceHours from './place-detail/PlaceHours'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
@@ -494,6 +495,7 @@ const EMPTY_PLACE_DETAIL = {
   verification_sources: [],
   last_verified_at: null,
   website_url: null,
+  opening_hours: null,
   highlights: [],
   imageUrl: null,
   curatedImageUrl: null,
@@ -2376,12 +2378,13 @@ function PlaceDetailView({
               </div>
             ) : null}
 
-            {keyFacts.length > 0 || placePosition ? (
+            {keyFacts.length > 0 || placePosition || place.opening_hours ? (
               <ul className="pd-kl" aria-label="Key facts">
                 <PlaceWeather
                   position={placePosition}
                   place={{ name: place.name, category: categoryLabel, tags: place.tags, indoorOutdoor: cleanString(place.indoor_outdoor) }}
                 />
+                <PlaceHours hours={place.opening_hours} />
                 {keyFacts.map((fact) => {
                   const FactIcon = fact.icon
                   const body = (

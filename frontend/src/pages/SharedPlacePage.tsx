@@ -7,6 +7,7 @@ import { getCanonicalPlacePath, getHistoryState, resolveAreaMeta } from '../util
 import { getDestinationBySlug } from '../data/destinations'
 import { buildPlaceDescription, buildPlaceFaqSchema, buildPlaceTitle, getStructuredPlaceType } from '../utils/placeSeo'
 import { mapBackendPlaceToCardData } from '../utils/placeMapping'
+import { openingHoursSchema } from '../utils/openingHours'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import { trackPlaceViewed } from '../utils/analytics'
@@ -248,6 +249,7 @@ export default function SharedPlacePage({
     const rating = Number(detail.community_rating)
     const reviewCount = Number(detail.community_review_count ?? 0)
     const budget = detail.budget_min == null ? null : Number(detail.budget_min)
+    const openingHours = openingHoursSchema(detail.opening_hours)
     return {
       ...(Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0)
         ? { geo: { '@type': 'GeoCoordinates', latitude, longitude } }
@@ -261,6 +263,7 @@ export default function SharedPlacePage({
           : { priceRange: `From PHP ${Math.round(budget)}` }
         : {}),
       ...(detail.googleMapsUrl ? { hasMap: detail.googleMapsUrl } : {}),
+      ...(openingHours.length > 0 ? { openingHoursSpecification: openingHours } : {}),
     }
   }
 

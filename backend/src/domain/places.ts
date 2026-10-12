@@ -2,6 +2,7 @@ import { isGalaWorthySlug } from "../utils/galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue, deleteJsonCacheValue } from "../services/redisCacheService";
 import { fetchAllRows } from "../utils/fetchAllRows";
+import { parseOpeningHours, type OpeningHours } from "../utils/openingHours";
 
 export type PlaceFaq = {
   question: string;
@@ -33,6 +34,7 @@ export type PlaceRecord = {
   tags: string[] | null;
   average_rating: number | string | null;
   review_count: number | string | null;
+  opening_hours: OpeningHours | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -92,6 +94,7 @@ export const PUBLIC_PLACE_COLUMNS = [
   "tags",
   "average_rating",
   "review_count",
+  "opening_hours",
   "status",
   "created_at",
   "updated_at",
@@ -199,6 +202,7 @@ export function normalizePlaceRecord(row: Record<string, unknown>, warn?: (messa
     tags: stringArray(row.tags),
     average_rating: nullableNumber(row.average_rating),
     review_count: nullableInteger(row.review_count),
+    opening_hours: parseOpeningHours(row.opening_hours),
     status: nullableString(row.status) ?? "",
     created_at: nullableString(row.created_at) ?? "",
     updated_at: nullableString(row.updated_at) ?? "",

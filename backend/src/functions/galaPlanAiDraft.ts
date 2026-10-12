@@ -62,6 +62,7 @@ import {
   type PlanConstraints,
 } from "../services/galaPlanDraftPlanner";
 import { isMealStop } from "../domain/queryIntent";
+import { closedStopNote } from "../utils/openingHours";
 import { isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 
 /** Straight-line km between two points. */
@@ -446,6 +447,11 @@ export async function buildPlanDraft({
       : null,
     ...missingPinned.map((place) => `${place.name} isn't open at the time this plan reaches it, so it's left out. Start earlier to fit it in.`),
     ...tooFar.map((place) => `${place.name} is in ${place.city ?? place.area ?? "another area"}, too far to share a day with ${pinned[0]?.city ?? "the rest"}, so plan it on its own day.`),
+    ...stopsInOrder.map((stop) => {
+      const place = candidatesById.get(stop.place_id);
+      const start = parseClock(stop.time);
+      return place && start !== null ? closedStopNote(place.name, place.opening_hours, planDate.date, start) : null;
+    }),
   ].filter((note): note is string => Boolean(note));
 
   // Meals the stops can't price (a food street with free entry) or that no listed place covers still cost
