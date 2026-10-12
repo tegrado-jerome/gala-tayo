@@ -11,6 +11,7 @@ import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS, getRegionSlugForArea, type SeoLandingTarget } from '../utils/seoLandingPages'
 
 const AROUND_PH = 'Around the Philippines'
+const ESSENTIALS = 'Know before you go'
 
 type GuidePhoto = { url: string; alt: string }
 /** Written by the static listings build: each guide's place count and its top places. */
@@ -33,13 +34,15 @@ function pickGuidePhotos(guides: SeoLandingTarget[], summaries: Record<string, G
   return photos
 }
 
-/** Two shelves: Metro Manila, then everywhere else; biggest guides first within each. */
+/** Written guides first, then Metro Manila lists, then everywhere else; biggest lists first within each. */
 function groupGuides(guides: SeoLandingTarget[], summaries: Record<string, GuideSummary> | null) {
   const bySize = [...guides].sort((left, right) => (summaries?.[right.slug]?.total ?? 0) - (summaries?.[left.slug]?.total ?? 0))
+  const lists = bySize.filter((guide) => !guide.article)
   const isMetro = (guide: SeoLandingTarget) => getRegionSlugForArea(guide.areaSlug) === METRO_MANILA_REGION_SLUG
   return [
-    [getAreaLabelBySlug(METRO_MANILA_REGION_SLUG) ?? 'Metro Manila', bySize.filter(isMetro)],
-    [AROUND_PH, bySize.filter((guide) => !isMetro(guide))],
+    [ESSENTIALS, guides.filter((guide) => guide.article)],
+    [getAreaLabelBySlug(METRO_MANILA_REGION_SLUG) ?? 'Metro Manila', lists.filter(isMetro)],
+    [AROUND_PH, lists.filter((guide) => !isMetro(guide))],
   ] as const
 }
 
@@ -49,7 +52,9 @@ function GuideCard({ guide, summary, photo }: { guide: SeoLandingTarget; summary
       <InternalLink href={`/guides/${guide.slug}`} className="m-guide-card">
         <span className="m-guide-photo">{photo ? <img src={photo.url} alt={photo.alt} loading="lazy" decoding="async" /> : null}</span>
         <span className="g-h3 mt-2 block">{guide.label}</span>
-        <span className="g-xs g-mut">{[guide.displayAreaName || getAreaLabelBySlug(guide.areaSlug), summary ? `${summary.total} places` : null].filter(Boolean).join(' · ')}</span>
+        <span className="g-xs g-mut">
+          {guide.article ? 'Philippines · Guide' : [guide.displayAreaName || getAreaLabelBySlug(guide.areaSlug), summary ? `${summary.total} places` : null].filter(Boolean).join(' · ')}
+        </span>
       </InternalLink>
     </li>
   )
@@ -72,7 +77,8 @@ function GuidesIndexPage() {
   }, [])
 
   // Thin guides are noindex, so the index only shows guides with enough places (all of them when counts are unavailable).
-  const guides = summaries ? SEO_LANDING_TARGETS.filter((guide) => (summaries[guide.slug]?.total ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES) : SEO_LANDING_TARGETS
+  // Written guides are full pages whatever their place count.
+  const guides = summaries ? SEO_LANDING_TARGETS.filter((guide) => guide.article || (summaries[guide.slug]?.total ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES) : SEO_LANDING_TARGETS
   const groups = groupGuides(guides, summaries).filter(([, shelf]) => shelf.length > 0)
   const photos = pickGuidePhotos(groups.flatMap(([, shelf]) => shelf), summaries)
   const origin = getSiteOrigin()

@@ -77,6 +77,9 @@ import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { buildPriceBadgeLabel } from '../utils/priceBadge'
 import PlaceHours from './place-detail/PlaceHours'
+import TravelEssentials, { PriceToggle } from './place-detail/TravelEssentials'
+import { useForeignCurrency } from '../hooks/useForeignCurrency'
+import { hasPesoAmount, withForeignPrice } from '../utils/travelInfo'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
@@ -496,6 +499,7 @@ const EMPTY_PLACE_DETAIL = {
   last_verified_at: null,
   website_url: null,
   opening_hours: null,
+  travel_info: null,
   highlights: [],
   imageUrl: null,
   curatedImageUrl: null,
@@ -528,6 +532,7 @@ function PlaceDetailView({
 }: PlaceDetailViewProps) {
   const place = inputPlace ?? EMPTY_PLACE_DETAIL
   const { currentProfile, session: appSession } = useAppUser()
+  const [foreignCurrency, setForeignCurrency] = useForeignCurrency()
   const commentSkeleton = (
     <ul className="mt-4 grid gap-4" aria-hidden="true">
       {Array.from({ length: 3 }).map((_, index) => (
@@ -1763,7 +1768,7 @@ function PlaceDetailView({
   const keyFacts: Array<{ key: string; icon: PhosphorIcon; value: string; note: string; href?: string; warn?: boolean }> = [
     { key: 'duration', icon: Clock, value: timeNeeded, note: 'Time to spend' },
     { key: 'best-time', icon: SunHorizon, value: bestTime, note: 'Best time to go' },
-    { key: 'fee', icon: Ticket, value: feeValue, note: valueText || 'Entrance and budget' },
+    { key: 'fee', icon: Ticket, value: withForeignPrice(feeValue, foreignCurrency), note: valueText || 'Entrance and budget' },
     { key: 'hours', icon: Door, value: /^(not available|n\/a|unknown)$/i.test(hoursText) ? '' : hoursText, note: 'Opening hours' },
     { key: 'commute', icon: Train, value: commuteSummary, note: distanceLabel || 'Getting there', href: '#getting-there' },
     { key: 'crowd', icon: UsersThree, value: titleCase(cleanString(place.crowd_level)), note: 'Crowd', warn: true },
@@ -1782,11 +1787,14 @@ function PlaceDetailView({
   const knowBefore: Array<{ key: string; icon: PhosphorIcon; text: string }> = [
     ...(extras.safetyTips ?? []).map((text, index) => ({ key: `safety-${index}`, icon: ShieldCheck, text })),
     { key: 'parking', icon: Car, text: cleanString(place.parking_info) },
-    { key: 'budget', icon: Wallet, text: cleanString(place.budget_notes) },
+    { key: 'budget', icon: Wallet, text: withForeignPrice(cleanString(place.budget_notes), foreignCurrency) },
     ...describedTips(place.description).map((text, index) => ({ key: `tip-${index}`, icon: Backpack, text })),
     { key: 'access', icon: Wheelchair, text: cleanString(place.accessibility_notes) },
     { key: 'not-ideal', icon: Prohibit, text: notIdealFor.length > 0 ? `Not ideal for ${notIdealFor.join(', ')}.` : '' },
   ].filter((item) => item.text)
+  const travelInfo = place.travel_info ?? null
+  const fees = travelInfo?.fees
+  const hasPesoPrices = [feeValue, cleanString(place.budget_notes), fees?.local, fees?.foreigner, fees?.other].some((text) => text && hasPesoAmount(text))
   const cityName = cleanString(place.city) || areaBreadcrumb?.areaName || ''
   const localAreaName = cleanString(place.localArea) || cleanString(place.area)
   const crumbs: Array<{ label: string; href?: string | null }> = [
@@ -2422,6 +2430,7 @@ function PlaceDetailView({
                 })}
               </ul>
             ) : null}
+            {hasPesoPrices ? <PriceToggle currency={foreignCurrency} onChange={setForeignCurrency} /> : null}
           </section>
 
           {extras.didYouKnow?.length ? (
@@ -2462,22 +2471,25 @@ function PlaceDetailView({
             </section>
           ) : null}
 
-          {knowBefore.length > 0 ? (
+          {knowBefore.length > 0 || travelInfo ? (
             <section className="pd-sec" aria-labelledby="place-know">
               <h2 id="place-know" className="pd-sec-title">
                 Know before you go
               </h2>
-              <div className="g-kb pd-kb">
-                {knowBefore.map((item) => {
-                  const TipIcon = item.icon
-                  return (
-                    <div key={item.key}>
-                      <TipIcon weight="light" aria-hidden="true" />
-                      <p>{item.text}</p>
-                    </div>
-                  )
-                })}
-              </div>
+              {travelInfo ? <TravelEssentials info={travelInfo} currency={foreignCurrency} /> : null}
+              {knowBefore.length > 0 ? (
+                <div className="g-kb pd-kb">
+                  {knowBefore.map((item) => {
+                    const TipIcon = item.icon
+                    return (
+                      <div key={item.key}>
+                        <TipIcon weight="light" aria-hidden="true" />
+                        <p>{item.text}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
             </section>
           ) : null}
 

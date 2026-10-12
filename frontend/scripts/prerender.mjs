@@ -184,6 +184,7 @@ async function snapshot(page, routePath) {
       area: liveRoot.querySelector('.m-facts li')?.textContent.trim() || '',
       count: count?.textContent.trim() || '',
       photoUrl: photo ? photo.currentSrc || photo.src : null,
+      footnote: liveRoot.querySelector('[data-og-footnote]')?.getAttribute('data-og-footnote') || '',
     }
     const root = liveRoot.cloneNode(true)
     // Drop markup that only makes sense live: open dialogs, map tiles, blob images.
@@ -262,7 +263,7 @@ async function writePreviewCard(cardPage, imagePath, result) {
       fontDir: path.join(dist, 'fonts'),
       title: result.card.title,
       kicker: kind === 'guides' && !isGuide ? 'GalaTayo guides' : [cardKickers[kind] ?? 'GalaTayo', isGuide ? result.card.area : ''].filter(Boolean).join(' · '),
-      footnote: result.card.count && !result.card.count.startsWith('0 ') ? `${result.card.count} · budget per head` : 'Budget per head on every pick',
+      footnote: result.card.footnote || (result.card.count && !result.card.count.startsWith('0 ') ? `${result.card.count} · budget per head` : 'Budget per head on every pick'),
       photoUrl: result.card.photoUrl,
     }, path.join(dist, decodeURIComponent(imagePath)))
     return result.head

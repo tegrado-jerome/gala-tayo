@@ -32,3 +32,14 @@ test('seoGuides.json has no guide for a blocked category', () => {
   const blocked = guides.filter((guide) => BLOCKED_GUIDE_CATEGORIES.has(guide.category))
   assert.deepEqual(blocked.map((guide) => guide.slug), [])
 })
+
+test('written guides link only visible places they list, and cite sources', () => {
+  const hiddenSlugs = new Set(hidden)
+  for (const guide of guides.filter((candidate) => candidate.article)) {
+    const { places, sections, sources } = guide.article
+    assert.deepEqual(places.filter((slug) => hiddenSlugs.has(slug)), [], guide.slug)
+    const linked = sections.flatMap((section) => [...section.body.matchAll(/\]\(\/places\/[^/)]+\/([^)#?]+)\)/g)].map((match) => match[1]))
+    assert.deepEqual(linked.filter((slug) => !places.includes(slug)), [], guide.slug)
+    assert.ok(sources.length > 0 && sources.every((source) => /^https:\/\//.test(source.url)), guide.slug)
+  }
+})

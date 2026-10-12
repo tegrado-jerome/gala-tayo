@@ -43,6 +43,7 @@ export function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardDa
     badge: 'Shared',
     googleMapsUrl: place.google_maps_url,
     opening_hours: place.opening_hours ?? null,
+    travel_info: place.travel_info ?? null,
     best_time_to_visit: place.best_time_to_visit,
     visit_duration: place.visit_duration,
     good_for: place.good_for ?? [],

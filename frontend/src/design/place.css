@@ -126,6 +126,35 @@
 .pd-kb p { margin: 0; line-height: 1.5; }
 .pd-kb small { font-size: 12px; color: var(--ink-2); }
 
+/* Visitor essentials: icon, title, then short labelled lines. Sits above the sand tips panel. */
+.pd-ti { max-width: 680px; margin-bottom: 14px; }
+.pd-ti dl { display: grid; margin: 0; }
+.pd-ti dl > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.pd-ti dl > div:first-child { padding-top: 2px; }
+.pd-ti dl svg { grid-row: 1 / span 9; width: 24px; height: 24px; color: var(--ink); margin-top: calc((15px * 1.35 - 24px) / 2); }
+.pd-ti dt { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.pd-ti dd { margin: 3px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.pd-ti dd > span { color: var(--ink-2); }
+.pd-ti dd.is-warn > span { color: var(--warn); font-weight: 600; }
+.pd-ti-src { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.pd-ti-src summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.pd-ti-src summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+.pd-ti-src ul { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 4px; padding: 0; list-style: none; }
+.pd-ti-src a { color: inherit; overflow-wrap: anywhere; }
+@media (min-width: 768px) { .pd-ti dl { grid-template-columns: 1fr 1fr; column-gap: 32px; } .pd-ti dl > div:nth-child(2) { padding-top: 2px; } }
+
+/* PHP / USD / EUR switch under the key facts. Buttons keep a 44px hit area around a small pill. */
+.pd-fx { margin-top: 4px; font-size: 13px; color: var(--ink-2); }
+.pd-fx > div { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2px; }
+.pd-fx > div > span { margin-right: 6px; }
+.pd-fx button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.pd-fx button > span { padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; transition: border-color var(--t) var(--ease-g), background-color var(--t) var(--ease-g); }
+.pd-fx button:hover > span { border-color: var(--ink); }
+.pd-fx button[aria-pressed='true'] > span { border-color: var(--ink); background: var(--ink); color: var(--on-ink); font-weight: 600; }
+.pd-fx button:focus-visible { outline: none; }
+.pd-fx button:focus-visible > span { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pd-fx p { margin: 0 0 4px; font-size: 12px; line-height: 1.4; }
+
 /* Where it is */
 .pd-addr, .pd-commute { display: flex; gap: 10px; margin: 0; font-size: 15px; line-height: 1.5; }
 .pd-addr svg, .pd-commute svg { width: 22px; height: 22px; flex: 0 0 auto; margin-top: calc((1.5em - 22px) / 2); }
