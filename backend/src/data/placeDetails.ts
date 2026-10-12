@@ -16,6 +16,7 @@ import {
   setJsonCacheValue,
 } from "../services/redisCacheService";
 import { PUBLIC_PLACE_COLUMNS, normalizeFaqs } from "../domain/places";
+import { fetchAllRows } from "../utils/fetchAllRows";
 
 export type DetailCategoryMeta = {
   id: string;
@@ -751,15 +752,14 @@ export async function resolveCityImageDetails(
   try {
     const requestedCityKeys = new Set(unresolvedRequests.flatMap((request) => Array.from(request.cityKeys)));
     const supabase = await getSupabaseAdminClient();
-    const { data, error } = await (supabase.from("places") as any)
-      .select(PLACE_DETAIL_COLUMNS)
-      .eq("status", "active")
-      .order("name", { ascending: true, nullsFirst: false })
-      .limit(1000);
-
-    if (error) {
-      throw error;
-    }
+    const data = await fetchAllRows<Record<string, unknown>>((from, to) =>
+      (supabase.from("places") as any)
+        .select(PLACE_DETAIL_COLUMNS)
+        .eq("status", "active")
+        .order("name", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
 
     const rows = ((data || []) as Array<Record<string, unknown>>).filter((row) => {
       const rowCityKey = normalizeCityImageKey(getNullableString(row.city));

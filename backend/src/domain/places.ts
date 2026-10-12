@@ -1,6 +1,7 @@
 import { isGalaWorthySlug } from "../utils/galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue, deleteJsonCacheValue } from "../services/redisCacheService";
+import { fetchAllRows } from "../utils/fetchAllRows";
 
 export type PlaceFaq = {
   question: string;
@@ -215,16 +216,18 @@ export async function getActiveNormalizedPlaces({ includeHidden = false }: { inc
   if (cachedPlaces) return cachedPlaces;
 
   const supabase = await getSupabaseAdminClient();
-  let query = (supabase.from("places") as any)
-    .select(PUBLIC_PLACE_COLUMNS)
-    .eq("status", "active");
-  const { data, error } = await query
-    .order("name", { ascending: true, nullsFirst: false })
-    .limit(1000);
+  const rows = await fetchAllRows<Record<string, unknown>>((from, to) =>
+    (supabase.from("places") as any)
+      .select(PUBLIC_PLACE_COLUMNS)
+      .eq("status", "active")
+      .order("name", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(from, to),
+  ).catch(() => {
+    throw new Error("Failed to load active places.");
+  });
 
-  if (error) throw new Error("Failed to load active places.");
-
-  const places = ((data ?? []) as Array<Record<string, unknown>>)
+  const places = rows
     .map((row) => normalizePlaceRecord(row))
     .filter((place) => includeHidden || isGalaWorthySlug(place.slug));
   await setJsonCacheValue(cacheKey, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS, memoryTtlSeconds: ACTIVE_PLACES_MEMORY_TTL_SECONDS });
