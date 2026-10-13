@@ -779,6 +779,18 @@
                 "Burgos Pangasinan",
                 "Burgos (Pangasinan)"
               ]
+            },
+            {
+              "slug": "lingayen",
+              "name": "Lingayen",
+              "type": "municipality",
+              "center": [
+                16.0206363,
+                120.2307093
+              ],
+              "aliases": [
+                "lingayen-pangasinan"
+              ]
             }
           ]
         }
@@ -857,6 +869,18 @@
               "aliases": [
                 "Itbayat, Batanes",
                 "Itbayat Island"
+              ]
+            },
+            {
+              "slug": "ivana",
+              "name": "Ivana",
+              "type": "municipality",
+              "center": [
+                20.3709221,
+                121.9145002
+              ],
+              "aliases": [
+                "ivana-batanes"
               ]
             }
           ]
