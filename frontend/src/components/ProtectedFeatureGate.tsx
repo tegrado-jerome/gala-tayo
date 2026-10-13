@@ -23,6 +23,20 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
   const authVariant = getAuthVariant(pathname)
   const leaveGate = () => navigateToPath('/')
 
+  // Plans is a main tab, so guests get a real page with a heading and the sign-in card, not a blurred page behind a modal.
+  if (authVariant === 'plans-page') {
+    return (
+      <Page narrow>
+        <header className="mt-2 md:mt-6">
+          <p className="g-eyebrow">Your plans</p>
+          <h1 className="g-h1 mt-1.5">Plans</h1>
+          <p className="g-mut mt-2">One link for the whole group: pick spots, vote on the date, split the bill.</p>
+        </header>
+        <GuestAuthPrompt variant={authVariant} mode="inline-card" className="mt-6 md:mx-0" />
+      </Page>
+    )
+  }
+
   return (
     <>
       <div className="pointer-events-none select-none opacity-40 blur-[3px]" aria-hidden="true" inert>

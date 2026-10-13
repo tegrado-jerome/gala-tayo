@@ -164,7 +164,7 @@ function EditorsPick({ place }: { place: PlaceDetail | undefined }) {
         <img
           src={resizedMediaUrl(photo, 'hero')}
           srcSet={heroSrcSet(photo)}
-          sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
+          sizes="(min-width: 1440px) 1280px, (min-width: 1240px) 1176px, calc(100vw - 32px)"
           width={1280}
           height={720}
           alt=""
@@ -269,7 +269,7 @@ function Guides({ covers, title = 'Guides', limit = 4, showAll = false }: { cove
       />
       <div className={cx('g-guides', showAll && 'is-all')}>
         {covers === null
-          ? Array.from({ length: 2 }, (_, index) => <Skeleton key={index} className="aspect-[3/2] !rounded-[var(--r-2)]" />)
+          ? Array.from({ length: 2 }, (_, index) => <Skeleton key={index} className="aspect-[4/3] !rounded-[var(--r-2)]" />)
           : covers.slice(0, limit).map((cover) => (
               <InternalLink key={cover.slug} href={`/guides/${cover.slug}`} className="g-guide">
                 <span className="g-guide-img">

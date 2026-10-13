@@ -23,7 +23,7 @@ function resizedMediaUrl<T extends string | null | undefined>(url: T, size: Medi
   return SMALL_SIZES.has(size) ? cardFile(url) : fullFile(url)
 }
 
-/** srcset for a full-width hero; pair it with sizes like "(min-width: 1240px) 1176px, calc(100vw - 32px)". */
+/** srcset for a full-width hero; pair it with sizes like "(min-width: 1440px) 1280px, (min-width: 1240px) 1176px, calc(100vw - 32px)". */
 function heroSrcSet(url: string) {
   return `${cardFile(url)} 800w, ${fullFile(url)} 1600w`
 }

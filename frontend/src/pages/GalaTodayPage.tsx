@@ -235,7 +235,7 @@ function GalaTodayPage({ slug }: { slug?: string }) {
   }
 
   return (
-    <Page narrow>
+    <Page>
       <SeoHead
         title="Today's Plan: What's Trending, Turned Into Trips | GalaTayo"
         description="Every day, what the Philippines is searching and sharing, turned into a fun plan: budget challenges, tier lists and guess the place, with real top places."
@@ -245,7 +245,7 @@ function GalaTodayPage({ slug }: { slug?: string }) {
         jsonLd={posts.length > 0 ? todayListJsonLd(posts, getSiteOrigin()) : null}
       />
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Today\'s Plan' }]} />
-      <header className="mt-5">
+      <header className="mt-5 max-w-[42rem]">
         <p className="t-kicker">
           <span className="t-live" aria-hidden="true" />
           Fresh every morning
@@ -256,7 +256,7 @@ function GalaTodayPage({ slug }: { slug?: string }) {
       {posts.length === 0 ? (
         <Empty className="mt-8" title="Today's post is on the way" description="New posts land every morning at 6:30." action={<Button href="/saan-tayo">Pick a spot now</Button>} />
       ) : (
-        <div className="t-list mt-6">
+        <div className="t-list is-wide mt-6">
           {posts.map((post, index) => (
             <GalaTodayCard key={post.slug} post={post} headingLevel={index === 0 ? 'h2' : 'h3'} />
           ))}

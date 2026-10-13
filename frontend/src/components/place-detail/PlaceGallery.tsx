@@ -88,9 +88,9 @@ export function PhotoGrid({ photos, reservedTiles = 0, placeName, onBroken, onOp
             <button key={photo} type="button" className="pd-pg-tile" onClick={() => onOpen(index)} aria-label={`Open photo ${index + 1} of ${photos.length}`}>
               <img
                 src={resizedMediaUrl(photo, index === 0 ? 'hero' : 'card')}
-                // Phones show the big photo about 2/3 of the screen wide, so they get the 640px file.
+                // Phones swipe full-width photos; tablets show the big photo about 2/3 of the screen wide.
                 srcSet={index === 0 ? `${resizedMediaUrl(photo, 'card')} 640w, ${resizedMediaUrl(photo, 'hero')} 1280w` : undefined}
-                sizes={index === 0 ? (tileCount === 1 ? '(min-width: 1024px) 1176px, 100vw' : '(min-width: 1024px) 784px, 67vw') : undefined}
+                sizes={index === 0 ? (tileCount === 1 ? '(min-width: 1024px) 1176px, 100vw' : '(min-width: 1024px) 784px, (min-width: 768px) 67vw, 100vw') : undefined}
                 width={index === 0 ? 1280 : 640}
                 height={index === 0 ? 960 : 480}
                 alt={index === 0 ? placeName : ''}

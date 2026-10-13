@@ -73,7 +73,7 @@ function AboutPage() {
   ]
 
   return (
-    <Page narrow>
+    <Page narrow className="lg:max-w-[1080px]">
       <SeoHead
         title="About GalaTayo | Place discovery around the Philippines"
         description="What GalaTayo is and how we pick places: only the best, scored on real evidence, no fake reviews and credited photos."
@@ -129,7 +129,7 @@ function AboutPage() {
           <h2 id="about-curation" className="g-h2">
             About our curation
           </h2>
-          <div className="m-prose mt-3 max-w-[65ch]">
+          <div className="m-prose mt-3 grid max-w-[65ch] lg:max-w-none lg:grid-cols-2 lg:gap-x-12">
             {curationStandards.map(({ title, body }) => (
               <div key={title}>
                 <h3 className="g-h3 mt-6">{title}</h3>

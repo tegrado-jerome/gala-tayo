@@ -1,7 +1,7 @@
 /* Place detail, "Editorial Picks": photo grid, serif title, key facts, mint highlights, sand tips. Tokens come from gt1.css. */
 
 /* ---------- Photo grid (1 big + 2 small) ---------- */
-.pd-pg-wrap { position: relative; margin-inline: -16px; background: var(--fill); }
+.pd-pg-wrap { position: relative; margin-inline: calc(-1 * var(--page-px)); background: var(--fill); }
 .pd-pg { display: grid; gap: 3px; height: 286px; grid-template-columns: 2fr 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); }
 .pd-pg.n-1 { grid-template-columns: 1fr; }
 .pd-pg-tile { position: relative; display: block; min-width: 0; min-height: 0; border: 0; padding: 0; overflow: hidden; background: var(--fill); cursor: zoom-in; }
@@ -10,6 +10,12 @@
 .pd-pg-tile:hover img { filter: brightness(0.92); }
 .pd-pg-tile:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
 .pd-pg-empty { display: grid; place-items: center; height: 286px; padding: 0 24px; text-align: center; color: var(--ink); }
+/* Phones: one full-width photo at a time that swipes (Airbnb-style) instead of a mosaic with 3px slivers. */
+@media (max-width: 767px) {
+  .pd-pg { display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .pd-pg::-webkit-scrollbar { display: none; }
+  .pd-pg-tile { flex: 0 0 100%; scroll-snap-align: start; }
+}
 .pd-pg-top { position: absolute; inset: 0 0 auto 0; display: flex; align-items: center; gap: 4px; padding: 10px 10px; pointer-events: none; }
 .pd-pg-top > * { pointer-events: auto; }
 .pd-pg-tools { position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; }
@@ -77,7 +83,8 @@
 .pd-sec { margin-top: var(--sec-gap); }
 .pd-sec.is-first { margin-top: var(--sec-gap); }
 .pd-sec-title { margin: 0 0 10px; font: 600 21px/1.2 var(--font-display); letter-spacing: -0.01em; }
-.pd-prose { max-width: 680px; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
+/* About 70 characters a line at 15px. */
+.pd-prose { max-width: 36rem; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
 .pd-more, .pd-ask { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: 700 14px/1 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .pd-ask { color: var(--sea); text-decoration: none; }
 .pd-about-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
@@ -96,7 +103,8 @@
 .pd-kl b + span { display: block; margin-top: 1px; font-size: 13px; color: var(--ink-2); }
 .pd-kl a:hover b { text-decoration: underline; text-underline-offset: 2px; }
 .pd-kl a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
-@media (min-width: 768px) { .pd-kl { grid-template-columns: 1fr 1fr; column-gap: 32px; } }
+/* Two fact columns only once the main column beside the side card is about 750px wide, so long facts aren't cut short. */
+@media (min-width: 1280px) { .pd-kl { grid-template-columns: 1fr 1fr; column-gap: 32px; } }
 
 /* Opening hours: status line as the summary, the week inside. */
 .pd-hours summary { display: grid; grid-template-columns: 28px minmax(0, 1fr) 20px; gap: 12px; align-items: start; min-height: 44px; padding: 8px 0; list-style: none; cursor: pointer; }
@@ -141,7 +149,7 @@
 .pd-ti-src summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 .pd-ti-src ul { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 4px; padding: 0; list-style: none; }
 .pd-ti-src a { color: inherit; overflow-wrap: anywhere; }
-@media (min-width: 768px) { .pd-ti dl { grid-template-columns: 1fr 1fr; column-gap: 32px; } .pd-ti dl > div:nth-child(2) { padding-top: 2px; } }
+@media (min-width: 1280px) { .pd-ti dl { grid-template-columns: 1fr 1fr; column-gap: 32px; } .pd-ti dl > div:nth-child(2) { padding-top: 2px; } }
 
 /* PHP / USD / EUR switch under the key facts. Buttons keep a 44px hit area around a small pill. */
 .pd-fx { margin-top: 4px; font-size: 13px; color: var(--ink-2); }
@@ -209,9 +217,10 @@
 /* Spinner for inline loading */
 .pd-spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink); animation: g-spin 0.7s linear infinite; vertical-align: -2px; }
 
-/* Desktop sticky plan card */
-.pd-aside { position: sticky; top: 132px; }
-.pd-aside-card { padding: 24px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); box-shadow: var(--sh-2); }
+/* Sticky plan card beside the page from 768px (below the section tabs from 1024px) */
+.pd-aside { position: sticky; top: 80px; }
+@media (min-width: 1024px) { .pd-aside { top: 132px; } }
+.pd-aside-card { padding: 20px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); box-shadow: var(--sh-2); }
 .pd-aside-price { margin: 0; }
 .pd-aside-price b { font: 600 28px/1.1 var(--font-display); letter-spacing: -0.01em; }
 .pd-from { margin-right: 6px; font-size: 13px; color: var(--ink-2); }
@@ -224,6 +233,13 @@
 .pd-bar-price b { font: 700 18px/1.2 var(--font-body); }
 .pd-bar-price .pd-from { font-size: 12px; margin-right: 4px; }
 .pd-bar-price > span { display: block; margin-top: 1px; overflow: hidden; font-size: 12px; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; }
+/* 320–360px: a one-line price and a standard 44px button keep the bar about 60px tall, and "From ₱75" never slides under the stamp button. */
+@media (max-width: 360px) {
+  .pd-bar { padding: 8px 12px; }
+  .pd-bar-price p { overflow: hidden; text-overflow: ellipsis; }
+  .pd-bar-price > span { display: none; }
+  .pd-bar .g-btn-lg { height: 44px; padding: 0 16px; font-size: 15px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .pd-photos, .pd-spin { animation: none !important; }
@@ -240,4 +256,5 @@
 .pd-dyk-fact + .pd-dyk-fact { padding-top: 10px; border-top: 1px solid var(--line); }
 /* Fine print under the last section: sources, disclaimer, photo credits and the report link, one section gap below the page. */
 .pd-fine { display: flex; flex-direction: column; gap: 16px; margin-top: var(--sec-gap); }
+.pd-fine p { max-width: 70ch; }
 .pd-sources a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

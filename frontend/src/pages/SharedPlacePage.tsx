@@ -178,7 +178,7 @@ export default function SharedPlacePage({
     return (
       <Page className="pt-0 lg:pt-8">
         <div aria-busy="true" aria-label="Loading place">
-          <div className="-mx-4 grid h-[286px] grid-cols-[2fr_1fr] grid-rows-2 gap-[3px] overflow-hidden lg:mx-0 lg:h-[460px] lg:gap-2 lg:rounded-[var(--r-2)]">
+          <div className="mx-[calc(-1*var(--page-px))] grid h-[286px] grid-cols-[2fr_1fr] grid-rows-2 gap-[3px] overflow-hidden lg:mx-0 lg:h-[460px] lg:gap-2 lg:rounded-[var(--r-2)]">
             <Skeleton className="row-span-2 rounded-none" />
             <Skeleton className="rounded-none" />
             <Skeleton className="rounded-none" />

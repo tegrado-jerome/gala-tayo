@@ -280,7 +280,7 @@ function MasonrySkeleton({ count = 8, desktopColumns }: { count?: number; deskto
     <Masonry aria-hidden="true" desktopColumns={desktopColumns}>
       {Array.from({ length: count }, (_, index) => (
         <div key={index} className="min-w-0">
-          <Skeleton className="aspect-video w-full !rounded-[var(--r-3)]" />
+          <Skeleton className="aspect-[4/3] w-full !rounded-[var(--r-3)]" />
           <Skeleton className="mt-3 h-3 w-1/3" />
           <Skeleton className="mt-2 h-4 w-3/4" />
           <Skeleton className="mt-2 h-3 w-1/2" />
@@ -417,7 +417,7 @@ function SearchResults({
         onViewChange={isDesktop ? undefined : onMobileViewChange}
       />
 
-      <div className="g-split">
+      <div className="g-split is-map">
         <section id="search-results-anchor" className="min-w-0" aria-label="Results">
           {showMobileMap ? (
             <>

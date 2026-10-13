@@ -14,12 +14,11 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
   }
 
   return (
-    <section aria-label="Cookie consent" className="m-cookie flex-wrap sm:flex-nowrap">
+    <section aria-label="Cookie consent" className="m-cookie">
       <Cookie weight="light" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="g-sm font-semibold leading-5">Cookies okay?</p>
         <p className="g-xs g-mut leading-4">
-          Analytics only, to make GalaTayo better.{' '}
+          <b className="font-semibold text-[var(--ink)]">Cookies okay?</b> Analytics only, to make GalaTayo better.{' '}
           <button type="button" onClick={() => setShowDetails((value) => !value)} className="font-semibold text-[var(--ink)] underline underline-offset-2" aria-expanded={showDetails}>
             {showDetails ? 'Less' : 'Learn more'}
           </button>
@@ -33,11 +32,11 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
           </p>
         ) : null}
       </div>
-      <div className="flex shrink-0 gap-1.5 max-sm:w-full max-sm:[&>*]:flex-1">
-        <Button variant="soft" onClick={rejectCookies}>
+      <div className="flex shrink-0 gap-1.5">
+        <Button variant="soft" size="sm" onClick={rejectCookies}>
           Reject
         </Button>
-        <Button variant="ink" onClick={acceptCookies}>
+        <Button variant="ink" size="sm" onClick={acceptCookies}>
           Accept
         </Button>
       </div>
