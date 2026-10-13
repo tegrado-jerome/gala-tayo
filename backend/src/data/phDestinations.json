@@ -3433,6 +3433,18 @@
                 125.135
               ],
               "aliases": []
+            },
+            {
+              "slug": "calbiga",
+              "name": "Calbiga",
+              "type": "municipality",
+              "center": [
+                11.6274469,
+                125.0170454
+              ],
+              "aliases": [
+                "Calbiga, Samar"
+              ]
             }
           ]
         },
@@ -3468,6 +3480,30 @@
               ],
               "aliases": [
                 "Maripipi, Biliran"
+              ]
+            },
+            {
+              "slug": "naval",
+              "name": "Naval",
+              "type": "municipality",
+              "center": [
+                11.56179,
+                124.3965267
+              ],
+              "aliases": [
+                "Naval, Biliran"
+              ]
+            },
+            {
+              "slug": "caibiran",
+              "name": "Caibiran",
+              "type": "municipality",
+              "center": [
+                11.5723202,
+                124.5813362
+              ],
+              "aliases": [
+                "Caibiran, Biliran"
               ]
             }
           ]
@@ -3531,6 +3567,18 @@
               "aliases": [
                 "Guiuan, Eastern Samar",
                 "Calicoan"
+              ]
+            },
+            {
+              "slug": "hernani",
+              "name": "Hernani",
+              "type": "municipality",
+              "center": [
+                11.3232473,
+                125.6190691
+              ],
+              "aliases": [
+                "Hernani, Eastern Samar"
               ]
             }
           ]
@@ -3761,6 +3809,105 @@
                 "City of Mati",
                 "Mati, Davao Oriental"
               ]
+            },
+            {
+              "slug": "cateel",
+              "name": "Cateel",
+              "type": "municipality",
+              "center": [
+                7.7901142,
+                126.4537908
+              ],
+              "aliases": [
+                "Cateel, Davao Oriental"
+              ]
+            },
+            {
+              "slug": "baganga",
+              "name": "Baganga",
+              "type": "municipality",
+              "center": [
+                7.5747096,
+                126.5616073
+              ],
+              "aliases": [
+                "Baganga, Davao Oriental"
+              ]
+            },
+            {
+              "slug": "lupon",
+              "name": "Lupon",
+              "type": "municipality",
+              "center": [
+                6.8977121,
+                126.0118409
+              ],
+              "aliases": [
+                "Lupon, Davao Oriental"
+              ]
+            },
+            {
+              "slug": "caraga-davao-oriental",
+              "name": "Caraga, Davao Oriental",
+              "type": "municipality",
+              "center": [
+                7.328232,
+                126.5653582
+              ],
+              "aliases": [
+                "Caraga Davao Oriental",
+                "Caraga (Davao Oriental)",
+                "Pusan Point"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "davao-de-oro",
+          "name": "Davao de Oro",
+          "cities": [
+            {
+              "slug": "monkayo",
+              "name": "Monkayo",
+              "type": "municipality",
+              "center": [
+                7.8239526,
+                126.0536908
+              ],
+              "aliases": [
+                "Monkayo, Davao de Oro"
+              ]
+            },
+            {
+              "slug": "maragusan",
+              "name": "Maragusan",
+              "type": "municipality",
+              "center": [
+                7.3176458,
+                126.1226535
+              ],
+              "aliases": [
+                "Maragusan, Davao de Oro"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "davao-occidental",
+          "name": "Davao Occidental",
+          "cities": [
+            {
+              "slug": "santa-maria-davao-occidental",
+              "name": "Santa Maria, Davao Occidental",
+              "type": "municipality",
+              "center": [
+                6.5508908,
+                125.4748759
+              ],
+              "aliases": [
+                "Santa Maria Davao Occidental",
+                "Sta. Maria, Davao Occidental"
+              ]
             }
           ]
         }
@@ -3911,6 +4058,25 @@
                 124.7086
               ],
               "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "sarangani",
+          "name": "Sarangani",
+          "cities": [
+            {
+              "slug": "glan",
+              "name": "Glan",
+              "type": "municipality",
+              "center": [
+                5.8226991,
+                125.2049049
+              ],
+              "aliases": [
+                "Glan, Sarangani",
+                "Gumasa"
+              ]
             }
           ]
         }
