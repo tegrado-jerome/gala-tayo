@@ -114,5 +114,19 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "gcash ipo",
+    "traffic": 1000,
+    "date": "2026-10-13",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
   }
 ]
