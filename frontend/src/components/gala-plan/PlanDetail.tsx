@@ -19,6 +19,7 @@ import { Avatar, AvatarStack, Button, Empty, Page, Sheet, Skeleton, Tabs, Tag, c
 import { MembersList, PollsPanel, RsvpPanel, personAvatar, personName } from './BarkadaPanel'
 import { TaraBurst } from './BarkadaVotes'
 import BudgetPanel from './BudgetPanel'
+import GateTotal from './GateTotal'
 import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
 import { PlanCover } from './PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from './PlanTimeline'
@@ -720,6 +721,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                       ))}
                     </button>
                   </section>
+
+                  <GateTotal plan={plan} groupSize={groupSize} />
 
                   <section className="g-story mt-6" aria-labelledby="plan-story-title">
                     <span className="g-story-mock" aria-hidden="true">

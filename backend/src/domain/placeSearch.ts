@@ -405,6 +405,11 @@ function activeOf(places: NormalizedPlace[]): NormalizedPlace[] {
 
 const readQuery = (query: string, places: NormalizedPlace[]) => parseQueryIntent(query, places, { locationWords: LOCATION_WORDS, rewrites: JOINED_LOCATION_NAMES });
 
+/** The text as search reads it: folded, nicknames expanded and typos fixed ("bora", "chocolate hils"). */
+export function readQueryText(query: string, places: NormalizedPlace[]): string {
+  return normalizeSearchText(readQuery(query, activeOf(places)).text);
+}
+
 /** A province named in the query ("waterfalls cebu", "beach batangas"), unless a city in it is named too. */
 function detectProvince(normalizedQuery: string, city: string | null): string | null {
   const province = PROVINCES.filter((name) => includesWholePhrase(normalizedQuery, name)).sort((a, b) => b.length - a.length)[0] ?? null;
@@ -425,6 +430,9 @@ function locationWords(names: Array<string | null>): Set<string> {
 
 const isLocationOnly = (normalizedQuery: string) =>
   Boolean(canonicalCity(normalizedQuery) ?? PROVINCES.find((name) => normalizeSearchText(name) === normalizedQuery) ?? REGION_GROUPS[normalizedQuery]);
+
+/** The text names only a city, province or region ("palawan", "puerto princesa"), not a place. */
+export const isLocationQuery = (text: string) => isLocationOnly(normalizeSearchText(text));
 
 /** Places whose own name holds the whole query ("rizal park", "mount apo"): a place named outright beats any reading of its words. */
 function namedPlaces(places: NormalizedPlace[], normalizedQuery: string): NormalizedPlace[] {

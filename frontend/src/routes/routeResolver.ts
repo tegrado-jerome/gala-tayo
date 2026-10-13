@@ -83,6 +83,7 @@ export type RouteDescriptor =
   | { kind: 'saan-tayo' }
   | { kind: 'gala-tayo-meaning' }
   | { kind: 'long-weekends' }
+  | { kind: 'trip-check'; planId: string | null }
   | { kind: 'gala-today'; slug?: string }
   | { kind: 'profile-search' }
   | { kind: 'public-gala-plan'; username: string; slug: string }
@@ -324,6 +325,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (isPath(pathname, '/long-weekends-2027-philippines')) {
     return { kind: 'long-weekends' }
+  }
+
+  if (isPath(pathname, '/trip-check')) {
+    return { kind: 'trip-check', planId: new URLSearchParams(search).get('plan') }
   }
 
   const todayMatch = pathname.match(/^\/today(?:\/([a-z0-9-]+))?\/?$/)

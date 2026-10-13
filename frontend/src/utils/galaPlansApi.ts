@@ -4,6 +4,7 @@ import { getApiUrl } from './apiClient'
 import { trackAiDraft, trackPlanCreated } from './analytics'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
 import type { OpeningHours } from './openingHours'
+import type { TravelInfo } from './travelInfo'
 import { getAskAiRequestHeaders } from './askAiIdentity'
 import { parseGalaPlanDescription } from './planDescription'
 
@@ -80,6 +81,7 @@ export type GalaPlanDetail = GalaPlanSummary & {
       longitude: number | null
       image_url?: string | null
       opening_hours?: OpeningHours | null
+      travel_info?: TravelInfo | null
     }
   }>
 }
