@@ -2582,6 +2582,20 @@
                 "Concepcion (Iloilo)",
                 "Concepcion Islands"
               ]
+            },
+            {
+              "slug": "leon-iloilo",
+              "name": "Leon, Iloilo",
+              "type": "municipality",
+              "center": [
+                10.7806,
+                122.3874
+              ],
+              "aliases": [
+                "Leon Iloilo",
+                "Leon (Iloilo)",
+                "Bucari"
+              ]
             }
           ]
         },
@@ -2598,6 +2612,19 @@
                 122.556
               ],
               "aliases": []
+            },
+            {
+              "slug": "buenavista-guimaras",
+              "name": "Buenavista, Guimaras",
+              "type": "municipality",
+              "center": [
+                10.697,
+                122.648
+              ],
+              "aliases": [
+                "Buenavista Guimaras",
+                "Buenavista (Guimaras)"
+              ]
             }
           ]
         },
@@ -3055,6 +3082,32 @@
               ],
               "aliases": [
                 "Balamban, Cebu"
+              ]
+            },
+            {
+              "slug": "aloguinsan",
+              "name": "Aloguinsan",
+              "type": "municipality",
+              "center": [
+                10.2225,
+                123.5485
+              ],
+              "aliases": [
+                "Aloguinsan, Cebu",
+                "Aloguinsan Cebu"
+              ]
+            },
+            {
+              "slug": "ginatilan",
+              "name": "Ginatilan",
+              "type": "municipality",
+              "center": [
+                9.5699,
+                123.3124
+              ],
+              "aliases": [
+                "Ginatilan, Cebu",
+                "Ginatilan Cebu"
               ]
             }
           ]
