@@ -62,7 +62,9 @@ describe("day plans with dinner", () => {
       assert.ok(minutes(body.stops[0].time) <= 12 * 60, slugs);
       const dinner = body.stops.find((stop) => isMeal(stop, "dinner") && minutes(stop.time) >= 17 * 60 + 30);
       assert.ok(dinner, slugs);
-      assert.equal(body.stops.at(-1), dinner, slugs);
+      // "Ends with dinner" ends there; "with dinner" may go on to a night stop (the night market after dinner).
+      if (/ends with dinner/.test(prompt)) assert.equal(body.stops.at(-1), dinner, slugs);
+      else assert.ok(body.stops.slice(body.stops.indexOf(dinner) + 1).every((stop) => minutes(stop.time) >= 19 * 60), slugs);
     });
   }
 

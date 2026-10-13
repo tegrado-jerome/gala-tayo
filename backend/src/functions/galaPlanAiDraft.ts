@@ -306,8 +306,12 @@ export async function buildPlanDraft({
   const timed = wholeDay
     ? full.map((stop) => {
         const kind = picked.get(stop.place_id);
-        const isFood = candidatesById.get(stop.place_id)?.category === "Food";
-        const time = kind === "cafe" && isFood ? "09:00" : (MEAL_TIMES[kind ?? ""] ?? (isFood ? stop.time : ""));
+        const place = candidatesById.get(stop.place_id)!;
+        const isFood = place.category === "Food";
+        // A pasalubong shop keeping the model's 7 PM meal slot would start the whole day at dinner time.
+        const clock = parseClock(stop.time);
+        const isMealAtClock = isFood && clock !== null && fitsKind(place, clock >= 16 * 60 ? "dinner" : "lunch");
+        const time = kind === "cafe" && isFood ? "09:00" : (MEAL_TIMES[kind ?? ""] ?? (isMealAtClock ? stop.time : ""));
         return { ...stop, time };
       })
     : full;
@@ -384,6 +388,18 @@ export async function buildPlanDraft({
       const retimed = retime(topped);
       stopsInOrder = retimed.filter((stop) => keep().has(stop.place_id) || !isDarkOutdoor(candidatesById.get(stop.place_id)!, parseClock(stop.time) ?? 0, sunsetMinutes));
     }
+  }
+  // Chosen places beat stops nobody asked for: give those up, extra eateries first, until the chosen ones fit the day.
+  const pinnedCount = (stops: DraftStop[]) => stops.filter((stop) => pinnedIds.has(stop.place_id)).length;
+  const isFoodStop = (stop: DraftStop) => candidatesById.get(stop.place_id)?.category === "Food";
+  const unasked = stopsInOrder.filter((stop) => !keep().has(stop.place_id));
+  let spared = stopsInOrder;
+  for (const stop of [...unasked.filter(isFoodStop).reverse(), ...unasked.filter((other) => !isFoodStop(other)).reverse()]) {
+    if (pinnedCount(stopsInOrder) === pinned.length) break;
+    spared = spared.filter((other) => other !== stop);
+    const missing = pinned.filter((place) => !spared.some((other) => other.place_id === place.id));
+    const retimed = retime([...spared, ...missing.map((place) => ({ place_id: place.id, time: "", minutes: 60, note: describeStop(place) }))]);
+    if (pinnedCount(retimed) > pinnedCount(stopsInOrder)) stopsInOrder = retimed;
   }
   // The rules above can drop or move an asked-for meal (a dinner timed past the end, a lunch at 5 PM): put a real
   // one back at its time, or say why there is none.

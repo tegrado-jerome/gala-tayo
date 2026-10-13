@@ -1183,6 +1183,8 @@ export function orderByTimeOfDay(stops: DraftStop[], placesById: Map<string, Nor
 
 /** Whether a place can be visited starting at `start`: open then, and not a park in the dark. */
 function canVisitAt(place: NormalizedPlace, start: number, sunsetMinutes: number) {
+  // A "9 PM opening" night market can't fill a 2 PM gap.
+  if ((statedOpening(place) ?? 0) > start) return false;
   if (start >= sunsetMinutes) return isNightFriendly(place);
   const opening = CATEGORY_OPENING[place.category];
   return isNightFriendly(place) || !opening || opening.max - 30 >= start;

@@ -574,6 +574,14 @@ describe("plan intent rules (QA round 2)", () => {
     assert.deepEqual(out.map((entry) => entry.place_id), ["dinner", "bridge"]);
   });
 
+  it("never fills an afternoon gap with a place that opens at night", () => {
+    const lunch = place({ id: "lunch", category: "Food", latitude: 16.412, longitude: 120.596 });
+    const nightMarket = place({ id: "night-market", category: "Activity", best_time_to_visit: "Right at 9 PM opening", latitude: 16.413, longitude: 120.597 });
+    const park = place({ id: "park", category: "Park", latitude: 16.414, longitude: 120.598 });
+    const out = fillGaps([stop("lunch", "12:00", "Lunch", 90)], [lunch, nightMarket, park], { end: at(17), sunsetMinutes: at(17, 45) });
+    assert.deepEqual(out.map((entry) => entry.place_id), ["lunch", "park"]);
+  });
+
   it("leaves morning-only eateries out of evening plans", () => {
     const byId = new Map([market, qcDinner].map((entry) => [entry.id, entry]));
     assert.deepEqual(dropOffHoursFood([stop("market"), stop("qc-dinner")], byId, true).map((entry) => entry.place_id), ["qc-dinner"]);
