@@ -48,7 +48,7 @@ const BRAND_NAME = 'GalaTayo'
 const BRAND_ALTERNATE_NAME = 'Gala Tayo'
 const PRODUCT_NAME = 'GalaTayo'
 const BRAND_DESCRIPTION =
-  'GalaTayo (Gala Tayo) is a place discovery and planning app for the best places around the Philippines. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
+  'GalaTayo (Gala Tayo) is a place discovery and planning app for the best places around the Philippines. Browse places by city, vibe and budget, then plan your next gala with friends.'
 
 function buildBrandJsonLd() {
   const origin = getPublicSiteOrigin()
@@ -85,7 +85,7 @@ function buildBrandJsonLd() {
   ]
 }
 
-// Cinemas, hotels and malls never get a guide (see scripts/seo/guide-rules.mjs).
+// Cinemas, hotels, malls, cafes and restaurants never get a guide (see scripts/seo/guide-rules.mjs).
 const SEO_LANDING_TARGETS: SeoLandingTarget[] = seoGuides.filter((guide) => !guideRules.blockedCategories.includes(guide.category ?? ''))
 
 const GOOD_FOR_LABELS: Record<string, string> = {

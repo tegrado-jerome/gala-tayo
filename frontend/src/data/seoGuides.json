@@ -1,31 +1,5 @@
 [
   {
-    "slug": "best-cafes-in-makati",
-    "label": "Best Cafes in Makati",
-    "areaSlug": "makati",
-    "category": "cafe",
-    "keywords": [
-      "best cafes in makati",
-      "coffee shops in makati",
-      "makati cafe guide"
-    ],
-    "description": "Coffee spots in Makati worth the trip, from quick espresso stops to tables made for lingering, with the starting budget per head for each.",
-    "intro": "Makati has more cafes than any group can try! These are the ones we would actually send you to, with what a cup and a snack will cost."
-  },
-  {
-    "slug": "restaurants-in-quezon-city",
-    "label": "Restaurants in Quezon City",
-    "areaSlug": "quezon-city",
-    "category": "food",
-    "keywords": [
-      "restaurants in quezon city",
-      "best food in qc",
-      "kainan sa qc"
-    ],
-    "description": "Where to eat in Quezon City: Maginhawa food trips, old-school Filipino kitchens and date-night spots, each with a starting budget per head.",
-    "intro": "QC eats well on any budget. Start with the classics, then work your way down Maginhawa when the group is hungry again!"
-  },
-  {
     "slug": "museums-in-manila",
     "label": "Museums in Manila",
     "areaSlug": "manila",
@@ -79,20 +53,6 @@
     "intro": "These spots have space to run around, food everyone eats and easy parking or commute, so the whole family can come along."
   },
   {
-    "slug": "study-cafes-in-manila",
-    "label": "Study Cafes in Manila",
-    "areaSlug": "manila",
-    "category": "cafe",
-    "goodFor": "study",
-    "keywords": [
-      "study cafes in manila",
-      "quiet cafes in manila",
-      "cafes with wifi in manila"
-    ],
-    "description": "Quiet cafes in Manila for studying or working, with outlets, good Wi-Fi and the hours when tables are easiest to get.",
-    "intro": "A good study cafe needs a table you can keep for hours. These are the calm ones, with notes on the best time to go."
-  },
-  {
     "slug": "chill-spots-in-taguig",
     "label": "Chill Spots in Taguig",
     "areaSlug": "taguig",
@@ -104,20 +64,6 @@
     ],
     "description": "Low-key spots in Taguig for when you just want to sit, eat and talk: open-air walks, cafes and easy hangouts in BGC.",
     "intro": "No big plan needed. Pick one, stay as long as you like and let the afternoon happen."
-  },
-  {
-    "slug": "kainan-sa-bgc",
-    "label": "Restaurants in BGC",
-    "areaSlug": "taguig",
-    "displayAreaName": "BGC",
-    "category": "food",
-    "keywords": [
-      "kainan sa bgc",
-      "restaurants in bgc",
-      "food trip in bgc"
-    ],
-    "description": "Restaurants in Bonifacio Global City from casual to special-occasion, with the starting budget per head for each.",
-    "intro": "BGC has a restaurant for every mood. These are the ones worth your money, with an idea of the bill before you sit down."
   },
   {
     "slug": "tambayan-sa-makati",
@@ -180,20 +126,6 @@
     ]
   },
   {
-    "slug": "study-cafes-in-metro-manila",
-    "label": "Study Cafes in Metro Manila",
-    "areaSlug": "metro-manila",
-    "category": "cafe",
-    "goodFor": "study",
-    "keywords": [
-      "study cafes in metro manila",
-      "quiet cafes with wifi",
-      "best cafes for studying"
-    ],
-    "description": "Study cafes across Metro Manila with good Wi-Fi, outlets and tables you can keep, plus the quiet hours for each.",
-    "intro": "Finals week or deadline week, you need a table and a socket. These cafes give you both."
-  },
-  {
     "slug": "nightlife-in-makati",
     "label": "Nightlife in Makati",
     "areaSlug": "makati",
@@ -221,20 +153,6 @@
     "description": "Heritage sites in Manila: Intramuros, Fort Santiago, Binondo and old churches, with entrance fees and the best time to walk them.",
     "intro": "Manila wears four centuries of history on its streets. Go early morning, wear comfortable shoes and leave room for an afternoon snack in Binondo.",
     "title": "Historical Places in Manila: Heritage Sites, Ranked"
-  },
-  {
-    "slug": "cheap-eats-in-manila",
-    "label": "Cheap Eats in Manila",
-    "areaSlug": "manila",
-    "category": "food",
-    "keywords": [
-      "cheap eats in manila",
-      "budget food in manila",
-      "murang kainan sa manila",
-      "manila affordable restaurants"
-    ],
-    "description": "Cheap eats in Manila: Binondo dumplings, Divisoria snacks and old favourites where a full meal stays budget-friendly.",
-    "intro": "You do not need a big budget to eat well in Manila. These are the spots where the food is better than the price suggests."
   },
   {
     "slug": "barkada-hangouts-in-makati",
@@ -266,22 +184,6 @@
     "title": "Things to Do in Manila with Kids: Family Outing Ideas"
   },
   {
-    "slug": "restaurants-in-metro-manila",
-    "label": "Restaurants in Metro Manila",
-    "areaSlug": "metro-manila",
-    "category": "food",
-    "keywords": [
-      "restaurants in metro manila",
-      "restaurants in metro manila with private rooms",
-      "restaurants in metro manila with birthday promo",
-      "restaurants in metro manila with function rooms",
-      "restaurants in metro manila for family"
-    ],
-    "addedAt": "2026-10-05",
-    "description": "Restaurants in Metro Manila worth the drive, from Filipino classics to chef-led dining rooms, each with a starting budget per head.",
-    "intro": "This is our shortlist of places to eat across the metro. Every pick shows the starting budget, so you can plan the night around it."
-  },
-  {
     "slug": "things-to-do-in-metro-manila",
     "label": "Things to Do in Metro Manila",
     "areaSlug": "metro-manila",
@@ -296,22 +198,6 @@
     "addedAt": "2026-10-05",
     "description": "Things to do in Metro Manila: bike tours, aquariums, theme parks and creative hubs for a day out, with fees and how long to stay.",
     "intro": "Beyond eating and malling, the metro has plenty to do. Use these picks to plan a day your friends will still talk about!"
-  },
-  {
-    "slug": "cafes-in-metro-manila",
-    "label": "Cafes in Metro Manila",
-    "areaSlug": "metro-manila",
-    "category": "cafe",
-    "keywords": [
-      "cafes in metro manila",
-      "restaurants in metro manila",
-      "restaurants in metro manila with private rooms",
-      "restaurants in metro manila with function rooms",
-      "coffee in metro manila"
-    ],
-    "addedAt": "2026-10-05",
-    "description": "Cafes in Metro Manila with character, from heritage buildings to garden views, with what coffee and a snack will cost.",
-    "intro": "These are cafes worth crossing the city for. Bring a book, a laptop or a friend."
   },
   {
     "slug": "museums-in-metro-manila",
@@ -355,20 +241,6 @@
         "answer": "The ukay stalls on Harrison Road beside Burnham Park open at around 9 PM. Come right at opening for first dibs and a smaller crowd."
       }
     ]
-  },
-  {
-    "slug": "where-to-eat-in-baguio",
-    "label": "Where to Eat in Baguio",
-    "areaSlug": "baguio",
-    "category": "food",
-    "keywords": [
-      "where to eat in baguio",
-      "baguio restaurants",
-      "baguio food trip"
-    ],
-    "description": "Where to eat in Baguio: the public market, old-school favourites and cozy restaurants, with the starting budget per head for each.",
-    "intro": "Cold weather makes everything taste better. These are the Baguio meals worth the trip up.",
-    "addedAt": "2026-10-06"
   },
   {
     "slug": "things-to-do-in-cebu-city",
@@ -782,28 +654,6 @@
       {
         "question": "Can you swim at Valugan Boulder Beach?",
         "answer": "No. Valugan faces the open Pacific, the waves are strong and the shore is all boulders, so it is a look-only beach. Come for the sunrise and the sound of the rocks."
-      }
-    ],
-    "addedAt": "2026-10-06"
-  },
-  {
-    "slug": "where-to-eat-in-makati",
-    "label": "Where to Eat in Makati",
-    "areaSlug": "makati",
-    "category": "food",
-    "keywords": [
-      "where to eat in makati",
-      "makati food trip",
-      "where to eat in makati for dinner",
-      "michelin restaurants makati",
-      "fine dining makati"
-    ],
-    "description": "Where to eat in Makati: Michelin-starred Toyo Eatery, Helm, Hapag, Celera, Inatô and Kása Palma, plus dinner in the old Nielson Tower at Blackbird.",
-    "intro": "Makati is where the Michelin stars cluster. Save up for a tasting menu at Helm, Toyo Eatery or Hapag, or book Blackbird for dinner inside the 1937 Nielson Tower in Ayala Triangle.",
-    "faqs": [
-      {
-        "question": "Which Makati restaurants have Michelin stars?",
-        "answer": "Helm by Josh Boutwood has two stars. Toyo Eatery, Hapag, Celera, Inatô and Kása Palma each have one. Blackbird at the Nielson Tower is also in the Michelin Guide."
       }
     ],
     "addedAt": "2026-10-06"

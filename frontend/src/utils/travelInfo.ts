@@ -70,3 +70,13 @@ export function sourceHost(url: string) {
     return null
   }
 }
+
+/** One link per site: several pages from the same domain count as one source, linked to the first. */
+export function uniqueSourceHosts(urls: string[]) {
+  const byHost = new Map<string, string>()
+  for (const url of urls) {
+    const host = sourceHost(url)
+    if (host && !byHost.has(host)) byHost.set(host, url)
+  }
+  return [...byHost].map(([host, url]) => ({ url, host }))
+}

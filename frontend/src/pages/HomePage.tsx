@@ -18,7 +18,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   const seoConfig = useMemo(
     () => ({
       title: 'Home | GalaTayo',
-      description: 'Discover the best places around the Philippines by city, category, budget and vibe.',
+      description: 'Discover the best places around the Philippines by city, vibe and budget.',
       canonicalPath: '/',
       preconnectOrigins: [new URL(R2_PUBLIC_BASE_URL).origin],
     }),

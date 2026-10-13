@@ -1,4 +1,4 @@
 {
-  "blockedCategories": ["cinema", "hotel", "mall"],
+  "blockedCategories": ["cafe", "cinema", "food", "hotel", "mall"],
   "minIndexablePlaces": 4
 }

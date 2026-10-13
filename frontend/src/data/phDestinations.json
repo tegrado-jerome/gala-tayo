@@ -1293,6 +1293,19 @@
                 120.3852
               ],
               "aliases": []
+            },
+            {
+              "slug": "pilar-bataan",
+              "name": "Pilar, Bataan",
+              "type": "municipality",
+              "center": [
+                14.67,
+                120.57
+              ],
+              "aliases": [
+                "Pilar Bataan",
+                "Pilar (Bataan)"
+              ]
             }
           ]
         },

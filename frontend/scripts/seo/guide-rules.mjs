@@ -1,6 +1,7 @@
 // Which guides the discovery bot may create. The rules live in src/data/guideRules.json so the app
-// reads the same ones: cinemas, hotels and malls are never a gala-worthy guide topic (an iconic mall
-// is a place page, not a "Malls in X" list), and a guide needs enough visible places to be indexed.
+// reads the same ones: cinemas, hotels, malls, cafes and restaurants are never a gala-worthy guide topic (an
+// iconic mall or cafe is a place page, not a "Cafes in X" list; trip-worthy eats get a food-trip guide),
+// and a guide needs enough visible places to be indexed.
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

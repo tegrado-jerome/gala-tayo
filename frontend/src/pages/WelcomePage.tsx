@@ -84,7 +84,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
     <>
       <SeoHead
         title={`Discover the Best Places Around the Philippines | ${BRAND_NAME}`}
-        description={`${BRAND_NAME} helps you discover the best places around the Philippines by city, category, budget and vibe, with AI help to plan your next trip.`}
+        description={`${BRAND_NAME} helps you discover the best places around the Philippines by city, vibe and budget, with AI help to plan your next trip.`}
         robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"

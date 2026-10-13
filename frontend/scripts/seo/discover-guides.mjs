@@ -20,18 +20,17 @@ const STRONG_TREND_SEARCHES = 1000
 const minPlaces = 6
 const TREND_DAYS = trendingOnly ? 2 : 14
 
+// No cafe or restaurant lists: guides are for trips, so food stays a food trip (see guide-rules.mjs).
 const INTENTS = [
   { goodFor: 'date', phrases: ['date spots in {c}', 'date places in {c}', 'date ideas in {c}'] },
   { goodFor: 'family', phrases: ['family friendly places in {c}', 'family outing in {c}'] },
   { goodFor: 'barkada', phrases: ['barkada hangout in {c}', 'tambayan sa {c}'] },
   { goodFor: 'chill', phrases: ['chill places in {c}', 'chill spots in {c}'] },
-  { goodFor: 'study', phrases: ['study cafe in {c}', 'study spots in {c}'] },
+  { goodFor: 'study', phrases: ['study spots in {c}'] },
   { goodFor: 'rainy-day', phrases: ['indoor activities in {c}', 'rainy day date ideas in {c}'] },
-  { goodFor: 'food-trip', phrases: ['food trip in {c}', 'where to eat in {c}'] },
+  { goodFor: 'food-trip', phrases: ['food trip in {c}'] },
   { goodFor: 'photo-spot', phrases: ['instagrammable places in {c}', 'photo spots in {c}'] },
   { goodFor: 'free', phrases: ['free things to do in {c}'] },
-  { category: 'cafe', phrases: ['cafes in {c}', 'coffee shops in {c}'] },
-  { category: 'food', phrases: ['restaurants in {c}', 'saan masarap kumain sa {c}'] },
   { category: 'museum', phrases: ['museums in {c}'] },
   { category: 'park', phrases: ['parks in {c}'] },
   { category: 'heritage', phrases: ['historical places in {c}', 'heritage sites in {c}'] },

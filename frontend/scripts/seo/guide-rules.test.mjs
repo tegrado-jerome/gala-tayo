@@ -6,21 +6,22 @@ import { BLOCKED_GUIDE_CATEGORIES, MIN_INDEXABLE_GUIDE_PLACES, canCreateGuide, i
 const guides = JSON.parse(readFileSync(new URL('../../src/data/seoGuides.json', import.meta.url), 'utf8'))
 const hidden = JSON.parse(readFileSync(new URL('../../src/data/galaWorthy.json', import.meta.url), 'utf8')).hidden
 
-test('cinemas, hotels and malls never become guides, however many places they have', () => {
-  for (const category of ['cinema', 'hotel', 'mall', 'Mall']) {
+test('cinemas, hotels, malls, cafes and restaurants never become guides, however many places they have', () => {
+  for (const category of ['cinema', 'hotel', 'mall', 'Mall', 'cafe', 'food']) {
     assert.equal(isAllowedGuideTopic({ category }), false, category)
     assert.equal(canCreateGuide({ category }, 50), false, category)
   }
   assert.equal(canCreateGuide({ category: 'museum' }, 6, 6), true)
   assert.equal(canCreateGuide({ goodFor: 'date' }, 6, 6), true)
+  assert.equal(canCreateGuide({ goodFor: 'food-trip' }, 6, 6), true)
 })
 
 test('a guide needs at least the indexable minimum of visible places', () => {
-  assert.equal(canCreateGuide({ category: 'cafe' }, MIN_INDEXABLE_GUIDE_PLACES - 1), false)
-  assert.equal(canCreateGuide({ category: 'cafe' }, MIN_INDEXABLE_GUIDE_PLACES), true)
+  assert.equal(canCreateGuide({ category: 'museum' }, MIN_INDEXABLE_GUIDE_PLACES - 1), false)
+  assert.equal(canCreateGuide({ category: 'museum' }, MIN_INDEXABLE_GUIDE_PLACES), true)
   // A lower bot threshold never undercuts the indexable minimum; a higher one wins.
-  assert.equal(canCreateGuide({ category: 'cafe' }, MIN_INDEXABLE_GUIDE_PLACES - 1, 1), false)
-  assert.equal(canCreateGuide({ category: 'cafe' }, 5, 6), false)
+  assert.equal(canCreateGuide({ category: 'museum' }, MIN_INDEXABLE_GUIDE_PLACES - 1, 1), false)
+  assert.equal(canCreateGuide({ category: 'museum' }, 5, 6), false)
 })
 
 test('hidden places do not count toward a guide', () => {
@@ -31,6 +32,9 @@ test('hidden places do not count toward a guide', () => {
 test('seoGuides.json has no guide for a blocked category', () => {
   const blocked = guides.filter((guide) => BLOCKED_GUIDE_CATEGORIES.has(guide.category))
   assert.deepEqual(blocked.map((guide) => guide.slug), [])
+  // Food trips stay; plain cafe and restaurant lists do not.
+  const eatingLists = guides.filter((guide) => /cafe|restaurant|where-to-eat|kainan|cheap-eats/.test(guide.slug))
+  assert.deepEqual(eatingLists.map((guide) => guide.slug), [])
 })
 
 test('written guides link only visible places they list, and cite sources', () => {

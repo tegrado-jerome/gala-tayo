@@ -622,8 +622,8 @@ function PlaceDetailView({
   const hdGallery = usePlaceGalleryPhotos(cleanString(place.slug) || null)
   const hdPhotos = hdGallery ?? []
   const extras = usePlaceExtras(cleanString(place.slug) || null)
-  // Wikipedia isn't shown as a source: only official, news and travel-authority links.
-  const credibleSources = (extras.sources ?? []).filter((url) => !/wiki(pedia|voyage)\.org/i.test(url))
+  // Wikipedia isn't shown as a source: only official, news and travel-authority links, one per site.
+  const credibleSources = (extras.sources ?? []).filter((url, index, all) => !/wiki(pedia|voyage)\.org/i.test(url) && all.findIndex((other) => sourceLabel(other) === sourceLabel(url)) === index)
   useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
   // Own uploads wait for the manifest too: in the prerendered grid they'd take an HD photo's tile (often an old, deleted file).

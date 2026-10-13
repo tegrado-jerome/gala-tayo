@@ -39,12 +39,9 @@ const HOME_GUIDES = [
   'things-to-do-in-cebu-city',
   'museums-in-manila',
   'things-to-do-in-el-nido',
-  'restaurants-in-metro-manila',
-  'where-to-eat-in-baguio',
-  'cheap-eats-in-manila',
-  'restaurants-in-quezon-city',
+  'food-trip-in-metro-manila',
+  'food-trip-in-makati',
 ]
-const FOOD_CATEGORIES = new Set(['food', 'cafe'])
 // Food has its own tab on Home, so the Things to do chips leave it out instead of repeating it.
 const THINGS_TO_DO_VIBES = vibes.filter((vibe) => vibe.id !== 'food-trip')
 // Guides outside Metro Manila, listed by name until their places have photos for a cover.
@@ -224,7 +221,7 @@ function WeekdayCard({ places }: { places: PlaceDetail[] }) {
   )
 }
 
-type GuideCover = { slug: string; label: string; category: string | null; photo: string; total: number }
+type GuideCover = { slug: string; label: string; goodFor: string | null; photo: string; total: number }
 
 let guideCoversRequest: Promise<GuideCover[]> | null = null
 
@@ -237,7 +234,7 @@ function loadGuideCovers() {
       const page = await getSeoListingPage({ areaSlug: target.areaSlug ?? null, category: target.category ?? null, goodFor: target.goodFor ?? null, page: 1, pageSize: 10 }).catch(() => null)
       if (!page || page.total < MIN_INDEXABLE_GUIDE_PLACES) return null
       const photo = page.items.map((item) => photoFor(item.slug)).find(Boolean) || page.items.find((item) => item.imageUrl)?.imageUrl
-      return photo ? { slug, label: target.label, category: target.category ?? null, photo, total: page.total } : null
+      return photo ? { slug, label: target.label, goodFor: target.goodFor ?? null, photo, total: page.total } : null
     }),
   ).then((covers) => covers.filter((cover): cover is GuideCover => cover !== null))
   return guideCoversRequest
@@ -330,7 +327,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
     const bySlug = new Map((pickDetails ?? []).map((place) => [place.slug, place]))
     return railSlugs.map((slug) => bySlug.get(slug)).filter((place): place is PlaceDetail => Boolean(place)).map(toPhotoCardPlace)
   }, [pickDetails])
-  const foodGuides = useMemo(() => guideCovers && guideCovers.filter((cover) => cover.category && FOOD_CATEGORIES.has(cover.category)), [guideCovers])
+  const foodGuides = useMemo(() => guideCovers && guideCovers.filter((cover) => cover.goodFor === 'food-trip'), [guideCovers])
 
   return (
     <div className={cx('min-w-0', className)}>

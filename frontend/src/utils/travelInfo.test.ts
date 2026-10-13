@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { defaultForeignCurrency, foreignRateNote, formatForeignAmount, hasPesoAmount, withForeignPrice } from './travelInfo.ts'
+import { defaultForeignCurrency, foreignRateNote, formatForeignAmount, hasPesoAmount, uniqueSourceHosts, withForeignPrice } from './travelInfo.ts'
 
 test('Philippine browsers keep PHP only', () => {
   assert.equal(defaultForeignCurrency(['en-PH', 'en-US']), null)
@@ -42,4 +42,12 @@ test('leaves text alone when no foreign currency is wanted or there is no amount
 
 test('the rate note names the rate and its date', () => {
   assert.equal(foreignRateNote('USD'), 'Approximate, at US$1 ≈ ₱62.8 (rate as of 9 Oct 2026). Pay in pesos.')
+})
+
+test('lists each source site once, linked to its first page', () => {
+  const urls = ['https://www.tourism.gov.ph/a', 'https://tourism.gov.ph/b', 'https://news.example.ph/x', 'not a url', 'https://news.example.ph/y']
+  assert.deepEqual(uniqueSourceHosts(urls), [
+    { url: 'https://www.tourism.gov.ph/a', host: 'tourism.gov.ph' },
+    { url: 'https://news.example.ph/x', host: 'news.example.ph' },
+  ])
 })
