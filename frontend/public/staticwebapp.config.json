@@ -327,6 +327,16 @@
       "statusCode": 301
     },
     {
+      "route": "/places/olongapo/mount-samat-shrine-bataan",
+      "redirect": "/places/pilar-bataan/mount-samat-shrine-bataan",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/uyugan/marlboro-country-racuh-a-payaman-batanes",
+      "redirect": "/places/mahatao/marlboro-country-racuh-a-payaman-batanes",
+      "statusCode": 301
+    },
+    {
       "route": "/guides/mall-shopping-in-pasig",
       "redirect": "/places/pasig",
       "statusCode": 301
@@ -354,6 +364,56 @@
     {
       "route": "/guides/malls-in-makati",
       "redirect": "/places/makati",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/best-cafes-in-makati",
+      "redirect": "/places/makati",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/cafes-in-metro-manila",
+      "redirect": "/places/metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/cheap-eats-in-manila",
+      "redirect": "/guides/food-trip-in-metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/kainan-sa-bgc",
+      "redirect": "/guides/food-trip-in-metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/restaurants-in-metro-manila",
+      "redirect": "/guides/food-trip-in-metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/restaurants-in-quezon-city",
+      "redirect": "/guides/food-trip-in-metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/study-cafes-in-manila",
+      "redirect": "/places/manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/study-cafes-in-metro-manila",
+      "redirect": "/places/metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/where-to-eat-in-baguio",
+      "redirect": "/places/baguio",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/where-to-eat-in-makati",
+      "redirect": "/guides/food-trip-in-makati",
       "statusCode": 301
     },
     {

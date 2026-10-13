@@ -6,7 +6,7 @@ import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { Ticket } from '@phosphor-icons/react/dist/csr/Ticket'
 import { TShirt } from '@phosphor-icons/react/dist/csr/TShirt'
 import type { ForeignCurrency } from '../../data/fxRates'
-import { foreignRateNote, sourceHost, withForeignPrice, type TravelInfo } from '../../utils/travelInfo'
+import { foreignRateNote, uniqueSourceHosts, withForeignPrice, type TravelInfo } from '../../utils/travelInfo'
 
 type Line = { label?: string; text: string | undefined; warn?: boolean }
 type Row = { key: string; icon: PhosphorIcon; title: string; lines: Line[] }
@@ -63,7 +63,7 @@ export default function TravelEssentials({ info, currency }: { info: TravelInfo;
   if (rows.length === 0) return null
 
   const sources = [info.getting_there, info.money, info.fees, info.seasons, info.safety, info.dress].flatMap((section) => section?.sources ?? [])
-  const uniqueSources = [...new Set(sources)].map((url) => ({ url, host: sourceHost(url) })).filter((source): source is { url: string; host: string } => Boolean(source.host))
+  const uniqueSources = uniqueSourceHosts(sources)
   const checked = formatChecked(info.checked)
 
   return (
