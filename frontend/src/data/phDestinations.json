@@ -2352,6 +2352,19 @@
               "aliases": [
                 "Pio Duran, Albay"
               ]
+            },
+            {
+              "slug": "malinao-albay",
+              "name": "Malinao",
+              "type": "municipality",
+              "center": [
+                13.3974574,
+                123.7049776
+              ],
+              "aliases": [
+                "Malinao, Albay",
+                "Vera Falls"
+              ]
             }
           ]
         },
@@ -2394,6 +2407,20 @@
               "aliases": [
                 "Bulusan, Sorsogon",
                 "Bulusan Lake"
+              ]
+            },
+            {
+              "slug": "sorsogon-city",
+              "name": "Sorsogon City",
+              "type": "city",
+              "center": [
+                12.9711469,
+                124.0014783
+              ],
+              "aliases": [
+                "Sorsogon City, Sorsogon",
+                "Bacon",
+                "Bacon, Sorsogon"
               ]
             }
           ]
@@ -2447,6 +2474,21 @@
               "aliases": [
                 "Siruma, Camarines Sur"
               ]
+            },
+            {
+              "slug": "sagnay",
+              "name": "Sagñay",
+              "type": "municipality",
+              "center": [
+                13.6044805,
+                123.5216164
+              ],
+              "aliases": [
+                "Sagnay",
+                "Sagñay, Camarines Sur",
+                "Sagnay, Camarines Sur",
+                "Atulayan Island"
+              ]
             }
           ]
         },
@@ -2493,6 +2535,20 @@
               "aliases": [
                 "Bato Catanduanes",
                 "Bato (Catanduanes)"
+              ]
+            },
+            {
+              "slug": "virac",
+              "name": "Virac",
+              "type": "municipality",
+              "center": [
+                13.5803594,
+                124.2312028
+              ],
+              "aliases": [
+                "Virac, Catanduanes",
+                "Twin Rock",
+                "Igang"
               ]
             }
           ]
@@ -2559,6 +2615,35 @@
               "aliases": [
                 "Daet, Camarines Norte",
                 "Bagasbas"
+              ]
+            },
+            {
+              "slug": "mercedes-camarines-norte",
+              "name": "Mercedes, Camarines Norte",
+              "type": "municipality",
+              "center": [
+                14.1094447,
+                123.0093071
+              ],
+              "aliases": [
+                "Mercedes Camarines Norte",
+                "Mercedes (Camarines Norte)",
+                "Apuao Grande"
+              ]
+            },
+            {
+              "slug": "vinzons",
+              "name": "Vinzons",
+              "type": "municipality",
+              "center": [
+                14.1739546,
+                122.907596
+              ],
+              "aliases": [
+                "Vinzons, Camarines Norte",
+                "Calaguas",
+                "Calaguas Island",
+                "Calaguas Islands"
               ]
             }
           ]
