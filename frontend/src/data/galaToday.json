@@ -1,5 +1,69 @@
 [
  {
+  "slug": "metro-manila-photo-spots-starter-pack",
+  "date": "2026-10-13",
+  "publishedAt": "2026-10-13T03:19:06.600Z",
+  "format": "starter-pack",
+  "sticker": "Starter Pack",
+  "title": "Metro Manila Photo Spots Starter Pack",
+  "hook": "Clear your phone storage right now: these indoor corners are ready to test your battery life!",
+  "body": "Pack the power bank and head out before afternoon showers roll in! Start inside Art in Island to pose across 3,800 square meters of 3D murals. Head over to Bahay Modernismo for free retro photos in a rebuilt mid-century modern bungalow. Then wrap up inside Casa Manila to snap the grand sala through classic capiz windows. Go get your Tuesday photo dump today!",
+  "meme": {
+   "top": "Said we would only take five pictures",
+   "bottom": "Now we are running from 100 murals"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "Metro Manila photo spots",
+   "query": "Metro Manila photo spots",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 4–7 PM",
+  "area": "Metro Manila",
+  "leadSlug": "casa-manila",
+  "picks": [
+   {
+    "slug": "art-in-island",
+    "name": "Art in Island",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/art-in-island",
+    "why": "Climb into around 100 optical-illusion murals across two storeys. Good luck keeping your phone alive!",
+    "budgetMin": 850
+   },
+   {
+    "slug": "bahay-modernismo-quezon-city",
+    "name": "Bahay Modernismo",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/bahay-modernismo-quezon-city",
+    "why": "Pose by a vintage car and retro TVs in a rebuilt mid-century bungalow. Admission is completely free!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "casa-manila",
+    "name": "Casa Manila",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/casa-manila",
+    "why": "Step inside an 1850s Binondo-style house design with capiz windows and a grand sala for just ₱75.",
+    "budgetMin": 75
+   }
+  ],
+  "items": [
+   "A fully charged power bank",
+   "Cleared phone storage",
+   "A friend who crouches for angles",
+   "An umbrella for 4 PM showers"
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "metro-manila-in-one-day",
   "date": "2026-10-12",
   "publishedAt": "2026-10-11T22:30:01.930Z",
