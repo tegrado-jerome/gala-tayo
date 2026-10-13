@@ -1019,6 +1019,30 @@
               "aliases": [
                 "Porac, Pampanga"
               ]
+            },
+            {
+              "slug": "lubao",
+              "name": "Lubao",
+              "type": "municipality",
+              "center": [
+                14.9378,
+                120.6005
+              ],
+              "aliases": [
+                "Lubao, Pampanga"
+              ]
+            },
+            {
+              "slug": "bacolor",
+              "name": "Bacolor",
+              "type": "municipality",
+              "center": [
+                14.9966,
+                120.6514
+              ],
+              "aliases": [
+                "Bacolor, Pampanga"
+              ]
             }
           ]
         },
@@ -1077,6 +1101,19 @@
               "aliases": [
                 "Palauig, Zambales",
                 "Magalawa Island"
+              ]
+            },
+            {
+              "slug": "candelaria-zambales",
+              "name": "Candelaria, Zambales",
+              "type": "municipality",
+              "center": [
+                15.6271,
+                119.9301
+              ],
+              "aliases": [
+                "Candelaria Zambales",
+                "Candelaria (Zambales)"
               ]
             }
           ]
@@ -1199,6 +1236,18 @@
               "aliases": [
                 "Maria Aurora, Aurora"
               ]
+            },
+            {
+              "slug": "dingalan",
+              "name": "Dingalan",
+              "type": "municipality",
+              "center": [
+                15.3894,
+                121.3927
+              ],
+              "aliases": [
+                "Dingalan, Aurora"
+              ]
             }
           ]
         },
@@ -1215,6 +1264,19 @@
                 120.3503
               ],
               "aliases": []
+            },
+            {
+              "slug": "san-jose-tarlac",
+              "name": "San Jose, Tarlac",
+              "type": "municipality",
+              "center": [
+                15.4776,
+                120.464
+              ],
+              "aliases": [
+                "San Jose Tarlac",
+                "San Jose (Tarlac)"
+              ]
             }
           ]
         },
@@ -1260,6 +1322,31 @@
               ],
               "aliases": [
                 "Pantabangan, Nueva Ecija"
+              ]
+            },
+            {
+              "slug": "gapan",
+              "name": "Gapan",
+              "type": "city",
+              "center": [
+                15.3123,
+                120.9479
+              ],
+              "aliases": [
+                "Gapan City",
+                "Gapan, Nueva Ecija"
+              ]
+            },
+            {
+              "slug": "general-tinio",
+              "name": "General Tinio",
+              "type": "municipality",
+              "center": [
+                15.3501,
+                121.0498
+              ],
+              "aliases": [
+                "General Tinio, Nueva Ecija"
               ]
             }
           ]
