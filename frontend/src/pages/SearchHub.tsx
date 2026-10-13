@@ -76,6 +76,7 @@ type SearchRequestState = {
   page: number
   sort: SearchSort
   openNow: boolean
+  noCar: boolean
   location: UserLocation | null
 }
 
@@ -142,6 +143,7 @@ function SearchHub({
   const [rainSafeOnly, setRainSafeOnly] = useState(false)
   const [sort, setSort] = useState<SearchSort>('best')
   const [openNow, setOpenNow] = useState(false)
+  const [noCar, setNoCar] = useState(false)
   // Only set after the searcher taps "Near me" (here or in the search box) this visit.
   const [userLocation, setUserLocation] = useState<UserLocation | null>(() => readSearchLocation())
   const [locating, setLocating] = useState(false)
@@ -352,6 +354,7 @@ function SearchHub({
     const nextRawQuery = normalizeSearchText(nextState?.rawQuery !== undefined ? nextState.rawQuery : rawQuery)
     const nextSort = nextState?.sort ?? sort
     const nextOpenNow = nextState?.openNow ?? openNow
+    const nextNoCar = nextState?.noCar ?? noCar
     const nextLocation = nextState?.location !== undefined ? nextState.location : userLocation
     const nextCategory = nextState?.category !== undefined ? nextState.category : selectedCategory
     const nextArea = nextState?.area !== undefined ? nextState.area : selectedArea
@@ -403,6 +406,7 @@ function SearchHub({
       limit: SEARCH_RESULTS_PER_PAGE,
       sort: nextSort,
       open_now: nextOpenNow,
+      no_car: nextNoCar,
       ...(nextLocation ? { userLocation: nextLocation, radiusKm: NEAR_ME_RADIUS_KM } : {}),
       filters: {
         category: nextCategory,
@@ -445,6 +449,7 @@ function SearchHub({
       setActiveSearchLabel(nextSearchLabel)
       setSort(nextSort)
       setOpenNow(nextOpenNow)
+      setNoCar(nextNoCar)
 
       const response = await fetch(getApiUrl('/search'), {
         method: 'POST',
@@ -775,10 +780,12 @@ function SearchHub({
           className="mt-2"
           sort={sort}
           openNow={openNow}
+          noCar={noCar}
           nearMe={Boolean(userLocation)}
           locating={locating}
           onSortChange={changeSort}
           onOpenNowChange={(on) => void handleSearch({ openNow: on })}
+          onNoCarChange={(on) => void handleSearch({ noCar: on })}
           onNearMeChange={(on) => void changeNearMe(on)}
         />
       ) : null}
@@ -846,11 +853,17 @@ function SearchHub({
         <SearchEmptyState
           hasSearched={hasSearched}
           status={searchStatus}
-          message={openNow ? 'None of the places with posted hours is open right now. Turn off Open now to see everything.' : searchFeedbackMessage}
+          message={
+            openNow
+              ? 'None of the places with posted hours is open right now. Turn off Open now to see everything.'
+              : noCar
+                ? 'None of these places has a clear bus, jeep, train or ferry route yet. Turn off No car needed to see everything.'
+                : searchFeedbackMessage
+          }
           error={searchError}
           askAiQuestion={searchLabel ? `Find me ${searchLabel}` : 'Help me find a great spot in Metro Manila'}
           onSearchAgain={handleSearchAgain}
-          ideas={openNow ? [] : SEARCH_IDEAS.filter((idea) => idea !== lastSearchQuery.toLowerCase()).slice(0, 4)}
+          ideas={openNow || noCar ? [] : SEARCH_IDEAS.filter((idea) => idea !== lastSearchQuery.toLowerCase()).slice(0, 4)}
           onIdea={searchIdea}
         />
       )}

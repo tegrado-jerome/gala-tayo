@@ -487,6 +487,8 @@ export type SearchOptions = {
   now?: Date;
   /** Only places whose hours say they are open at `now` (the "Open now" chip). */
   openNow?: boolean;
+  /** Only places you can reach without a car (the "No car needed" chip). */
+  noCar?: boolean;
   /** Search around this city instead of only inside it (a city with few matches). */
   around?: string;
 };
@@ -569,7 +571,7 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
   const seen = new Set<string>();
   const terms = intent.terms.filter(([word]) => !where.has(word) && !seen.has(word) && seen.add(word));
   const openNow = intent.openNow || options.openNow === true;
-  const hasFilter = Boolean(explicit.category ?? city ?? province ?? region ?? near ?? budget ?? explicit.good_for) || openNow;
+  const hasFilter = Boolean(explicit.category ?? city ?? province ?? region ?? near ?? budget ?? explicit.good_for) || openNow || options.noCar === true;
   const named = new Set(namedPlaces(activePlaces, normalizedQuery).map((place) => place.slug));
   if (normalizedQuery && named.size === 0 && terms.length === 0 && intent.vibes.length === 0 && !hasFilter && !intent.browse) return [];
 
@@ -583,6 +585,7 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
     if (region && !region.regions.includes(resolveDestination(place.city, place.area)?.regionName ?? "")) return [];
     if (near && (away(place) > near.radiusKm || away(place) < (near.minKm ?? 0))) return [];
     if (openNow && isOpenNow(place.opening_hours, now).state !== "open") return [];
+    if (options.noCar && !vibeMatches(place, "no-car")) return [];
     let score = 0;
     for (const vibe of intent.vibes) {
       const fit = vibeScore(place, vibe);
@@ -637,6 +640,7 @@ const VIBE_LABEL: Partial<Record<VibeId, string>> = {
   date: "date spots", family: "family spots", barkada: "barkada spots", view: "viewpoints", sunset: "sunset spots",
   free: "free places", indoor: "indoor places", heritage: "heritage sites", "island-hopping": "island hopping tours",
   "theme-park": "theme parks", wildlife: "wildlife spots",
+  "no-car": "places you can reach without a car", solo: "solo-friendly places",
 };
 
 /** The words asked for, as one phrase: Tagalog doubled words read whole ("halo halo" is "halo-halo"). */

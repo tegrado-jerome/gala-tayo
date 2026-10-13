@@ -1,4 +1,5 @@
 import type { NormalizedPlace } from "./places";
+import { isNoCarSlug, isSoloSlug } from "../utils/placeTraits";
 
 // Reads what a search or Tara ask is about: the vibe ("date", "libre", "umuulan"), the kind of place
 // ("talon", "dagat", "kape") and the words left over, with Tagalog and common typos understood.
@@ -28,7 +29,9 @@ export type VibeId =
   | "night"
   | "island-hopping"
   | "theme-park"
-  | "wildlife";
+  | "wildlife"
+  | "no-car"
+  | "solo";
 
 export function foldText(value: string): string {
   return value
@@ -247,6 +250,21 @@ const VIBES: Vibe[] = [
     // Sanctuaries and conservation work first, so "ethical animal encounters" never leads with a show.
     best: (place) => hasAny(place.tags, ["ethical", "conservation", "responsible tourism", "marine sanctuary"]),
   },
+  {
+    // Places whose own commute notes name a public ride and no car (data/placeTraits.json).
+    id: "no-car",
+    phrases: [
+      "commute", "commutable", "commuter", "commuting", "by commute", "pang commute", "no car", "no car needed", "without a car", "car free",
+      "public transport", "public transportation", "walang kotse", "walang sasakyan", "walang car",
+    ],
+    matches: (place) => isNoCarSlug(place.slug),
+  },
+  {
+    // Hand-checked places that work alone, each with a reason and a caveat (data/placeTraits.json).
+    id: "solo",
+    phrases: ["solo", "solo trip", "solo travel", "solo traveler", "solo travelers", "solo traveller", "mag isa", "magisa", "by myself"],
+    matches: (place) => isSoloSlug(place.slug),
+  },
 ];
 
 // Words for a thing that places name differently: "aquarium" finds Manila Ocean Park.
@@ -318,7 +336,7 @@ const STOP_WORDS = new Set(
 const BROWSE_PHRASES = [
   "pasyalan", "pasyal", "pamasyal", "gala", "galaan", "gala spots", "lakad", "lakwatsa", "outing", "outings", "bonding",
   "tourist spot", "tourist spots", "attraction", "attractions", "sightseeing", "sights", "things to do", "must see", "must visit",
-  "places to visit", "where to go", "puntahan", "philippines", "pilipinas", "ph", "solo", "solo travel", "solo trip", "backpacking",
+  "places to visit", "where to go", "puntahan", "philippines", "pilipinas", "ph", "backpacking",
   "tambayan", "hangout", "itinerary", "getaway",
 ]
   .map(foldText)

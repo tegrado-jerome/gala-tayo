@@ -3,6 +3,8 @@ import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Wheelchair } from '@phosphor-icons/react/dist/csr/Wheelchair'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { Backpack } from '@phosphor-icons/react/dist/csr/Backpack'
+import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
+import { CalendarX } from '@phosphor-icons/react/dist/csr/CalendarX'
 import { Car } from '@phosphor-icons/react/dist/csr/Car'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
@@ -76,6 +78,9 @@ import PlaceShareSheet, { type PlaceShareView } from './share/PlaceShareSheet'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { buildPriceBadgeLabel } from '../utils/priceBadge'
+import { NO_CAR_LABEL, SOLO_LABEL, getNoCarReason, getSoloInfo, getSurgeKind } from '../utils/placeTraits'
+import { placeSurgeLine } from '../utils/holidaySurge'
+import { manilaToday } from '../utils/phHolidays'
 import PlaceHours from './place-detail/PlaceHours'
 import TravelEssentials, { PriceToggle } from './place-detail/TravelEssentials'
 import { useForeignCurrency } from '../hooks/useForeignCurrency'
@@ -1765,12 +1770,19 @@ function PlaceDetailView({
     : []
   const hoursText = cleanString(place.hours)
   const commuteSummary = place.commute_friendly && !commuteText ? 'Commute-friendly' : splitSentences(commuteText)[0] ?? ''
+  const noCarReason = getNoCarReason(place.slug)
+  const solo = getSoloInfo(place.slug)
+  const surgeLine = placeSurgeLine(manilaToday(), getSurgeKind(place.city))
   const keyFacts: Array<{ key: string; icon: PhosphorIcon; value: string; note: string; href?: string; warn?: boolean }> = [
+    { key: 'surge', icon: CalendarX, value: surgeLine ?? '', note: 'Peak week', warn: true },
     { key: 'duration', icon: Clock, value: timeNeeded, note: 'Time to spend' },
     { key: 'best-time', icon: SunHorizon, value: bestTime, note: 'Best time to go' },
     { key: 'fee', icon: Ticket, value: withForeignPrice(feeValue, foreignCurrency), note: valueText || 'Entrance and budget' },
     { key: 'hours', icon: Door, value: /^(not available|n\/a|unknown)$/i.test(hoursText) ? '' : hoursText, note: 'Opening hours' },
-    { key: 'commute', icon: Train, value: commuteSummary, note: distanceLabel || 'Getting there', href: '#getting-there' },
+    noCarReason
+      ? { key: 'commute', icon: Bus, value: noCarReason, note: NO_CAR_LABEL, href: '#getting-there' }
+      : { key: 'commute', icon: Train, value: commuteSummary, note: distanceLabel || 'Getting there', href: '#getting-there' },
+    { key: 'solo', icon: UserRound, value: solo?.why ?? '', note: SOLO_LABEL },
     { key: 'crowd', icon: UsersThree, value: titleCase(cleanString(place.crowd_level)), note: 'Crowd', warn: true },
   ].filter((fact) => fact.value)
   const highlights = buildHighlights({
@@ -1785,6 +1797,7 @@ function PlaceDetailView({
   })
   const notIdealFor = uniqueList(place.not_ideal_for ?? []).map((value) => value.toLowerCase())
   const knowBefore: Array<{ key: string; icon: PhosphorIcon; text: string }> = [
+    { key: 'solo', icon: UserRound, text: solo ? `Going solo: ${solo.caveat}` : '' },
     ...(extras.safetyTips ?? []).map((text, index) => ({ key: `safety-${index}`, icon: ShieldCheck, text })),
     { key: 'parking', icon: Car, text: cleanString(place.parking_info) },
     { key: 'budget', icon: Wallet, text: withForeignPrice(cleanString(place.budget_notes), foreignCurrency) },
@@ -2349,7 +2362,7 @@ function PlaceDetailView({
                 </Button>
               </div>
             </div>
-            {hasHeadlineScore || isTopPick || place.status === 'Closed' ? (
+            {hasHeadlineScore || isTopPick || noCarReason || solo || place.status === 'Closed' ? (
               <div className="pd-rr">
                 {hasHeadlineScore ? (
                   <button type="button" onClick={() => scrollToSection('reviews')} className="pd-rr-score">
@@ -2366,6 +2379,8 @@ function PlaceDetailView({
                     GalaTayo Pick
                   </span>
                 ) : null}
+                {noCarReason ? <Tag title={noCarReason}>{NO_CAR_LABEL}</Tag> : null}
+                {solo ? <Tag title={solo.why}>{SOLO_LABEL}</Tag> : null}
                 {place.status === 'Closed' ? <span className="pd-closed">Closed</span> : null}
               </div>
             ) : null}
@@ -2509,7 +2524,7 @@ function PlaceDetailView({
               <p className="pd-commute">
                 <Train weight="light" aria-hidden="true" />
                 <span>
-                  <b>{place.commute_friendly ? 'Commute-friendly' : 'By commute'}</b>
+                  <b>{noCarReason ? NO_CAR_LABEL : place.commute_friendly ? 'Commute-friendly' : 'By commute'}</b>
                   {commuteText}
                 </span>
               </p>

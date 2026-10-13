@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { BookOpenText } from '@phosphor-icons/react/dist/csr/BookOpenText'
+import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
 import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { NavigationArrow } from '@phosphor-icons/react/dist/csr/NavigationArrow'
@@ -18,6 +19,7 @@ import { openFloatingChat } from '../../../utils/floatingChat'
 import { SEARCH_RESULTS_PER_PAGE, type BackendSearchStatus, type MobileResultsViewMode } from '../homeHelpers'
 import type { SearchBudgetValue } from '../../../utils/searchParams'
 import type { SearchShortcut } from '../../../utils/searchAssist'
+import { NO_CAR_LABEL } from '../../../utils/placeTraits'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 const QUICK_CITY_IDS = ['baguio', 'cebu-city', 'makati']
@@ -221,23 +223,27 @@ function QuickFilterChips({
 type SearchSort = 'best' | 'cheapest' | 'nearest'
 const SORT_LABELS: Record<SearchSort, string> = { best: 'Best match', cheapest: 'Cheapest', nearest: 'Nearest' }
 
-/** Near me, open now and the sort order, one tap each (Google Maps style). Location is asked for only on a tap. */
+/** Near me, open now, no car and the sort order, one tap each (Google Maps style). Location is asked for only on a tap. */
 function ResultControls({
   sort,
   openNow,
+  noCar,
   nearMe,
   locating,
   onSortChange,
   onOpenNowChange,
+  onNoCarChange,
   onNearMeChange,
   className,
 }: {
   sort: SearchSort
   openNow: boolean
+  noCar: boolean
   nearMe: boolean
   locating: boolean
   onSortChange: (sort: SearchSort) => void
   onOpenNowChange: (on: boolean) => void
+  onNoCarChange: (on: boolean) => void
   onNearMeChange: (on: boolean) => void
   className?: string
 }) {
@@ -250,6 +256,10 @@ function ResultControls({
       <Chip on={openNow} onClick={() => onOpenNowChange(!openNow)}>
         <Clock aria-hidden="true" />
         Open now
+      </Chip>
+      <Chip on={noCar} onClick={() => onNoCarChange(!noCar)}>
+        <Bus aria-hidden="true" />
+        {NO_CAR_LABEL}
       </Chip>
       {(Object.keys(SORT_LABELS) as SearchSort[]).map((value) => (
         <Chip key={value} on={sort === value} onClick={() => onSortChange(value)}>

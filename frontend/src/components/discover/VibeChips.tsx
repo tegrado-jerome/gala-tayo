@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Bank } from '@phosphor-icons/react/dist/csr/Bank'
 import { BowlFood } from '@phosphor-icons/react/dist/csr/BowlFood'
+import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
+import { Backpack } from '@phosphor-icons/react/dist/csr/Backpack'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { Island } from '@phosphor-icons/react/dist/csr/Island'
 import { Mountains } from '@phosphor-icons/react/dist/csr/Mountains'
@@ -20,6 +22,8 @@ export const vibeIcons: Record<VibeId, PhosphorIcon> = {
   adventure: PersonSimpleHike,
   'food-trip': BowlFood,
   'rainy-day': CloudRain,
+  'no-car': Bus,
+  solo: Backpack,
 }
 
 type VibeChipsProps = {

@@ -47,6 +47,9 @@ import { buildGalaPlanInviteUrl } from '../../utils/share'
 import { bestDate, formatDateChoice, inviteMessage, joinNames, lockedDate, replyNames, splitPolls } from '../../utils/barkadaVotes'
 import { trackInviteShared, trackShare } from '../../utils/analytics'
 import { withShareRef } from '../../utils/shareRef'
+import { surgeLineOn } from '../../utils/holidaySurge'
+import { getSurgeKind } from '../../utils/placeTraits'
+import SurgeNote from '../SurgeNote'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
 
@@ -305,6 +308,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const storyStop = plan.items[0]?.place
   const lastStop = plan.items[plan.items.length - 1]
   const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
+  const surgeNote = surgeLineOn(
+    date ? { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() } : null,
+    plan.items.map((item) => getSurgeKind(item.place.city)),
+  )
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
   const hasRoute = plan.items.some((item) => item.place.latitude != null && item.place.longitude != null)
   const votes = readyBarkada ? splitPolls(readyBarkada.polls) : null
@@ -619,6 +626,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               onSwap={plan.viewer_is_owner ? swapToIndoor : undefined}
             />
           ) : null}
+          {surgeNote ? <SurgeNote text={surgeNote} className="mt-3" /> : null}
           {description ? <p className="mt-3 max-w-[65ch] text-[15px] leading-relaxed">{description}</p> : null}
           {notice ? <p role="status" className="g-sm mt-3 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{notice}</p> : null}
 

@@ -23,6 +23,7 @@ export type SearchRequestBody = {
   strictPlaceSearch?: unknown;
   sort?: unknown;
   open_now?: unknown;
+  no_car?: unknown;
   tags?: unknown;
   price_level?: unknown;
   max_budget?: unknown;

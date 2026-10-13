@@ -1,11 +1,16 @@
 import galaWorthy from '../data/galaWorthy.json'
+import { getNoCarReason, getSoloInfo } from './placeTraits'
 import { getSeoPlaces, type SeoPlaceSummary } from './seoApi'
 
-export type CompactPlace = Pick<SeoPlaceSummary, 'id' | 'slug' | 'name' | 'category' | 'area' | 'city' | 'areaSlug' | 'goodFor' | 'budgetMin' | 'canonicalPath' | 'imageUrl'>
+export type CompactPlace = Pick<SeoPlaceSummary, 'id' | 'slug' | 'name' | 'category' | 'area' | 'city' | 'areaSlug' | 'goodFor' | 'budgetMin' | 'canonicalPath' | 'imageUrl'> & {
+  noCar?: boolean
+  solo?: boolean
+}
 
 // The daily /data snapshot can lag behind curation, so hidden places are dropped here too.
 const hiddenSlugs = new Set((galaWorthy as { hidden: string[] }).hidden)
-const onlyWorthy = (places: CompactPlace[]) => places.filter((place) => !hiddenSlugs.has(place.slug))
+const onlyWorthy = (places: CompactPlace[]) =>
+  places.filter((place) => !hiddenSlugs.has(place.slug)).map((place) => ({ ...place, noCar: getNoCarReason(place.slug) !== null, solo: getSoloInfo(place.slug) !== null }))
 
 let compactPlacesRequest: Promise<CompactPlace[]> | null = null
 

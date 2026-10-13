@@ -1,6 +1,6 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { formatPricePerHead, formatVisitDuration, getCategoryIcon } from '../PlaceCard'
-import { PlaceCard, Tag } from '../ui'
+import { cardFlag, formatPricePerHead, formatVisitDuration, getCategoryIcon } from '../PlaceCard'
+import { PlaceCard } from '../ui'
 import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { isGalaTayoPick } from '../../data/galaTayoPicks'
@@ -116,7 +116,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         duration={formatVisitDuration(place.duration)}
         pricePerHead={formatPricePerHead(place.budgetMin)}
         pick={isGalaTayoPick(place.slug)}
-        flag={badge ? <Tag tone="solid">{badge}</Tag> : null}
+        flag={cardFlag(badge ?? null, place.slug)}
         selected={isSelected}
         saved={isSaved}
         onToggleSave={() => void toggleSave()}

@@ -1,0 +1,397 @@
+{
+ "noCar": {
+  "aguinaldo-shrine-kawit": "Bus or jeep gets you there",
+  "aguinid-falls-samboan": "Bus gets you there",
+  "alibijaban-island-san-andres": "Bus or van, plus a boat",
+  "anawangin-cove-zambales": "Bus, plus a boat",
+  "anilao-mabini-batangas": "Bus or jeep, then a tricycle",
+  "aninuan-beach-puerto-galera": "Bus, plus a ferry",
+  "antipolo-cathedral-international-shrine": "Train or jeep, then a short ride",
+  "apo-island-dauin": "Jeep or van, plus a boat",
+  "aqua-planet-mabalacat": "Bus gets you there",
+  "art-in-island": "Train, then a short walk",
+  "ayala-museum": "Train, then a short walk",
+  "ayala-triangle-gardens": "Train or bus, then a short ride",
+  "badoc-island": "Bus, plus a boat",
+  "bagasbas-beach-daet": "Bus, then a tricycle",
+  "baguio-public-market": "Jeep, then a short walk",
+  "bahay-modernismo-quezon-city": "Train or jeep, then a short ride",
+  "balabac-island-hopping": "Ferry, then a boat",
+  "bangui-windmills-ilocos-norte": "Bus, then a tricycle",
+  "bantay-abot-cave-pagudpud": "Bus, then a tricycle",
+  "barasoain-church-malolos": "Bus or jeep, then a tricycle",
+  "basilica-del-santo-nino-cebu": "Jeep gets you there",
+  "batad-rice-terraces-banaue": "Bus or jeep, then a tricycle",
+  "bell-church-la-trinidad": "Jeep gets you there",
+  "bencab-museum-tuba": "Jeep gets you there",
+  "betis-church-guagua": "Jeep gets you there",
+  "biak-na-bato-national-park-bulacan": "Bus, then a tricycle",
+  "binondo-chinatown": "Train or jeep, then a short ride",
+  "bolinao-falls-bolinao": "Bus, then a tricycle",
+  "bomod-ok-falls-sagada": "Jeep or van gets you there",
+  "bonbon-beach-romblon": "Bus, plus a ferry",
+  "borawan-island-padre-burgos": "Bus or van, plus a boat",
+  "britania-islands-san-agustin": "Bus, plus a boat",
+  "bulusan-lake-bulusan": "Bus or jeep, then a tricycle",
+  "burias-island-hopping-san-pascual": "Bus or jeep, plus a ferry",
+  "burnham-park-baguio": "Bus, then a short walk",
+  "buruwisan-falls-mount-romelo-siniloan": "Bus or jeep, then a tricycle",
+  "cabongaoan-beach-burgos": "Bus, then a tricycle",
+  "cagbalete-island-mauban": "Bus or van, plus a ferry",
+  "cagsawa-ruins-daraga": "Bus or jeep, then a tricycle",
+  "calauit-safari-park-busuanga": "Van, plus a boat",
+  "calicoan-island-surf-guiuan": "Bus or van, then a tricycle",
+  "calle-crisologo-vigan": "Bus, then a tricycle",
+  "cambugahay-falls-lazi": "Ferry, then a tricycle",
+  "camp-john-hay-baguio": "Jeep gets you there",
+  "camsur-watersports-complex-pili": "Bus or jeep, then a tricycle",
+  "canigao-island-matalom-leyte": "Bus or van, plus a boat",
+  "cape-bojeador-lighthouse-burgos": "Bus, then a tricycle",
+  "carabao-island-san-jose-romblon": "Ferry, then a boat",
+  "caramoan-island-hopping": "Bus or van, plus a boat",
+  "carnaza-island-daanbantayan": "Bus, plus a ferry",
+  "casa-manila": "Train or jeep, then a short walk",
+  "casapsapan-beach-casiguran": "Bus or van, then a tricycle",
+  "chocolate-hills-carmen": "Bus gets you there",
+  "cloud-9-antipolo": "Train or jeep, then a short ride",
+  "cloud-9-siargao": "Van, then a tricycle",
+  "concepcion-islands-iloilo": "Bus or van, plus a boat",
+  "corregidor-island-cavite-city": "Bus or van, plus a boat",
+  "cresta-de-gallo-san-fernando-romblon": "Van, plus a ferry",
+  "crosswinds-tagaytay": "Bus or jeep gets you there",
+  "cuatro-islas-inopacan": "Bus or van, plus a boat",
+  "cubao-expo": "Train, then a short walk",
+  "dagisdis-ng-maragondon": "Bus, then a tricycle",
+  "dahican-beach-mati": "Bus or van, then a tricycle",
+  "daraga-church-albay": "Jeep, then a tricycle",
+  "daranak-falls-tanay": "Jeep or van, then a tricycle",
+  "donsol-whale-shark-interaction": "Van, then a tricycle",
+  "dragon-treasure-castle-baguio": "Jeep, then a short walk",
+  "dupinga-river-gabaldon": "Bus or jeep, then a tricycle",
+  "el-nido-tour-a-lagoons": "Van gets you there",
+  "enchanted-kingdom-santa-rosa-laguna": "Bus or van gets you there",
+  "esmeris-farm-liliw": "Jeep, then a tricycle",
+  "forest-camp-valencia": "Jeep, then a tricycle",
+  "fort-santiago": "Train or jeep, then a short walk",
+  "fortune-island-nasugbu": "Bus, plus a boat",
+  "gallery-by-chele": "Bus, then a short walk",
+  "garin-farm-san-joaquin": "Bus or jeep gets you there",
+  "good-shepherd-convent-baguio": "Jeep, then a short walk",
+  "guimaras-island-hopping-alubihod": "Jeep, plus a boat",
+  "hagimit-falls-samal": "Ferry, then a tricycle",
+  "halo-halo-de-iloko-san-fernando-la-union": "Jeep, then a tricycle",
+  "hapao-rice-terraces-hungduan": "Bus or jeep, then a tricycle",
+  "helm": "Train, then a short walk",
+  "hinatuan-enchanted-river": "Bus or van, then a tricycle",
+  "honda-bay-island-hopping-puerto-princesa": "Van, then a tricycle",
+  "hulugan-falls-luisiana": "Bus or jeep, then a tricycle",
+  "hundred-islands-national-park-alaminos": "Bus, then a tricycle",
+  "imeldas-garden-cuenca": "Jeep, then a tricycle",
+  "immuki-island-balaoan": "Bus or jeep, then a tricycle",
+  "inato": "Train, then a short ride",
+  "infinity-farm-baco": "Jeep, then a tricycle",
+  "intramuros": "Train or bus, then a short walk",
+  "islas-de-gigantes-carles": "Bus or van, plus a boat",
+  "jones-bridge": "Bus or jeep, then a short walk",
+  "jovellar-underground-river": "Jeep or van, then a tricycle",
+  "kalanggaman-island-palompon": "Bus or van, plus a boat",
+  "kapangan-day-tour-benguet": "Jeep gets you there",
+  "kapurpurawan-rock-formation-burgos": "Bus, then a tricycle",
+  "kasa-palma": "Train, then a short ride",
+  "katibawasan-falls-camiguin": "Jeep, then a tricycle",
+  "kawasan-falls-badian": "Bus, then a tricycle",
+  "kayangan-lake-coron": "Van, plus a boat",
+  "kayapa-quad-peak": "Bus or jeep gets you there",
+  "kota-beach-bantayan": "Bus, plus a ferry",
+  "la-trinidad-strawberry-farm": "Jeep gets you there",
+  "laiya-beach-san-juan-batangas": "Bus or jeep, then a tricycle",
+  "lakawon-island-cadiz": "Bus, plus a boat",
+  "las-casas-filipinas-de-acuzar-bagac": "Bus or jeep, then a tricycle",
+  "limasawa-island": "Bus or jeep, plus a ferry",
+  "linapacan-islands-palawan": "Van, plus a boat",
+  "little-boracay-sandbar-calatagan": "Bus, then a tricycle",
+  "lucban-pahiyas-town": "Bus or jeep gets you there",
+  "luna-pebble-beach-baluarte-watchtower": "Bus, then a tricycle",
+  "luzon-datum-balanacan-view-deck-mogpog": "Van, plus a ferry",
+  "ma-cho-temple-san-fernando-la-union": "Jeep, then a tricycle",
+  "magalawa-island-palauig": "Bus, plus a boat",
+  "majayjay-church-basilica": "Bus or jeep gets you there",
+  "malabrigo-lighthouse-lobo": "Bus or jeep, then a tricycle",
+  "malacanang-of-the-north-paoay": "Van, then a tricycle",
+  "malapascua-thresher-shark-dive": "Bus, plus a boat",
+  "maligcong-rice-terraces-bontoc": "Bus or jeep gets you there",
+  "malumpati-cold-spring-pandan-antique": "Bus or van, then a tricycle",
+  "manila-cathedral": "Jeep, then a tricycle",
+  "manila-ocean-park": "Train or bus, then a short walk",
+  "maniwaya-island-palad-sandbar-santa-cruz": "Bus or van, plus a ferry",
+  "manjuyod-sandbar-bais": "Bus or van, plus a boat",
+  "mantayupan-falls-barili-cebu": "Bus, then a tricycle",
+  "mantigue-island-camiguin": "Jeep, plus a boat",
+  "manuel-uy-beach-calatagan": "Bus or van, then a tricycle",
+  "mararison-island-culasi-antique": "Van, plus a boat",
+  "marlboro-hills-blue-soil-sagada": "Bus gets you there",
+  "masasa-beach-tingloy": "Bus or jeep, plus a ferry",
+  "masungi-georeserve-rizal": "Jeep or van gets you there",
+  "mcad-manila": "Train, then a short walk",
+  "metropolitan-theater": "Train or bus, then a short ride",
+  "miagao-church": "Bus or jeep gets you there",
+  "mines-view-park-baguio": "Jeep gets you there",
+  "moalboal-sardine-run-panagsama": "Bus, then a tricycle",
+  "molo-mansion-iloilo": "Jeep gets you there",
+  "montemaria-shrine-miracle-walk-batangas-city": "Bus or jeep gets you there",
+  "mount-apo": "Bus gets you there",
+  "mount-batulao-nasugbu": "Bus, then a tricycle",
+  "mount-gulugod-baboy-mabini": "Bus or jeep, then a tricycle",
+  "mount-makiling-los-banos": "Bus or jeep gets you there",
+  "mount-pico-de-loro-nasugbu": "Bus or jeep, then a tricycle",
+  "mount-samat-shrine-bataan": "Bus, then a tricycle",
+  "mount-tapulao-zambales": "Bus, then a tricycle",
+  "mount-ulap-itogon": "Jeep gets you there",
+  "museo-orlina-tagaytay": "Jeep gets you there",
+  "nagsasa-cove-zambales": "Bus, plus a boat",
+  "nasugbu-cove-hopping-calayo": "Bus, then a tricycle",
+  "nasugbu-trilogy-hike": "Bus, then a tricycle",
+  "national-museum-of-anthropology-manila": "Train or jeep, then a short walk",
+  "national-museum-of-fine-arts": "Train or bus, then a short walk",
+  "national-museum-of-natural-history": "Train or bus, then a short ride",
+  "northern-blossom-flower-farm-atok": "Bus or van gets you there",
+  "ocean-adventure-subic": "Bus or jeep, then a tricycle",
+  "paete-carving-town-laguna": "Bus or jeep gets you there",
+  "pagsanjan-falls-laguna": "Bus or jeep, plus a boat",
+  "pangabangan-blue-lagoon-jelmars-islet": "Ferry, then a boat",
+  "panicuason-hot-spring-naga": "Jeep, then a tricycle",
+  "paoay-church-ilocos-norte": "Bus or jeep gets you there",
+  "paoay-sand-dunes-ilocos-norte": "Van, then a tricycle",
+  "pasig-river-esplanade-manila": "Train or jeep, then a short walk",
+  "patapat-viaduct-pagudpud": "Bus gets you there",
+  "patar-beach-bolinao": "Bus, then a tricycle",
+  "peoples-park-in-the-sky-tagaytay": "Jeep, then a short walk",
+  "philippine-eagle-center-davao": "Jeep, then a tricycle",
+  "picnic-grove-tagaytay": "Bus or jeep gets you there",
+  "pililla-wind-farm-pililla": "Jeep or van, then a tricycle",
+  "pinsal-falls-santa-maria-ilocos-sur": "Bus, then a tricycle",
+  "pinto-art-museum-antipolo": "Jeep, then a tricycle",
+  "pintuyan-whale-shark-interaction": "Bus or van gets you there",
+  "plaza-san-luis-complex": "Jeep, then a tricycle",
+  "poblacion-makati": "Train or jeep, then a short walk",
+  "port-barton-island-hopping": "Van gets you there",
+  "puerto-princesa-underground-river": "Van, plus a boat",
+  "puraran-beach-baras": "Van, plus a ferry",
+  "quezon-memorial-circle-quezon-city": "Train or jeep, then a short ride",
+  "quitinday-hills-camalig": "Jeep, then a tricycle",
+  "regina-rica-tanay": "Jeep or van gets you there",
+  "rizal-park-luneta-park": "Train or bus, then a short ride",
+  "rizal-shrine-calamba": "Bus or jeep, then a tricycle",
+  "roxas-boulevard-promenade-light-park": "Bus gets you there",
+  "sabang-beach-baler": "Bus, then a tricycle",
+  "sabang-beach-puerto-galera": "Bus or jeep, plus a ferry",
+  "sabtang-island-chavayan-village-sabtang": "Tricycle, plus a boat",
+  "sambawan-island-maripipi": "Van, plus a ferry",
+  "san-agustin-church": "Jeep, then a tricycle",
+  "san-agustin-museum": "Train or jeep, then a short walk",
+  "san-juanico-bridge-view-deck-tacloban": "Jeep or van gets you there",
+  "san-sebastian-basilica": "Train or jeep, then a short walk",
+  "santa-maria-church-santa-maria-ilocos-sur": "Bus or jeep, then a short walk",
+  "santo-nino-shrine-tacloban": "Jeep, then a tricycle",
+  "saud-beach-pagudpud": "Bus or van, then a tricycle",
+  "session-road-baguio": "Bus, then a short walk",
+  "simala-shrine-sibonga": "Bus, then a tricycle",
+  "sky-ranch-tagaytay": "Bus or jeep gets you there",
+  "sogod-bay-diving-padre-burgos": "Ferry gets you there",
+  "sohoton-natural-bridge-basey": "Van, plus a boat",
+  "star-city": "Train, then a short ride",
+  "subic-beach-matnog": "Bus or van, plus a ferry",
+  "sumaguing-cave-sagada": "Bus gets you there",
+  "sumlang-lake-camalig": "Jeep, then a tricycle",
+  "sunken-cemetery-camiguin": "Jeep, then a tricycle",
+  "taal-heritage-town-batangas": "Bus or jeep, then a tricycle",
+  "taal-vista-hotel-tagaytay": "Bus gets you there",
+  "tagbungan-mountain-resort-baco": "Bus or jeep, plus a ferry",
+  "tam-awan-village-baguio": "Jeep gets you there",
+  "tamaraw-falls-puerto-galera": "Jeep, then a tricycle",
+  "tayabas-heritage-town": "Bus or jeep gets you there",
+  "taytay-falls-majayjay": "Bus or jeep, then a tricycle",
+  "ten-thousand-roses-cordova": "Ferry, then a tricycle",
+  "the-mind-museum": "Bus gets you there",
+  "tingko-beach-alcoy": "Bus gets you there",
+  "tondol-beach-anda": "Bus or jeep, then a tricycle",
+  "treasure-mountain-tanay": "Jeep, then a tricycle",
+  "urbiztondo-beach-san-juan-la-union": "Bus gets you there",
+  "vanishing-island-samal": "Ferry, then a boat",
+  "viewscape-nature-park-tanay": "Jeep, then a tricycle",
+  "villa-escudero-tiaong": "Bus gets you there",
+  "wawa-dam-mt-pamitinan-rodriguez": "Jeep, then a tricycle",
+  "white-beach-boracay": "Van, plus a boat",
+  "white-beach-puerto-galera": "Bus or jeep, plus a ferry",
+  "white-island-camiguin": "Jeep, plus a ferry"
+ },
+ "solo": {
+  "anilao-mabini-batangas": {
+   "why": "Bus and jeep from Manila; dive resorts arrange transfers",
+   "caveat": "Dive only with accredited shops and certified guides."
+  },
+  "baguio-night-market": {
+   "why": "A walk from Session Road; easy to graze alone",
+   "caveat": "Pickpockets work the crowd; keep your phone in front."
+  },
+  "baguio-public-market": {
+   "why": "A walk from Session Road; browse at your own pace",
+   "caveat": "Very crowded; keep your bag in front."
+  },
+  "basco-lighthouse-naidi-hills-basco": {
+   "why": "Tricycle or a 1.2 km hike from Basco Port",
+   "caveat": "The top deck is windy; hold on to your phone."
+  },
+  "basilica-del-santo-nino-cebu": {
+   "why": "Downtown Cebu, with jeepneys passing nearby",
+   "caveat": "Strict dress code; heavy crowds on Fridays and Sundays."
+  },
+  "bencab-museum-tuba": {
+   "why": "Asin-bound jeep from Baguio; a quiet museum to take slowly",
+   "caveat": "Closed Mondays; the garden trail slopes, so wear grippy shoes."
+  },
+  "bulabog-beach-boracay": {
+   "why": "A short walk from Station 2; learn at a certified kite school",
+   "caveat": "Don't swim in the kite zone; White Beach is for swimming."
+  },
+  "camsur-watersports-complex-pili": {
+   "why": "A jeep or tricycle from Naga; instructors brief you on site",
+   "caveat": "Wear the helmet and vest; start on the beginner cable."
+  },
+  "cebu-taoist-temple": {
+   "why": "15 to 20 minutes by taxi or Grab from IT Park or Ayala",
+   "caveat": "Hot, steep steps; dress modestly in the prayer areas."
+  },
+  "diniwid-beach-boracay": {
+   "why": "A walk on the rock path from Station 1",
+   "caveat": "No lifeguards and a narrow path; go in daylight."
+  },
+  "donsol-whale-shark-interaction": {
+   "why": "Van from Legazpi; a BIO guides you in the water",
+   "caveat": "Boats skip rough days, so keep an extra day."
+  },
+  "garin-farm-san-joaquin": {
+   "why": "Bus or jeepney south from Iloilo City",
+   "caveat": "The white area is bright and hot; bring an umbrella and water."
+  },
+  "iloilo-river-esplanade": {
+   "why": "In the city, with several access points",
+   "caveat": "Stay on the path, away from the river edge."
+  },
+  "malapascua-thresher-shark-dive": {
+   "why": "Bus and boat from Cebu; dive with an accredited shop",
+   "caveat": "Don't fly within 24 hours of your last dive."
+  },
+  "miagao-church": {
+   "why": "About an hour by jeep or bus from Iloilo City",
+   "caveat": "An active church: dress modestly and mind the highway traffic."
+  },
+  "mirador-heritage-park-baguio": {
+   "why": "10 to 15 minutes by taxi from downtown Baguio",
+   "caveat": "Steep stairs in parts; it's a retreat area, so keep it quiet."
+  },
+  "mt-tapyas-coron": {
+   "why": "A walk or short tricycle ride from Coron town",
+   "caveat": "Bring a light for the walk down after sunset."
+  },
+  "peoples-park-davao": {
+   "why": "Downtown Davao, a short taxi or Grab ride",
+   "caveat": "Davao strictly enforces its no-smoking and no-littering rules."
+  },
+  "plaza-burgos-empanada-vigan": {
+   "why": "A walk from Calle Crisologo to the stalls",
+   "caveat": "Bring small bills for the stalls."
+  },
+  "rizal-boulevard-dumaguete": {
+   "why": "Walking distance from Dumaguete port",
+   "caveat": "Keep bags close in the evening crowd."
+  },
+  "sabang-beach-baler": {
+   "why": "Bus to Baler, then a tricycle; surf schools on the beach",
+   "caveat": "Learn with an instructor and stay out on red-flag days."
+  },
+  "tam-awan-village-baguio": {
+   "why": "Jeepney from Kayang Street; easy to wander alone",
+   "caveat": "Trails are steep and slippery after rain."
+  },
+  "urbiztondo-beach-san-juan-la-union": {
+   "why": "Buses from Manila stop at Urbiztondo",
+   "caveat": "New to surfing? Book an instructor."
+  },
+  "valugan-boulder-beach-basco": {
+   "why": "10 minutes by tricycle from Basco",
+   "caveat": "Not for swimming: strong waves and slippery boulders."
+  }
+ },
+ "surge": [
+  {
+   "cities": [
+    "Boracay",
+    "Malay"
+   ],
+   "kind": "ferry",
+   "sources": [
+    "https://www.gmanetwork.com/news/topstories/regions/866148/holy-week-vacationers-start-arriving-in-boracay/story/",
+    "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+   ]
+  },
+  {
+   "cities": [
+    "Puerto Galera"
+   ],
+   "kind": "ferry",
+   "sources": [
+    "https://www.gmanetwork.com/news/topstories/regions/982420/puerto-galera-holy-week-tourists/story/",
+    "https://www.gmanetwork.com/news/topstories/regions/942870/batangas-port-holy-week-2025/story/"
+   ]
+  },
+  {
+   "cities": [
+    "Baguio"
+   ],
+   "kind": "stay",
+   "sources": [
+    "https://www.gmanetwork.com/news/topstories/regions/691591/baguio-city-puerto-galera-hotels-fully-booked-for-holy-week/story/",
+    "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+   ]
+  },
+  {
+   "cities": [
+    "Tagaytay"
+   ],
+   "kind": "road",
+   "sources": [
+    "https://www.topgear.com.ph/news/motoring-news/tagaytay-one-way-traffic-scheme-a962-20190412"
+   ]
+  },
+  {
+   "cities": [
+    "Siargao",
+    "General Luna"
+   ],
+   "kind": "stay",
+   "sources": [
+    "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+   ]
+  },
+  {
+   "cities": [
+    "El Nido",
+    "Coron"
+   ],
+   "kind": "stay",
+   "sources": [
+    "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+   ]
+  },
+  {
+   "cities": [
+    "Panglao"
+   ],
+   "kind": "stay",
+   "sources": [
+    "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+   ]
+  }
+ ]
+}
