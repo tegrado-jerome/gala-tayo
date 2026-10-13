@@ -80,6 +80,13 @@ test('rainy day puts indoor sights first and fine dining last, and skips open-ai
   assert.equal(fitsVibe(place('Baguio City Public Market', 'Food', ['Food Trip']), 'rainy-day'), false)
 })
 
+test('no car and solo read the flags from the trait data, never a guess', () => {
+  assert.equal(fitsVibe({ ...fort, noCar: true }, 'no-car'), true)
+  assert.equal(fitsVibe(fort, 'no-car'), false)
+  assert.equal(fitsVibe({ ...market, solo: true }, 'solo'), true)
+  assert.equal(fitsVibe({ ...market, goodFor: ['Solo Trip'] }, 'solo'), false)
+})
+
 test('a hillside wind farm is a view', () => {
   assert.equal(fitsVibe(place('Pililla Wind Farm', 'Park', ['Photo Walk']), 'views'), true)
 })

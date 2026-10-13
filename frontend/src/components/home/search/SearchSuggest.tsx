@@ -42,7 +42,7 @@ function buildSuggestions(places: CompactPlace[], rawQuery: string): Suggestion[
     .slice(0, 3)
     .map((area): Suggestion => ({ key: `d:${area.slug}`, group: 'Destinations', label: area.label, sub: `${area.count} ${area.count === 1 ? 'place' : 'places'}`, href: `/places/${area.slug}` }))
 
-  const vibeMatches = byRank(vibes.map((vibe) => ({ vibe, rank: Math.max(suggestionRank(vibe.label, query), suggestionRank(vibe.title, query)) })))
+  const vibeMatches = byRank(vibes.map((vibe) => ({ vibe, rank: Math.max(...[vibe.label, vibe.title, ...(vibe.keywords ?? [])].map((text) => suggestionRank(text, query))) })))
     .map(({ vibe }) => ({ vibe, count: filterByVibe(places, vibe.id).length }))
     .filter(({ count }) => count > 0)
     .slice(0, 2)

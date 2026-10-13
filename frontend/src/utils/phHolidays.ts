@@ -87,3 +87,50 @@ export function longWeekendAround(holiday: CalendarDate) {
   while ([0, 6].includes(weekday(addDays(to, 1)))) to = addDays(to, 1)
   return { from, to }
 }
+
+/** A stretch when rooms, boats and roads to the big destinations fill up. */
+export type PeakWeek = { name: string; from: CalendarDate; to: CalendarDate }
+
+/**
+ * The peak weeks of a year, from dates the law and the church calendar already fix (no proclamation guesses):
+ * Palm Sunday to Easter, Undas (All Saints' Day and any weekend it touches), Christmas Eve through the New Year
+ * weekend, and the National Heroes Day and December 8 long weekends.
+ */
+export function peakWeeks(year: number): PeakWeek[] {
+  const easter = easterSunday(year)
+  const heroes = longWeekendAround(lastMondayOfAugust(year))
+  const december8 = longWeekendAround({ year, month: 12, day: 8 })
+  return [
+    { name: 'Holy Week', from: addDays(easter, -7), to: easter },
+    { name: 'National Heroes Day weekend', ...heroes },
+    { name: "All Saints' Day", ...longWeekendAround({ year, month: 11, day: 1 }) },
+    // December 8 midweek is a one-day break, not a long weekend.
+    ...(spanDays(december8.from, december8.to) >= 3 ? [{ name: 'December 8 long weekend', ...december8 }] : []),
+    { name: 'Christmas to New Year', from: { year, month: 12, day: 24 }, to: longWeekendAround({ year: year + 1, month: 1, day: 1 }).to },
+  ]
+}
+
+const inPeak = (day: number) => (week: PeakWeek) => toUtc(week.from) <= day && day <= toUtc(week.to)
+
+/** The peak week a date falls in, or null. Early January belongs to the previous year's Christmas stretch. */
+export function peakWeekOn(date: CalendarDate): PeakWeek | null {
+  return [...peakWeeks(date.year - 1), ...peakWeeks(date.year)].find(inPeak(toUtc(date))) ?? null
+}
+
+/** The peak week going on today or starting within `days` days, or null. */
+export function upcomingPeakWeek(today: CalendarDate, days: number): PeakWeek | null {
+  const start = toUtc(today)
+  const end = toUtc(addDays(today, days))
+  return [...peakWeeks(today.year - 1), ...peakWeeks(today.year)].find((week) => toUtc(week.to) >= start && toUtc(week.from) <= end) ?? null
+}
+
+/** "Mar 22 to 29", or "Dec 24 to Jan 3" across months. */
+export function formatPeakDates({ from, to }: PeakWeek) {
+  const month = (date: CalendarDate) => MONTHS[date.month - 1]
+  return from.month === to.month ? `${month(from)} ${from.day} to ${to.day}` : `${month(from)} ${from.day} to ${month(to)} ${to.day}`
+}
+
+/** Today in Manila as a calendar date, whatever the device's time zone. */
+export function manilaToday(now = new Date()): CalendarDate {
+  return fromUtc(now.getTime() + 8 * 3_600_000)
+}

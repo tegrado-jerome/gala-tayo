@@ -1,0 +1,79 @@
+{
+  "noCarOverrides": {
+    "palaui-island-cape-engano-santa-ana": null,
+    "sabtang-island-chavayan-village-sabtang": "Tricycle, plus a boat",
+    "tara-sa-gulod-tanay": null
+  },
+  "solo": {
+    "anilao-mabini-batangas": { "why": "Bus and jeep from Manila; dive resorts arrange transfers", "caveat": "Dive only with accredited shops and certified guides." },
+    "baguio-night-market": { "why": "A walk from Session Road; easy to graze alone", "caveat": "Pickpockets work the crowd; keep your phone in front." },
+    "baguio-public-market": { "why": "A walk from Session Road; browse at your own pace", "caveat": "Very crowded; keep your bag in front." },
+    "basco-lighthouse-naidi-hills-basco": { "why": "Tricycle or a 1.2 km hike from Basco Port", "caveat": "The top deck is windy; hold on to your phone." },
+    "basilica-del-santo-nino-cebu": { "why": "Downtown Cebu, with jeepneys passing nearby", "caveat": "Strict dress code; heavy crowds on Fridays and Sundays." },
+    "bencab-museum-tuba": { "why": "Asin-bound jeep from Baguio; a quiet museum to take slowly", "caveat": "Closed Mondays; the garden trail slopes, so wear grippy shoes." },
+    "bulabog-beach-boracay": { "why": "A short walk from Station 2; learn at a certified kite school", "caveat": "Don't swim in the kite zone; White Beach is for swimming." },
+    "camsur-watersports-complex-pili": { "why": "A jeep or tricycle from Naga; instructors brief you on site", "caveat": "Wear the helmet and vest; start on the beginner cable." },
+    "cebu-taoist-temple": { "why": "15 to 20 minutes by taxi or Grab from IT Park or Ayala", "caveat": "Hot, steep steps; dress modestly in the prayer areas." },
+    "diniwid-beach-boracay": { "why": "A walk on the rock path from Station 1", "caveat": "No lifeguards and a narrow path; go in daylight." },
+    "donsol-whale-shark-interaction": { "why": "Van from Legazpi; a BIO guides you in the water", "caveat": "Boats skip rough days, so keep an extra day." },
+    "garin-farm-san-joaquin": { "why": "Bus or jeepney south from Iloilo City", "caveat": "The white area is bright and hot; bring an umbrella and water." },
+    "iloilo-river-esplanade": { "why": "In the city, with several access points", "caveat": "Stay on the path, away from the river edge." },
+    "malapascua-thresher-shark-dive": { "why": "Bus and boat from Cebu; dive with an accredited shop", "caveat": "Don't fly within 24 hours of your last dive." },
+    "miagao-church": { "why": "About an hour by jeep or bus from Iloilo City", "caveat": "An active church: dress modestly and mind the highway traffic." },
+    "mirador-heritage-park-baguio": { "why": "10 to 15 minutes by taxi from downtown Baguio", "caveat": "Steep stairs in parts; it's a retreat area, so keep it quiet." },
+    "mt-tapyas-coron": { "why": "A walk or short tricycle ride from Coron town", "caveat": "Bring a light for the walk down after sunset." },
+    "peoples-park-davao": { "why": "Downtown Davao, a short taxi or Grab ride", "caveat": "Davao strictly enforces its no-smoking and no-littering rules." },
+    "plaza-burgos-empanada-vigan": { "why": "A walk from Calle Crisologo to the stalls", "caveat": "Bring small bills for the stalls." },
+    "rizal-boulevard-dumaguete": { "why": "Walking distance from Dumaguete port", "caveat": "Keep bags close in the evening crowd." },
+    "sabang-beach-baler": { "why": "Bus to Baler, then a tricycle; surf schools on the beach", "caveat": "Learn with an instructor and stay out on red-flag days." },
+    "tam-awan-village-baguio": { "why": "Jeepney from Kayang Street; easy to wander alone", "caveat": "Trails are steep and slippery after rain." },
+    "urbiztondo-beach-san-juan-la-union": { "why": "Buses from Manila stop at Urbiztondo", "caveat": "New to surfing? Book an instructor." },
+    "valugan-boulder-beach-basco": { "why": "10 minutes by tricycle from Basco", "caveat": "Not for swimming: strong waves and slippery boulders." }
+  },
+  "surge": [
+    {
+      "cities": ["Boracay", "Malay"],
+      "kind": "ferry",
+      "sources": [
+        "https://www.gmanetwork.com/news/topstories/regions/866148/holy-week-vacationers-start-arriving-in-boracay/story/",
+        "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+      ]
+    },
+    {
+      "cities": ["Puerto Galera"],
+      "kind": "ferry",
+      "sources": [
+        "https://www.gmanetwork.com/news/topstories/regions/982420/puerto-galera-holy-week-tourists/story/",
+        "https://www.gmanetwork.com/news/topstories/regions/942870/batangas-port-holy-week-2025/story/"
+      ]
+    },
+    {
+      "cities": ["Baguio"],
+      "kind": "stay",
+      "sources": [
+        "https://www.gmanetwork.com/news/topstories/regions/691591/baguio-city-puerto-galera-hotels-fully-booked-for-holy-week/story/",
+        "https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"
+      ]
+    },
+    {
+      "cities": ["Tagaytay"],
+      "kind": "road",
+      "sources": ["https://www.topgear.com.ph/news/motoring-news/tagaytay-one-way-traffic-scheme-a962-20190412"]
+    },
+    {
+      "cities": ["Siargao", "General Luna"],
+      "kind": "stay",
+      "sources": ["https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"]
+    },
+    {
+      "cities": ["El Nido", "Coron"],
+      "kind": "stay",
+      "sources": ["https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"]
+    },
+    {
+      "cities": ["Panglao"],
+      "kind": "stay",
+      "sources": ["https://edgedavao.net/the-economy/2025/04/tourism-dept-expects-30m-tourists-during-holy-week/"]
+    }
+  ]
+}

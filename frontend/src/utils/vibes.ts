@@ -7,9 +7,10 @@ import { isRainFriendly } from './saanTayo.ts'
  * so node:test can run it.
  */
 
-export type VibePlace = { name: string; category: string | null; goodFor: string[]; budgetMin?: number | null }
+/** `noCar` and `solo` come from data/placeTraits.json, added when the compact list loads. */
+export type VibePlace = { name: string; category: string | null; goodFor: string[]; budgetMin?: number | null; noCar?: boolean; solo?: boolean }
 
-export const VIBE_IDS = ['beach', 'nature', 'views', 'heritage', 'adventure', 'food-trip', 'rainy-day'] as const
+export const VIBE_IDS = ['beach', 'nature', 'views', 'heritage', 'adventure', 'food-trip', 'rainy-day', 'no-car', 'solo'] as const
 export type VibeId = (typeof VIBE_IDS)[number]
 
 type VibeDef = {
@@ -19,6 +20,8 @@ type VibeDef = {
   title: string
   /** One line under the heading, tour-guide style. */
   blurb: string
+  /** Other words the search box suggests this vibe for ("commute", "walang kotse"). */
+  keywords?: string[]
   matches: (place: VibePlace) => boolean
   /** Lower comes first; places that tie keep the list's own best-first order. */
   rank?: (place: VibePlace) => number
@@ -102,9 +105,25 @@ const VIBES: VibeDef[] = [
     matches: (place) => isRainFriendly(place) || nameHas(place, /\b(aquarium|ocean park)\b/),
     rank: rainyDayRank,
   },
+  {
+    id: 'no-car',
+    label: 'No car needed',
+    title: 'No car needed',
+    blurb: 'Bus, jeep, train or ferry gets you there. Leave the car at home!',
+    keywords: ['commute', 'public transport', 'walang kotse', 'walang sasakyan'],
+    matches: (place) => place.noCar === true,
+  },
+  {
+    id: 'solo',
+    label: 'Solo',
+    title: 'Solo-friendly places',
+    blurb: 'Easy to reach and easy to enjoy on your own, each with a heads-up.',
+    keywords: ['solo trip', 'solo travel', 'mag isa'],
+    matches: (place) => place.solo === true,
+  },
 ]
 
-export const vibes: ReadonlyArray<Omit<VibeDef, 'matches'>> = VIBES.map(({ id, label, title, blurb }) => ({ id, label, title, blurb }))
+export const vibes: ReadonlyArray<Omit<VibeDef, 'matches' | 'rank'>> = VIBES.map(({ id, label, title, blurb, keywords }) => ({ id, label, title, blurb, keywords }))
 
 export function parseVibe(value: string | null | undefined): VibeId | null {
   const id = (value ?? '').trim().toLowerCase()

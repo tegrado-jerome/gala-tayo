@@ -29,6 +29,10 @@ import '../design/saan.css'
 import { useForecast } from '../hooks/useWeather'
 import { trackSaanTayoUsed } from '../utils/analytics'
 import { loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
+import { surgeLineOn } from '../utils/holidaySurge'
+import { manilaToday } from '../utils/phHolidays'
+import { getSurgeKind } from '../utils/placeTraits'
+import SurgeNote from '../components/SurgeNote'
 import type { PlaceExtras } from '../utils/placeExtras'
 import {
   PICK_COUNT,
@@ -261,6 +265,8 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
 
   const kicker = place ? placeWhere(place) : ''
   const price = place ? formatPricePerHead(place.budgetMin) : null
+  // Pick for me deals for today, so today's date decides the holiday surge line.
+  const surge = place ? surgeLineOn(manilaToday(), [getSurgeKind(place.city)]) : null
 
   return (
     <article
@@ -301,6 +307,7 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
               </h3>
               {why ? <p className="st-why">{why}</p> : null}
               {price ? <p className="st-price">{price === 'Free' ? 'Free entry' : `From ${price}/head`}</p> : null}
+              {surge ? <SurgeNote text={surge} className="mt-2" /> : null}
               <div className="st-acts">
                 <a href={directionsUrl(place)} target="_blank" rel="noopener noreferrer">
                   <NavigationArrow aria-hidden="true" />

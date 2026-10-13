@@ -200,11 +200,11 @@ export function getSearchSort(value: unknown): SearchSort {
 }
 
 export async function findSearchPlaces({
-  normalizedQuery, nearbySearch, explicitFilters, sort = "best", openNow = false,
+  normalizedQuery, nearbySearch, explicitFilters, sort = "best", openNow = false, noCar = false,
 }: {
-  normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters; sort?: SearchSort; openNow?: boolean;
+  normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters; sort?: SearchSort; openNow?: boolean; noCar?: boolean;
 }): Promise<{ places: SearchPlaceResult[]; note: string | null; didYouMean: string | null; needsLocation: boolean }> {
-  const { ranked, note, didYouMean, nearMe } = searchPlacesInArea(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters, { openNow });
+  const { ranked, note, didYouMean, nearMe } = searchPlacesInArea(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters, { openNow, noCar });
   const rankedRows = ranked
     .map(({ place, score }, rank) => {
       const row = place as unknown as PlaceRow;
@@ -285,7 +285,8 @@ export async function search(
     const effectiveBudget = budget;
     const sort = getSearchSort(body.sort);
     const openNow = body.open_now === true;
-    const cacheKey = `${generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, effectiveGoodFor, effectiveBudget)}:sort:${sort}`;
+    const noCar = body.no_car === true;
+    const cacheKey = `${generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, effectiveGoodFor, effectiveBudget)}:sort:${sort}${noCar ? ":no-car" : ""}`;
     // "Open now" changes by the minute, so those answers are never reused.
     const canUseSharedCache = !nearbySearch && !openNow && !/\b(open|bukas)\b/.test(normalizedQuery);
     const responseCacheKey = buildSearchResponseCacheKey({ baseKey: cacheKey, page, limit });
@@ -339,6 +340,7 @@ export async function search(
       nearbySearch,
       sort,
       openNow,
+      noCar,
       explicitFilters: {
         category: effectiveCategoryId,
         city: effectiveAreaId,

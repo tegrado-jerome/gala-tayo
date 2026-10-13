@@ -8,6 +8,7 @@ import { isGalaTayoPick } from '../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { resizedMediaUrl } from '../data/r2Config'
 import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
+import { NO_CAR_LABEL, getNoCarReason } from '../utils/placeTraits'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import type { PlaceDetail } from '../types/appTypes'
@@ -120,6 +121,12 @@ export function formatVisitDuration(duration: string | null | undefined) {
     .replace(/\s*-\s*/g, '–')
     .replace(/\bhours?\b/gi, (word) => (word.toLowerCase() === 'hour' ? 'hr' : 'hrs'))
     .replace(/\bminutes?\b/gi, 'min')
+}
+
+/** One badge per card at most: the card's own badge first, else "No car needed" where the data shows it. */
+export function cardFlag(badge: string | null, slug: string | null | undefined) {
+  const label = badge ?? (getNoCarReason(slug) ? NO_CAR_LABEL : null)
+  return label ? <Tag tone="solid">{label}</Tag> : null
 }
 
 export function isRainSafe(place: Pick<PlaceCardData, 'indoor_outdoor' | 'weather_fit'>) {
@@ -252,7 +259,7 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         duration={formatVisitDuration(place.visit_duration)}
         pricePerHead={formatPricePerHead(place.budget_min)}
         pick={isGalaTayoPick(place.slug)}
-        flag={isRainSafe(place) ? <Tag tone="solid">Rain-safe</Tag> : null}
+        flag={cardFlag(isRainSafe(place) ? 'Rain-safe' : null, place.slug)}
         selected={selected}
         priority={priority}
         saved={saved}
