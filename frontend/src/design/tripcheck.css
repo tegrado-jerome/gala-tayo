@@ -1,0 +1,34 @@
+/* Trip Check page and the plan's "Total at the gate" block. Builds on gt1.css tokens. */
+@layer properties, theme, base, components, utilities;
+@layer components {
+/* ---------- Total at the gate: numbers wrap rather than clip, since fees are often ranges ---------- */
+.g-gate-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 12px 16px; padding: 14px 0; border-block: 1px solid var(--line); }
+.g-gate-sum > div { min-width: 0; }
+.g-gate-sum b { display: block; font: 600 22px/1.15 var(--font-display); letter-spacing: -0.01em; color: var(--ink); overflow-wrap: anywhere; }
+.g-gate-sum span { display: block; margin-top: 2px; font-size: 13px; color: var(--ink-2); }
+.g-gate-rows { margin-top: 4px; }
+.g-gate-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 14px; }
+.g-gate-row + .g-gate-row { border-top: 1px solid var(--line-2); }
+.g-gate-row a { min-width: 0; color: var(--ink); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.g-gate-row a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.g-gate-row > span:last-child { flex-shrink: 0; max-width: 55%; text-align: right; font-weight: 600; color: var(--ink); }
+.g-gate-row .is-unknown { font-weight: 400; color: var(--ink-2); }
+.g-gate-note { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--ink-2); overflow-wrap: anywhere; }
+@media (min-width: 768px) { .g-gate-sum b { font-size: 26px; } }
+
+/* ---------- Trip Check checklist ---------- */
+.g-check { display: flex; gap: 12px; padding: 14px 0; }
+.g-check + .g-check { border-top: 1px solid var(--line-2); }
+.g-check-ic { flex-shrink: 0; width: 22px; height: 22px; margin-top: 1px; }
+.g-check.is-problem .g-check-ic { color: var(--bad); }
+.g-check.is-heads-up .g-check-ic { color: var(--warn); }
+.g-check.is-ok .g-check-ic { color: var(--ok); }
+.g-check-t { font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+.g-check-d { margin-top: 2px; font-size: 14px; line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
+.g-check-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.g-check-links a { display: inline-flex; align-items: center; min-height: 32px; max-width: 100%; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-pill); font-size: 13px; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.g-check-links a:hover { border-color: var(--ink); }
+.g-check-count { display: flex; flex-wrap: wrap; gap: 8px; }
+.g-trip-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 768px) { .g-trip-fields { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+}

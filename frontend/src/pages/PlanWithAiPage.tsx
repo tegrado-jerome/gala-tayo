@@ -15,6 +15,7 @@ import { SunHorizon as Sunset } from '@phosphor-icons/react/dist/csr/SunHorizon'
 import { Tree as Trees } from '@phosphor-icons/react/dist/csr/Tree'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import AskAiUsagePill from '../components/AskAiUsagePill'
+import InternalLink from '../components/InternalLink'
 import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
 import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
 import { Button, KeyValue, Page, Skeleton } from '../components/ui'
@@ -370,6 +371,12 @@ function PlanWithAiPage({ initialPrompt, initialPlaces = [] }: { initialPrompt: 
               </Button>
             </div>
           </form>
+          <p className="g-sm g-mut mt-3">
+            Already have an itinerary?{' '}
+            <InternalLink href="/trip-check" className="font-semibold text-[var(--ink)] underline underline-offset-[3px]">
+              Check my trip
+            </InternalLink>
+          </p>
 
           <section className="mt-8" aria-labelledby="plan-ai-ideas">
             <h2 id="plan-ai-ideas" className="g-h3">Try one of these</h2>

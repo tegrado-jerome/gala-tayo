@@ -55,6 +55,30 @@ export const formatDay = (date: CalendarDate) => `${WEEKDAYS[weekday(date)].slic
 
 export const isoDate = ({ year, month, day }: CalendarDate) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
+/**
+ * The law-dated holidays around a date (the same ones the long weekends page lists, plus Christmas Day):
+ * Holy Week from Maundy Thursday to Easter, and each fixed holiday with the weekend it touches. Null when
+ * the date is in none. Days the yearly proclamation sets are left out, since they aren't dated yet.
+ */
+export function peakHolidayOn(date: CalendarDate): { name: string; from: CalendarDate; to: CalendarDate } | null {
+  const target = toUtc(date)
+  for (const year of [date.year - 1, date.year]) {
+    const easter = easterSunday(year)
+    const day = (month: number, dayOfMonth: number) => ({ year, month, day: dayOfMonth })
+    const windows = [
+      { name: "New Year's Day", ...longWeekendAround(day(1, 1)) },
+      { name: 'Holy Week', from: addDays(easter, -3), to: easter },
+      { name: 'National Heroes Day', ...longWeekendAround(lastMondayOfAugust(year)) },
+      { name: "All Saints' Day", ...longWeekendAround(day(11, 1)) },
+      { name: 'Christmas Day', ...longWeekendAround(day(12, 25)) },
+      { name: 'Last Day of the Year', ...longWeekendAround(day(12, 31)) },
+    ]
+    const hit = windows.find(({ from, to }) => toUtc(from) <= target && target <= toUtc(to))
+    if (hit) return hit
+  }
+  return null
+}
+
 /** Days off in a row: the holiday plus any weekend it touches. */
 export function longWeekendAround(holiday: CalendarDate) {
   let from = holiday

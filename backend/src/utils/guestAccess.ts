@@ -25,6 +25,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "listSharePage",
   "placeDetail",
   "placeDetailsBatch",
+  "tripCheck",
   "placePhotos",
   "placeCommentsList",
   "placeReviewsList",
