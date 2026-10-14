@@ -135,5 +135,26 @@
     "date": "2026-10-14",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "atasha muhlach boyfriend",
+    "traffic": 500,
+    "date": "2026-10-14",
+    "intents": [],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "davao city",
+    "traffic": 100,
+    "date": "2026-10-14",
+    "intents": [],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "gma news",
+    "traffic": 200,
+    "date": "2026-10-14",
+    "intents": [],
+    "areaSlug": "marikina"
   }
 ]
