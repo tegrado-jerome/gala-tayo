@@ -1,5 +1,63 @@
 [
  {
+  "slug": "history-trip-in-metro-manila-stops",
+  "date": "2026-10-14",
+  "publishedAt": "2026-10-13T22:30:00.783Z",
+  "format": "pov",
+  "sticker": "POV",
+  "title": "History Trip in Metro Manila: 3 Heritage Stops",
+  "hook": "Skip the textbook. You can literally walk inside an 1800s mansion and decode ancient scripts today!",
+  "body": "Turn an ordinary Wednesday into a time machine before the afternoon showers hit. Stand right in front of the ancient Manunggul Jar at the National Museum of Anthropology. Walk through the grand sala of Casa Manila to see how Binondo style shaped an 1800s home. Then roam the stone cloisters and courtyards of San Agustin Museum. Metro Manila heritage is waiting, so get moving today!",
+  "meme": {
+   "top": "POV: you said one quick history stop",
+   "bottom": "now you are inspecting 1800s kitchen pottery"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "history trip in Metro Manila",
+   "query": "history trip in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 3–7 PM",
+  "area": "Metro Manila",
+  "leadSlug": "casa-manila",
+  "picks": [
+   {
+    "slug": "national-museum-of-anthropology-manila",
+    "name": "National Museum of Anthropology",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-anthropology-manila",
+    "why": "Decode ancient scripts in the Baybayin gallery and meet the famous Manunggul Jar with zero admission fee!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "casa-manila",
+    "name": "Casa Manila",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/casa-manila",
+    "why": "Step inside an 1800s grand sala with capiz windows and see how Binondo luxury used to look!",
+    "budgetMin": 75
+   },
+   {
+    "slug": "san-agustin-museum",
+    "name": "San Agustin Museum",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/san-agustin-museum",
+    "why": "Wander former monastery cloisters and stone courtyards filled with carved retablos and manuscripts.",
+    "budgetMin": 200
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 9,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "metro-manila-photo-spots-starter-pack",
   "date": "2026-10-13",
   "publishedAt": "2026-10-13T03:19:06.600Z",
