@@ -166,5 +166,12 @@
       "heritage"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "manila",
+    "traffic": 100,
+    "date": "2026-10-15",
+    "intents": [],
+    "areaSlug": "manila"
   }
 ]
