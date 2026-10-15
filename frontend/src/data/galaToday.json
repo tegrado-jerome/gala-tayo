@@ -1,5 +1,55 @@
 [
  {
+  "slug": "payday-treat-ideas-in-metro-manila",
+  "date": "2026-10-15",
+  "publishedAt": "2026-10-14T22:30:02.044Z",
+  "format": "would-you-rather",
+  "sticker": "Would You Rather",
+  "title": "Payday Treat Ideas in Metro Manila",
+  "hook": "Salary just cleared: do you want a Michelin-starred tasting table or a street crawl for hot dumplings?",
+  "body": "The pay slip arrived and your wallet is ready to move! Option one: head to Makati where Chef Jordy Navarra serves Michelin-starred plates using Philippine toyo, suka, and patis. Option two: hit Binondo, founded in 1594, to fill up on hot dumplings, lumpia, and warm hopia from old family shops along Ongpin Street. Are you sitting down for fermented craft or walking off your meal on the pavement? Pick your side and go celebrate today!",
+  "meme": {
+   "top": "Would you rather dine with a Michelin star",
+   "bottom": "or hold warm boxes of hopia on Ongpin Street?"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "payday treat ideas in Metro Manila",
+   "query": "payday treat ideas in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "binondo-chinatown",
+  "picks": [
+   {
+    "slug": "toyo-eatery",
+    "name": "Toyo Eatery",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/toyo-eatery",
+    "why": "Chef Jordy Navarra balances Philippine toyo, suka, and patis into a creative, Michelin-starred night out!",
+    "budgetMin": 2500
+   },
+   {
+    "slug": "binondo-chinatown",
+    "name": "Binondo Chinatown",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/binondo-chinatown",
+    "why": "Prowl Ongpin Street for warm hopia, fresh lumpia, and plates of dumplings from old family shops!",
+    "budgetMin": 0
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "history-trip-in-metro-manila-stops",
   "date": "2026-10-14",
   "publishedAt": "2026-10-13T22:30:00.783Z",

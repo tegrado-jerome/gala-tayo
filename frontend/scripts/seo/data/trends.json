@@ -156,5 +156,15 @@
     "date": "2026-10-14",
     "intents": [],
     "areaSlug": "marikina"
+  },
+  {
+    "title": "inter miami vs new york city",
+    "traffic": 500,
+    "date": "2026-10-15",
+    "intents": [
+      "museum",
+      "heritage"
+    ],
+    "areaSlug": null
   }
 ]

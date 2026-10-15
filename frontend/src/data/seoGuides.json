@@ -1061,5 +1061,18 @@
       "best family friendly restaurants in coronado"
     ],
     "addedAt": "2026-10-14"
+  },
+  {
+    "slug": "date-spots-in-boracay",
+    "label": "Date Spots in Boracay",
+    "areaSlug": "malay-boracay",
+    "goodFor": "date",
+    "keywords": [
+      "date spots in boracay",
+      "date ideas in boracay",
+      "date restaurants in boracay",
+      "best date restaurants in boracay"
+    ],
+    "addedAt": "2026-10-15"
   }
 ]
