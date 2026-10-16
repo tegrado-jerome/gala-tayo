@@ -1,5 +1,69 @@
 [
  {
+  "slug": "group-day-out-in-metro-manila",
+  "date": "2026-10-16",
+  "publishedAt": "2026-10-16T08:30:02.877Z",
+  "format": "starter-pack",
+  "sticker": "Starter Pack",
+  "title": "Metro Manila Group Day Out Starter Pack",
+  "hook": "Pack your sneakers and your loudest friends: Metro Manila has thrill rides, bamboo bikes, and a 1928 heritage landmark today!",
+  "body": "Gather the crew, charge every phone, and close the group chat debates. Take on the thrill rides and freezing Snow World at Pasay's Star City, pedal past Fort Santiago on bamboo bikes from Plaza San Luis, and browse creative studios inside the 1928 First United Building in Escolta. Friday is waiting, so assemble your favorite people and go today!",
+  "meme": {
+   "top": "Entering Snow World with your friends",
+   "bottom": "Nobody brought a jacket"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "group day out in Metro Manila",
+   "query": "group day out in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "star-city",
+  "picks": [
+   {
+    "slug": "star-city",
+    "name": "Star City",
+    "city": "Pasay",
+    "canonicalPath": "/places/pasay/star-city",
+    "why": "Spin on thrill rides and freeze inside Snow World at this classic amusement park in Pasay since 1991!",
+    "budgetMin": 699
+   },
+   {
+    "slug": "bambike-ecotours-intramuros",
+    "name": "Bambike Ecotours Intramuros",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/bambike-ecotours-intramuros",
+    "why": "Pedal a bamboo bike from Plaza San Luis past Fort Santiago. A history lesson disguised as a workout!",
+    "budgetMin": 1200
+   },
+   {
+    "slug": "first-united-building",
+    "name": "First United Building",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/first-united-building",
+    "why": "Wander the 1928 Escolta landmark and check out creative studios and Hub: Make Lab shops together!",
+    "budgetMin": 0
+   }
+  ],
+  "items": [
+   "A fully charged phone",
+   "A friend who screams on rides",
+   "Sensible walking shoes",
+   "Zero agreement on lunch"
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-2.5-flash"
+ },
+ {
   "slug": "weekend-date-ideas-in-metro-manila",
   "date": "2026-10-16",
   "publishedAt": "2026-10-15T22:30:02.839Z",
