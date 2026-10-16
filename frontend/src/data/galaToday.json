@@ -1,5 +1,63 @@
 [
  {
+  "slug": "weekend-date-ideas-in-metro-manila",
+  "date": "2026-10-16",
+  "publishedAt": "2026-10-15T22:30:02.839Z",
+  "format": "expectation-vs-reality",
+  "sticker": "Expectation vs Reality",
+  "title": "Fresh date ideas in Metro Manila this weekend",
+  "hook": "You planned a sensible afternoon date, but the sharks and vintage vinyl had other plans!",
+  "body": "The plan was a simple afternoon out, but Manila dates have a way of escalating into full adventures. Start under rays and sharks in the 25-meter glass tunnel at Manila Ocean Park. Next, head over to Fort Santiago to catch river views from Baluarte de Santa Barbara. Wrap up the day flipping through vintage vinyl and antique finds inside Cubao Expo. Pick your stop and set out today!",
+  "meme": {
+   "top": "Expectation: a quick stroll through the tunnel",
+   "bottom": "Reality: standing under sharks until your neck hurts"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "date ideas in Metro Manila",
+   "query": "date ideas in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "fort-santiago",
+  "picks": [
+   {
+    "slug": "manila-ocean-park",
+    "name": "Manila Ocean Park",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/manila-ocean-park",
+    "why": "A 25-meter curved glass tunnel where rays glide over you. You will lose track of time!",
+    "budgetMin": 720
+   },
+   {
+    "slug": "fort-santiago",
+    "name": "Fort Santiago",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/fort-santiago",
+    "why": "Walk Baluarte de Santa Barbara for breezy river views. Suddenly you are both history nerds!",
+    "budgetMin": 75
+   },
+   {
+    "slug": "cubao-expo",
+    "name": "Cubao Expo",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/cubao-expo",
+    "why": "Crate-digging for records and browsing antiques beats another quiet cafe bench every time.",
+    "budgetMin": 200
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "payday-treat-ideas-in-metro-manila",
   "date": "2026-10-15",
   "publishedAt": "2026-10-14T22:30:02.044Z",

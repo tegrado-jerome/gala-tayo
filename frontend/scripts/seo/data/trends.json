@@ -173,5 +173,17 @@
     "date": "2026-10-15",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "kim kardashian",
+    "traffic": 200,
+    "date": "2026-10-16",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
   }
 ]
