@@ -1,5 +1,63 @@
 [
  {
+  "slug": "things-to-do-in-calabarzon-this-weekend",
+  "date": "2026-10-17",
+  "publishedAt": "2026-10-17T08:30:02.393Z",
+  "format": "pov",
+  "sticker": "POV",
+  "title": "Fun things to do in Calabarzon this weekend",
+  "hook": "Two boatmen push your canoe upstream over rapids while you hold on for dear life!",
+  "body": "Saturday is here, and your group chat needs an actual plan. Head to Calabarzon today for serious water thrills. In Pagsanjan, two boatmen push your narrow canoe against river rapids into a deep gorge. Over in Mauban, catch a boat to Cagbalete Island where low tide exposes a huge sandbar into Lamon Bay. Or gear up with a headlamp in Cavinti to wade through a chest-deep river inside a cave. Pack your dry bag and go!",
+  "meme": {
+   "top": "POV: you told the bangkeros you wanted an easy river ride",
+   "bottom": "Now you are flying upstream over giant boulders"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Calabarzon this weekend",
+   "query": "things to do in Calabarzon this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Calabarzon",
+  "leadSlug": "pagsanjan-falls-laguna",
+  "picks": [
+   {
+    "slug": "pagsanjan-falls-laguna",
+    "name": "Pagsanjan Falls (Cavinti Falls) Boat Ride",
+    "city": "Pagsanjan",
+    "canonicalPath": "/places/pagsanjan/pagsanjan-falls-laguna",
+    "why": "Two skilled bangkeros push your canoe upstream through a gorge and over wild rapids!",
+    "budgetMin": 1500
+   },
+   {
+    "slug": "cagbalete-island-mauban",
+    "name": "Cagbalete Island",
+    "city": "Mauban",
+    "canonicalPath": "/places/mauban/cagbalete-island-mauban",
+    "why": "Low tide pulls the sea back so far you can stroll across pale sand straight into Lamon Bay!",
+    "budgetMin": 50
+   },
+   {
+    "slug": "cavinti-underground-river-cave-complex",
+    "name": "Cavinti Underground River and Cave Complex",
+    "city": "Cavinti",
+    "canonicalPath": "/places/cavinti/cavinti-underground-river-cave-complex",
+    "why": "Wade through a chest-deep underground river beneath stalactites and find a waterfall inside!",
+    "budgetMin": null
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 8,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "batanes-main-character-weekend-moments",
   "date": "2026-10-17",
   "publishedAt": "2026-10-17T00:58:19.935Z",

@@ -198,5 +198,31 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "blackwater vs rain or shine",
+    "traffic": 2000,
+    "date": "2026-10-17",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "storm",
+    "traffic": 100,
+    "date": "2026-10-17",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
