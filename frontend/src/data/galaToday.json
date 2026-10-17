@@ -1,5 +1,63 @@
 [
  {
+  "slug": "batanes-main-character-weekend-moments",
+  "date": "2026-10-17",
+  "publishedAt": "2026-10-17T00:58:19.935Z",
+  "format": "main-character",
+  "sticker": "Main Character Moments",
+  "title": "Things to do in Batanes this weekend like a movie",
+  "hook": "Three dramatic spots where Batanes turns your Saturday into a full movie scene, zero auditions needed!",
+  "body": "Step out into your personal Saturday cinema. Head up the spiral staircase at Basco Lighthouse for an orange sunset over Mount Iraya. Stroll the green rolling hills of Marlboro Country while horses graze above crashing Pacific waves, then pose on the grassy hill at Alapad beside the yellow Blow Ur Horn cliff sign. Your dramatic movie moment is waiting out in Batanes today, so get moving!",
+  "meme": {
+   "top": "Staring out from the Basco Lighthouse viewing deck",
+   "bottom": "Convinced this entire orange sunset was staged for me"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Batanes this weekend",
+   "query": "things to do in Batanes this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Batanes",
+  "leadSlug": "basco-lighthouse-naidi-hills-basco",
+  "picks": [
+   {
+    "slug": "basco-lighthouse-naidi-hills-basco",
+    "name": "Basco Lighthouse (Naidi Hills)",
+    "city": "Basco",
+    "canonicalPath": "/places/basco/basco-lighthouse-naidi-hills-basco",
+    "why": "Take the spiral stairs to the fifth-floor deck at sunset and gaze at Mount Iraya like a brooding lead.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "marlboro-country-racuh-a-payaman-batanes",
+    "name": "Marlboro Country (Racuh a Payaman)",
+    "city": "Mahatao",
+    "canonicalPath": "/places/mahatao/marlboro-country-racuh-a-payaman-batanes",
+    "why": "Stand on green hills above Pacific cliffs while horses graze beside you like your own indie movie cast.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "alapad-rock-formation-uyugan",
+    "name": "Alapad Rock Formation (Blow Ur Horn)",
+    "city": "Uyugan",
+    "canonicalPath": "/places/uyugan/alapad-rock-formation-uyugan",
+    "why": "Climb the grassy hill by the yellow Blow Ur Horn sign with the Pacific crashing below your cliffhanger.",
+    "budgetMin": 0
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 8,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "group-day-out-in-metro-manila",
   "date": "2026-10-16",
   "publishedAt": "2026-10-16T08:30:02.877Z",

@@ -185,5 +185,18 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "philippine area of responsibility",
+    "traffic": 1000,
+    "date": "2026-10-17",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
