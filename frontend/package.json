@@ -22,7 +22,7 @@
     "heic2any": "^0.0.4",
     "leaflet": "^1.9.4",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "react-dom": "^19.3.1",
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
@@ -33,7 +33,7 @@
     "@types/leaflet": "^1.9.21",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.1.1",
