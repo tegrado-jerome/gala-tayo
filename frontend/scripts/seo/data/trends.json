@@ -224,5 +224,31 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "windy",
+    "traffic": 500,
+    "date": "2026-10-18",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "real betis vs fc barcelona standings",
+    "traffic": 200,
+    "date": "2026-10-18",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]

@@ -1,5 +1,66 @@
 [
  {
+  "slug": "weekend-metro-manila-tier-list",
+  "date": "2026-10-18",
+  "publishedAt": "2026-10-17T22:30:01.702Z",
+  "format": "tier-list",
+  "sticker": "Tier List",
+  "title": "Things to do in Metro Manila this weekend, sorted",
+  "hook": "The Tree of Life has a glass dome, Juan Luna has the Spoliarium, and your Sunday afternoon has zero excuses.",
+  "body": "Sunday plans sorted before afternoon showers hit at 3 PM! At the National Museum of Natural History, you get the giant Tree of Life beneath a glass dome for zero pesos. The National Museum of Fine Arts delivers Juan Luna's huge Spoliarium with free air-con. Down in BGC, The Mind Museum brings more than 250 interactive exhibits across five galleries. Step inside today!",
+  "meme": {
+   "top": "Me under the giant Tree of Life dome",
+   "bottom": "Realizing I entered an ecosystem just to dodge the rain"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila this weekend",
+   "query": "things to do in Metro Manila this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 3–4 PM",
+  "area": "Metro Manila",
+  "leadSlug": "national-museum-of-natural-history",
+  "picks": [
+   {
+    "slug": "national-museum-of-natural-history",
+    "name": "National Museum of Natural History",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-natural-history",
+    "why": "Free entry and that giant Tree of Life under a glass dome. Perfect shelter when rain hits Rizal Park!",
+    "budgetMin": 0,
+    "tier": "S"
+   },
+   {
+    "slug": "national-museum-of-fine-arts",
+    "name": "National Museum of Fine Arts",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-fine-arts",
+    "why": "Free air-con and Juan Luna's Spoliarium. Lost S tier only because your neck will ache from looking up.",
+    "budgetMin": 0,
+    "tier": "A"
+   },
+   {
+    "slug": "the-mind-museum",
+    "name": "The Mind Museum",
+    "city": "Taguig",
+    "canonicalPath": "/places/taguig/the-mind-museum",
+    "why": "More than 250 interactive exhibits in five galleries. It only lost because kids push buttons faster!",
+    "budgetMin": 625,
+    "tier": "B"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "things-to-do-in-calabarzon-this-weekend",
   "date": "2026-10-17",
   "publishedAt": "2026-10-17T08:30:02.393Z",
