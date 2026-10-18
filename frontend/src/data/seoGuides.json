@@ -1086,5 +1086,45 @@
       "best date spots in cebu city"
     ],
     "addedAt": "2026-10-15"
+  },
+  {
+    "slug": "food-trip-in-baguio",
+    "label": "Food Trip in Baguio",
+    "areaSlug": "baguio",
+    "goodFor": "food-trip",
+    "keywords": [
+      "food trip in baguio",
+      "food trip in baguio affordable",
+      "best food trip in baguio",
+      "famous food trip in baguio",
+      "food trip sa baguio"
+    ],
+    "addedAt": "2026-10-18"
+  },
+  {
+    "slug": "historical-places-in-metro-manila",
+    "label": "Historical Places in Metro Manila",
+    "areaSlug": "metro-manila",
+    "category": "heritage",
+    "keywords": [
+      "historical places in metro manila",
+      "historical sites in metro manila",
+      "historical landmarks in metro manila",
+      "historical places in the philippines metro manila",
+      "historical places to visit in metro manila"
+    ],
+    "addedAt": "2026-10-18"
+  },
+  {
+    "slug": "family-friendly-places-in-baguio",
+    "label": "Family Friendly Places in Baguio",
+    "areaSlug": "baguio",
+    "goodFor": "family",
+    "keywords": [
+      "family friendly restaurants in baguio",
+      "kid friendly places in baguio",
+      "kid friendly restaurants in baguio"
+    ],
+    "addedAt": "2026-10-18"
   }
 ]
