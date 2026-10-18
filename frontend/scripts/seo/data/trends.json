@@ -250,5 +250,17 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "masskara festival",
+    "traffic": 200,
+    "date": "2026-10-18",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
   }
 ]

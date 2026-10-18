@@ -1,5 +1,55 @@
 [
  {
+  "slug": "cebu-weekend-islands-or-temple",
+  "date": "2026-10-18",
+  "publishedAt": "2026-10-18T08:30:01.759Z",
+  "format": "would-you-rather",
+  "sticker": "Would You Rather",
+  "title": "Two things to do in Cebu this weekend",
+  "hook": "Swarmed by reef fish in Nalusuan or posing like Roman royalty in Busay? Your Sunday vote starts now!",
+  "body": "Option one: hop on a bangka from Mactan and let fish swarm around you in the shallow water off Nalusuan, then grab seafood barbecue on Pandanon sandbar. Option two: climb into the Busay hills to the Roman-style Temple of Leah and strike poses among concrete columns built for love. Are we doing salty snorkels or mountain emperor vibes? Cast your vote and get moving today!",
+  "meme": {
+   "top": "Would you rather get swarmed by reef fish",
+   "bottom": "or act like Roman royalty on a Busay hill?"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Cebu this weekend",
+   "query": "things to do in Cebu this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Cebu",
+  "leadSlug": "mactan-island-hopping-cebu",
+  "picks": [
+   {
+    "slug": "mactan-island-hopping-cebu",
+    "name": "Mactan Island Hopping (Nalusuan, Hilutungan, Pandanon)",
+    "city": "Lapu-Lapu",
+    "canonicalPath": "/places/lapu-lapu/mactan-island-hopping-cebu",
+    "why": "Clear, shallow water where fish swarm around you, followed by seafood barbecue on the sand at Pandanon.",
+    "budgetMin": 1500
+   },
+   {
+    "slug": "temple-of-leah-cebu",
+    "name": "Temple of Leah",
+    "city": "Cebu City",
+    "canonicalPath": "/places/cebu-city/temple-of-leah-cebu",
+    "why": "A Roman-style temple in Busay built for love. Walk past concrete columns and channel your inner royalty!",
+    "budgetMin": 100
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "weekend-metro-manila-tier-list",
   "date": "2026-10-18",
   "publishedAt": "2026-10-17T22:30:01.702Z",
