@@ -1,5 +1,55 @@
 [
  {
+  "slug": "rainy-day-activities-in-metro-manila-2026-10-20",
+  "date": "2026-10-20",
+  "publishedAt": "2026-10-20T08:30:02.436Z",
+  "format": "gem-vs-famous",
+  "sticker": "Hidden Gem vs The Famous One",
+  "title": "Rainy day activities in Metro Manila: 2 picks",
+  "hook": "Makati gives you sixty tiny diorama worlds. Las Piñas counters with an entire bamboo organ backroom!",
+  "body": "When afternoon showers threaten your plans, pick your indoor vibe. The glossy crowd-pleaser is Ayala Museum at Greenbelt, packing sixty detailed diorama worlds into a sleek space renovated by Leandro V. Locsin Partners. Down south, the humble hero is Bamboo Organ Museum beside St. Joseph Parish, displaying historical objects that reveal how the famous instrument was actually built and restored. Do you want polished Makati dioramas or quiet Las Piñas history? Head out today!",
+  "meme": {
+   "top": "Visiting Ayala Museum just to dodge the 5 PM rain",
+   "bottom": "Now emotionally invested in sixty tiny dioramas"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "rainy day activities in Metro Manila",
+   "query": "rainy day activities in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 5–6 PM",
+  "area": "Metro Manila",
+  "leadSlug": "ayala-museum",
+  "picks": [
+   {
+    "slug": "ayala-museum",
+    "name": "Ayala Museum",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/ayala-museum",
+    "why": "The famous Makati heavy hitter where sixty tiny diorama worlds bring Philippine history to life.",
+    "budgetMin": 450
+   },
+   {
+    "slug": "bamboo-organ-museum",
+    "name": "Bamboo Organ Museum",
+    "city": "Las Piñas",
+    "canonicalPath": "/places/las-pinas/bamboo-organ-museum",
+    "why": "The quiet Las Piñas hero with historical objects revealing how the famous instrument was built.",
+    "budgetMin": 50
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "cebu-weekend-islands-or-temple",
   "date": "2026-10-18",
   "publishedAt": "2026-10-18T08:30:01.759Z",

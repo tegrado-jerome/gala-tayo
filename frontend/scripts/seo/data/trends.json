@@ -262,5 +262,28 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "regine velasquez retirement signature songs",
+    "traffic": 100,
+    "date": "2026-10-20",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "capital1 solar spikers",
+    "traffic": 100,
+    "date": "2026-10-20",
+    "intents": [
+      "food",
+      "food-trip",
+      "cafe"
+    ],
+    "areaSlug": null
   }
 ]
