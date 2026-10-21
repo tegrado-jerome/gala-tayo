@@ -1,5 +1,67 @@
 [
  {
+  "slug": "budget-sunset-spots-metro-manila",
+  "date": "2026-10-21",
+  "publishedAt": "2026-10-21T14:22:36.483Z",
+  "format": "budget-challenge",
+  "sticker": "₱300 Challenge",
+  "title": "₱300 Sunset Spots in Metro Manila: ₱0 Spent",
+  "hook": "We budgeted ₱300 for an evening view run and spent exactly ₱0. Keep the whole ₱300 for merienda!",
+  "body": "Catch sunset over the river from the car-free Pasig River Esplanade walkway around 4 to 5 PM. Stroll straight to Jones Bridge as its ornate lamp posts light up for blue hour over the Pasig River. Wrap up with an evening stroll under decorative lighting at Roxas Boulevard Promenade Light Park. Total spent across all three: exactly ₱0. Your ₱300 budget is completely untouched and waiting for dinner. Head out this Wednesday afternoon!",
+  "meme": {
+   "top": "Arrived at Pasig River Esplanade with ₱300",
+   "bottom": "Sunset was free so the ₱300 is purely for food"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "sunset spots in Metro Manila",
+   "query": "sunset spots in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "jones-bridge",
+  "picks": [
+   {
+    "slug": "pasig-river-esplanade-manila",
+    "name": "Pasig River Esplanade",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/pasig-river-esplanade-manila",
+    "why": "Come around 4 to 5 PM for the sunset over the water along this car-free 1.7 to 1.9 km walkway!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "jones-bridge",
+    "name": "Jones Bridge",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/jones-bridge",
+    "why": "Catch blue hour right after sundown as ornate lamp posts glow with views of the Central Post Office!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "roxas-boulevard-promenade-light-park",
+    "name": "Roxas Boulevard Promenade Light Park",
+    "city": "Pasay",
+    "canonicalPath": "/places/pasay/roxas-boulevard-promenade-light-park",
+    "why": "A free open waterfront space with decorative lighting that comes alive right after sunset!",
+    "budgetMin": 0
+   }
+  ],
+  "budget": {
+   "cap": 300,
+   "total": 0
+  },
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 9,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "rainy-day-activities-in-metro-manila-2026-10-20",
   "date": "2026-10-20",
   "publishedAt": "2026-10-20T08:30:02.436Z",

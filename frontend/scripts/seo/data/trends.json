@@ -285,5 +285,44 @@
       "cafe"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "currently",
+    "traffic": 200,
+    "date": "2026-10-21",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "right",
+    "traffic": 500,
+    "date": "2026-10-21",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "super typhoon philippines rosal",
+    "traffic": 1000,
+    "date": "2026-10-21",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
