@@ -1,5 +1,66 @@
 [
  {
+  "slug": "metro-manila-in-one-day-guide",
+  "date": "2026-10-22",
+  "publishedAt": "2026-10-22T08:30:00.775Z",
+  "format": "24-hours",
+  "sticker": "24 Hours in Metro Manila",
+  "title": "Things to do in Metro Manila: The 24-Hour Plan",
+  "hook": "Start with 1594 dumplings in Binondo and end with Michelin-starred dining in Makati. Zero wasted hours today!",
+  "body": "Start early on Ongpin Street with hot dumplings and sweet hopia in one of the world's oldest Chinatowns. By early afternoon, explore Fort Santiago to walk the Baluarte de Santa Barbara overlooking the Pasig River and see the historic dungeons. Wrap up your Thursday night at The Alley at Karrivin in Makati, where Toyo Eatery serves a one-Michelin-star dinner made entirely with Philippine ingredients. Grab your shoes and go right now!",
+  "meme": {
+   "top": "8 AM: We are just getting one box of hopia.",
+   "bottom": "10 AM: Carrying four bags down Ongpin Street."
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila",
+   "query": "things to do in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "fort-santiago",
+  "picks": [
+   {
+    "slug": "binondo-chinatown",
+    "name": "Binondo Chinatown",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/binondo-chinatown",
+    "why": "Kick off in one of the oldest Chinatowns with morning hopia and dumplings on Ongpin Street!",
+    "budgetMin": 0,
+    "time": "8 AM"
+   },
+   {
+    "slug": "fort-santiago",
+    "name": "Fort Santiago",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/fort-santiago",
+    "why": "Stroll the Baluarte de Santa Barbara for breezy river views, then visit the Spanish-era dungeons.",
+    "budgetMin": 75,
+    "time": "1 PM"
+   },
+   {
+    "slug": "toyo-eatery",
+    "name": "Toyo Eatery",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/toyo-eatery",
+    "why": "Chef Jordy Navarra turns local Philippine ingredients into a one-Michelin-star dinner at Karrivin.",
+    "budgetMin": 2500,
+    "time": "7 PM"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "budget-sunset-spots-metro-manila",
   "date": "2026-10-21",
   "publishedAt": "2026-10-21T14:22:36.483Z",

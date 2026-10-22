@@ -324,5 +324,18 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "weather forecast typhoon philippines",
+    "traffic": 500,
+    "date": "2026-10-22",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
