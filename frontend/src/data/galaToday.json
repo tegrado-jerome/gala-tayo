@@ -1,5 +1,70 @@
 [
  {
+  "slug": "family-day-out-metro-manila-starter-pack",
+  "date": "2026-10-23",
+  "publishedAt": "2026-10-23T01:08:35.208Z",
+  "format": "starter-pack",
+  "sticker": "Starter Pack",
+  "title": "Metro Manila Family Day Out Starter Pack",
+  "hook": "Three spots that make the toddler, the teen, and the grandparents happy in one go.",
+  "body": "Planning a family day out in Metro Manila usually means a group chat that goes nowhere. Skip the chaos and stick to these classics that satisfy every age group. From colonial history to sharks swimming over your head, your Friday is sorted. Bring your walking shoes and prepare to capture every moment. If you can keep the group together until the last stop, consider it a win. Let’s get out the door before everyone changes their mind!",
+  "meme": {
+   "top": "The family day out starter pack",
+   "bottom": "The plan was 5 hours. We made it 3."
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "family day out in Metro Manila",
+   "query": "family day out in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "rizal-park-luneta-park",
+  "picks": [
+   {
+    "slug": "rizal-park-luneta-park",
+    "name": "Rizal Park / Luneta Park",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/rizal-park-luneta-park",
+    "why": "Walk from the Rizal Monument to Kilometer Zero. It's the heart of the nation and a classic free day out for everyone.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "manila-ocean-park",
+    "name": "Manila Ocean Park",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/manila-ocean-park",
+    "why": "A 25-meter glass tunnel where sharks and rays swim over your head. You get all the sea life without any sand!",
+    "budgetMin": 720
+   },
+   {
+    "slug": "star-city",
+    "name": "Star City",
+    "city": "Pasay",
+    "canonicalPath": "/places/pasay/star-city",
+    "why": "Thrill rides, carnival lights, and Snow World! This amusement park reopened in 2022 for all your family's screams.",
+    "budgetMin": 699
+   }
+  ],
+  "items": [
+   "Comfortable walking shoes",
+   "An extra shirt for the kids",
+   "A portable fan",
+   "Snacks for the car ride",
+   "Patience for the group photos"
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-2.5-flash"
+ },
+ {
   "slug": "metro-manila-in-one-day-guide",
   "date": "2026-10-22",
   "publishedAt": "2026-10-22T08:30:00.775Z",
