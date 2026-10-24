@@ -1,5 +1,63 @@
 [
  {
+  "slug": "calabarzon-photo-spots-camera-roll",
+  "date": "2026-10-24",
+  "publishedAt": "2026-10-23T22:30:02.067Z",
+  "format": "pov",
+  "sticker": "POV",
+  "title": "Scenic Calabarzon Photo Spots for the Feed",
+  "hook": "A swing over a green valley, lake views, and lunch in a waterfall. Your gallery is full already!",
+  "body": "Your phone storage warning is coming, but your feed deserves it. Drive out this Saturday for Bali-style swings on Mount Banahaw, quiet hillside views of Taal Lake, and bamboo tables resting in shallow water right below a waterfall. No need to stress over poses when the backdrop does the heavy lifting. Charge the phone, clear space, and head out to Calabarzon today!",
+  "meme": {
+   "top": "POV: you swore you would only take one photo",
+   "bottom": "and now you are deleting apps for storage space"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "Calabarzon photo spots",
+   "query": "Calabarzon photo spots",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Calabarzon",
+  "leadSlug": "esmeris-farm-liliw",
+  "picks": [
+   {
+    "slug": "esmeris-farm-liliw",
+    "name": "Esmeris Farm (Daang Hari Campgrounds)",
+    "city": "Liliw",
+    "canonicalPath": "/places/liliw/esmeris-farm-liliw",
+    "why": "Bamboo view decks and Bali-style swings over a valley on the slopes of Mount Banahaw!",
+    "budgetMin": 50
+   },
+   {
+    "slug": "imeldas-garden-cuenca",
+    "name": "Imelda's Garden",
+    "city": "Cuenca",
+    "canonicalPath": "/places/cuenca/imeldas-garden-cuenca",
+    "why": "An open view of Taal Lake and Volcano Island with Mt. Maculot towering right behind.",
+    "budgetMin": 150
+   },
+   {
+    "slug": "villa-escudero-tiaong",
+    "name": "Villa Escudero Plantations and Resort",
+    "city": "Tiaong",
+    "canonicalPath": "/places/tiaong/villa-escudero-tiaong",
+    "why": "Dine at bamboo tables sitting in shallow water right at the foot of a waterfall!",
+    "budgetMin": null
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "family-day-out-metro-manila-starter-pack",
   "date": "2026-10-23",
   "publishedAt": "2026-10-23T01:08:35.208Z",
