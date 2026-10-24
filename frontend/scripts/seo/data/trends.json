@@ -337,5 +337,18 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "bagyo",
+    "traffic": 100,
+    "date": "2026-10-24",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
