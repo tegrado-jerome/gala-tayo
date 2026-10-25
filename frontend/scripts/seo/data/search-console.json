@@ -1,14 +1,44 @@
 {
   "range": {
-    "startDate": "2026-09-18",
-    "endDate": "2026-10-16"
+    "startDate": "2026-09-25",
+    "endDate": "2026-10-23"
   },
   "queries": [
     {
       "query": "gala tayo",
-      "clicks": 3,
-      "impressions": 31,
-      "position": 5.096774193548387
+      "clicks": 4,
+      "impressions": 28,
+      "position": 3.107142857142857
+    },
+    {
+      "query": "restaurants around quezon city",
+      "clicks": 1,
+      "impressions": 1,
+      "position": 44
+    },
+    {
+      "query": "1042 ap reyes tejeros makati",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 34
+    },
+    {
+      "query": "11 islands zamboanga",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 44
+    },
+    {
+      "query": "7 commando el nido",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 8
+    },
+    {
+      "query": "adventure-park-antipolo02001.qodsblog.com",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 1
     },
     {
       "query": "aling lucia sisig",
@@ -17,22 +47,100 @@
       "position": 35
     },
     {
+      "query": "aling lucing angeles",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 75
+    },
+    {
+      "query": "aling lucing dau",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 8
+    },
+    {
       "query": "aling lucing sisig near me",
       "clicks": 0,
       "impressions": 1,
       "position": 36
     },
     {
-      "query": "art in island quezon city",
+      "query": "aliwagwag falls location",
       "clicks": 0,
       "impressions": 1,
-      "position": 31
+      "position": 48
+    },
+    {
+      "query": "amora misamis occidental",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 16
+    },
+    {
+      "query": "amorap misamis occidental",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 23
+    },
+    {
+      "query": "amorap misamis occidental entrance fee",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 8.75
+    },
+    {
+      "query": "amorap rates",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
+    },
+    {
+      "query": "amorap rates per night",
+      "clicks": 0,
+      "impressions": 7,
+      "position": 10.285714285714286
+    },
+    {
+      "query": "art in island entrance fee 2023",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 8
+    },
+    {
+      "query": "art in island quezon city",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 24.75
     },
     {
       "query": "aya by hapag",
       "clicks": 0,
+      "impressions": 7,
+      "position": 9.857142857142858
+    },
+    {
+      "query": "aya hapag",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 12.5
+    },
+    {
+      "query": "aya makati",
+      "clicks": 0,
       "impressions": 1,
-      "position": 9
+      "position": 12
+    },
+    {
+      "query": "aya makati city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 12
+    },
+    {
+      "query": "aya rockwell",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
     },
     {
       "query": "ayà by hapag location",
@@ -41,10 +149,28 @@
       "position": 8
     },
     {
+      "query": "bacolor san guillermo parish church",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 12
+    },
+    {
       "query": "badian canyoneering",
       "clicks": 0,
       "impressions": 3,
       "position": 56.666666666666664
+    },
+    {
+      "query": "baguio night life",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 37
+    },
+    {
+      "query": "bahay na bato iloilo",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 34
     },
     {
       "query": "bais city sandbar",
@@ -71,6 +197,18 @@
       "position": 86
     },
     {
+      "query": "banol beach",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 77
+    },
+    {
+      "query": "barangay 158 pasay city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 55
+    },
+    {
       "query": "barkada food",
       "clicks": 0,
       "impressions": 1,
@@ -79,14 +217,14 @@
     {
       "query": "batad banaue",
       "clicks": 0,
-      "impressions": 1,
-      "position": 67
+      "impressions": 2,
+      "position": 65
     },
     {
       "query": "batad banaue rice terraces",
       "clicks": 0,
-      "impressions": 2,
-      "position": 75.5
+      "impressions": 4,
+      "position": 65.75
     },
     {
       "query": "batad philippines",
@@ -97,8 +235,14 @@
     {
       "query": "batad rice terraces",
       "clicks": 0,
-      "impressions": 1,
-      "position": 71
+      "impressions": 4,
+      "position": 66.25
+    },
+    {
+      "query": "batad rice terraces philippines",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 67.5
     },
     {
       "query": "bell baguio",
@@ -119,10 +263,28 @@
       "position": 33
     },
     {
+      "query": "binondo metro manila",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 96
+    },
+    {
+      "query": "black bird restaurant manila",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 39
+    },
+    {
       "query": "blackbird makati",
       "clicks": 0,
       "impressions": 3,
       "position": 28.333333333333332
+    },
+    {
+      "query": "blackbird makati wedding",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 47
     },
     {
       "query": "blackbird restaurant reservations",
@@ -143,6 +305,18 @@
       "position": 50
     },
     {
+      "query": "bolao cold spring entrance fee",
+      "clicks": 0,
+      "impressions": 5,
+      "position": 14.2
+    },
+    {
+      "query": "bolinao patar beach",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 30.5
+    },
+    {
       "query": "breakfast at antonio's tagaytay",
       "clicks": 0,
       "impressions": 2,
@@ -153,6 +327,30 @@
       "clicks": 0,
       "impressions": 1,
       "position": 48
+    },
+    {
+      "query": "burnham park to ili likha artist village",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 11
+    },
+    {
+      "query": "caleya bacolod",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 59.5
+    },
+    {
+      "query": "calicoan",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 31
+    },
+    {
+      "query": "calicoan island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 25
     },
     {
       "query": "calle crisologo",
@@ -171,6 +369,60 @@
       "clicks": 0,
       "impressions": 1,
       "position": 50
+    },
+    {
+      "query": "calle katorse",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 49
+    },
+    {
+      "query": "calle real",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 9.5
+    },
+    {
+      "query": "calle real acueducto",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 22
+    },
+    {
+      "query": "calle real iloilo",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 11
+    },
+    {
+      "query": "camiguin mantigue island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 32
+    },
+    {
+      "query": "camp john hay to dragon treasure castle",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 6
+    },
+    {
+      "query": "camping date baguio",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 36
+    },
+    {
+      "query": "canigao island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 70
+    },
+    {
+      "query": "canigao island entrance fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 6
     },
     {
       "query": "canyoneering badian",
@@ -203,10 +455,106 @@
       "position": 35
     },
     {
+      "query": "cloud 9 antipolo hanging bridge",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 22
+    },
+    {
+      "query": "cloud 9 bridge",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 12
+    },
+    {
+      "query": "cloud 9 to hinulugang taktak",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 2
+    },
+    {
       "query": "co tec tai medical museum",
       "clicks": 0,
       "impressions": 1,
       "position": 31
+    },
+    {
+      "query": "cold spring in cagayan de oro",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 20
+    },
+    {
+      "query": "communal ranch entrance fee 2026",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 6
+    },
+    {
+      "query": "cuyegkeng street pasay city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 38
+    },
+    {
+      "query": "dagonoy street malate manila",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 54
+    },
+    {
+      "query": "dahican mati",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 63
+    },
+    {
+      "query": "date ideas baguio",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 12
+    },
+    {
+      "query": "date manila",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 44
+    },
+    {
+      "query": "date spots in manila",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 51.666666666666664
+    },
+    {
+      "query": "dating spot near me",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 9
+    },
+    {
+      "query": "day trip",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 4
+    },
+    {
+      "query": "de jesus oval",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 51
+    },
+    {
+      "query": "dinadiawan",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 45
+    },
+    {
+      "query": "dinadiawan aurora",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 51
     },
     {
       "query": "dinner quezon city",
@@ -215,16 +563,52 @@
       "position": 53
     },
     {
+      "query": "dragon castle baguio entrance fee 2026",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 9
+    },
+    {
+      "query": "dragon treasure castle entrance fee 2026",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 9
+    },
+    {
+      "query": "duli beach",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 69
+    },
+    {
+      "query": "duli beach el nido",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 63
+    },
+    {
       "query": "el nido lagoon tour",
       "clicks": 0,
       "impressions": 1,
       "position": 56
     },
     {
+      "query": "el nido taraw cliff",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 62
+    },
+    {
       "query": "event venue puerto princesa",
       "clicks": 0,
-      "impressions": 11,
-      "position": 41.90909090909091
+      "impressions": 20,
+      "position": 39.2
+    },
+    {
+      "query": "events place in pasay",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 51.333333333333336
     },
     {
       "query": "fong wei wu menu",
@@ -233,16 +617,34 @@
       "position": 12.333333333333334
     },
     {
-      "query": "gala marikina",
+      "query": "fort pilar location",
       "clicks": 0,
       "impressions": 1,
+      "position": 84
+    },
+    {
+      "query": "fort pilar museum zamboanga",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 95
+    },
+    {
+      "query": "gala marikina",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 6.666666666666667
+    },
+    {
+      "query": "gala near me",
+      "clicks": 0,
+      "impressions": 2,
       "position": 8
     },
     {
       "query": "gala places",
       "clicks": 0,
-      "impressions": 2,
-      "position": 12.5
+      "impressions": 5,
+      "position": 9
     },
     {
       "query": "gala spots near me",
@@ -251,16 +653,70 @@
       "position": 3
     },
     {
+      "query": "gala ta",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 27
+    },
+    {
       "query": "gala tayo meaning",
       "clicks": 0,
-      "impressions": 2,
-      "position": 10.5
+      "impressions": 3,
+      "position": 10.333333333333334
     },
     {
       "query": "galayo",
       "clicks": 0,
       "impressions": 1,
       "position": 55
+    },
+    {
+      "query": "ginduyanan cove",
+      "clicks": 0,
+      "impressions": 8,
+      "position": 10.5
+    },
+    {
+      "query": "good restaurants in quezon city",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 36
+    },
+    {
+      "query": "guinduyanan cove",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 21.5
+    },
+    {
+      "query": "hagimit falls",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 29
+    },
+    {
+      "query": "hagimit falls entrance fee",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 8.25
+    },
+    {
+      "query": "hagimit falls samal entrance fee",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 9.666666666666666
+    },
+    {
+      "query": "hanging bridge cloud 9",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 8.5
+    },
+    {
+      "query": "hapag pinoy resto bar",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 9
     },
     {
       "query": "hard rock cafe s maison",
@@ -273,6 +729,60 @@
       "clicks": 0,
       "impressions": 2,
       "position": 43
+    },
+    {
+      "query": "hinulugang taktak",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 2
+    },
+    {
+      "query": "hinulugang taktak activities",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 35
+    },
+    {
+      "query": "hinulugang taktak activities fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 7
+    },
+    {
+      "query": "hinulugang taktak antipolo entrance fee",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 8.5
+    },
+    {
+      "query": "hinulugang taktak entrance fee",
+      "clicks": 0,
+      "impressions": 19,
+      "position": 9.210526315789474
+    },
+    {
+      "query": "hinulugang taktak entrance fee 2026",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 7.5
+    },
+    {
+      "query": "hinulugang taktak falls",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 2
+    },
+    {
+      "query": "hinulugang taktak nature & adventure park",
+      "clicks": 0,
+      "impressions": 6,
+      "position": 9
+    },
+    {
+      "query": "hinulugang taktak nature and adventure park",
+      "clicks": 0,
+      "impressions": 5,
+      "position": 8.2
     },
     {
       "query": "historical places in mandaluyong",
@@ -305,10 +815,82 @@
       "position": 38
     },
     {
-      "query": "kao club",
+      "query": "ili likha baguio",
       "clicks": 0,
       "impressions": 1,
-      "position": 10
+      "position": 28
+    },
+    {
+      "query": "ili-likha artist village entrance fee",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 11.333333333333334
+    },
+    {
+      "query": "impasugong communal ranch",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 12
+    },
+    {
+      "query": "is cp safe today",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 79
+    },
+    {
+      "query": "is hinulugang taktak free",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 9.333333333333334
+    },
+    {
+      "query": "kao club",
+      "clicks": 0,
+      "impressions": 5,
+      "position": 8
+    },
+    {
+      "query": "kao newport",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 8
+    },
+    {
+      "query": "klubsport tagaytay",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 34
+    },
+    {
+      "query": "la terrasse puerto princesa",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 29.25
+    },
+    {
+      "query": "lake danao",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 68.5
+    },
+    {
+      "query": "lake danao history",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 62.333333333333336
+    },
+    {
+      "query": "lake danao ormoc",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 16.333333333333336
+    },
+    {
+      "query": "lake danao southern leyte",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 87
     },
     {
       "query": "las cabanas beach",
@@ -317,22 +899,46 @@
       "position": 79.33333333333333
     },
     {
+      "query": "legazpi",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 54
+    },
+    {
       "query": "liberation plaza",
       "clicks": 0,
       "impressions": 1,
       "position": 1
     },
     {
+      "query": "limasawa island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 30
+    },
+    {
       "query": "lio beach",
       "clicks": 0,
-      "impressions": 2,
-      "position": 56
+      "impressions": 4,
+      "position": 58.5
     },
     {
       "query": "lio beach el nido",
       "clicks": 0,
+      "impressions": 3,
+      "position": 70.66666666666667
+    },
+    {
+      "query": "lio beach el nido philippines",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 62.5
+    },
+    {
+      "query": "lio lio el nido",
+      "clicks": 0,
       "impressions": 1,
-      "position": 57
+      "position": 50
     },
     {
       "query": "lualhati park",
@@ -365,6 +971,12 @@
       "position": 47
     },
     {
+      "query": "mantigue island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 34
+    },
+    {
       "query": "marikina community hall",
       "clicks": 0,
       "impressions": 1,
@@ -377,10 +989,40 @@
       "position": 77
     },
     {
+      "query": "matalom port",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
+    },
+    {
+      "query": "mati",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 38
+    },
+    {
+      "query": "mati davao",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 47.5
+    },
+    {
+      "query": "mati davao tourist spot",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 38
+    },
+    {
       "query": "moalboal sardine run",
       "clicks": 0,
       "impressions": 1,
       "position": 55
+    },
+    {
+      "query": "molo church",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 11
     },
     {
       "query": "mt tapyas steps",
@@ -389,10 +1031,40 @@
       "position": 55
     },
     {
+      "query": "musei metro manila",
+      "clicks": 0,
+      "impressions": 12,
+      "position": 26.666666666666668
+    },
+    {
       "query": "museum metro manila",
       "clicks": 0,
+      "impressions": 8,
+      "position": 28.125
+    },
+    {
+      "query": "museums in manila",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 31.5
+    },
+    {
+      "query": "museums in metro manila",
+      "clicks": 0,
       "impressions": 1,
-      "position": 30
+      "position": 79
+    },
+    {
+      "query": "musée metro manila",
+      "clicks": 0,
+      "impressions": 7,
+      "position": 23.571428571428573
+    },
+    {
+      "query": "nagsasa cove",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 85
     },
     {
       "query": "nagsasa cove zambales",
@@ -413,10 +1085,22 @@
       "position": 54
     },
     {
+      "query": "paez street concepcion malabon city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 56
+    },
+    {
       "query": "palawan activities",
       "clicks": 0,
-      "impressions": 5,
-      "position": 66.4
+      "impressions": 15,
+      "position": 69.46666666666667
+    },
+    {
+      "query": "palawan things to do",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 76
     },
     {
       "query": "pamilacan vs balicasag",
@@ -431,10 +1115,16 @@
       "position": 58
     },
     {
-      "query": "patar beach",
+      "query": "pasig river esplanade sunset",
       "clicks": 0,
       "impressions": 1,
-      "position": 41
+      "position": 8
+    },
+    {
+      "query": "patar beach",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 38.333333333333336
     },
     {
       "query": "patar beach bolinao pangasinan entrance fee",
@@ -443,10 +1133,28 @@
       "position": 35
     },
     {
-      "query": "patar beach location",
+      "query": "patar beach bolinao pangasinan philippines",
       "clicks": 0,
       "impressions": 1,
-      "position": 52
+      "position": 41
+    },
+    {
+      "query": "patar beach bolinao philippines",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 38
+    },
+    {
+      "query": "patar beach entrance fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 11
+    },
+    {
+      "query": "patar beach location",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 49.25
     },
     {
       "query": "patar philippines",
@@ -461,7 +1169,31 @@
       "position": 62.5
     },
     {
+      "query": "pitas island",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 69
+    },
+    {
+      "query": "places for a date",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
+    },
+    {
+      "query": "places to eat in quezon city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 35
+    },
+    {
       "query": "pulag philippines",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 87
+    },
+    {
+      "query": "qc restaurants",
       "clicks": 0,
       "impressions": 1,
       "position": 87
@@ -473,22 +1205,70 @@
       "position": 30
     },
     {
+      "query": "restaurant in quezon city",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 31
+    },
+    {
       "query": "restaurant quezon city",
       "clicks": 0,
-      "impressions": 4,
-      "position": 88.25
+      "impressions": 8,
+      "position": 69.25
     },
     {
       "query": "restaurants in quezon city",
       "clicks": 0,
+      "impressions": 4,
+      "position": 57.75
+    },
+    {
+      "query": "restaurants quezon city",
+      "clicks": 0,
       "impressions": 1,
-      "position": 31
+      "position": 27
+    },
+    {
+      "query": "sagada municipal hall",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 61
+    },
+    {
+      "query": "sam guillermo",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 36
+    },
+    {
+      "query": "samal",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 49
+    },
+    {
+      "query": "san guillermo church",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 12.25
     },
     {
       "query": "sans rival cakes & pastries",
       "clicks": 0,
       "impressions": 3,
       "position": 36.666666666666664
+    },
+    {
+      "query": "sans rival cakes and pastries dumaguete city",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 27.25
+    },
+    {
+      "query": "sans rival dumaguete",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 30
     },
     {
       "query": "sans rival store near me",
@@ -517,14 +1297,38 @@
     {
       "query": "siglo tagaytay",
       "clicks": 0,
-      "impressions": 2,
-      "position": 70.5
+      "impressions": 3,
+      "position": 69
     },
     {
       "query": "simala sibonga",
       "clicks": 0,
       "impressions": 1,
       "position": 40
+    },
+    {
+      "query": "sinulom falls",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 44.333333333333336
+    },
+    {
+      "query": "sinulom falls and bolao cold spring",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 11
+    },
+    {
+      "query": "sinulom falls and bolao cold spring entrance fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 20
+    },
+    {
+      "query": "sinulom falls entrance fee",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
     },
     {
       "query": "tam awan",
@@ -557,6 +1361,12 @@
       "position": 65
     },
     {
+      "query": "tambayan near me",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 10
+    },
+    {
       "query": "tangadan falls entrance fee",
       "clicks": 0,
       "impressions": 1,
@@ -567,6 +1377,18 @@
       "clicks": 0,
       "impressions": 1,
       "position": 61
+    },
+    {
+      "query": "taraw cliff canopy walk",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 11.5
+    },
+    {
+      "query": "taraw cliff canopy walk price",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 12
     },
     {
       "query": "temple of leah",
@@ -605,16 +1427,46 @@
       "position": 56
     },
     {
+      "query": "the mansion and wright park",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 12
+    },
+    {
       "query": "the ruins talisay",
       "clicks": 0,
       "impressions": 1,
       "position": 68
     },
     {
-      "query": "things to do in palawan",
+      "query": "things to do in amorap",
       "clicks": 0,
       "impressions": 1,
-      "position": 93
+      "position": 11
+    },
+    {
+      "query": "things to do in legazpi",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 45
+    },
+    {
+      "query": "things to do in palawan",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 80.25
+    },
+    {
+      "query": "things to do in samal island",
+      "clicks": 0,
+      "impressions": 3,
+      "position": 28
+    },
+    {
+      "query": "things to do in zamboanga",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 38
     },
     {
       "query": "things to do palawan",
@@ -623,58 +1475,64 @@
       "position": 85.33333333333333
     },
     {
+      "query": "tinago falls caibiran",
+      "clicks": 0,
+      "impressions": 4,
+      "position": 11.25
+    },
+    {
       "query": "tiyo's events place",
       "clicks": 0,
       "impressions": 1,
       "position": 43
     },
     {
-      "query": "tutuban center",
+      "query": "tomas morato restaurants",
       "clicks": 0,
       "impressions": 1,
-      "position": 63
+      "position": 21
     },
     {
-      "query": "valeria street iloilo city",
-      "clicks": 0,
-      "impressions": 1,
-      "position": 64
-    },
-    {
-      "query": "vigan calle crisologo",
+      "query": "top restaurant in quezon city",
       "clicks": 0,
       "impressions": 2,
-      "position": 49.5
+      "position": 65
     },
     {
-      "query": "what time does simala open",
+      "query": "transportation schedules",
       "clicks": 0,
       "impressions": 1,
-      "position": 43
-    },
-    {
-      "query": "where to gala in metro manila",
-      "clicks": 0,
-      "impressions": 2,
-      "position": 6
+      "position": 9
     }
   ],
   "guides": [
     {
+      "slug": "museums-in-metro-manila",
+      "category": "museum",
+      "impressions": 30,
+      "clicks": 0
+    },
+    {
       "slug": "things-to-do-in-palawan",
-      "impressions": 9,
+      "impressions": 25,
       "clicks": 0
     },
     {
       "slug": "date-places-in-metro-manila",
       "goodFor": "date",
-      "impressions": 2,
+      "impressions": 6,
+      "clicks": 0
+    },
+    {
+      "slug": "date-spots-in-baguio",
+      "goodFor": "date",
+      "impressions": 6,
       "clicks": 0
     },
     {
       "slug": "barkada-hangouts-in-makati",
       "goodFor": "barkada",
-      "impressions": 2,
+      "impressions": 3,
       "clicks": 0
     },
     {
@@ -684,8 +1542,7 @@
       "clicks": 0
     },
     {
-      "slug": "museums-in-metro-manila",
-      "category": "museum",
+      "slug": "is-the-philippines-safe",
       "impressions": 1,
       "clicks": 0
     },
@@ -882,17 +1739,6 @@
       "clicks": 0
     },
     {
-      "slug": "is-the-philippines-safe",
-      "impressions": 0,
-      "clicks": 0
-    },
-    {
-      "slug": "date-spots-in-baguio",
-      "goodFor": "date",
-      "impressions": 0,
-      "clicks": 0
-    },
-    {
       "slug": "things-to-do-in-camiguin",
       "category": "activity",
       "impressions": 0,
@@ -913,6 +1759,24 @@
     {
       "slug": "date-spots-in-cebu-city",
       "goodFor": "date",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "food-trip-in-baguio",
+      "goodFor": "food-trip",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "historical-places-in-metro-manila",
+      "category": "heritage",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "slug": "family-friendly-places-in-baguio",
+      "goodFor": "family",
       "impressions": 0,
       "clicks": 0
     }

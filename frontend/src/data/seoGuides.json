@@ -1126,5 +1126,40 @@
       "kid friendly restaurants in baguio"
     ],
     "addedAt": "2026-10-18"
+  },
+  {
+    "slug": "barkada-hangout-in-manila",
+    "label": "Barkada Hangout in Manila",
+    "areaSlug": "manila",
+    "goodFor": "barkada",
+    "keywords": [
+      "barkada hangouts in manila",
+      "barkada activities in manila",
+      "hangout places in manila"
+    ],
+    "addedAt": "2026-10-25"
+  },
+  {
+    "slug": "family-friendly-places-in-tagaytay",
+    "label": "Family Friendly Places in Tagaytay",
+    "areaSlug": "tagaytay",
+    "goodFor": "family",
+    "keywords": [
+      "family friendly places in tagaytay",
+      "family friendly restaurants in tagaytay",
+      "kid friendly places in tagaytay"
+    ],
+    "addedAt": "2026-10-25"
+  },
+  {
+    "slug": "family-friendly-places-in-metro-manila",
+    "label": "Family Friendly Places in Metro Manila",
+    "areaSlug": "metro-manila",
+    "goodFor": "family",
+    "keywords": [
+      "family friendly places in metro manila",
+      "kid friendly places in metro manila"
+    ],
+    "addedAt": "2026-10-25"
   }
 ]
