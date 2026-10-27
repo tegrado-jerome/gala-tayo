@@ -350,5 +350,19 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "november holidays",
+    "traffic": 200,
+    "date": "2026-10-27",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
   }
 ]
