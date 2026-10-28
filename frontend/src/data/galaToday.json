@@ -1,5 +1,66 @@
 [
  {
+  "slug": "history-trip-in-metro-manila-tier-list",
+  "date": "2026-10-28",
+  "publishedAt": "2026-10-28T01:58:44.731Z",
+  "format": "tier-list",
+  "sticker": "Tier List",
+  "title": "The History Trip in Metro Manila Tier List",
+  "hook": "Ceilings painted in 3D, a secret steel fortress, and an ace of spades fort ranked for your Wednesday walk!",
+  "body": "Metro Manila is packed with wild structural plot twists. San Agustin brings UNESCO glory with ceilings that trick your brain into seeing 3D stone, San Sebastian flexes an entire church secretly engineered out of painted metal, and Baluarte de San Diego sits shaped like a giant ace of spades. Skip the dull timeline lectures, grab your walking shoes, and hit the stone paths today!",
+  "meme": {
+   "top": "Ranking Metro Manila heritage stops",
+   "bottom": "The steel church took the A rank personally"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "history trip in Metro Manila",
+   "query": "history trip in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "san-agustin-church",
+  "picks": [
+   {
+    "slug": "san-agustin-church",
+    "name": "San Agustin Church",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/san-agustin-church",
+    "why": "A trompe-l'oeil ceiling painted so sharp it looks 3D. UNESCO fame without a single bad camera angle.",
+    "budgetMin": 0,
+    "tier": "S"
+   },
+   {
+    "slug": "san-sebastian-basilica",
+    "name": "San Sebastian Basilica",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/san-sebastian-basilica",
+    "why": "The only all-steel church in the Philippines painted to look like marble. Masterclass in church disguise.",
+    "budgetMin": 0,
+    "tier": "A"
+   },
+   {
+    "slug": "baluarte-de-san-diego",
+    "name": "Baluarte de San Diego",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/baluarte-de-san-diego",
+    "why": "A 16th-century fort built like an ace of spades. Only in B because the steel church flexed harder.",
+    "budgetMin": 75,
+    "tier": "B"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "calabarzon-photo-spots-camera-roll",
   "date": "2026-10-24",
   "publishedAt": "2026-10-23T22:30:02.067Z",

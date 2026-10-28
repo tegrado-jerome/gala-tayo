@@ -364,5 +364,19 @@
       "free"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "asean summit 2026 holiday",
+    "traffic": 500,
+    "date": "2026-10-28",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": "pasay"
   }
 ]
