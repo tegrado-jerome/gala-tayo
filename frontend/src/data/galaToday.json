@@ -1,5 +1,66 @@
 [
  {
+  "slug": "holiday-in-metro-manila-24-hour-plan",
+  "date": "2026-11-01",
+  "publishedAt": "2026-10-31T22:30:01.555Z",
+  "format": "24-hours",
+  "sticker": "24 Hours in Metro Manila",
+  "title": "Things to do in Metro Manila this holiday in 24 hours",
+  "hook": "Spoliarium in the morning, button-mashing science by two, and dinner in a 1937 airport tower to beat the rain!",
+  "body": "Got a day off and zero plans? Beat the afternoon showers indoors across the metro. Start inside the grand Old Legislative Building to see the huge Spoliarium in cool galleries. By afternoon, jump into more than 250 interactive exhibits across five galleries to play with light and sound. Wrap up your holiday dinner inside an Art Deco terminal from 1937. Grab your umbrella and head out today!",
+  "meme": {
+   "top": "I only came in here for free air-con",
+   "bottom": "Suddenly crying in front of the Spoliarium"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila this holiday",
+   "query": "things to do in Metro Manila this holiday",
+   "source": null,
+   "url": null
+  },
+  "weather": "Afternoon showers likely, 2–8 PM",
+  "area": "Metro Manila",
+  "leadSlug": "national-museum-of-fine-arts",
+  "picks": [
+   {
+    "slug": "national-museum-of-fine-arts",
+    "name": "National Museum of Fine Arts",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-fine-arts",
+    "why": "Free entry, crisp air-con, and standing face to face with Juan Luna's Spoliarium. Morning unlocked!",
+    "budgetMin": 0,
+    "time": "10 AM"
+   },
+   {
+    "slug": "the-mind-museum",
+    "name": "The Mind Museum",
+    "city": "Taguig",
+    "canonicalPath": "/places/taguig/the-mind-museum",
+    "why": "Rain outside, but you are inside five galleries pushing buttons and testing light and sound experiments!",
+    "budgetMin": 625,
+    "time": "2 PM"
+   },
+   {
+    "slug": "blackbird-at-the-nielson-tower",
+    "name": "Blackbird at the Nielson Tower",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/blackbird-at-the-nielson-tower",
+    "why": "Holiday dinner inside a 1937 Art Deco airport control tower. Safe from the rain and effortlessly stylish!",
+    "budgetMin": 1500,
+    "time": "7 PM"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "history-trip-in-metro-manila-tier-list",
   "date": "2026-10-28",
   "publishedAt": "2026-10-28T01:58:44.731Z",
