@@ -378,5 +378,38 @@
       "free"
     ],
     "areaSlug": "pasay"
+  },
+  {
+    "title": "philippine airlines asean summit flights",
+    "traffic": 200,
+    "date": "2026-11-01",
+    "intents": [],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "inde navarrette",
+    "traffic": 100,
+    "date": "2026-11-01",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "2027 starbucks collection",
+    "traffic": 1000,
+    "date": "2026-11-01",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
   }
 ]
