@@ -1161,5 +1161,47 @@
       "kid friendly places in metro manila"
     ],
     "addedAt": "2026-10-25"
+  },
+  {
+    "slug": "chill-places-in-manila",
+    "label": "Chill Places in Manila",
+    "areaSlug": "manila",
+    "goodFor": "chill",
+    "keywords": [
+      "chill places in manila",
+      "fun places in manila",
+      "cool places in manila",
+      "hangout places in manila",
+      "fun places in manila for kids"
+    ],
+    "addedAt": "2026-11-01"
+  },
+  {
+    "slug": "parks-in-metro-manila",
+    "label": "Parks in Metro Manila",
+    "areaSlug": "metro-manila",
+    "category": "park",
+    "keywords": [
+      "parks in metro manila",
+      "parks in metro manila reddit",
+      "best parks in metro manila",
+      "public parks in metro manila",
+      "food parks in metro manila"
+    ],
+    "addedAt": "2026-11-01"
+  },
+  {
+    "slug": "chill-places-in-metro-manila",
+    "label": "Chill Places in Metro Manila",
+    "areaSlug": "metro-manila",
+    "goodFor": "chill",
+    "keywords": [
+      "chill places in metro manila",
+      "fun places in metro manila",
+      "chill spots in metro manila",
+      "cool places in metro manila",
+      "hangout places metro manila"
+    ],
+    "addedAt": "2026-11-01"
   }
 ]
