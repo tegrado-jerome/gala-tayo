@@ -1,5 +1,69 @@
 [
  {
+  "slug": "group-day-out-metro-manila",
+  "date": "2026-11-02",
+  "publishedAt": "2026-11-01T22:30:02.157Z",
+  "format": "starter-pack",
+  "sticker": "Starter Pack",
+  "title": "Group Day Out in Metro Manila: The Trio Plan",
+  "hook": "Tired of the group chat dying? Here is how to actually get everyone out of the house today.",
+  "body": "Forget the endless typing. A real plan works better than a dozen tentative messages. Start with optical illusions where you become the art, then feed the squad with enough sisig to end the debate on what is for lunch. When the rain starts, head to the planetarium for science that feels like a trip to another dimension. Keep it simple, keep it moving, and just show up. Grab your friends and go.",
+  "meme": {
+   "top": "The group day out in Metro Manila starter pack",
+   "bottom": "Your camera roll is not ready"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "group day out in Metro Manila",
+   "query": "group day out in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": "Light rain on and off, 3–4 PM",
+  "area": "Metro Manila",
+  "leadSlug": "the-mind-museum",
+  "picks": [
+   {
+    "slug": "art-in-island",
+    "name": "Art in Island",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/art-in-island",
+    "why": "Two floors of 3D murals where you climb into the frame. Finally, a museum where touching the art is required.",
+    "budgetMin": 850
+   },
+   {
+    "slug": "manam-at-the-triangle",
+    "name": "Manam at the Triangle",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/manam-at-the-triangle",
+    "why": "The flagship spot for crispy sisig and beef cheeks. The menu is built for sharing with the whole squad.",
+    "budgetMin": null
+   },
+   {
+    "slug": "the-mind-museum",
+    "name": "The Mind Museum",
+    "city": "Taguig",
+    "canonicalPath": "/places/taguig/the-mind-museum",
+    "why": "Five galleries with over 250 exhibits. The perfect indoor spot to dodge that afternoon light rain.",
+    "budgetMin": 625
+   }
+  ],
+  "items": [
+   "A fully charged power bank",
+   "A pair of sensible walking shoes",
+   "One designated group photographer",
+   "An umbrella for the 3 PM sprinkle"
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.1-flash-lite"
+ },
+ {
   "slug": "holiday-in-metro-manila-24-hour-plan",
   "date": "2026-11-01",
   "publishedAt": "2026-10-31T22:30:01.555Z",
