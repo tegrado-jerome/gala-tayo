@@ -425,5 +425,25 @@
       "free"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "barangay ginebra san miguel matchup",
+    "traffic": 500,
+    "date": "2026-11-02",
+    "intents": [],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "heat index",
+    "traffic": 1000,
+    "date": "2026-11-02",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
