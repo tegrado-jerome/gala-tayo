@@ -1,5 +1,63 @@
 [
  {
+  "slug": "metro-manila-photo-spots-fresh-feed",
+  "date": "2026-11-03",
+  "publishedAt": "2026-11-03T03:48:50.982Z",
+  "format": "pov",
+  "sticker": "POV",
+  "title": "3 Metro Manila Photo Spots for a Fresh Feed",
+  "hook": "Your camera roll is tired of plain walls, so head to these three spots for a proper feed upgrade.",
+  "body": "Tuesday is for chasing the light without the weekend crowds. Stop wasting storage on blurry selfies and aim for heritage halls, Art Deco masterpieces, and retro living rooms instead. These spots turn your phone into a time machine. Whether you want to pose with a vintage car or sit under glowing stained glass, your grid needs this. Keep your battery charged and get to these locations before the sun sets today.",
+  "meme": {
+   "top": "POV: You promised your friends a quick walk through town",
+   "bottom": "But you spent three hours posing in a 1950s living room"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "Metro Manila photo spots",
+   "query": "Metro Manila photo spots",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "casa-manila",
+  "picks": [
+   {
+    "slug": "casa-manila",
+    "name": "Casa Manila",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/casa-manila",
+    "why": "Walk through an 1800s home with capiz windows and period furniture that makes every angle look regal.",
+    "budgetMin": 75
+   },
+   {
+    "slug": "metropolitan-theater",
+    "name": "Metropolitan Theater",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/metropolitan-theater",
+    "why": "Designed in 1931, the stained-glass marquee and tropical Filipino reliefs are pure Art Deco magic.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "bahay-modernismo-quezon-city",
+    "name": "Bahay Modernismo",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/bahay-modernismo-quezon-city",
+    "why": "A 1950s bungalow with a vintage car and retro radios. It is a colorful playground for your camera.",
+    "budgetMin": 0
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.1-flash-lite"
+ },
+ {
   "slug": "group-day-out-metro-manila",
   "date": "2026-11-02",
   "publishedAt": "2026-11-01T22:30:02.157Z",
