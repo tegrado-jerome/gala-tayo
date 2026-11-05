@@ -1,5 +1,63 @@
 [
  {
+  "slug": "best-things-to-do-in-metro-manila",
+  "date": "2026-11-05",
+  "publishedAt": "2026-11-05T03:01:53.271Z",
+  "format": "expectation-vs-reality",
+  "sticker": "Expectation vs Reality",
+  "title": "Top things to do in Metro Manila today",
+  "hook": "You planned a sensible schedule, but a giant Tree of Life and vintage record shops had other plans!",
+  "body": "The group chat swore this was a short Thursday outing. Instead, the National Museum of Natural History traps you under its soaring Tree of Life dome. Then Intramuros proves it is a full walled city with massive stone bastions, not just a photo backdrop. Cap it at Cubao Expo, flipping through vinyl in vintage record shops until evening gigs kick off. Pack your comfiest shoes and get out there today!",
+  "meme": {
+   "top": "Expectation: a quick walk past some plants",
+   "bottom": "Reality: jaw on the floor under the giant Tree of Life"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila",
+   "query": "things to do in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "national-museum-of-natural-history",
+  "picks": [
+   {
+    "slug": "national-museum-of-natural-history",
+    "name": "National Museum of Natural History",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-natural-history",
+    "why": "The towering Tree of Life under the glass dome hijacks your camera roll, and entry is totally free!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "intramuros",
+    "name": "Intramuros",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/intramuros",
+    "why": "You came for one gate picture and suddenly you are wandering massive stone bastions and San Agustin Church!",
+    "budgetMin": 0
+   },
+   {
+    "slug": "cubao-expo",
+    "name": "Cubao Expo",
+    "city": "Quezon City",
+    "canonicalPath": "/places/quezon-city/cubao-expo",
+    "why": "Pop in for a vintage trinket and end up browsing record stores and art galleries until evening gigs start!",
+    "budgetMin": 200
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "metro-manila-photo-spots-fresh-feed",
   "date": "2026-11-03",
   "publishedAt": "2026-11-03T03:48:50.982Z",
