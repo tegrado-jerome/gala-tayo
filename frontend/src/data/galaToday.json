@@ -1,5 +1,63 @@
 [
  {
+  "slug": "main-character-date-ideas-metro-manila",
+  "date": "2026-11-06",
+  "publishedAt": "2026-11-06T08:30:10.168Z",
+  "format": "main-character",
+  "sticker": "Main Character Moments",
+  "title": "Main Character Date Ideas in Metro Manila",
+  "hook": "These Manila spots are your movie set, and the extras do not even know they are in your film.",
+  "body": "Stop settling for a dark cinema when your weekend deserves a real location shoot. Walk the historic walls, cross a bridge that thinks it is in Paris, and stroll through a former airport runway. Each spot turns a routine Friday into your breakout scene. Put the phone on self-timer, act natural, and own the frame. The city is ready for its close-up, but you are the reason everyone is watching. Go claim your opening credits tonight.",
+  "meme": {
+   "top": "Planning a date for the lead role",
+   "bottom": "The spotlight is definitely on me"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "date ideas in Metro Manila",
+   "query": "date ideas in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "fort-santiago",
+  "picks": [
+   {
+    "slug": "fort-santiago",
+    "name": "Fort Santiago",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/fort-santiago",
+    "why": "Walk the Baluarte de Santa Barbara walls for river views that set the tone for your period drama.",
+    "budgetMin": 75
+   },
+   {
+    "slug": "jones-bridge",
+    "name": "Jones Bridge",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/jones-bridge",
+    "why": "Stand by the ornate lamp posts at blue hour for that Paris-inspired shot over the Pasig River.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "ayala-triangle-gardens",
+    "name": "Ayala Triangle Gardens",
+    "city": "Makati",
+    "canonicalPath": "/places/makati/ayala-triangle-gardens",
+    "why": "Stroll across the grounds of a former prewar airport for a high-fashion walk among office towers.",
+    "budgetMin": 0
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.1-flash-lite"
+ },
+ {
   "slug": "best-things-to-do-in-metro-manila",
   "date": "2026-11-05",
   "publishedAt": "2026-11-05T03:01:53.271Z",

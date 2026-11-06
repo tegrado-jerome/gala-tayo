@@ -452,5 +452,18 @@
     "date": "2026-11-04",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "rain or shine vs converge",
+    "traffic": 5000,
+    "date": "2026-11-06",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
