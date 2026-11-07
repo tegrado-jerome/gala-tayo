@@ -1,5 +1,66 @@
 [
  {
+  "slug": "weekend-ilocos-norte-top-picks",
+  "date": "2026-11-07",
+  "publishedAt": "2026-11-07T08:30:02.381Z",
+  "format": "tier-list",
+  "sticker": "Tier List",
+  "title": "Things to Do in Ilocos Norte This Weekend",
+  "hook": "Skip the hours of debate and get to the white sand beaches.",
+  "body": "The group chat is frozen, but your Saturday itinerary is waiting. We have fine sand, giant turbines, and history from 1892. These spots are why you drove all the way north. Pack your bag, clear your camera, and just go. Stop scrolling and start driving to see why the north hits different when you actually have a plan.",
+  "meme": {
+   "top": "When you finally reach Ilocos after the long drive",
+   "bottom": "The group chat is still deciding where to eat"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Ilocos Norte this weekend",
+   "query": "things to do in Ilocos Norte this weekend",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Ilocos Norte",
+  "leadSlug": "saud-beach-pagudpud",
+  "picks": [
+   {
+    "slug": "saud-beach-pagudpud",
+    "name": "Saud Beach",
+    "city": "Pagudpud",
+    "canonicalPath": "/places/pagudpud/saud-beach-pagudpud",
+    "why": "Named by a US travel site in 2021. It takes S because wide white sand gives you space to breathe.",
+    "budgetMin": 50,
+    "tier": "S"
+   },
+   {
+    "slug": "bangui-windmills-ilocos-norte",
+    "name": "Bangui Windmills",
+    "city": "Bangui",
+    "canonicalPath": "/places/bangui/bangui-windmills-ilocos-norte",
+    "why": "Twenty 70-meter turbines in a row. It is an A because the wind messes up your hair, but the shot is gold.",
+    "budgetMin": 0,
+    "tier": "A"
+   },
+   {
+    "slug": "cape-bojeador-lighthouse-burgos",
+    "name": "Cape Bojeador Lighthouse",
+    "city": "Burgos, Ilocos Norte",
+    "canonicalPath": "/places/burgos-ilocos-norte/cape-bojeador-lighthouse-burgos",
+    "why": "Lit in 1892 and still standing. It is a B only because climbing those brick steps counts as your gym day.",
+    "budgetMin": 0,
+    "tier": "B"
+   }
+  ],
+  "review": {
+   "funny": 9,
+   "purpose": 10,
+   "accuracy": 10,
+   "natural": 10,
+   "safe": 10
+  },
+  "model": "gemini-3.1-flash-lite"
+ },
+ {
   "slug": "main-character-date-ideas-metro-manila",
   "date": "2026-11-06",
   "publishedAt": "2026-11-06T08:30:10.168Z",
