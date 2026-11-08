@@ -1203,5 +1203,39 @@
       "hangout places metro manila"
     ],
     "addedAt": "2026-11-01"
+  },
+  {
+    "slug": "instagrammable-places-in-manila",
+    "label": "Instagrammable Places in Manila",
+    "areaSlug": "manila",
+    "goodFor": "photo-spot",
+    "keywords": [
+      "instagrammable places in manila",
+      "instagram places in manila",
+      "instagrammable spots in manila",
+      "instagrammable places in metro manila",
+      "most instagrammable places in manila"
+    ],
+    "addedAt": "2026-11-08"
+  },
+  {
+    "slug": "instagrammable-places-in-baguio",
+    "label": "Instagrammable Places in Baguio",
+    "areaSlug": "baguio",
+    "goodFor": "photo-spot",
+    "keywords": [
+      "instagrammable places in baguio"
+    ],
+    "addedAt": "2026-11-08"
+  },
+  {
+    "slug": "instagrammable-places-in-boracay",
+    "label": "Instagrammable Places in Boracay",
+    "areaSlug": "malay-boracay",
+    "goodFor": "photo-spot",
+    "keywords": [
+      "instagrammable places in boracay"
+    ],
+    "addedAt": "2026-11-08"
   }
 ]
