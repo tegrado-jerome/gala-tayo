@@ -465,5 +465,31 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "gta 6 release date",
+    "traffic": 500,
+    "date": "2026-11-09",
+    "intents": [
+      "date"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "pal seat sale",
+    "traffic": 200,
+    "date": "2026-11-09",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": "manila"
   }
 ]
