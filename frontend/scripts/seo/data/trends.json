@@ -491,5 +491,22 @@
       "food-trip"
     ],
     "areaSlug": "manila"
+  },
+  {
+    "title": "shopee",
+    "traffic": 500,
+    "date": "2026-11-10",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
   }
 ]
