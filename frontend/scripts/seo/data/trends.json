@@ -508,5 +508,12 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "asean",
+    "traffic": 200,
+    "date": "2026-11-11",
+    "intents": [],
+    "areaSlug": "manila"
   }
 ]
