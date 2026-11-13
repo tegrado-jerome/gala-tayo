@@ -1,5 +1,63 @@
 [
  {
+  "slug": "sunset-spots-in-metro-manila-walks",
+  "date": "2026-11-13",
+  "publishedAt": "2026-11-13T03:05:42.589Z",
+  "format": "pov",
+  "sticker": "POV",
+  "title": "Sunset spots in Metro Manila to visit today",
+  "hook": "Swap the cubicle view for these sunset spots in Metro Manila where the sky turns gold by the water.",
+  "body": "Office hours are over and the horizon is ready to perform. You do not need a ticket to watch the light change over the city. Walk along the river, cross a bridge with Paris energy, or breathe in the bayside air. These locations make the late afternoon worth the travel time. Pack your camera, round up your friends, and hit the road before the sun hides behind the skyline.",
+  "meme": {
+   "top": "POV: you told your boss you have an urgent meeting",
+   "bottom": "but the meeting is actually with a river sunset"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "sunset spots in Metro Manila",
+   "query": "sunset spots in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "jones-bridge",
+  "picks": [
+   {
+    "slug": "pasig-river-esplanade-manila",
+    "name": "Pasig River Esplanade",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/pasig-river-esplanade-manila",
+    "why": "Walk the 1.9 km stretch starting at 4 PM for sunset before the fountain lights take over.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "jones-bridge",
+    "name": "Jones Bridge",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/jones-bridge",
+    "why": "Snap shots of the ornate lamp posts at blue hour right after the sun sets over the river.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "roxas-boulevard-promenade-light-park",
+    "name": "Roxas Boulevard Promenade Light Park",
+    "city": "Pasay",
+    "canonicalPath": "/places/pasay/roxas-boulevard-promenade-light-park",
+    "why": "Take a waterfront stroll once the sun dips for a view of the bay area evening lights.",
+    "budgetMin": 0
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 9,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.1-flash-lite"
+ },
+ {
   "slug": "weekend-ilocos-norte-top-picks",
   "date": "2026-11-07",
   "publishedAt": "2026-11-07T08:30:02.381Z",
