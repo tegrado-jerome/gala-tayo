@@ -1237,5 +1237,15 @@
       "instagrammable places in boracay"
     ],
     "addedAt": "2026-11-08"
+  },
+  {
+    "slug": "instagrammable-places-in-cebu-city",
+    "label": "Instagrammable Places in Cebu City",
+    "areaSlug": "cebu-city",
+    "goodFor": "photo-spot",
+    "keywords": [
+      "instagrammable places in cebu city"
+    ],
+    "addedAt": "2026-11-15"
   }
 ]
