@@ -515,5 +515,14 @@
     "date": "2026-11-11",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "gta 6 release date",
+    "traffic": 200,
+    "date": "2026-11-16",
+    "intents": [
+      "date"
+    ],
+    "areaSlug": null
   }
 ]
