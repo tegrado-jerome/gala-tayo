@@ -524,5 +524,27 @@
       "date"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "gta 6 release date",
+    "traffic": 200,
+    "date": "2026-11-17",
+    "intents": [
+      "date"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "leonids meteor shower",
+    "traffic": 1000,
+    "date": "2026-11-17",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
