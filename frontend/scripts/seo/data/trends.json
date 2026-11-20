@@ -1,43 +1,5 @@
 [
   {
-    "title": "national teachers day october 5",
-    "traffic": 200,
-    "date": "2026-10-05",
-    "intents": [
-      "rainy-day",
-      "cafe",
-      "mall",
-      "cinema",
-      "museum"
-    ],
-    "areaSlug": null
-  },
-  {
-    "title": "pagasa",
-    "traffic": 5000,
-    "date": "2026-10-05",
-    "intents": [
-      "rainy-day",
-      "cafe",
-      "mall",
-      "cinema",
-      "museum"
-    ],
-    "areaSlug": null
-  },
-  {
-    "title": "dodgers vs braves",
-    "traffic": 500,
-    "date": "2026-10-05",
-    "intents": [
-      "activity",
-      "nightlife",
-      "mall",
-      "food-trip"
-    ],
-    "areaSlug": null
-  },
-  {
     "title": "ncap",
     "traffic": 2000,
     "date": "2026-10-08",
@@ -553,6 +515,18 @@
     "date": "2026-11-18",
     "intents": [
       "date"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "blast slam 9",
+    "traffic": 500,
+    "date": "2026-11-20",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
     ],
     "areaSlug": null
   }
