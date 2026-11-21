@@ -529,5 +529,18 @@
       "food-trip"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "boycott",
+    "traffic": 200,
+    "date": "2026-11-21",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
