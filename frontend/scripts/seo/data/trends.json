@@ -542,5 +542,30 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "sunrise on the reaping cast",
+    "traffic": 200,
+    "date": "2026-11-22",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "walang pasok",
+    "traffic": 20000,
+    "date": "2026-11-22",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
