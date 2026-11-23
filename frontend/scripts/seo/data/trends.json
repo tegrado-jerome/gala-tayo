@@ -1,12 +1,5 @@
 [
   {
-    "title": "ncap",
-    "traffic": 2000,
-    "date": "2026-10-08",
-    "intents": [],
-    "areaSlug": "manila"
-  },
-  {
     "title": "arraignment",
     "traffic": 100,
     "date": "2026-10-09",
@@ -567,5 +560,26 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "december 2026",
+    "traffic": 100,
+    "date": "2026-11-23",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "quezon city police district",
+    "traffic": 200,
+    "date": "2026-11-23",
+    "intents": [],
+    "areaSlug": "quezon-city"
   }
 ]
