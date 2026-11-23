@@ -581,5 +581,18 @@
     "date": "2026-11-23",
     "intents": [],
     "areaSlug": "quezon-city"
+  },
+  {
+    "title": "thanksgiving 2026 usa",
+    "traffic": 200,
+    "date": "2026-11-23",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
   }
 ]
