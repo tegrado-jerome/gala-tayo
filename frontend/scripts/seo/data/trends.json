@@ -609,5 +609,72 @@
       "heritage"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "thanksgiving",
+    "traffic": 100,
+    "date": "2026-11-24",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum",
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "thanksgiving 2026",
+    "traffic": 500,
+    "date": "2026-11-24",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "someone someday",
+    "traffic": 100,
+    "date": "2026-11-24",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "metro manila",
+    "traffic": 2000,
+    "date": "2026-11-24",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "court order",
+    "traffic": 200,
+    "date": "2026-11-24",
+    "intents": [],
+    "areaSlug": "manila"
   }
 ]
