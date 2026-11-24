@@ -1,12 +1,5 @@
 [
   {
-    "title": "arraignment",
-    "traffic": 100,
-    "date": "2026-10-09",
-    "intents": [],
-    "areaSlug": "quezon-city"
-  },
-  {
     "title": "class suspensions walang pasok",
     "traffic": 200,
     "date": "2026-10-11",
@@ -592,6 +585,28 @@
       "mall",
       "cinema",
       "museum"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "supreme court",
+    "traffic": 100,
+    "date": "2026-11-24",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "miss universe coronation",
+    "traffic": 500,
+    "date": "2026-11-24",
+    "intents": [
+      "museum",
+      "heritage"
     ],
     "areaSlug": null
   }

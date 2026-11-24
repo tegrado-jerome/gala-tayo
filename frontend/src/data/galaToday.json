@@ -1,5 +1,55 @@
 [
  {
+  "slug": "metro-manila-tuesday-things-to-do",
+  "date": "2026-11-24",
+  "publishedAt": "2026-11-23T22:30:00.762Z",
+  "format": "would-you-rather",
+  "sticker": "Would You Rather",
+  "title": "Your Tuesday Showdown: Things to do in Metro Manila",
+  "hook": "It is Tuesday, the group chat is silent, and you have two distinct ways to own the day. Decide now!",
+  "body": "Your group chat has zero excuse for boredom today. Would you rather soak in history at a UNESCO World Heritage site with a ceiling that tricks your eyes into seeing 3D art? Or would you prefer to get your underwater fix by walking through a tunnel where sharks hover right above you? One path leads to grand Baroque altars, the other to 277 Southeast Asian species. Pick your side, grab your bag, and get out there before the sun goes down!",
+  "meme": {
+   "top": "Would you rather explore a",
+   "bottom": "3D painted ceiling or swim with sharks?"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "things to do in Metro Manila",
+   "query": "things to do in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "san-agustin-church",
+  "picks": [
+   {
+    "slug": "san-agustin-church",
+    "name": "San Agustin Church",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/san-agustin-church",
+    "why": "A UNESCO site with a trompe-l'oeil ceiling that looks 3D. The ornate choir seats are a jaw-dropping surprise.",
+    "budgetMin": 0
+   },
+   {
+    "slug": "manila-ocean-park",
+    "name": "Manila Ocean Park",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/manila-ocean-park",
+    "why": "A 25-meter glass tunnel where sharks and rays swim over your head. No diving gear required, just pure awe!",
+    "budgetMin": 720
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 10,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-2.5-flash"
+ },
+ {
   "slug": "sunset-spots-in-metro-manila-walks",
   "date": "2026-11-13",
   "publishedAt": "2026-11-13T03:05:42.589Z",
