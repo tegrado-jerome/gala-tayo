@@ -676,5 +676,48 @@
     "date": "2026-11-24",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "when is thanksgiving 2026",
+    "traffic": 1000,
+    "date": "2026-11-25",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum",
+      "activity",
+      "nightlife",
+      "food-trip"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "thanksgiving",
+    "traffic": 50000,
+    "date": "2026-11-25",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "metropolitan manila development authority",
+    "traffic": 100,
+    "date": "2026-11-25",
+    "intents": [],
+    "areaSlug": "manila"
+  },
+  {
+    "title": "bomber",
+    "traffic": 200,
+    "date": "2026-11-25",
+    "intents": [],
+    "areaSlug": "manila"
   }
 ]
