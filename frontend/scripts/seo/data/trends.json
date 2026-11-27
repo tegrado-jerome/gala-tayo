@@ -1,31 +1,5 @@
 [
   {
-    "title": "philippine area of responsibility",
-    "traffic": 200,
-    "date": "2026-10-12",
-    "intents": [
-      "rainy-day",
-      "cafe",
-      "mall",
-      "cinema",
-      "museum"
-    ],
-    "areaSlug": null
-  },
-  {
-    "title": "philippine weather forecast",
-    "traffic": 200,
-    "date": "2026-10-12",
-    "intents": [
-      "rainy-day",
-      "cafe",
-      "mall",
-      "cinema",
-      "museum"
-    ],
-    "areaSlug": null
-  },
-  {
     "title": "rays vs guardians",
     "traffic": 100,
     "date": "2026-10-13",
@@ -706,5 +680,35 @@
     "date": "2026-11-25",
     "intents": [],
     "areaSlug": "manila"
+  },
+  {
+    "title": "storm",
+    "traffic": 500,
+    "date": "2026-11-27",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum",
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "black friday 2026",
+    "traffic": 100,
+    "date": "2026-11-27",
+    "intents": [
+      "food",
+      "food-trip",
+      "cafe"
+    ],
+    "areaSlug": null
   }
 ]

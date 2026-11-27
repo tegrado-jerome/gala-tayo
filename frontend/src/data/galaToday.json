@@ -1,5 +1,66 @@
 [
  {
+  "slug": "family-day-out-metro-manila-tiers",
+  "date": "2026-11-27",
+  "publishedAt": "2026-11-27T04:43:30.588Z",
+  "format": "tier-list",
+  "sticker": "Tier List",
+  "title": "Family Day Out in Metro Manila: The Tier List",
+  "hook": "A toddler, a teen, and the grandparents walk into Friday. Who wins the official family day out ranking?",
+  "body": "Pleasing three generations on a Friday is serious business. S tier goes straight to Binondo Chinatown because walking Ongpin Street for dumplings, hopia, and lumpia instantly unites every age. National Museum of Fine Arts takes A tier with free entry, air-con, and the massive Spoliarium. Rizal Park claims B tier for honor guards at the Rizal Monument and Kilometer Zero. Pick your favorite stop and head out today!",
+  "meme": {
+   "top": "Taking the whole family out on a Friday",
+   "bottom": "The dumplings on Ongpin Street saved the day"
+  },
+  "topic": {
+   "kind": "evergreen",
+   "title": "family day out in Metro Manila",
+   "query": "family day out in Metro Manila",
+   "source": null,
+   "url": null
+  },
+  "weather": null,
+  "area": "Metro Manila",
+  "leadSlug": "national-museum-of-fine-arts",
+  "picks": [
+   {
+    "slug": "binondo-chinatown",
+    "name": "Binondo Chinatown",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/binondo-chinatown",
+    "why": "Dumplings and hopia along Ongpin Street. S tier because warm snacks keep toddlers and grandparents smiling.",
+    "budgetMin": 0,
+    "tier": "S"
+   },
+   {
+    "slug": "national-museum-of-fine-arts",
+    "name": "National Museum of Fine Arts",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/national-museum-of-fine-arts",
+    "why": "Free entry, air-con, and the huge Spoliarium. It only lost top spot because you cannot eat the paintings.",
+    "budgetMin": 0,
+    "tier": "A"
+   },
+   {
+    "slug": "rizal-park-luneta-park",
+    "name": "Rizal Park / Luneta Park",
+    "city": "Manila",
+    "canonicalPath": "/places/manila/rizal-park-luneta-park",
+    "why": "Honor guards at Rizal Monument and Kilometer Zero. A true classic, it only lost because Ongpin has snacks.",
+    "budgetMin": 0,
+    "tier": "B"
+   }
+  ],
+  "review": {
+   "funny": 8,
+   "purpose": 9,
+   "accuracy": 10,
+   "natural": 9,
+   "safe": 10
+  },
+  "model": "gemini-3.8-flash"
+ },
+ {
   "slug": "metro-manila-tuesday-things-to-do",
   "date": "2026-11-24",
   "publishedAt": "2026-11-23T22:30:00.762Z",
