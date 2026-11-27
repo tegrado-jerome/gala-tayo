@@ -710,5 +710,22 @@
       "cafe"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "burj khalifa",
+    "traffic": 100,
+    "date": "2026-11-27",
+    "intents": [
+      "family",
+      "barkada",
+      "date",
+      "hotel",
+      "activity",
+      "free",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
   }
 ]
