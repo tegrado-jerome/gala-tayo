@@ -1,44 +1,5 @@
 [
   {
-    "title": "rays vs guardians",
-    "traffic": 100,
-    "date": "2026-10-13",
-    "intents": [
-      "rainy-day",
-      "cafe",
-      "mall",
-      "cinema",
-      "museum"
-    ],
-    "areaSlug": null
-  },
-  {
-    "title": "josh dix",
-    "traffic": 200,
-    "date": "2026-10-13",
-    "intents": [
-      "activity",
-      "nightlife",
-      "mall",
-      "food-trip"
-    ],
-    "areaSlug": null
-  },
-  {
-    "title": "gcash ipo",
-    "traffic": 1000,
-    "date": "2026-10-13",
-    "intents": [
-      "family",
-      "barkada",
-      "date",
-      "hotel",
-      "activity",
-      "free"
-    ],
-    "areaSlug": null
-  },
-  {
     "title": "earthquake manila",
     "traffic": 200,
     "date": "2026-10-14",
